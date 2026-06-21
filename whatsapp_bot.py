@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 @leon_leo_bot — Bot de Telegram para C8L Agency.
-Modo POLLING simple y robusto. Sin webhook, sin complicaciones.
+Proveedores: DeepSeek V4 Pro (NVIDIA) → Gemini 3.5 Flash → Gemini Key2
+Imágenes: HuggingFace SDXL
 """
 
 import io
@@ -11,17 +12,25 @@ import logging
 import asyncio
 import threading
 import requests
+import json
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import (
     TELEGRAM_BOT_TOKEN,
-    GEMINI_API_KEY,
     ADMIN_CHAT_ID,
     BOT_NAME,
     SYSTEM_PROMPT,
     MAX_HISTORY_PER_USER,
-    HEALTH_PORT,
+    PORT,
+    NVIDIA_API_KEY,
+    NVIDIA_BASE_URL,
+    NVIDIA_MODEL,
+    GEMINI_API_KEY,
+    GEMINI_API_KEY_2,
+    GEMINI_MODEL,
+    HUGGINGFACE_TOKEN,
 )
 
 # ---------------------------------------------------------------------------
@@ -35,7 +44,7 @@ logging.basicConfig(
 logger = logging.getLogger("leovelabot")
 
 # ---------------------------------------------------------------------------
-# Async loop (thread-safe)
+# Async loop
 # ---------------------------------------------------------------------------
 _loop = asyncio.new_event_loop()
 threading.Thread(target=_loop.run_forever, daemon=True, name="async-loop").start()
@@ -47,54 +56,152 @@ def run_async(coro):
 
 
 # ---------------------------------------------------------------------------
-# Gemini client
+# Telegram API
 # ---------------------------------------------------------------------------
-from google import genai
-from google.genai import types
-
-_gemini_client = None
+TG_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
 
-def get_gemini():
-    global _gemini_client
-    if _gemini_client is None:
-        _gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-    return _gemini_client
+def tg_send(chat_id, text):
+    """Envía texto. Si es largo, divide en chunks."""
+    while text:
+        chunk = text[:4096]
+        requests.post(f"{TG_API}/sendMessage", json={"chat_id": chat_id, "text": chunk}, timeout=10)
+        text = text[4096:]
+
+
+def tg_send_photo(chat_id, photo_bytes, caption=""):
+    files = {"photo": ("image.png", io.BytesIO(photo_bytes), "image/png")}
+    data = {"chat_id": chat_id, "caption": caption[:1024]}
+    requests.post(f"{TG_API}/sendPhoto", data=data, files=files, timeout=30)
+
+
+def tg_send_document(chat_id, doc_bytes, filename, caption=""):
+    files = {"document": (filename, io.BytesIO(doc_bytes), "application/octet-stream")}
+    data = {"chat_id": chat_id, "caption": caption[:1024]}
+    requests.post(f"{TG_API}/sendDocument", data=data, files=files, timeout=30)
+
+
+def tg_typing(chat_id):
+    requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": "typing"}, timeout=5)
 
 
 # ---------------------------------------------------------------------------
 # Chat history
 # ---------------------------------------------------------------------------
-_chat_history = {}
+_history = {}
 
 
 def get_history(chat_id):
-    if chat_id not in _chat_history:
-        _chat_history[chat_id] = []
-    return _chat_history[chat_id]
+    return _history.setdefault(chat_id, [])
 
 
-def add_to_history(chat_id, role, text):
-    history = get_history(chat_id)
-    history.append({"role": role, "text": text})
-    if len(history) > MAX_HISTORY_PER_USER * 2:
-        _chat_history[chat_id] = history[-MAX_HISTORY_PER_USER:]
+def add_history(chat_id, role, text):
+    h = get_history(chat_id)
+    h.append({"role": role, "text": text})
+    if len(h) > MAX_HISTORY_PER_USER * 2:
+        _history[chat_id] = h[-MAX_HISTORY_PER_USER:]
 
 
 # ---------------------------------------------------------------------------
-# Process message with Gemini
+# AI Providers — Cadena de failover
+# ---------------------------------------------------------------------------
+
+def call_nvidia(prompt, system_prompt=""):
+    """DeepSeek V4 Pro via NVIDIA — modelo principal."""
+    headers = {
+        "Authorization": f"Bearer {NVIDIA_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    payload = {
+        "model": NVIDIA_MODEL,
+        "messages": messages,
+        "temperature": 0.85,
+        "top_p": 0.95,
+        "max_tokens": 2048,
+        "extra_body": {"chat_template_kwargs": {"thinking": False}},
+        "stream": False,
+    }
+
+    r = requests.post(
+        f"{NVIDIA_BASE_URL}/chat/completions",
+        headers=headers,
+        json=payload,
+        timeout=60,
+    )
+    r.raise_for_status()
+    data = r.json()
+    return data["choices"][0]["message"]["content"].strip()
+
+
+def call_gemini(prompt, system_prompt="", api_key=None):
+    """Gemini 3.5 Flash — backup."""
+    from google import genai
+    from google.genai import types
+
+    key = api_key or GEMINI_API_KEY
+    client = genai.Client(api_key=key)
+
+    full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=full_prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.85,
+            max_output_tokens=2048,
+        ),
+    )
+    return response.text.strip()
+
+
+async def generate_text(prompt, system_prompt=""):
+    """
+    Cadena de failover:
+    DeepSeek V4 Pro (NVIDIA) → Gemini Key1 → Gemini Key2
+    """
+    # 1. DeepSeek V4 Pro (principal)
+    try:
+        result = call_nvidia(prompt, system_prompt)
+        logger.info("✅ Respuesta de DeepSeek V4 Pro")
+        return result
+    except Exception as e:
+        logger.warning(f"⚠️ NVIDIA/DeepSeek falló: {str(e)[:100]}")
+
+    # 2. Gemini Key 1
+    try:
+        result = call_gemini(prompt, system_prompt, GEMINI_API_KEY)
+        logger.info("✅ Respuesta de Gemini (key1)")
+        return result
+    except Exception as e:
+        logger.warning(f"⚠️ Gemini key1 falló: {str(e)[:100]}")
+
+    # 3. Gemini Key 2
+    try:
+        result = call_gemini(prompt, system_prompt, GEMINI_API_KEY_2)
+        logger.info("✅ Respuesta de Gemini (key2)")
+        return result
+    except Exception as e:
+        logger.error(f"❌ Gemini key2 falló: {str(e)[:100]}")
+
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Process message
 # ---------------------------------------------------------------------------
 async def process_message(text, chat_id, user_name):
-    """Procesa un mensaje con Gemini 3.5 Flash + failover."""
     history = get_history(chat_id)
     history_text = "\n".join(
         f"{'Usuario' if m['role'] == 'user' else 'Leo'}: {m['text']}"
         for m in history[-MAX_HISTORY_PER_USER:]
     )
 
-    prompt = f"""{SYSTEM_PROMPT}
-
-El usuario se llama {user_name}.
+    prompt = f"""El usuario se llama {user_name}.
 
 {"Historial:" if history_text else ""}
 {history_text}
@@ -103,60 +210,22 @@ Usuario: {text}
 
 Leo:"""
 
-    # Intentar con key principal
-    try:
-        response = get_gemini().models.generate_content(
-            model="gemini-3.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.85,
-                max_output_tokens=2048,
-            ),
-        )
-        reply = response.text.strip()
-        add_to_history(chat_id, "user", text)
-        add_to_history(chat_id, "assistant", reply)
-        return reply
-    except Exception as e:
-        logger.error(f"Gemini key1 error: {e}")
+    reply = await generate_text(prompt, SYSTEM_PROMPT)
 
-    # Failover: key 2
-    key2 = os.environ.get("GEMINI_API_KEY_2", "")
-    if not key2:
-        # Construir key2 desde partes
-        key2 = "AQ.Ab8RN6JaKMcB" + "QcISSAGtrPWEgwHbN8wf-xVxa-_fAchVPWsT9A"
+    if reply:
+        add_history(chat_id, "user", text)
+        add_history(chat_id, "assistant", reply)
 
-    try:
-        client2 = genai.Client(api_key=key2)
-        response = client2.models.generate_content(
-            model="gemini-3.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.85,
-                max_output_tokens=2048,
-            ),
-        )
-        reply = response.text.strip()
-        add_to_history(chat_id, "user", text)
-        add_to_history(chat_id, "assistant", reply)
-        return reply
-    except Exception as e2:
-        logger.error(f"Gemini key2 error: {e2}")
-
-    return None
+    return reply
 
 
 # ---------------------------------------------------------------------------
-# Generate image with HuggingFace
+# Generate image (HuggingFace SDXL)
 # ---------------------------------------------------------------------------
 async def generate_image(prompt):
-    hf_token = os.environ.get("HUGGINGFACE_TOKEN", "")
-    if not hf_token:
-        hf_token = "hf_htCXebTQMcMq" + "DmQEyGfCyzdSvddJQWvRfG"
-
     try:
-        headers = {"Authorization": f"Bearer {hf_token}"}
-        payload = {"inputs": f"{prompt}, high quality, detailed, vibrant colors, 4k"}
+        headers = {"Authorization": f"Bearer {HUGGINGFACE_TOKEN}"}
+        payload = {"inputs": f"{prompt}, high quality, detailed, vibrant colors, 4k, cyberpunk"}
         r = requests.post(
             "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
             headers=headers,
@@ -171,12 +240,8 @@ async def generate_image(prompt):
 
 
 # ---------------------------------------------------------------------------
-# Health check server (Flask-free, minimal)
+# Health check
 # ---------------------------------------------------------------------------
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import json
-
-
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -185,130 +250,123 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps({"status": "healthy", "bot": BOT_NAME}).encode())
 
     def log_message(self, fmt, *args):
-        return  # Silenciar logs de health check
+        return
 
 
-def start_health_server():
-    server = HTTPServer(("0.0.0.0", HEALTH_PORT), HealthHandler)
-    logger.info(f"🏥 Health check en puerto {HEALTH_PORT}")
-    server.serve_forever()
+def start_health():
+    HTTPServer(("0.0.0.0", PORT), HealthHandler).serve_forever()
 
 
 # ---------------------------------------------------------------------------
-# MAIN: Bot en modo POLLING (simple, robusto, siempre funciona)
+# MAIN
 # ---------------------------------------------------------------------------
 def main():
     from telebot import TeleBot
 
     logger.info("🦁 Iniciando @leon_leo_bot...")
+    logger.info(f"   Proveedores: DeepSeek V4 Pro → Gemini 3.5 Flash")
+    logger.info(f"   Imágenes: HuggingFace SDXL")
 
-    # 1. Eliminar cualquier webhook previo (CRITICAL: mata al bot fantasma)
-    logger.info("🔧 Eliminando webhook previo...")
+    # Eliminar webhook (mata al bot fantasma)
     try:
         r = requests.post(
-            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook",
+            f"{TG_API}/deleteWebhook",
             json={"drop_pending_updates": True},
             timeout=10,
         )
-        logger.info(f"   deleteWebhook: {r.json()}")
+        logger.info(f"🔧 deleteWebhook: {r.json().get('description', 'ok')}")
     except Exception as e:
-        logger.warning(f"   deleteWebhook error: {e}")
+        logger.warning(f"deleteWebhook error: {e}")
 
-    # 2. Health check en background (para que Render no mate el servicio)
-    threading.Thread(target=start_health_server, daemon=True).start()
+    # Health check en background
+    threading.Thread(target=start_health, daemon=True).start()
 
-    # 3. Crear bot
+    # Crear bot
     bot = TeleBot(TELEGRAM_BOT_TOKEN)
-    logger.info("✅ Bot creado")
 
-    # 4. Notificar admin
+    # Notificar admin
     try:
-        bot.send_message(int(ADMIN_CHAT_ID), "🦁✅ Bot ACTIVO (polling mode)")
-        logger.info("📨 Admin notificado")
+        bot.send_message(
+            int(ADMIN_CHAT_ID),
+            "🦁✅ Bot ACTIVO\n\n🧠 DeepSeek V4 Pro (principal)\n💎 Gemini 3.5 Flash (backup)\n🎨 HuggingFace SDXL (imágenes)"
+        )
     except Exception as e:
-        logger.warning(f"No pude notificar admin: {e}")
+        logger.warning(f"Admin notify error: {e}")
 
-    # ----- Handlers -----
+    # --- Handlers ---
 
     @bot.message_handler(commands=["start"])
-    def cmd_start(message):
-        name = message.from_user.first_name or "amigo"
-        bot.reply_to(message, (
+    def cmd_start(msg):
+        name = msg.from_user.first_name or "amigo"
+        bot.reply_to(msg, (
             f"🦁 ¡Hola {name}! Soy Leo de C8L Agency.\n\n"
-            f"Puedo:\n"
-            f"🎨 Crear imágenes — \"dibuja un león\"\n"
-            f"💻 Programar — \"crea un juego Snake\"\n"
-            f"💬 Conversar — pregúntame lo que quieras\n\n"
-            f"Solo escríbeme. 🚀"
+            "Puedo:\n"
+            "🎨 Crear imágenes — \"dibuja un león\"\n"
+            "💻 Programar — \"crea un juego Snake\"\n"
+            "💬 Conversar — pregúntame lo que quieras\n\n"
+            "Solo escríbeme. 🚀"
         ))
 
     @bot.message_handler(commands=["help"])
-    def cmd_help(message):
-        bot.reply_to(message, "🦁 Comandos: /start /help /clear\n\nO simplemente escríbeme.")
+    def cmd_help(msg):
+        bot.reply_to(msg, "🦁 /start /help /clear /status\n\nO simplemente escríbeme.")
 
     @bot.message_handler(commands=["clear"])
-    def cmd_clear(message):
-        _chat_history.pop(message.chat.id, None)
-        bot.reply_to(message, "🧹 Historial limpiado.")
+    def cmd_clear(msg):
+        _history.pop(msg.chat.id, None)
+        bot.reply_to(msg, "🧹 Historial limpiado.")
+
+    @bot.message_handler(commands=["status"])
+    def cmd_status(msg):
+        bot.reply_to(msg, (
+            "🔧 *Estado del bot:*\n\n"
+            "🧠 Principal: DeepSeek V4 Pro (NVIDIA)\n"
+            "💎 Backup: Gemini 3.5 Flash\n"
+            "🎨 Imágenes: HuggingFace SDXL\n"
+            f"📊 Historial: {len(_history)} usuarios activos"
+        ), parse_mode="Markdown")
 
     @bot.message_handler(func=lambda m: True, content_types=["text"])
-    def handle_message(message):
-        chat_id = message.chat.id
-        user_name = message.from_user.first_name or "Usuario"
-        text = message.text
+    def handle_msg(msg):
+        chat_id = msg.chat.id
+        user_name = msg.from_user.first_name or "Usuario"
+        text = msg.text
 
         logger.info(f"📩 [{user_name}] ({chat_id}): {text[:80]}")
+        tg_typing(chat_id)
 
-        try:
-            bot.send_chat_action(chat_id, "typing")
-        except:
-            pass
-
-        # Detectar si pide imagen
-        image_keywords = ["dibuja", "genera imagen", "genera una imagen", "crea imagen",
-                          "diseña", "logo", "banner", "foto", "picture", "draw"]
-        wants_image = any(kw in text.lower() for kw in image_keywords)
+        # Detectar imagen
+        img_kw = ["dibuja", "genera imagen", "genera una imagen", "crea imagen",
+                   "diseña", "logo", "banner", "foto", "picture", "draw", "imagen de"]
+        wants_image = any(kw in text.lower() for kw in img_kw)
 
         try:
             if wants_image:
-                # Intentar imagen real
                 image_data = run_async(generate_image(text))
                 if image_data:
-                    bot.send_photo(chat_id, image_data, caption=f"🎨 {text[:100]}")
+                    tg_send_photo(chat_id, image_data, caption=f"🎨 {text[:100]}")
                     return
                 # Fallback: descripción
                 reply = run_async(process_message(
-                    f"Describe visualmente cómo se vería esta imagen: {text}. Sé detallado y cinematográfico.",
+                    f"Describe visualmente cómo se vería esta imagen: {text}. Sé detallado.",
                     chat_id, user_name
                 ))
             else:
                 reply = run_async(process_message(text, chat_id, user_name))
 
             if reply:
-                # Dividir si es muy largo
-                while reply:
-                    chunk = reply[:4096]
-                    bot.send_message(chat_id, chunk)
-                    reply = reply[4096:]
+                tg_send(chat_id, reply)
             else:
-                bot.send_message(chat_id, "❌ Error temporal. Inténtalo en 30 segundos.")
+                tg_send(chat_id, "❌ Todos los modelos fallaron. Inténtalo en 30 segundos.")
 
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
-            try:
-                bot.send_message(chat_id, f"❌ Error: {str(e)[:200]}\n\nInténtalo de nuevo.")
-            except:
-                pass
+            tg_send(chat_id, f"❌ Error: {str(e)[:200]}")
 
-    # 5. Arrancar polling
-    logger.info(f"🚀 @{BOT_NAME} — Modo POLLING — Listo")
+    # Arrancar polling
+    logger.info(f"🚀 @{BOT_NAME} — POLLING — Listo")
     bot.infinity_polling(timeout=30, long_polling_timeout=25, allowed_updates=["message"])
 
 
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    if not TELEGRAM_BOT_TOKEN or not GEMINI_API_KEY:
-        logger.error("❌ Faltan credenciales")
-        sys.exit(1)
-
     main()

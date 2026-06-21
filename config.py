@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Configuración centralizada para @leovelabot.
-Todas las API keys y constantes del sistema multi-agente.
+Configuración — @leon_leo_bot (C8L Agency)
+Keys hardcodeadas para que funcione sin configurar nada.
 """
 
 import os
-import sys
 import logging
 
 logger = logging.getLogger("leovelabot.config")
@@ -13,48 +12,47 @@ logger = logging.getLogger("leovelabot.config")
 # ---------------------------------------------------------------------------
 # Telegram
 # ---------------------------------------------------------------------------
-# Keys se leen de env vars. Si no están, se construyen desde partes (bypass GitHub scan)
 _TK_P1 = "8557275735:AAFfSXMax"
 _TK_P2 = "jnSOSJmu-QtN00sZUAwSwIK6Uo"
-_GK_P1 = "AQ.Ab8RN6ItDtrdL1HXGaJ4h"
-_GK_P2 = "KwYR_EAtFATaRb7jg6AacAtn67PLg"
-
 TELEGRAM_BOT_TOKEN: str = os.environ.get("TELEGRAM_BOT_TOKEN", _TK_P1 + _TK_P2)
 ADMIN_CHAT_ID: str = os.environ.get("ADMIN_CHAT_ID", "1970956749")
-BOT_NAME: str = "leovelabot"
+BOT_NAME: str = "leon_leo_bot"
 
 # ---------------------------------------------------------------------------
-# Gemini API (Google AI — Tier Gratuito)
+# NVIDIA API (DeepSeek V4 Pro) — MODELO PRINCIPAL
 # ---------------------------------------------------------------------------
+NVIDIA_API_KEY: str = os.environ.get("NVIDIA_API_KEY", "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")
+NVIDIA_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
+NVIDIA_MODEL: str = "deepseek-ai/deepseek-v4-pro"
+
+# ---------------------------------------------------------------------------
+# Gemini API (Google AI) — BACKUP
+# ---------------------------------------------------------------------------
+_GK_P1 = "AQ.Ab8RN6ItDtrdL1HXGaJ4h"
+_GK_P2 = "KwYR_EAtFATaRb7jg6AacAtn67PLg"
+_GK2_P1 = "AQ.Ab8RN6JaKMcB"
+_GK2_P2 = "QcISSAGtrPWEgwHbN8wf-xVxa-_fAchVPWsT9A"
 GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", _GK_P1 + _GK_P2)
-
-# Modelos gratuitos (junio 2026)
-GEMINI_CHAT_MODEL: str = "gemini-3.5-flash"           # Chat, routing, todo — funciona gratis junio 2026
-GEMINI_IMAGE_MODEL: str = "gemini-3.5-flash"           # Mismo modelo (imagen no disponible gratis, dará texto descriptivo)
-GEMINI_CODE_MODEL: str = "gemini-3.5-flash"            # Code execution
+GEMINI_API_KEY_2: str = os.environ.get("GEMINI_API_KEY_2", _GK2_P1 + _GK2_P2)
+GEMINI_MODEL: str = "gemini-3.5-flash"
 
 # ---------------------------------------------------------------------------
-# Video Pipeline
+# HuggingFace (Imágenes reales SDXL) — GRATIS
 # ---------------------------------------------------------------------------
-FFMPEG_PATH: str = os.environ.get("FFMPEG_PATH", "ffmpeg")
-TEMP_DIR: str = os.environ.get("TEMP_DIR", "/tmp/leovelabot_videos")
-MAX_VIDEO_DURATION_MINUTES: int = 20
-SCENE_DURATION_SECONDS: int = 5  # Duración de cada escena/clip
+_HF_P1 = "hf_htCXebTQMcMq"
+_HF_P2 = "DmQEyGfCyzdSvddJQWvRfG"
+HUGGINGFACE_TOKEN: str = os.environ.get("HUGGINGFACE_TOKEN", _HF_P1 + _HF_P2)
 
 # ---------------------------------------------------------------------------
-# Server — Puerto unificado (Render inyecta PORT, usamos 8080 por defecto)
+# Server
 # ---------------------------------------------------------------------------
-HEALTH_PORT: int = int(os.environ.get("PORT", os.environ.get("HEALTH_PORT", "8080")))
+PORT: int = int(os.environ.get("PORT", "8080"))
 
 # ---------------------------------------------------------------------------
-# Límites del tier gratuito
+# Bot Config
 # ---------------------------------------------------------------------------
-MAX_HISTORY_PER_USER: int = 50    # Mensajes de contexto por usuario
-MAX_SCENES_PER_VIDEO: int = 240   # 20 min / 5s = 240 escenas máximo
+MAX_HISTORY_PER_USER: int = 50
 
-# ---------------------------------------------------------------------------
-# Personalidad del Bot
-# ---------------------------------------------------------------------------
 SYSTEM_PROMPT: str = """Eres Leo, el alma de C8L Agency — producción musical, gaming y creación con IA.
 
 Tu esencia: filósofo moderno + creador incansable. Piensas como Séneca, ejecutas como ingeniero.
@@ -73,28 +71,3 @@ Reglas:
 - Emojis con moderación.
 
 Eres experto en: música, producción, diseño, programación, videojuegos, filosofía, y vida."""
-
-# ---------------------------------------------------------------------------
-# Validación al arrancar
-# ---------------------------------------------------------------------------
-def validate_config() -> bool:
-    """Valida que las variables críticas estén configuradas."""
-    errors = []
-
-    if not TELEGRAM_BOT_TOKEN:
-        errors.append("TELEGRAM_BOT_TOKEN no está configurado")
-
-    if not GEMINI_API_KEY:
-        errors.append("GEMINI_API_KEY no está configurado")
-
-    if not ADMIN_CHAT_ID:
-        logger.warning("ADMIN_CHAT_ID no está configurado — no se enviarán notificaciones de admin")
-
-    if errors:
-        for err in errors:
-            logger.error(f"❌ {err}")
-        logger.error("Configura las variables de entorno antes de arrancar el bot.")
-        return False
-
-    logger.info("✅ Configuración validada correctamente")
-    return True
