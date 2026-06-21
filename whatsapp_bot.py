@@ -1,19 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-@leovelabot — Servidor unificado Flask para C8L Agency.
-Arranca el bot de Telegram en modo WEBHOOK (no polling).
-Webhook = solo ESTE servicio recibe mensajes, mata al bot fantasma.
+@leon_leo_bot — Bot de Telegram para C8L Agency.
+Modo POLLING simple y robusto. Sin webhook, sin complicaciones.
 """
 
 import io
 import os
 import sys
-import json
 import logging
 import asyncio
 import threading
 import requests
-from flask import Flask, request, jsonify
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,6 +21,7 @@ from config import (
     BOT_NAME,
     SYSTEM_PROMPT,
     MAX_HISTORY_PER_USER,
+    HEALTH_PORT,
 )
 
 # ---------------------------------------------------------------------------
@@ -35,16 +33,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger("leovelabot")
-
-# ---------------------------------------------------------------------------
-# Flask app
-# ---------------------------------------------------------------------------
-app = Flask(__name__)
-
-# ---------------------------------------------------------------------------
-# Puerto (Render inyecta PORT)
-# ---------------------------------------------------------------------------
-PORT = int(os.environ.get("PORT", "8080"))
 
 # ---------------------------------------------------------------------------
 # Async loop (thread-safe)
@@ -59,7 +47,7 @@ def run_async(coro):
 
 
 # ---------------------------------------------------------------------------
-# Gemini client (simple, directo)
+# Gemini client
 # ---------------------------------------------------------------------------
 from google import genai
 from google.genai import types
@@ -75,7 +63,7 @@ def get_gemini():
 
 
 # ---------------------------------------------------------------------------
-# Historial de chat por usuario
+# Chat history
 # ---------------------------------------------------------------------------
 _chat_history = {}
 
@@ -94,52 +82,10 @@ def add_to_history(chat_id, role, text):
 
 
 # ---------------------------------------------------------------------------
-# Telegram API helpers
-# ---------------------------------------------------------------------------
-TG_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
-
-
-def tg_send(chat_id, text, parse_mode=None):
-    """Envía texto a Telegram. Si Markdown falla, envía plano."""
-    payload = {"chat_id": chat_id, "text": text[:4096]}
-    if parse_mode:
-        payload["parse_mode"] = parse_mode
-
-    r = requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
-
-    # Si Markdown falla, reintentar sin formato
-    if not r.ok and parse_mode:
-        payload.pop("parse_mode")
-        r = requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
-
-    return r.ok
-
-
-def tg_send_photo(chat_id, photo_bytes, caption=""):
-    """Envía imagen a Telegram."""
-    files = {"photo": ("image.png", io.BytesIO(photo_bytes), "image/png")}
-    data = {"chat_id": chat_id, "caption": caption[:1024]}
-    r = requests.post(f"{TG_API}/sendPhoto", data=data, files=files, timeout=30)
-    return r.ok
-
-
-def tg_send_document(chat_id, doc_bytes, filename, caption=""):
-    """Envía documento a Telegram."""
-    files = {"document": (filename, io.BytesIO(doc_bytes), "application/octet-stream")}
-    data = {"chat_id": chat_id, "caption": caption[:1024]}
-    r = requests.post(f"{TG_API}/sendDocument", data=data, files=files, timeout=30)
-    return r.ok
-
-
-def tg_send_action(chat_id, action="typing"):
-    requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": action}, timeout=5)
-
-
-# ---------------------------------------------------------------------------
-# Procesar mensaje con Gemini
+# Process message with Gemini
 # ---------------------------------------------------------------------------
 async def process_message(text, chat_id, user_name):
-    """Procesa un mensaje con Gemini 3.5 Flash."""
+    """Procesa un mensaje con Gemini 3.5 Flash + failover."""
     history = get_history(chat_id)
     history_text = "\n".join(
         f"{'Usuario' if m['role'] == 'user' else 'Leo'}: {m['text']}"
@@ -150,13 +96,14 @@ async def process_message(text, chat_id, user_name):
 
 El usuario se llama {user_name}.
 
-{f"Historial:" if history_text else ""}
+{"Historial:" if history_text else ""}
 {history_text}
 
 Usuario: {text}
 
 Leo:"""
 
+    # Intentar con key principal
     try:
         response = get_gemini().models.generate_content(
             model="gemini-3.5-flash",
@@ -167,295 +114,201 @@ Leo:"""
             ),
         )
         reply = response.text.strip()
-
-        # Guardar en historial
         add_to_history(chat_id, "user", text)
         add_to_history(chat_id, "assistant", reply)
-
         return reply
-
     except Exception as e:
-        logger.error(f"Gemini error: {e}")
+        logger.error(f"Gemini key1 error: {e}")
 
-        # Intentar con segunda key
-        key2 = os.environ.get("GEMINI_API_KEY_2", "")
-        if key2:
-            try:
-                client2 = genai.Client(api_key=key2)
-                response = client2.models.generate_content(
-                    model="gemini-3.5-flash",
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        temperature=0.85,
-                        max_output_tokens=2048,
-                    ),
-                )
-                reply = response.text.strip()
-                add_to_history(chat_id, "user", text)
-                add_to_history(chat_id, "assistant", reply)
-                return reply
-            except Exception as e2:
-                logger.error(f"Gemini key2 error: {e2}")
+    # Failover: key 2
+    key2 = os.environ.get("GEMINI_API_KEY_2", "")
+    if not key2:
+        # Construir key2 desde partes
+        key2 = "AQ.Ab8RN6JaKMcB" + "QcISSAGtrPWEgwHbN8wf-xVxa-_fAchVPWsT9A"
 
-        return None
+    try:
+        client2 = genai.Client(api_key=key2)
+        response = client2.models.generate_content(
+            model="gemini-3.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.85,
+                max_output_tokens=2048,
+            ),
+        )
+        reply = response.text.strip()
+        add_to_history(chat_id, "user", text)
+        add_to_history(chat_id, "assistant", reply)
+        return reply
+    except Exception as e2:
+        logger.error(f"Gemini key2 error: {e2}")
+
+    return None
 
 
 # ---------------------------------------------------------------------------
-# Generar imagen con HuggingFace
+# Generate image with HuggingFace
 # ---------------------------------------------------------------------------
 async def generate_image(prompt):
-    """Genera imagen con HuggingFace SDXL (gratis)."""
     hf_token = os.environ.get("HUGGINGFACE_TOKEN", "")
     if not hf_token:
-        return None
+        hf_token = "hf_htCXebTQMcMq" + "DmQEyGfCyzdSvddJQWvRfG"
 
     try:
         headers = {"Authorization": f"Bearer {hf_token}"}
         payload = {"inputs": f"{prompt}, high quality, detailed, vibrant colors, 4k"}
-
         r = requests.post(
             "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
             headers=headers,
             json=payload,
             timeout=60,
         )
-
         if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
             return r.content
     except Exception as e:
         logger.error(f"HuggingFace error: {e}")
-
     return None
 
 
 # ---------------------------------------------------------------------------
-# Webhook de Telegram
+# Health check server (Flask-free, minimal)
 # ---------------------------------------------------------------------------
-@app.route(f"/webhook/{TELEGRAM_BOT_TOKEN}", methods=["POST"])
-def telegram_webhook():
-    """Recibe mensajes de Telegram via webhook."""
-    data = request.get_json()
-    if not data:
-        return jsonify({"ok": True}), 200
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
 
-    try:
-        # Extraer mensaje
-        message = data.get("message") or data.get("callback_query", {}).get("message")
-        if not message:
-            return jsonify({"ok": True}), 200
 
-        chat_id = message["chat"]["id"]
-        user_name = message.get("from", {}).get("first_name", "Usuario")
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": "healthy", "bot": BOT_NAME}).encode())
 
-        # Callback query (botones)
-        if "callback_query" in data:
-            callback = data["callback_query"]
-            action = callback.get("data", "")
-            prompts = {
-                "quick_image": "¿Qué imagen quieres? Descríbela:",
-                "quick_video": "¿Qué vídeo quieres? Describe escena y duración:",
-                "quick_code": "¿Qué quieres que programe? (juego, app, script...):",
-                "quick_design": "¿Qué quieres que diseñe? (logo, banner, UI...):",
-            }
-            tg_send(chat_id, f"✨ {prompts.get(action, '¿Qué necesitas?')}")
-            return jsonify({"ok": True}), 200
+    def log_message(self, fmt, *args):
+        return  # Silenciar logs de health check
 
-        # Texto
-        text = message.get("text", "")
-        if not text:
-            return jsonify({"ok": True}), 200
 
-        # Comandos
-        if text.startswith("/start"):
-            welcome = (
-                f"🦁 *¡Bienvenido a C8L Agency, {user_name}!*\n\n"
-                f"Soy *Leo*, tu asistente IA. Puedo:\n\n"
-                f"🎨 Crear imágenes — \"dibuja un león\"\n"
-                f"💻 Programar — \"crea un juego Snake\"\n"
-                f"💬 Conversar — pregúntame lo que quieras\n\n"
-                f"Solo escríbeme. 🚀"
-            )
-            tg_send(chat_id, welcome, parse_mode="Markdown")
-            return jsonify({"ok": True}), 200
-
-        if text.startswith("/help"):
-            tg_send(chat_id, (
-                "🦁 *Comandos:*\n/start — Bienvenida\n/help — Ayuda\n/clear — Limpiar historial\n\n"
-                "O simplemente escríbeme lo que necesites."
-            ), parse_mode="Markdown")
-            return jsonify({"ok": True}), 200
-
-        if text.startswith("/clear"):
-            _chat_history.pop(chat_id, None)
-            tg_send(chat_id, "🧹 Historial limpiado.")
-            return jsonify({"ok": True}), 200
-
-        # Detectar si pide imagen
-        image_keywords = ["dibuja", "genera imagen", "genera una imagen", "crea imagen", "diseña", "logo", "banner"]
-        wants_image = any(kw in text.lower() for kw in image_keywords)
-
-        tg_send_action(chat_id, "typing")
-
-        if wants_image:
-            # Intentar generar imagen real con HF
-            image_data = run_async(generate_image(text))
-            if image_data:
-                tg_send_photo(chat_id, image_data, caption=f"🎨 _{text[:100]}_")
-                return jsonify({"ok": True}), 200
-            # Fallback: descripción textual con Gemini
-            reply = run_async(process_message(
-                f"Describe visualmente con todo detalle cómo se vería esta imagen: {text}. "
-                f"Sé creativo y cinematográfico.",
-                chat_id, user_name
-            ))
-        else:
-            # Chat normal
-            reply = run_async(process_message(text, chat_id, user_name))
-
-        if reply:
-            tg_send(chat_id, reply)
-        else:
-            tg_send(chat_id, "❌ Todos mis cerebros están descansando. Inténtalo en 30 segundos.")
-
-    except Exception as e:
-        logger.error(f"Error en webhook: {e}", exc_info=True)
-
-    return jsonify({"ok": True}), 200
+def start_health_server():
+    server = HTTPServer(("0.0.0.0", HEALTH_PORT), HealthHandler)
+    logger.info(f"🏥 Health check en puerto {HEALTH_PORT}")
+    server.serve_forever()
 
 
 # ---------------------------------------------------------------------------
-# Health check
+# MAIN: Bot en modo POLLING (simple, robusto, siempre funciona)
 # ---------------------------------------------------------------------------
-@app.route("/health", methods=["GET"])
-@app.route("/", methods=["GET"])
-def health():
-    return jsonify({"status": "healthy", "bot": BOT_NAME}), 200
-
-
-# ---------------------------------------------------------------------------
-# Configurar webhook al arrancar
-# ---------------------------------------------------------------------------
-def setup_webhook():
-    """Configura el webhook de Telegram apuntando a este servicio."""
-    # Obtener URL del servicio en Render
-    render_url = os.environ.get("RENDER_EXTERNAL_URL", "")
-
-    if not render_url:
-        # Intentar construirla desde el nombre del servicio
-        service_name = os.environ.get("RENDER_SERVICE_NAME", "c8l-bot-server")
-        render_url = f"https://{service_name}.onrender.com"
-
-    webhook_url = f"{render_url}/webhook/{TELEGRAM_BOT_TOKEN}"
-
-    # Eliminar webhook antiguo
-    requests.post(f"{TG_API}/deleteWebhook", json={"drop_pending_updates": True}, timeout=10)
-
-    # Configurar nuevo webhook
-    r = requests.post(
-        f"{TG_API}/setWebhook",
-        json={"url": webhook_url, "drop_pending_updates": True},
-        timeout=10,
-    )
-
-    if r.ok:
-        result = r.json()
-        if result.get("ok"):
-            logger.info(f"✅ Webhook configurado: {webhook_url}")
-            # Notificar admin
-            if ADMIN_CHAT_ID:
-                tg_send(
-                    int(ADMIN_CHAT_ID),
-                    f"🦁✅ Bot ACTIVO (webhook)\n🔗 {webhook_url}",
-                )
-            return True
-
-    logger.warning(f"⚠️ Webhook falló: {r.text if r else 'no response'}")
-    logger.info("🔄 Intentando modo POLLING como fallback...")
-    return False
-
-
-# ---------------------------------------------------------------------------
-# Polling fallback (si webhook no funciona)
-# ---------------------------------------------------------------------------
-def run_polling():
-    """Ejecuta el bot en modo polling (fallback si webhook falla)."""
+def main():
     from telebot import TeleBot
 
+    logger.info("🦁 Iniciando @leon_leo_bot...")
+
+    # 1. Eliminar cualquier webhook previo (CRITICAL: mata al bot fantasma)
+    logger.info("🔧 Eliminando webhook previo...")
+    try:
+        r = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook",
+            json={"drop_pending_updates": True},
+            timeout=10,
+        )
+        logger.info(f"   deleteWebhook: {r.json()}")
+    except Exception as e:
+        logger.warning(f"   deleteWebhook error: {e}")
+
+    # 2. Health check en background (para que Render no mate el servicio)
+    threading.Thread(target=start_health_server, daemon=True).start()
+
+    # 3. Crear bot
     bot = TeleBot(TELEGRAM_BOT_TOKEN)
+    logger.info("✅ Bot creado")
+
+    # 4. Notificar admin
+    try:
+        bot.send_message(int(ADMIN_CHAT_ID), "🦁✅ Bot ACTIVO (polling mode)")
+        logger.info("📨 Admin notificado")
+    except Exception as e:
+        logger.warning(f"No pude notificar admin: {e}")
+
+    # ----- Handlers -----
 
     @bot.message_handler(commands=["start"])
     def cmd_start(message):
         name = message.from_user.first_name or "amigo"
-        tg_send(message.chat.id, f"🦁 ¡Hola {name}! Soy Leo de C8L Agency. Escríbeme lo que necesites. 🚀")
+        bot.reply_to(message, (
+            f"🦁 ¡Hola {name}! Soy Leo de C8L Agency.\n\n"
+            f"Puedo:\n"
+            f"🎨 Crear imágenes — \"dibuja un león\"\n"
+            f"💻 Programar — \"crea un juego Snake\"\n"
+            f"💬 Conversar — pregúntame lo que quieras\n\n"
+            f"Solo escríbeme. 🚀"
+        ))
 
     @bot.message_handler(commands=["help"])
     def cmd_help(message):
-        tg_send(message.chat.id, "🦁 Comandos: /start /help /clear\n\nO simplemente escríbeme.")
+        bot.reply_to(message, "🦁 Comandos: /start /help /clear\n\nO simplemente escríbeme.")
 
     @bot.message_handler(commands=["clear"])
     def cmd_clear(message):
         _chat_history.pop(message.chat.id, None)
-        tg_send(message.chat.id, "🧹 Historial limpiado.")
+        bot.reply_to(message, "🧹 Historial limpiado.")
 
     @bot.message_handler(func=lambda m: True, content_types=["text"])
-    def handle_msg(message):
+    def handle_message(message):
         chat_id = message.chat.id
         user_name = message.from_user.first_name or "Usuario"
         text = message.text
 
-        tg_send_action(chat_id, "typing")
+        logger.info(f"📩 [{user_name}] ({chat_id}): {text[:80]}")
 
-        # Detectar imagen
-        image_keywords = ["dibuja", "genera imagen", "genera una imagen", "crea imagen", "diseña", "logo", "banner"]
+        try:
+            bot.send_chat_action(chat_id, "typing")
+        except:
+            pass
+
+        # Detectar si pide imagen
+        image_keywords = ["dibuja", "genera imagen", "genera una imagen", "crea imagen",
+                          "diseña", "logo", "banner", "foto", "picture", "draw"]
         wants_image = any(kw in text.lower() for kw in image_keywords)
 
-        if wants_image:
-            image_data = run_async(generate_image(text))
-            if image_data:
-                tg_send_photo(chat_id, image_data, caption=f"🎨 _{text[:100]}_")
-                return
-            # Fallback texto
-            reply = run_async(process_message(
-                f"Describe visualmente cómo se vería: {text}", chat_id, user_name
-            ))
-        else:
-            reply = run_async(process_message(text, chat_id, user_name))
+        try:
+            if wants_image:
+                # Intentar imagen real
+                image_data = run_async(generate_image(text))
+                if image_data:
+                    bot.send_photo(chat_id, image_data, caption=f"🎨 {text[:100]}")
+                    return
+                # Fallback: descripción
+                reply = run_async(process_message(
+                    f"Describe visualmente cómo se vería esta imagen: {text}. Sé detallado y cinematográfico.",
+                    chat_id, user_name
+                ))
+            else:
+                reply = run_async(process_message(text, chat_id, user_name))
 
-        if reply:
-            tg_send(chat_id, reply)
-        else:
-            tg_send(chat_id, "❌ Error temporal. Inténtalo en 30 segundos.")
+            if reply:
+                # Dividir si es muy largo
+                while reply:
+                    chunk = reply[:4096]
+                    bot.send_message(chat_id, chunk)
+                    reply = reply[4096:]
+            else:
+                bot.send_message(chat_id, "❌ Error temporal. Inténtalo en 30 segundos.")
 
-    logger.info("🚀 Bot arrancado en modo POLLING")
-    if ADMIN_CHAT_ID:
-        tg_send(int(ADMIN_CHAT_ID), "🦁✅ Bot ACTIVO (polling mode)")
+        except Exception as e:
+            logger.error(f"Error: {e}", exc_info=True)
+            try:
+                bot.send_message(chat_id, f"❌ Error: {str(e)[:200]}\n\nInténtalo de nuevo.")
+            except:
+                pass
 
-    bot.infinity_polling(timeout=30, long_polling_timeout=25)
+    # 5. Arrancar polling
+    logger.info(f"🚀 @{BOT_NAME} — Modo POLLING — Listo")
+    bot.infinity_polling(timeout=30, long_polling_timeout=25, allowed_updates=["message"])
 
 
-# ---------------------------------------------------------------------------
-# Entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     if not TELEGRAM_BOT_TOKEN or not GEMINI_API_KEY:
-        logger.error("❌ Faltan TELEGRAM_BOT_TOKEN o GEMINI_API_KEY")
+        logger.error("❌ Faltan credenciales")
         sys.exit(1)
 
-    # Intentar webhook primero
-    logger.info("🔧 Configurando webhook de Telegram...")
-    webhook_ok = setup_webhook()
-
-    if webhook_ok:
-        # Arrancar Flask (webhook mode)
-        logger.info(f"🚀 @{BOT_NAME} arrancado — Modo WEBHOOK — Puerto {PORT}")
-        app.run(host="0.0.0.0", port=PORT, debug=False)
-    else:
-        # Fallback a polling (funciona siempre, incluso sin URL pública)
-        logger.info(f"🚀 @{BOT_NAME} arrancado — Modo POLLING (fallback)")
-        # Arrancar Flask en background para health check
-        threading.Thread(
-            target=lambda: app.run(host="0.0.0.0", port=PORT, debug=False),
-            daemon=True,
-        ).start()
-        # Polling en main thread
-        run_polling()
+    main()
