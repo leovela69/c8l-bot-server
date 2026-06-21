@@ -342,13 +342,13 @@ def setup_webhook():
 
     if not render_url:
         # Intentar construirla desde el nombre del servicio
-        service_name = os.environ.get("RENDER_SERVICE_NAME", "leovelabot-dual")
+        service_name = os.environ.get("RENDER_SERVICE_NAME", "c8l-bot-server")
         render_url = f"https://{service_name}.onrender.com"
 
     webhook_url = f"{render_url}/webhook/{TELEGRAM_BOT_TOKEN}"
 
     # Eliminar webhook antiguo
-    requests.post(f"{TG_API}/deleteWebhook", timeout=10)
+    requests.post(f"{TG_API}/deleteWebhook", json={"drop_pending_updates": True}, timeout=10)
 
     # Configurar nuevo webhook
     r = requests.post(
@@ -369,8 +369,68 @@ def setup_webhook():
                 )
             return True
 
-    logger.error(f"❌ Error configurando webhook: {r.text}")
+    logger.warning(f"⚠️ Webhook falló: {r.text if r else 'no response'}")
+    logger.info("🔄 Intentando modo POLLING como fallback...")
     return False
+
+
+# ---------------------------------------------------------------------------
+# Polling fallback (si webhook no funciona)
+# ---------------------------------------------------------------------------
+def run_polling():
+    """Ejecuta el bot en modo polling (fallback si webhook falla)."""
+    from telebot import TeleBot
+
+    bot = TeleBot(TELEGRAM_BOT_TOKEN)
+
+    @bot.message_handler(commands=["start"])
+    def cmd_start(message):
+        name = message.from_user.first_name or "amigo"
+        tg_send(message.chat.id, f"🦁 ¡Hola {name}! Soy Leo de C8L Agency. Escríbeme lo que necesites. 🚀")
+
+    @bot.message_handler(commands=["help"])
+    def cmd_help(message):
+        tg_send(message.chat.id, "🦁 Comandos: /start /help /clear\n\nO simplemente escríbeme.")
+
+    @bot.message_handler(commands=["clear"])
+    def cmd_clear(message):
+        _chat_history.pop(message.chat.id, None)
+        tg_send(message.chat.id, "🧹 Historial limpiado.")
+
+    @bot.message_handler(func=lambda m: True, content_types=["text"])
+    def handle_msg(message):
+        chat_id = message.chat.id
+        user_name = message.from_user.first_name or "Usuario"
+        text = message.text
+
+        tg_send_action(chat_id, "typing")
+
+        # Detectar imagen
+        image_keywords = ["dibuja", "genera imagen", "genera una imagen", "crea imagen", "diseña", "logo", "banner"]
+        wants_image = any(kw in text.lower() for kw in image_keywords)
+
+        if wants_image:
+            image_data = run_async(generate_image(text))
+            if image_data:
+                tg_send_photo(chat_id, image_data, caption=f"🎨 _{text[:100]}_")
+                return
+            # Fallback texto
+            reply = run_async(process_message(
+                f"Describe visualmente cómo se vería: {text}", chat_id, user_name
+            ))
+        else:
+            reply = run_async(process_message(text, chat_id, user_name))
+
+        if reply:
+            tg_send(chat_id, reply)
+        else:
+            tg_send(chat_id, "❌ Error temporal. Inténtalo en 30 segundos.")
+
+    logger.info("🚀 Bot arrancado en modo POLLING")
+    if ADMIN_CHAT_ID:
+        tg_send(int(ADMIN_CHAT_ID), "🦁✅ Bot ACTIVO (polling mode)")
+
+    bot.infinity_polling(timeout=30, long_polling_timeout=25)
 
 
 # ---------------------------------------------------------------------------
@@ -381,10 +441,21 @@ if __name__ == "__main__":
         logger.error("❌ Faltan TELEGRAM_BOT_TOKEN o GEMINI_API_KEY")
         sys.exit(1)
 
-    # Configurar webhook (mata al bot fantasma automáticamente)
+    # Intentar webhook primero
     logger.info("🔧 Configurando webhook de Telegram...")
-    setup_webhook()
+    webhook_ok = setup_webhook()
 
-    # Arrancar Flask
-    logger.info(f"🚀 @{BOT_NAME} arrancado — Modo WEBHOOK — Puerto {PORT}")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+    if webhook_ok:
+        # Arrancar Flask (webhook mode)
+        logger.info(f"🚀 @{BOT_NAME} arrancado — Modo WEBHOOK — Puerto {PORT}")
+        app.run(host="0.0.0.0", port=PORT, debug=False)
+    else:
+        # Fallback a polling (funciona siempre, incluso sin URL pública)
+        logger.info(f"🚀 @{BOT_NAME} arrancado — Modo POLLING (fallback)")
+        # Arrancar Flask en background para health check
+        threading.Thread(
+            target=lambda: app.run(host="0.0.0.0", port=PORT, debug=False),
+            daemon=True,
+        ).start()
+        # Polling en main thread
+        run_polling()

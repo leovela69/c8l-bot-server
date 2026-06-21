@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: leovelabot-dual
+    name: c8l-bot-server
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -9,21 +9,13 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_API_KEY_2
+        sync: false
+      - key: HUGGINGFACE_TOKEN
+        sync: false
       - key: ADMIN_CHAT_ID
         sync: false
-      - key: WHATSAPP_TOKEN
-        sync: false
-      - key: WHATSAPP_PHONE_ID
-        sync: false
-      - key: WA_VERIFY_TOKEN
-        value: "c8l_leovela_2026"
-      - key: ADMIN_PHONE
-        value: "34611636294"
       - key: PORT
         value: "8080"
-      - key: TEMP_DIR
-        value: "/tmp/leovelabot_videos"
-    disk:
-      name: bot-memory
-      mountPath: /app/agents/memory_data
-      sizeGB: 1
+      - key: RENDER_SERVICE_NAME
+        value: "c8l-bot-server"
