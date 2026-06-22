@@ -141,11 +141,43 @@ def get_history_text(chat_id, limit=20):
 # ---------------------------------------------------------------------------
 # PDF Generator
 # ---------------------------------------------------------------------------
+import re
+
+def _strip_emojis(text):
+    """Elimina emojis y caracteres no-ASCII problematicos para PDF."""
+    # Eliminar emojis (rangos Unicode de emojis)
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F680-\U0001F6FF"  # transport & map
+        "\U0001F1E0-\U0001F1FF"  # flags
+        "\U00002702-\U000027B0"  # dingbats
+        "\U000024C2-\U0001F251"  # misc
+        "\U0001f926-\U0001f937"
+        "\U00010000-\U0010ffff"
+        "\u2640-\u2642"
+        "\u2600-\u2B55"
+        "\u200d"
+        "\u23cf"
+        "\u23e9"
+        "\u231a"
+        "\ufe0f"
+        "\u3030"
+        "]+", flags=re.UNICODE
+    )
+    return emoji_pattern.sub("", text)
+
+
 def generate_pdf(content, title="Documento C8L"):
-    """Genera PDF real con fpdf2."""
+    """Genera PDF real con fpdf2. Limpia emojis automaticamente."""
     try:
         from fpdf import FPDF
         from fpdf.enums import XPos, YPos
+
+        # Limpiar emojis del contenido y titulo
+        content = _strip_emojis(content)
+        title = _strip_emojis(title)
 
         pdf = FPDF()
         pdf.add_page()
@@ -177,7 +209,9 @@ def generate_pdf(content, title="Documento C8L"):
         pdf.cell(0, 8, "Generado por @leon_leo_bot - C8L Agency",
                  new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
         return pdf.output()
-    except ImportError:
+    except Exception as e:
+        # Fallback: enviar como texto plano si PDF falla
+        logger.warning(f"PDF generation failed: {e}")
         header = f"{'='*50}\n  {title}\n  C8L Agency\n{'='*50}\n\n"
         return (header + content).encode("utf-8")
 
