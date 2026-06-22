@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --c8l-gold: #D4AF37;
+  --c8l-black: #0A0A0A;
+  --c8l-purple: #8A2BE2;
+  --c8l-pink: #FF69B4;
+  --c8l-cyan: #00F3FF;
+}
+
+body { background: var(--c8l-black); color: white; font-family: 'Inter', sans-serif; }
+h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: var(--c8l-purple); border-radius: 3px; }
+
+.neon-gold { text-shadow: 0 0 10px var(--c8l-gold), 0 0 20px var(--c8l-gold), 0 0 40px var(--c8l-gold); }
+.neon-purple { text-shadow: 0 0 10px var(--c8l-purple), 0 0 20px var(--c8l-purple); }
+.neon-cyan { text-shadow: 0 0 10px var(--c8l-cyan), 0 0 20px var(--c8l-cyan); }
+
+.glass { background: rgba(26, 26, 46, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.2); }
+.glass-dark { background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(138, 43, 226, 0.3); }
+
+.casino-card { transition: all 0.3s ease; }
+.casino-card:hover { transform: perspective(1000px) rotateY(5deg) translateY(-5px); box-shadow: 0 20px 40px rgba(138, 43, 226, 0.3); }
+
+@keyframes rouletteSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.roulette-spinning { animation: rouletteSpin 0.3s linear infinite; }
