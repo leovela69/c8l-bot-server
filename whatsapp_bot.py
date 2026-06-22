@@ -37,6 +37,7 @@ from pantheon.slaves.hefesto import Hefesto
 from pantheon.slaves.artemisa import Artemisa
 from pantheon.slaves.atenea import Atenea
 from pantheon.slaves.estia import Estia
+from pantheon.slaves.guardian import Guardian
 
 # ---------------------------------------------------------------------------
 # Inicializar agentes
@@ -51,8 +52,9 @@ hefesto = Hefesto()
 artemisa = Artemisa()
 atenea = Atenea()
 estia = Estia()
+guardian = Guardian()
 
-logger.info("🏛️ Panteon inicializado — 11 agentes activos")
+logger.info("🏛️ Panteon inicializado — 11 agentes + Guardian activos")
 
 
 # ---------------------------------------------------------------------------
@@ -638,6 +640,102 @@ def main():
         else:
             tg_send(msg.chat.id, "❌ No pude crear el articulo.")
         estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "articulo", "atenea")
+
+    # === COMANDOS DE MODERACION (C8L Guardian) ===
+
+    def _is_admin(msg):
+        return str(msg.from_user.id) == str(ADMIN_CHAT_ID)
+
+    @bot.message_handler(commands=["warn"])
+    def cmd_warn(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin puede usar este comando.")
+        if not msg.reply_to_message:
+            return bot.reply_to(msg, "Uso: Responde al mensaje del usuario con /warn [motivo]")
+        target = msg.reply_to_message.from_user
+        reason = msg.text.replace("/warn", "").strip() or "Comportamiento inadecuado"
+        result = guardian.warn_user(target.id, target.first_name, reason, msg.from_user.first_name)
+        tg_send(msg.chat.id, result["message"], parse_mode="Markdown")
+        if result.get("auto_ban"):
+            tg_send(msg.chat.id, "\U0001f6a8 AUTO-BAN: 3 advertencias. Sancion 3 dias aplicada.", parse_mode="Markdown")
+
+    @bot.message_handler(commands=["ban"])
+    def cmd_ban(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin puede usar este comando.")
+        if not msg.reply_to_message:
+            return bot.reply_to(msg, "Uso: Responde con /ban 3d|7d|30d|perm [motivo]")
+        target = msg.reply_to_message.from_user
+        if str(target.id) == str(ADMIN_CHAT_ID):
+            return bot.reply_to(msg, "No puedes banearte a ti mismo.")
+        parts = msg.text.replace("/ban", "").strip().split(None, 1)
+        duration = parts[0] if parts else "3d"
+        reason = parts[1] if len(parts) > 1 else "Infraccion de normas"
+        if duration not in ["3d", "7d", "30d", "perm"]:
+            return bot.reply_to(msg, f"Duracion invalida: {duration}. Usa: 3d, 7d, 30d, perm")
+        result = guardian.ban_user(target.id, target.first_name, duration, reason, msg.from_user.first_name)
+        if result["success"]:
+            tg_send(msg.chat.id, result["message"], parse_mode="Markdown")
+            try:
+                tg_send(target.id, result["message"], parse_mode="Markdown")
+            except: pass
+            try:
+                bot.restrict_chat_member(msg.chat.id, target.id,
+                    until_date=int(time.time()) + (result["sanction_data"]["expires_at"] - time.time() if result["sanction_data"]["expires_at"] > 0 else 366*86400),
+                    can_send_messages=False, can_send_media_messages=False, can_send_other_messages=False)
+            except: pass
+
+    @bot.message_handler(commands=["unban"])
+    def cmd_unban(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        if msg.reply_to_message:
+            target_id = msg.reply_to_message.from_user.id
+        else:
+            parts = msg.text.replace("/unban", "").strip()
+            if parts.isdigit():
+                target_id = int(parts)
+            else:
+                return bot.reply_to(msg, "Uso: Responde o /unban [user_id]")
+        result = guardian.unban_user(target_id, msg.from_user.first_name)
+        tg_send(msg.chat.id, result["message"], parse_mode="Markdown")
+        if result["success"]:
+            try:
+                bot.restrict_chat_member(msg.chat.id, target_id, can_send_messages=True, can_send_media_messages=True, can_send_other_messages=True)
+            except: pass
+
+    @bot.message_handler(commands=["banlist"])
+    def cmd_banlist(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        tg_send(msg.chat.id, guardian.get_ban_list(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["infracciones"])
+    def cmd_infracciones(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        if msg.reply_to_message:
+            target_id = msg.reply_to_message.from_user.id
+        else:
+            parts = msg.text.replace("/infracciones", "").strip()
+            target_id = int(parts) if parts.isdigit() else msg.from_user.id
+        tg_send(msg.chat.id, guardian.get_user_infractions(target_id), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["modlog"])
+    def cmd_modlog(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        tg_send(msg.chat.id, guardian.get_mod_log(), parse_mode="Markdown")
+
+    # === Middleware: bloquear usuarios baneados ===
+    @bot.message_handler(func=lambda m: guardian.is_banned(m.from_user.id)["banned"],
+                         content_types=["text", "photo", "video", "audio", "document", "sticker"])
+    def handle_banned(msg):
+        ban = guardian.is_banned(msg.from_user.id)["sanction_data"]
+        try:
+            bot.reply_to(msg, f"\U0001f6ab Cuenta suspendida hasta: {ban.get('end_date','PERMANENTE')}\nContacto: moderacion@c8l.agency")
+            bot.delete_message(msg.chat.id, msg.message_id)
+        except: pass
 
     # === MENSAJE LIBRE (Zeus orquesta) ===
 
