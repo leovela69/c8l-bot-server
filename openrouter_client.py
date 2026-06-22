@@ -1,0 +1,222 @@
+# -*- coding: utf-8 -*-
+"""
+🏛️ OpenRouter Client — Motor unificado del Panteon
+Un solo cliente para llamar a cualquier modelo via OpenRouter.
+Fallback a NVIDIA si OpenRouter falla.
+"""
+
+import requests
+import logging
+import time
+from config import (
+    OPENROUTER_API_KEY, OPENROUTER_BASE_URL,
+    NVIDIA_API_KEY, NVIDIA_BASE_URL, NVIDIA_MODEL,
+    MODELS
+)
+
+logger = logging.getLogger("c8l.openrouter")
+
+# Rate limiting simple
+_last_call_time = 0
+MIN_CALL_INTERVAL = 0.5  # 500ms entre llamadas
+
+
+def call_openrouter(prompt, system_prompt="", agent_name="zeus", temperature=0.85, max_tokens=4096):
+    """
+    Llama a OpenRouter con el modelo asignado al agente.
+
+    Args:
+        prompt: El mensaje del usuario
+        system_prompt: Instrucciones del sistema para el agente
+        agent_name: Nombre del agente (zeus, minerva, vulcano, etc.)
+        temperature: Creatividad (0.0 - 1.0)
+        max_tokens: Maximo de tokens en la respuesta
+
+    Returns:
+        str: Respuesta del modelo o None si falla todo
+    """
+    global _last_call_time
+
+    # Rate limiting
+    elapsed = time.time() - _last_call_time
+    if elapsed < MIN_CALL_INTERVAL:
+        time.sleep(MIN_CALL_INTERVAL - elapsed)
+    _last_call_time = time.time()
+
+    # Seleccionar modelo para este agente
+    model = MODELS.get(agent_name, MODELS["fallback"])
+
+    # Construir mensajes
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    # Intentar OpenRouter
+    try:
+        response = _call_openrouter_api(messages, model, temperature, max_tokens)
+        if response:
+            logger.info(f"[{agent_name.upper()}] OK via OpenRouter ({model})")
+            return response
+    except Exception as e:
+        logger.warning(f"[{agent_name.upper()}] OpenRouter ({model}) fallo: {str(e)[:80]}")
+
+    # Retry con modelo fallback
+    if model != MODELS["fallback"]:
+        try:
+            response = _call_openrouter_api(messages, MODELS["fallback"], temperature, max_tokens)
+            if response:
+                logger.info(f"[{agent_name.upper()}] OK via OpenRouter fallback")
+                return response
+        except Exception as e:
+            logger.warning(f"[{agent_name.upper()}] OpenRouter fallback fallo: {str(e)[:80]}")
+
+    # Ultimo recurso: NVIDIA
+    try:
+        response = _call_nvidia_api(messages, temperature, max_tokens)
+        if response:
+            logger.info(f"[{agent_name.upper()}] OK via NVIDIA backup")
+            return response
+    except Exception as e:
+        logger.warning(f"[{agent_name.upper()}] NVIDIA backup fallo: {str(e)[:80]}")
+
+    logger.error(f"[{agent_name.upper()}] TODOS LOS MODELOS FALLARON")
+    return None
+
+
+def call_openrouter_with_history(messages, agent_name="zeus", temperature=0.85, max_tokens=4096):
+    """
+    Llama a OpenRouter con historial completo de mensajes.
+    Util para conversaciones multi-turno.
+
+    Args:
+        messages: Lista de {"role": "system/user/assistant", "content": "..."}
+        agent_name: Nombre del agente
+        temperature: Creatividad
+        max_tokens: Maximo tokens
+
+    Returns:
+        str: Respuesta del modelo o None
+    """
+    global _last_call_time
+
+    elapsed = time.time() - _last_call_time
+    if elapsed < MIN_CALL_INTERVAL:
+        time.sleep(MIN_CALL_INTERVAL - elapsed)
+    _last_call_time = time.time()
+
+    model = MODELS.get(agent_name, MODELS["fallback"])
+
+    try:
+        response = _call_openrouter_api(messages, model, temperature, max_tokens)
+        if response:
+            return response
+    except Exception as e:
+        logger.warning(f"[{agent_name.upper()}] OpenRouter fallo: {str(e)[:80]}")
+
+    # Fallback
+    try:
+        response = _call_openrouter_api(messages, MODELS["fallback"], temperature, max_tokens)
+        if response:
+            return response
+    except Exception as e:
+        logger.warning(f"[{agent_name.upper()}] Fallback fallo: {str(e)[:80]}")
+
+    # NVIDIA
+    try:
+        response = _call_nvidia_api(messages, temperature, max_tokens)
+        if response:
+            return response
+    except:
+        pass
+
+    return None
+
+
+def _call_openrouter_api(messages, model, temperature, max_tokens):
+    """Llamada directa a la API de OpenRouter."""
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://c8lagency.com",
+        "X-Title": "C8L Agency Bot",
+    }
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "stream": False,
+    }
+
+    r = requests.post(
+        f"{OPENROUTER_BASE_URL}/chat/completions",
+        headers=headers,
+        json=payload,
+        timeout=90
+    )
+
+    if r.status_code == 429:
+        # Rate limited — esperar y reintentar una vez
+        time.sleep(2)
+        r = requests.post(
+            f"{OPENROUTER_BASE_URL}/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=90
+        )
+
+    r.raise_for_status()
+    data = r.json()
+
+    # Extraer respuesta
+    if "choices" in data and len(data["choices"]) > 0:
+        content = data["choices"][0].get("message", {}).get("content", "")
+        if content:
+            return content.strip()
+
+    # Algunos modelos devuelven error en el body
+    if "error" in data:
+        raise Exception(f"API error: {data['error']}")
+
+    return None
+
+
+def _call_nvidia_api(messages, temperature, max_tokens):
+    """Llamada directa a NVIDIA como backup."""
+    headers = {
+        "Authorization": f"Bearer {NVIDIA_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": NVIDIA_MODEL,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "stream": False,
+    }
+
+    r = requests.post(
+        f"{NVIDIA_BASE_URL}/chat/completions",
+        headers=headers,
+        json=payload,
+        timeout=60
+    )
+    r.raise_for_status()
+    data = r.json()
+
+    if "choices" in data and len(data["choices"]) > 0:
+        return data["choices"][0]["message"]["content"].strip()
+
+    return None
+
+
+def test_connection():
+    """Prueba rapida de conectividad con OpenRouter."""
+    try:
+        result = call_openrouter("Di 'OK' si me escuchas.", agent_name="zeus", max_tokens=10)
+        return bool(result)
+    except:
+        return False

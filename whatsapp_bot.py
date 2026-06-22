@@ -1,67 +1,126 @@
 # -*- coding: utf-8 -*-
 """
-@leon_leo_bot — Bot principal de C8L Agency
-Funciones: Chat, Imagenes, Video (guiones), Codigo, PDF, Prompts musicales, AION
+🏛️ C8L AGENT v17.0 — PANTEON MASTER
+@leon_leo_bot — Bot principal de Telegram
+
+Arquitectura: 1 Bot Maestro (Zeus) + 2 Skills Maestros (Minerva, Vulcano)
+              + 8 Bots Esclavos (Aries, Hermes, Apolo, Ares, Hefesto, Artemisa, Atenea, Estia)
+
+Motor: OpenRouter (DeepSeek V3 + Qwen3) — 100% gratuito
 """
 
-import io, os, sys, logging, asyncio, threading, requests, json, time
+import io, os, sys, logging, threading, requests, json, time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import *
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s", handlers=[logging.StreamHandler(sys.stdout)])
-logger = logging.getLogger("leovelabot")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger("c8l.main")
 
 # ---------------------------------------------------------------------------
-# Async loop
+# Import Panteon
 # ---------------------------------------------------------------------------
-_loop = asyncio.new_event_loop()
-threading.Thread(target=_loop.run_forever, daemon=True).start()
+from pantheon.zeus import analyze_intent, get_status_report
+from pantheon.minerva import Minerva
+from pantheon.vulcano import Vulcano
+from pantheon.slaves.hermes_bot import Hermes
+from pantheon.slaves.apolo import Apolo
+from pantheon.slaves.ares import Ares
+from pantheon.slaves.aries import Aries
+from pantheon.slaves.hefesto import Hefesto
+from pantheon.slaves.artemisa import Artemisa
+from pantheon.slaves.atenea import Atenea
+from pantheon.slaves.estia import Estia
 
-def run_async(coro):
-    return asyncio.run_coroutine_threadsafe(coro, _loop).result(timeout=120)
+# ---------------------------------------------------------------------------
+# Inicializar agentes
+# ---------------------------------------------------------------------------
+minerva = Minerva()
+vulcano = Vulcano()
+hermes = Hermes()
+apolo = Apolo()
+ares_bot = Ares()
+aries = Aries()
+hefesto = Hefesto()
+artemisa = Artemisa()
+atenea = Atenea()
+estia = Estia()
+
+logger.info("🏛️ Panteon inicializado — 11 agentes activos")
+
 
 # ---------------------------------------------------------------------------
 # Telegram helpers
 # ---------------------------------------------------------------------------
 TG_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
+
 def tg_send(chat_id, text, parse_mode=None):
+    """Envia mensaje de texto (auto-split si >4096)."""
     while text:
         payload = {"chat_id": chat_id, "text": text[:4096]}
         if parse_mode:
             payload["parse_mode"] = parse_mode
-        requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
+        try:
+            requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
+        except:
+            pass
         text = text[4096:]
 
+
 def tg_send_photo(chat_id, photo_bytes, caption=""):
+    """Envia foto."""
     files = {"photo": ("image.jpg", io.BytesIO(photo_bytes), "image/jpeg")}
     data = {"chat_id": chat_id, "caption": caption[:1024]}
     requests.post(f"{TG_API}/sendPhoto", data=data, files=files, timeout=30)
 
+
 def tg_send_document(chat_id, doc_bytes, filename, caption=""):
+    """Envia documento/archivo."""
     files = {"document": (filename, io.BytesIO(doc_bytes), "application/octet-stream")}
     data = {"chat_id": chat_id, "caption": caption[:1024]}
     requests.post(f"{TG_API}/sendDocument", data=data, files=files, timeout=30)
 
+
 def tg_typing(chat_id):
-    requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": "typing"}, timeout=5)
+    """Muestra 'escribiendo...'"""
+    try:
+        requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": "typing"}, timeout=5)
+    except:
+        pass
+
 
 def tg_upload_action(chat_id):
-    requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": "upload_photo"}, timeout=5)
+    """Muestra 'subiendo foto...'"""
+    try:
+        requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": "upload_photo"}, timeout=5)
+    except:
+        pass
+
 
 def tg_doc_action(chat_id):
-    requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": "upload_document"}, timeout=5)
+    """Muestra 'subiendo documento...'"""
+    try:
+        requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": "upload_document"}, timeout=5)
+    except:
+        pass
+
 
 # ---------------------------------------------------------------------------
-# History
+# History (conversacion)
 # ---------------------------------------------------------------------------
 _history = {}
 
+
 def get_history(chat_id):
     return _history.setdefault(chat_id, [])
+
 
 def add_history(chat_id, role, text):
     h = get_history(chat_id)
@@ -69,192 +128,21 @@ def add_history(chat_id, role, text):
     if len(h) > MAX_HISTORY_PER_USER * 2:
         _history[chat_id] = h[-MAX_HISTORY_PER_USER:]
 
-# ---------------------------------------------------------------------------
-# LLM Providers (cascading fallback)
-# ---------------------------------------------------------------------------
 
-def call_nvidia(prompt, system_prompt=""):
-    """NVIDIA DeepSeek V4 Pro — modelo principal."""
-    headers = {"Authorization": f"Bearer {NVIDIA_API_KEY}", "Content-Type": "application/json"}
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-    r = requests.post(f"{NVIDIA_BASE_URL}/chat/completions", headers=headers,
-        json={"model": NVIDIA_MODEL, "messages": messages, "temperature": 0.85, "max_tokens": 4096, "stream": False}, timeout=60)
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"].strip()
-
-
-def call_gemini(prompt, system_prompt=""):
-    """Google Gemini — backup."""
-    for key in [GEMINI_API_KEY, GEMINI_API_KEY_2]:
-        if not key:
-            continue
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
-            parts = []
-            if system_prompt:
-                parts.append({"text": f"SISTEMA: {system_prompt}\n\nUSUARIO: {prompt}"})
-            else:
-                parts.append({"text": prompt})
-            payload = {"contents": [{"parts": parts}], "generationConfig": {"temperature": 0.85, "maxOutputTokens": 4096}}
-            r = requests.post(url, json=payload, timeout=60)
-            r.raise_for_status()
-            data = r.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"].strip()
-        except Exception as e:
-            logger.warning(f"Gemini key failed: {str(e)[:60]}")
-            continue
-    raise Exception("All Gemini keys failed")
-
-
-def call_groq(prompt, system_prompt=""):
-    """Groq Llama — rapido y gratis (si hay key)."""
-    if not GROQ_API_KEY:
-        raise Exception("No Groq API key configured")
-    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-    r = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers,
-        json={"model": GROQ_MODEL, "messages": messages, "temperature": 0.85, "max_tokens": 4096}, timeout=30)
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"].strip()
-
-
-def generate_text(prompt, system_prompt=""):
-    """Genera texto con cascada: NVIDIA -> Gemini -> Groq."""
-    errors = []
-    # 1. NVIDIA (principal)
-    try:
-        return call_nvidia(prompt, system_prompt)
-    except Exception as e:
-        errors.append(f"NVIDIA: {str(e)[:60]}")
-        logger.warning(errors[-1])
-
-    # 2. Gemini (backup)
-    try:
-        return call_gemini(prompt, system_prompt)
-    except Exception as e:
-        errors.append(f"Gemini: {str(e)[:60]}")
-        logger.warning(errors[-1])
-
-    # 3. Groq (si hay key)
-    try:
-        return call_groq(prompt, system_prompt)
-    except Exception as e:
-        errors.append(f"Groq: {str(e)[:60]}")
-        logger.warning(errors[-1])
-
-    logger.error(f"ALL LLMs FAILED: {errors}")
-    return None
-
-
-# ---------------------------------------------------------------------------
-# CHAT
-# ---------------------------------------------------------------------------
-def process_chat(text, chat_id, user_name):
-    """Procesa mensaje de chat con historial."""
+def get_history_text(chat_id, limit=20):
+    """Historial como texto para contexto."""
     history = get_history(chat_id)
-    ht = "\n".join(f"{'Usuario' if m['role']=='user' else 'Leo'}: {m['text']}" for m in history[-20:])
-    prompt = f"El usuario se llama {user_name}.\n"
-    if ht:
-        prompt += f"Historial reciente:\n{ht}\n\n"
-    prompt += f"Usuario: {text}\n\nLeo:"
-
-    reply = generate_text(prompt, SYSTEM_PROMPT)
-    if reply:
-        add_history(chat_id, "user", text)
-        add_history(chat_id, "assistant", reply)
-    return reply
+    return "\n".join(
+        f"{'Usuario' if m['role'] == 'user' else 'Leo'}: {m['text']}"
+        for m in history[-limit:]
+    )
 
 
 # ---------------------------------------------------------------------------
-# IMAGENES
-# ---------------------------------------------------------------------------
-def generate_image(prompt):
-    """Genera imagen con Pollinations.ai (gratis, sin API key)."""
-    try:
-        from urllib.parse import quote
-        enhanced = f"high quality, detailed, professional: {prompt}"
-        url = f"https://image.pollinations.ai/prompt/{quote(enhanced)}?width=1024&height=1024&nologo=true"
-        r = requests.get(url, timeout=90)
-        if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
-            return r.content
-    except Exception as e:
-        logger.error(f"Pollinations error: {e}")
-
-    # Fallback: HuggingFace SDXL
-    try:
-        headers = {"Authorization": f"Bearer {HUGGINGFACE_TOKEN}"}
-        payload = {"inputs": prompt}
-        r = requests.post("https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-            headers=headers, json=payload, timeout=90)
-        if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
-            return r.content
-    except Exception as e:
-        logger.error(f"HuggingFace error: {e}")
-
-    return None
-
-
-# ---------------------------------------------------------------------------
-# CODIGO
-# ---------------------------------------------------------------------------
-def generate_code(prompt):
-    """Genera codigo funcional y lo devuelve listo para archivo."""
-    code_prompt = f"""Genera SOLO codigo basado en esta peticion: {prompt}
-
-REGLAS:
-- Si es un juego o app web: genera UN archivo HTML completo con CSS y JS inline
-- Si es un script: genera el codigo Python/JS completo
-- NO expliques nada, SOLO el codigo
-- Empieza directamente con el codigo
-- El codigo debe ser FUNCIONAL y COMPLETO
-- Sin markdown, sin bloques de codigo, solo codigo puro"""
-
-    code = generate_text(code_prompt, CODE_SYSTEM_PROMPT)
-    if not code:
-        return None
-
-    # Limpiar markdown si el modelo lo agrego
-    if code.startswith("```"):
-        lines = code.split("\n")
-        lines = lines[1:]
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        code = "\n".join(lines)
-
-    return code
-
-
-# ---------------------------------------------------------------------------
-# VIDEO (guion + storyboard)
-# ---------------------------------------------------------------------------
-def generate_video_script(prompt):
-    """Genera guion cinematografico completo con storyboard textual."""
-    video_prompt = f"""Crea un guion completo para este video: {prompt}
-
-Incluye:
-1. CONCEPTO (1 linea)
-2. DURACION ESTIMADA
-3. GUION escena por escena (con tiempos)
-4. STORYBOARD TEXTUAL: describe cada frame como imagen
-5. MUSICA sugerida (genero, BPM, mood)
-6. PROMPTS PARA IA: prompts listos para generar cada escena con Midjourney/DALL-E
-
-Se cinematografico y detallado."""
-
-    return generate_text(video_prompt, VIDEO_SYSTEM_PROMPT)
-
-
-# ---------------------------------------------------------------------------
-# PDF
+# PDF Generator
 # ---------------------------------------------------------------------------
 def generate_pdf(content, title="Documento C8L"):
-    """Genera un PDF real con formato usando fpdf2."""
+    """Genera PDF real con fpdf2."""
     try:
         from fpdf import FPDF
         from fpdf.enums import XPos, YPos
@@ -263,18 +151,15 @@ def generate_pdf(content, title="Documento C8L"):
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=15)
 
-        # Titulo
         pdf.set_font("Helvetica", "B", 18)
         pdf.cell(0, 12, title, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
         pdf.ln(5)
-
-        # Fecha
         pdf.set_font("Helvetica", "I", 10)
-        pdf.cell(0, 8, f"C8L Agency - {datetime.now().strftime('%d/%m/%Y %H:%M')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+        pdf.cell(0, 8, f"C8L Agency - {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+                 new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
         pdf.ln(10)
-
-        # Contenido
         pdf.set_font("Helvetica", "", 11)
+
         for line in content.split("\n"):
             line = line.strip()
             if not line:
@@ -287,132 +172,258 @@ def generate_pdf(content, title="Documento C8L"):
             else:
                 pdf.multi_cell(0, 6, line)
 
-        # Footer
         pdf.ln(10)
         pdf.set_font("Helvetica", "I", 9)
-        pdf.cell(0, 8, "Generado por @leon_leo_bot - C8L Agency", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
-
+        pdf.cell(0, 8, "Generado por @leon_leo_bot - C8L Agency",
+                 new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
         return pdf.output()
     except ImportError:
-        # Si no hay fpdf2, generar formato texto enriquecido
-        logger.warning("fpdf2 no disponible, generando TXT")
-        header = f"{'='*60}\n  {title}\n  C8L Agency - {datetime.now().strftime('%d/%m/%Y %H:%M')}\n{'='*60}\n\n"
-        footer = f"\n\n{'='*60}\nGenerado por @leon_leo_bot - C8L Agency\n{'='*60}"
-        return (header + content + footer).encode("utf-8")
+        header = f"{'='*50}\n  {title}\n  C8L Agency\n{'='*50}\n\n"
+        return (header + content).encode("utf-8")
 
 
 # ---------------------------------------------------------------------------
-# PROMPTS MUSICALES
+# DISPATCH — Ejecuta la accion del agente asignado por Zeus
 # ---------------------------------------------------------------------------
-def generate_music_prompt(prompt):
-    """Genera prompt optimizado para Suno/Udio."""
-    music_prompt = f"""El usuario quiere crear esta cancion/musica: {prompt}
+def dispatch_to_agent(intent_data, text, chat_id, user_name):
+    """
+    Ejecuta la tarea en el agente correcto segun la decision de Zeus.
 
-Genera un prompt completo y optimizado para Suno AI o Udio, incluyendo:
-- El prompt principal (optimizado para la IA musical)
-- Estilo/genero especifico
-- BPM sugerido
-- Tipo de voz
-- Estructura (verso, coro, bridge, etc.)
-- Letra completa si aplica (con tags [Verse], [Chorus], etc.)
-- Tips para mejores resultados"""
+    Args:
+        intent_data: dict de Zeus con primary_agent, task_description, etc.
+        text: mensaje original del usuario
+        chat_id: ID del chat
+        user_name: nombre del usuario
 
-    return generate_text(music_prompt, MUSIC_SYSTEM_PROMPT)
+    Returns:
+        None (envia respuesta directamente por Telegram)
+    """
+    agent = intent_data.get("primary_agent", "hermes")
+    task = intent_data.get("task_description", text)
+    intent = intent_data.get("intent", "chat")
 
+    logger.info(f"  Dispatch -> {agent.upper()} | Task: {task[:60]}")
 
-# ---------------------------------------------------------------------------
-# INTENT DETECTION
-# ---------------------------------------------------------------------------
-def detect_intent(text):
-    """Detecta que quiere el usuario: image, code, video, pdf, prompt, status, chat."""
-    t = text.lower().strip()
-
-    # Comandos directos
-    if t in ["/status", "/aion", "/equipo"]:
-        return "status"
-
-    img_kw = ["imagen", "dibuja", "genera imagen", "foto", "picture", "draw",
-              "ilustra", "retrato", "logo", "banner", "disena", "diseña",
-              "genera una imagen", "crea una imagen", "hazme una imagen",
-              "genera un logo", "haz un dibujo"]
-    code_kw = ["juego", "game", "codigo", "programa", "script", "app", "html",
-               "snake", "tetris", "web", "pagina", "crea un juego", "programa un",
-               "haz un juego", "genera codigo", "crea una app", "pong", "flappy"]
-    video_kw = ["video", "clip", "animacion", "cortometraje", "guion para video",
-                "storyboard", "crea un video", "haz un video"]
-    pdf_kw = ["pdf", "documento", "informe", "reporte", "genera un pdf",
-              "hazme un documento", "crea un informe", "ensayo", "articulo formal"]
-    prompt_kw = ["prompt para suno", "prompt para udio", "cancion", "letra de",
-                 "crea una cancion", "escribe una cancion", "genera musica",
-                 "prompt musical", "haz un beat", "crea un tema"]
-
-    if any(kw in t for kw in img_kw):
-        return "image"
-    elif any(kw in t for kw in code_kw):
-        return "code"
-    elif any(kw in t for kw in video_kw):
-        return "video"
-    elif any(kw in t for kw in pdf_kw):
-        return "pdf"
-    elif any(kw in t for kw in prompt_kw):
-        return "prompt"
-    else:
-        return "chat"
-
-
-# ---------------------------------------------------------------------------
-# AION STATUS
-# ---------------------------------------------------------------------------
-def get_aion_status():
-    """Obtiene el estado del sistema AION."""
     try:
-        from bots.aion.coordinator import AION
-        aion = AION()
-        report = aion.get_telegram_report()
-        return report
+        if agent == "hermes":
+            # Chat conversacional
+            history_text = get_history_text(chat_id)
+            reply = hermes.chat(text, user_name, history_text)
+            if reply:
+                add_history(chat_id, "user", text)
+                add_history(chat_id, "assistant", reply)
+                tg_send(chat_id, reply)
+            else:
+                tg_send(chat_id, "🔄 Error temporal. Intenta en unos segundos.")
+
+        elif agent == "vulcano":
+            # Creacion general (detecta tipo automaticamente)
+            tg_typing(chat_id)
+            result = vulcano.create(text)
+            _send_creation_result(chat_id, result)
+
+        elif agent == "apolo":
+            # Musica
+            tg_typing(chat_id)
+            tg_send(chat_id, "🎵 Componiendo...")
+            reply = apolo.compose(text)
+            if reply:
+                add_history(chat_id, "user", text)
+                add_history(chat_id, "assistant", reply)
+                tg_send(chat_id, reply)
+            else:
+                tg_send(chat_id, "❌ No pude generar la musica.")
+
+        elif agent == "ares":
+            # Video
+            tg_typing(chat_id)
+            tg_send(chat_id, "🎬 Creando guion y storyboard...")
+            reply = ares_bot.create_script(text)
+            if reply:
+                if len(reply) > 3000:
+                    pdf_bytes = generate_pdf(reply, f"Guion: {text[:40]}")
+                    tg_send_document(chat_id, pdf_bytes, "guion_c8l.pdf",
+                                     caption=f"🎬 Guion: {text[:60]}")
+                else:
+                    tg_send(chat_id, reply)
+                # Bonus: imagen de primera escena
+                tg_upload_action(chat_id)
+                img = vulcano._generate_image_pollinations(f"cinematic scene: {text}")
+                if img:
+                    tg_send_photo(chat_id, img, caption="🎥 Preview escena 1")
+            else:
+                tg_send(chat_id, "❌ No pude generar el guion.")
+
+        elif agent == "hefesto":
+            # Diseno / Codigo / Juegos
+            tg_typing(chat_id)
+            tg_send(chat_id, "🖥️ Generando...")
+            t = text.lower()
+            if any(kw in t for kw in ["juego", "game", "snake", "tetris", "pong"]):
+                result = hefesto.create_game(text)
+            elif any(kw in t for kw in ["landing", "pagina", "web"]):
+                result = hefesto.create_landing(text)
+            else:
+                result = hefesto.create_component(text)
+            _send_creation_result(chat_id, result)
+
+        elif agent == "artemisa":
+            # Backend / API
+            tg_typing(chat_id)
+            tg_send(chat_id, "⚙️ Generando...")
+            t = text.lower()
+            if any(kw in t for kw in ["api", "endpoint", "rest"]):
+                result = artemisa.create_api(text)
+            else:
+                result = artemisa.create_script(text)
+            _send_creation_result(chat_id, result)
+
+        elif agent == "atenea":
+            # Estrategia / PDF / Articulos
+            tg_typing(chat_id)
+            t = text.lower()
+            if any(kw in t for kw in ["pdf", "documento", "informe", "reporte"]):
+                tg_send(chat_id, "📄 Generando documento...")
+                content = atenea.generate_pdf_content(text)
+                if content:
+                    title = text[:50].replace("pdf", "").replace("documento", "").strip()
+                    pdf_bytes = generate_pdf(content, title.title() or "Documento C8L")
+                    ext = "pdf" if pdf_bytes[:4] == b"%PDF" else "txt"
+                    tg_send_document(chat_id, pdf_bytes, f"c8l_documento.{ext}",
+                                     caption=f"📄 {title.title()}")
+                else:
+                    tg_send(chat_id, "❌ No pude generar el documento.")
+            elif any(kw in t for kw in ["estrategia", "marketing", "plan"]):
+                tg_send(chat_id, "📊 Generando estrategia...")
+                reply = atenea.create_strategy(text)
+                if reply:
+                    tg_send(chat_id, reply)
+                else:
+                    tg_send(chat_id, "❌ No pude generar la estrategia.")
+            else:
+                tg_send(chat_id, "📝 Generando articulo...")
+                reply = atenea.create_article(text)
+                if reply:
+                    tg_send(chat_id, reply)
+                else:
+                    tg_send(chat_id, "❌ No pude generar el articulo.")
+
+        elif agent == "aries":
+            # Seguridad / Diagnostico
+            tg_typing(chat_id)
+            tg_send(chat_id, "🛡️ Escaneando...")
+            reply = aries.diagnose()
+            tg_send(chat_id, reply, parse_mode="Markdown")
+
+        elif agent == "minerva":
+            # Investigacion / Conocimiento
+            tg_typing(chat_id)
+            reply = minerva.research(text)
+            if reply:
+                add_history(chat_id, "user", text)
+                add_history(chat_id, "assistant", reply)
+                tg_send(chat_id, reply)
+            else:
+                tg_send(chat_id, "❌ No pude investigar eso.")
+
+        elif agent == "estia":
+            # Aprendizaje
+            lesson = text.replace("/aprender", "").strip()
+            if lesson:
+                result = estia.learn(lesson)
+                tg_send(chat_id, result)
+            else:
+                tg_send(chat_id, estia.get_stats())
+
+        else:
+            # Fallback a Hermes (chat)
+            history_text = get_history_text(chat_id)
+            reply = hermes.chat(text, user_name, history_text)
+            if reply:
+                add_history(chat_id, "user", text)
+                add_history(chat_id, "assistant", reply)
+                tg_send(chat_id, reply)
+            else:
+                tg_send(chat_id, "🔄 Error temporal.")
+
     except Exception as e:
-        return (
-            f"👑 AION Status:\n\n"
-            f"✅ Bot activo y funcionando\n"
-            f"🤖 Modelo: {NVIDIA_MODEL}\n"
-            f"🖼️ Imagenes: Pollinations.ai + HuggingFace\n"
-            f"💻 Codigo: Generacion de archivos\n"
-            f"🎬 Video: Guiones + Storyboard\n"
-            f"📄 PDF: Documentos con formato\n"
-            f"🎵 Musica: Prompts para Suno/Udio\n\n"
-            f"⏰ {datetime.now().strftime('%d/%m/%Y %H:%M')}"
-        )
+        logger.error(f"Error en dispatch [{agent}]: {e}", exc_info=True)
+        tg_send(chat_id, f"⚠️ Error en {agent}: {str(e)[:150]}")
+
+    # Registrar en Estia (aprendizaje)
+    try:
+        estia.record_interaction(chat_id, user_name, text, intent, agent)
+    except:
+        pass
 
 
 # ---------------------------------------------------------------------------
-# Health check
+# Helper: enviar resultado de creacion (file/image/text/error)
+# ---------------------------------------------------------------------------
+def _send_creation_result(chat_id, result):
+    """Envia el resultado de una creacion al chat."""
+    if not result:
+        tg_send(chat_id, "❌ Error en la creacion.")
+        return
+
+    rtype = result.get("type", "error")
+
+    if rtype == "text":
+        tg_send(chat_id, result["content"])
+    elif rtype == "image":
+        tg_upload_action(chat_id)
+        tg_send_photo(chat_id, result["content"], caption=result.get("caption", ""))
+    elif rtype == "file":
+        tg_doc_action(chat_id)
+        tg_send_document(chat_id, result["content"], result.get("filename", "archivo.txt"),
+                         caption=result.get("caption", ""))
+    elif rtype == "error":
+        tg_send(chat_id, f"❌ {result.get('content', 'Error desconocido')}")
+    else:
+        tg_send(chat_id, str(result.get("content", "Resultado no reconocido")))
+
+
+# ---------------------------------------------------------------------------
+# Health check server
 # ---------------------------------------------------------------------------
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
-        self.wfile.write(json.dumps({"status": "healthy", "bot": BOT_NAME, "time": time.time()}).encode())
-    def log_message(self, fmt, *args): return
+        info = {"status": "healthy", "bot": BOT_NAME, "version": "17.0",
+                "architecture": "PANTEON_MASTER", "agents": 11, "time": time.time()}
+        self.wfile.write(json.dumps(info).encode())
+
+    def log_message(self, fmt, *args):
+        return
 
 
 # ---------------------------------------------------------------------------
-# MAIN
+# MAIN — Telegram Bot con los 12 comandos del Panteon
 # ---------------------------------------------------------------------------
 def main():
     from telebot import TeleBot
 
-    logger.info("=" * 50)
+    logger.info("=" * 60)
+    logger.info("  🏛️ C8L AGENT v17.0 — PANTEON MASTER")
     logger.info("  @leon_leo_bot — C8L Agency")
-    logger.info("=" * 50)
-    logger.info(f"  Chat: NVIDIA ({NVIDIA_MODEL}) + Gemini backup")
-    logger.info(f"  Imagenes: Pollinations.ai + HuggingFace")
-    logger.info(f"  Codigo: Archivos reales (HTML/Python)")
-    logger.info(f"  Video: Guiones + Storyboard")
-    logger.info(f"  PDF: Documentos con formato")
-    logger.info(f"  Musica: Prompts para Suno/Udio")
-    logger.info(f"  AION: Sistema de monitoreo")
-    logger.info("=" * 50)
+    logger.info("=" * 60)
+    logger.info("  👑 Zeus (Director) — Online")
+    logger.info("  🧠 Minerva (Sabio) — Online")
+    logger.info("  🎨 Vulcano (Artesano) — Online")
+    logger.info("  🛡️ Aries (Guardian) — Online")
+    logger.info("  📢 Hermes (Comunicador) — Online")
+    logger.info("  🎵 Apolo (Musico) — Online")
+    logger.info("  🎬 Ares (Cineasta) — Online")
+    logger.info("  🖥️ Hefesto (Disenador) — Online")
+    logger.info("  ⚙️ Artemisa (Arquitecto) — Online")
+    logger.info("  📊 Atenea (Estratega) — Online")
+    logger.info("  🧬 Estia (Memoria) — Online")
+    logger.info("=" * 60)
+    logger.info(f"  Motor: OpenRouter (DeepSeek V3 + Qwen3)")
+    logger.info(f"  Health: puerto {PORT}")
+    logger.info("=" * 60)
 
     # Limpiar webhook viejo
     try:
@@ -420,211 +431,200 @@ def main():
     except:
         pass
 
-    # Health check server
-    threading.Thread(target=lambda: HTTPServer(("0.0.0.0", PORT), HealthHandler).serve_forever(), daemon=True).start()
-    logger.info(f"Health check en puerto {PORT}")
+    # Health check
+    threading.Thread(
+        target=lambda: HTTPServer(("0.0.0.0", PORT), HealthHandler).serve_forever(),
+        daemon=True
+    ).start()
 
     bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
     # Notificar admin
     try:
         bot.send_message(int(ADMIN_CHAT_ID),
-            "🚀 Bot ACTIVO — C8L Agency\n\n"
-            "Funciones operativas:\n"
-            "💬 Chat inteligente\n"
-            "🖼️ Imagenes (Pollinations + HF)\n"
-            "💻 Codigo/Juegos (archivos)\n"
-            "🎬 Video (guiones completos)\n"
-            "📄 PDF (documentos reales)\n"
-            "🎵 Prompts musicales (Suno/Udio)\n"
-            "👑 /status — Estado del sistema\n"
-            "🗑️ /clear — Limpiar historial")
+            "🏛️ *PANTEON MASTER v17.0* — ACTIVO\n\n"
+            "11 agentes operativos:\n"
+            "👑 Zeus | 🧠 Minerva | 🎨 Vulcano\n"
+            "🛡️ Aries | 📢 Hermes | 🎵 Apolo\n"
+            "🎬 Ares | 🖥️ Hefesto | ⚙️ Artemisa\n"
+            "📊 Atenea | 🧬 Estia\n\n"
+            "Motor: OpenRouter (gratuito)\n"
+            "Comandos: /help",
+            parse_mode="Markdown")
     except Exception as e:
         logger.warning(f"No pude notificar admin: {e}")
 
-    # === HANDLERS ===
+    # === COMANDOS ===
 
     @bot.message_handler(commands=["start"])
     def cmd_start(msg):
         bot.reply_to(msg,
-            f"👋 Hola {msg.from_user.first_name}! Soy Leo de C8L Agency.\n\n"
-            "Puedo hacer:\n"
-            "🖼️ *Imagenes* — \"genera una imagen de...\"\n"
-            "💻 *Codigo/Juegos* — \"crea un juego snake\"\n"
-            "🎬 *Video* — \"haz un video de...\"\n"
-            "📄 *PDF* — \"genera un informe sobre...\"\n"
-            "🎵 *Musica* — \"crea una cancion de...\"\n"
-            "💬 *Chat* — preguntame lo que quieras\n\n"
-            "Comandos:\n"
-            "/status — Estado del sistema\n"
-            "/clear — Limpiar historial\n\n"
-            "Escribeme lo que necesites! 🎯",
+            f"🏛️ *PANTEON MASTER v17.0*\n\n"
+            f"Hola {msg.from_user.first_name}! Soy el sistema multi-agente de C8L Agency.\n\n"
+            "Tengo 11 agentes especializados. Solo dime que necesitas "
+            "y Zeus (mi director) asignara al mejor agente:\n\n"
+            "🎵 Musica → Apolo\n"
+            "🎬 Video → Ares\n"
+            "🖼️ Imagenes → Vulcano\n"
+            "🖥️ Codigo/Juegos → Hefesto\n"
+            "📄 Documentos → Atenea\n"
+            "🛡️ Seguridad → Aries\n"
+            "💬 Chat → Hermes\n\n"
+            "Usa /help para ver todos los comandos.",
             parse_mode="Markdown")
-
-    @bot.message_handler(commands=["clear"])
-    def cmd_clear(msg):
-        _history.pop(msg.chat.id, None)
-        bot.reply_to(msg, "🗑️ Historial limpiado. Empecemos de nuevo!")
-
-    @bot.message_handler(commands=["status", "aion"])
-    def cmd_status(msg):
-        tg_typing(msg.chat.id)
-        status = get_aion_status()
-        bot.reply_to(msg, status)
 
     @bot.message_handler(commands=["help"])
     def cmd_help(msg):
         bot.reply_to(msg,
-            "📚 *Guia rapida:*\n\n"
-            "🖼️ Imagenes:\n"
-            "  • \"genera una imagen de un atardecer\"\n"
-            "  • \"dibuja un logo futurista\"\n\n"
-            "💻 Codigo:\n"
-            "  • \"crea un juego snake en HTML\"\n"
-            "  • \"programa un script de calculadora\"\n\n"
-            "🎬 Video:\n"
-            "  • \"haz un video de un producto tech\"\n"
-            "  • \"crea un storyboard para un corto\"\n\n"
-            "📄 PDF:\n"
-            "  • \"genera un informe sobre IA\"\n"
-            "  • \"crea un documento sobre marketing\"\n\n"
-            "🎵 Musica:\n"
-            "  • \"crea una cancion de reggaeton\"\n"
-            "  • \"prompt para suno estilo bolero house\"\n\n"
-            "💬 Cualquier otra cosa = conversacion!",
+            "📚 *Comandos del Panteon:*\n\n"
+            "/crear\\_musica [tema] — Componer cancion\n"
+            "/crear\\_video [concepto] — Guion + storyboard\n"
+            "/crear\\_imagen [descripcion] — Generar imagen\n"
+            "/crear\\_landing [descripcion] — Landing page\n"
+            "/crear\\_api [descripcion] — API backend\n"
+            "/crear\\_articulo [tema] — Articulo SEO\n"
+            "/diagnosticar — Escanear web C8L\n"
+            "/aprender [leccion] — Registrar aprendizaje\n"
+            "/estado — Estado de todos los agentes\n"
+            "/informe — Informe de actividad\n"
+            "/evolucion — Evolucion del sistema\n"
+            "/clear — Limpiar historial\n\n"
+            "O simplemente escribe lo que necesitas "
+            "y Zeus lo asignara automaticamente.",
             parse_mode="Markdown")
+
+    @bot.message_handler(commands=["estado", "status"])
+    def cmd_estado(msg):
+        tg_send(msg.chat.id, get_status_report(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["clear"])
+    def cmd_clear(msg):
+        _history.pop(msg.chat.id, None)
+        bot.reply_to(msg, "🗑️ Historial limpiado.")
+
+    @bot.message_handler(commands=["diagnosticar"])
+    def cmd_diagnosticar(msg):
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "🛡️ Aries escaneando...")
+        report = aries.diagnose()
+        tg_send(msg.chat.id, report, parse_mode="Markdown")
+
+    @bot.message_handler(commands=["informe"])
+    def cmd_informe(msg):
+        tg_send(msg.chat.id, estia.get_stats(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["evolucion"])
+    def cmd_evolucion(msg):
+        tg_send(msg.chat.id, estia.get_evolution_report(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["aprender"])
+    def cmd_aprender(msg):
+        lesson = msg.text.replace("/aprender", "").strip()
+        if lesson:
+            result = estia.learn(lesson)
+            bot.reply_to(msg, result)
+        else:
+            bot.reply_to(msg, "Uso: /aprender [leccion a recordar]")
+
+    @bot.message_handler(commands=["crear_musica"])
+    def cmd_musica(msg):
+        tema = msg.text.replace("/crear_musica", "").strip()
+        if not tema:
+            tema = "Bolero-House sobre el amor en la era digital"
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "🎵 Apolo componiendo...")
+        reply = apolo.compose(tema)
+        if reply:
+            tg_send(msg.chat.id, reply)
+        else:
+            tg_send(msg.chat.id, "❌ No pude componer la cancion.")
+        estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "musica", "apolo")
+
+    @bot.message_handler(commands=["crear_video"])
+    def cmd_video(msg):
+        tema = msg.text.replace("/crear_video", "").strip()
+        if not tema:
+            tema = "Videoclip para cancion Bolero-House nocturna"
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "🎬 Ares creando guion...")
+        reply = ares_bot.create_script(tema)
+        if reply:
+            if len(reply) > 3000:
+                pdf_bytes = generate_pdf(reply, f"Guion: {tema[:40]}")
+                tg_send_document(msg.chat.id, pdf_bytes, "guion_c8l.pdf", caption=f"🎬 {tema[:60]}")
+            else:
+                tg_send(msg.chat.id, reply)
+        else:
+            tg_send(msg.chat.id, "❌ No pude crear el guion.")
+        estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "video", "ares")
+
+    @bot.message_handler(commands=["crear_imagen"])
+    def cmd_imagen(msg):
+        desc = msg.text.replace("/crear_imagen", "").strip()
+        if not desc:
+            desc = "leon dorado en escenario de neon, estilo cyberpunk"
+        tg_upload_action(msg.chat.id)
+        tg_send(msg.chat.id, "🎨 Vulcano generando imagen...")
+        result = vulcano.create(desc, creation_type="image")
+        _send_creation_result(msg.chat.id, result)
+        estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "imagen", "vulcano")
+
+    @bot.message_handler(commands=["crear_landing"])
+    def cmd_landing(msg):
+        desc = msg.text.replace("/crear_landing", "").strip()
+        if not desc:
+            desc = "landing page para C8L Agency estilo neon futurista"
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "🖥️ Hefesto disenando...")
+        result = hefesto.create_landing(desc)
+        _send_creation_result(msg.chat.id, result)
+        estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "landing", "hefesto")
+
+    @bot.message_handler(commands=["crear_api"])
+    def cmd_api(msg):
+        desc = msg.text.replace("/crear_api", "").strip()
+        if not desc:
+            desc = "API REST para gestionar canciones con CRUD"
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "⚙️ Artemisa construyendo...")
+        result = artemisa.create_api(desc)
+        _send_creation_result(msg.chat.id, result)
+        estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "api", "artemisa")
+
+    @bot.message_handler(commands=["crear_articulo"])
+    def cmd_articulo(msg):
+        tema = msg.text.replace("/crear_articulo", "").strip()
+        if not tema:
+            tema = "El futuro de la produccion musical con IA"
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "📝 Atenea redactando...")
+        reply = atenea.create_article(tema)
+        if reply:
+            tg_send(msg.chat.id, reply)
+        else:
+            tg_send(msg.chat.id, "❌ No pude crear el articulo.")
+        estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "articulo", "atenea")
+
+    # === MENSAJE LIBRE (Zeus orquesta) ===
 
     @bot.message_handler(func=lambda m: True, content_types=["text"])
     def handle_msg(msg):
         chat_id = msg.chat.id
         user_name = msg.from_user.first_name or "Usuario"
         text = msg.text
+
         logger.info(f"[{user_name}] ({chat_id}): {text[:80]}")
+        tg_typing(chat_id)
 
-        intent = detect_intent(text)
-        logger.info(f"  Intent: {intent}")
+        # Zeus analiza y decide
+        intent_data = analyze_intent(text, user_name)
+        logger.info(f"  Zeus -> {intent_data.get('primary_agent', '?').upper()}")
 
-        try:
-            # ---- IMAGENES ----
-            if intent == "image":
-                tg_upload_action(chat_id)
-                tg_send(chat_id, "🎨 Generando imagen...")
-                img = generate_image(text)
-                if img:
-                    tg_send_photo(chat_id, img, caption=f"🎨 {text[:100]}")
-                else:
-                    tg_send(chat_id, "❌ No pude generar la imagen. Intenta con otra descripcion.")
-                return
+        # Dispatch al agente correcto
+        dispatch_to_agent(intent_data, text, chat_id, user_name)
 
-            # ---- CODIGO ----
-            elif intent == "code":
-                tg_typing(chat_id)
-                tg_send(chat_id, "💻 Generando codigo...")
-                code = generate_code(text)
-                if code:
-                    # Detectar extension
-                    if "<!DOCTYPE" in code or "<html" in code.lower():
-                        ext = "html"
-                    elif "import " in code[:100] and "def " in code:
-                        ext = "py"
-                    elif "function " in code or "const " in code or "let " in code:
-                        ext = "js"
-                    else:
-                        ext = "html"
-
-                    filename = f"c8l_{text[:20].replace(' ', '_').lower()}.{ext}"
-                    filename = "".join(c for c in filename if c.isalnum() or c in "._-")
-                    tg_send_document(chat_id, code.encode("utf-8"), filename,
-                        caption=f"💻 {text[:100]}\n\nAbre el archivo para usarlo!")
-                else:
-                    tg_send(chat_id, "❌ No pude generar el codigo. Intenta de nuevo.")
-                return
-
-            # ---- VIDEO ----
-            elif intent == "video":
-                tg_typing(chat_id)
-                tg_send(chat_id, "🎬 Creando guion y storyboard...")
-                script = generate_video_script(text)
-                if script:
-                    # Enviar como mensaje (si es corto) o como documento
-                    if len(script) > 3000:
-                        try:
-                            pdf_bytes = generate_pdf(script, f"Guion: {text[:40]}")
-                            tg_send_document(chat_id, pdf_bytes, f"guion_c8l.pdf",
-                                caption=f"🎬 Guion completo: {text[:80]}")
-                        except:
-                            tg_send_document(chat_id, script.encode("utf-8"), "guion_c8l.txt",
-                                caption=f"🎬 Guion: {text[:80]}")
-                    else:
-                        tg_send(chat_id, f"🎬 GUION Y STORYBOARD\n\n{script}")
-
-                    # Bonus: generar imagen de la primera escena
-                    tg_upload_action(chat_id)
-                    scene_img = generate_image(f"cinematic scene, film still: {text}")
-                    if scene_img:
-                        tg_send_photo(chat_id, scene_img, caption="🎥 Preview de la primera escena")
-                else:
-                    tg_send(chat_id, "❌ No pude generar el guion. Intenta de nuevo.")
-                return
-
-            # ---- PDF ----
-            elif intent == "pdf":
-                tg_typing(chat_id)
-                tg_send(chat_id, "📄 Generando documento...")
-                content = generate_text(
-                    f"Genera un documento profesional completo sobre: {text}\n\n"
-                    "Incluye: titulo, introduccion, desarrollo con secciones, conclusion. "
-                    "Formato claro con titulos en MAYUSCULAS. Minimo 500 palabras.",
-                    SYSTEM_PROMPT
-                )
-                if content:
-                    tg_doc_action(chat_id)
-                    title = text.replace("pdf", "").replace("documento", "").replace("informe", "").strip()[:50]
-                    if not title:
-                        title = "Documento C8L"
-                    pdf_bytes = generate_pdf(content, title.title())
-                    ext = "pdf" if isinstance(pdf_bytes, bytes) and pdf_bytes[:4] == b"%PDF" else "txt"
-                    if isinstance(pdf_bytes, bytearray):
-                        ext = "pdf" if pdf_bytes[:4] == b"%PDF" else "txt"
-                    tg_send_document(chat_id, pdf_bytes, f"documento_c8l.{ext}",
-                        caption=f"📄 {title.title()}\n\nGenerado por C8L Agency")
-                else:
-                    tg_send(chat_id, "❌ No pude generar el documento. Intenta de nuevo.")
-                return
-
-            # ---- PROMPTS MUSICALES ----
-            elif intent == "prompt":
-                tg_typing(chat_id)
-                tg_send(chat_id, "🎵 Creando prompt musical...")
-                music = generate_music_prompt(text)
-                if music:
-                    tg_send(chat_id, music)
-                    add_history(chat_id, "user", text)
-                    add_history(chat_id, "assistant", music)
-                else:
-                    tg_send(chat_id, "❌ No pude generar el prompt musical. Intenta de nuevo.")
-                return
-
-            # ---- STATUS ----
-            elif intent == "status":
-                status = get_aion_status()
-                tg_send(chat_id, status)
-                return
-
-            # ---- CHAT ----
-            else:
-                tg_typing(chat_id)
-                reply = process_chat(text, chat_id, user_name)
-                if reply:
-                    tg_send(chat_id, reply)
-                else:
-                    tg_send(chat_id, "🔄 Error temporal. Intentalo en 30 segundos.")
-
-        except Exception as e:
-            logger.error(f"Error procesando mensaje: {e}", exc_info=True)
-            tg_send(chat_id, f"⚠️ Error: {str(e)[:200]}\n\nIntenta de nuevo en unos segundos.")
-
-    logger.info("🚀 @leon_leo_bot POLLING — Listo para recibir mensajes")
+    # === START POLLING ===
+    logger.info("🏛️ PANTEON MASTER — POLLING activo")
     bot.infinity_polling(timeout=30, long_polling_timeout=25)
 
 
