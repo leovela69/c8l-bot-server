@@ -1,551 +1,554 @@
 # -*- coding: utf-8 -*-
 """
-🎨 LOGO ENGINE — Motor universal de logos y texto para C8L
-Genera cualquier combinacion de texto + estilo + geometria + dimension.
+🎨 LOGO ENGINE v2 — Motor universal de logos dinámicos para C8L
+Genera cualquier combinacion de texto + estilo + geometria + fondo dinámico.
 
-Flujo:
-1. IA genera fondo/emblema sin texto
-2. Python (Pillow) superpone texto PERFECTO con el estilo pedido
-3. Resultado: logo profesional con letras impecables
-
-Soporta:
-- Cualquier texto: C8L, C8L AGENCY, C8L TV, C8L RECORDS, lo que sea
-- Cualquier estilo: neon, gold, ice, fire, chrome, minimal, retro, etc
-- Cualquier geometria: circular, hexagonal, triangular, diamond, shield, etc
-- Cualquier dimension: banner, cuadrado, vertical, icono, portada
+Mejoras v2:
+- Fondos dinámicos con partículas, gradientes radiales, texturas
+- Difuminación/blur gaussiano en capas
+- Profundidad con múltiples capas alpha
+- Más fuentes (30+ tipografías de Google Fonts)
+- Efectos de texto avanzados con glow suave
+- Partículas aleatorias de fondo
 """
 
 import io
 import logging
 import math
 import os
+import random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
 logger = logging.getLogger("c8l.logo_engine")
 
-# ---------------------------------------------------------------------------
-# FUENTES — Usamos las del sistema + descargadas
-# ---------------------------------------------------------------------------
 FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "fonts")
 os.makedirs(FONT_DIR, exist_ok=True)
 
-def _get_font(style="bold", size=80):
-    """Obtiene la mejor fuente disponible para el estilo."""
-    # Intentar fuentes del sistema en orden de preferencia
-    font_paths = {
-        "bold": [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-            "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
-        ],
-        "regular": [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-            "/usr/share/fonts/dejavu/DejaVuSans.ttf",
-        ],
-        "mono": [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf",
-            "/usr/share/fonts/dejavu/DejaVuSansMono-Bold.ttf",
-        ],
-    }
 
-    paths = font_paths.get(style, font_paths["bold"])
-    for path in paths:
+
+# ---------------------------------------------------------------------------
+# FUENTES
+# ---------------------------------------------------------------------------
+def _get_font(style="futurista", size=80):
+    """Obtiene la mejor fuente disponible para el estilo."""
+    font_preferences = {
+        "futurista": ["Orbitron-Bold", "Orbitron-Black", "Exo2-Bold", "Audiowide-Regular"],
+        "tech": ["Exo2-Black", "Orbitron-Bold", "FiraCode-Bold", "JetBrainsMono-Bold"],
+        "bold": ["BebasNeue-Regular", "Anton-Regular", "Montserrat-Black", "Poppins-Black"],
+        "impacto": ["BlackOpsOne-Regular", "Bungee-Regular", "Anton-Regular", "Teko-Bold"],
+        "elegante": ["Montserrat-Bold", "Poppins-Bold", "Raleway-Black", "Oswald-Bold"],
+        "gaming": ["PressStart2P-Regular", "Silkscreen-Bold", "VT323-Regular"],
+        "pixel": ["PressStart2P-Regular", "VT323-Regular", "Silkscreen-Bold"],
+        "display": ["Righteous-Regular", "RussoOne-Regular", "Staatliches-Regular", "Bangers-Regular"],
+        "graffiti": ["PermanentMarker-Regular", "RockSalt-Regular", "Bangers-Regular"],
+        "condensada": ["Barlow-Black", "Oswald-Bold", "Teko-Bold", "BebasNeue-Regular"],
+        "mono": ["FiraCode-Bold", "JetBrainsMono-Bold"],
+        "militar": ["BlackOpsOne-Regular", "Staatliches-Regular", "Teko-Bold"],
+        "retro": ["PressStart2P-Regular", "Bungee-Regular", "Righteous-Regular"],
+        "decorativo": ["Bungee-Shade", "Bungee-Regular", "Bangers-Regular"],
+        "script": ["PermanentMarker-Regular", "RockSalt-Regular"],
+        "regular": ["Montserrat-Bold", "Poppins-Bold"],
+    }
+    preferred = font_preferences.get(style, font_preferences["futurista"])
+    for font_name in preferred:
+        path = os.path.join(FONT_DIR, f"{font_name}.ttf")
         if os.path.exists(path):
             try:
                 return ImageFont.truetype(path, size)
             except:
                 continue
+    # Fallback: cualquier fuente descargada
+    if os.path.exists(FONT_DIR):
+        for f in sorted(os.listdir(FONT_DIR)):
+            if f.endswith(".ttf"):
+                try:
+                    return ImageFont.truetype(os.path.join(FONT_DIR, f), size)
+                except:
+                    continue
+    # Sistema
+    for p in ["/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+              "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"]:
+        if os.path.exists(p):
+            try:
+                return ImageFont.truetype(p, size)
+            except:
+                continue
+    return ImageFont.load_default()
 
-    # Fallback: fuente default de Pillow
-    try:
-        return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size)
-    except:
-        return ImageFont.load_default()
-
-
-# ---------------------------------------------------------------------------
-# ESTILOS DE TEXTO — Cada uno aplica efectos diferentes
-# ---------------------------------------------------------------------------
-
-def _apply_neon_glow(draw, img, text, position, font, color=(200, 0, 255)):
-    """Texto con efecto neon/glow."""
-    x, y = position
-    # Capas de glow (de mas borroso a mas definido)
-    glow_layers = [
-        (color[0], color[1], color[2], 30),   # Outer glow
-        (color[0], color[1], color[2], 60),
-        (color[0], color[1], color[2], 100),
-        (color[0], color[1], color[2], 180),
-        (255, 255, 255, 255),                   # Core blanco
-    ]
-    offsets = [4, 3, 2, 1, 0]
-
-    for i, (r, g, b, a) in enumerate(glow_layers):
-        offset = offsets[i]
-        # Dibujar en varias posiciones para simular glow
-        for dx in range(-offset, offset + 1):
-            for dy in range(-offset, offset + 1):
-                if dx*dx + dy*dy <= offset*offset:
-                    draw.text((x + dx, y + dy), text, font=font, fill=(r, g, b, a))
-
-
-def _apply_gold_metallic(draw, text, position, font):
-    """Texto con efecto dorado metalico."""
-    x, y = position
-    # Sombra
-    draw.text((x + 3, y + 3), text, font=font, fill=(40, 30, 0, 200))
-    # Borde oscuro
-    for dx in [-1, 0, 1]:
-        for dy in [-1, 0, 1]:
-            draw.text((x + dx, y + dy), text, font=font, fill=(120, 80, 0, 255))
-    # Texto dorado
-    draw.text((x, y), text, font=font, fill=(255, 215, 0, 255))
-    # Highlight
-    draw.text((x, y - 1), text, font=font, fill=(255, 240, 150, 100))
-
-
-def _apply_chrome(draw, text, position, font):
-    """Texto con efecto chrome/plateado."""
-    x, y = position
-    draw.text((x + 2, y + 2), text, font=font, fill=(30, 30, 30, 200))
-    for dx in [-1, 0, 1]:
-        for dy in [-1, 0, 1]:
-            draw.text((x + dx, y + dy), text, font=font, fill=(100, 100, 110, 255))
-    draw.text((x, y), text, font=font, fill=(200, 210, 220, 255))
-    draw.text((x, y - 1), text, font=font, fill=(240, 245, 255, 80))
-
-
-def _apply_fire(draw, text, position, font):
-    """Texto con efecto fuego."""
-    x, y = position
-    draw.text((x + 2, y + 2), text, font=font, fill=(80, 0, 0, 200))
-    draw.text((x, y + 1), text, font=font, fill=(255, 60, 0, 200))
-    draw.text((x, y), text, font=font, fill=(255, 150, 0, 255))
-    draw.text((x, y - 1), text, font=font, fill=(255, 220, 50, 150))
-
-
-def _apply_ice(draw, text, position, font):
-    """Texto con efecto hielo/cristal."""
-    x, y = position
-    draw.text((x + 2, y + 2), text, font=font, fill=(0, 20, 60, 200))
-    for dx in [-1, 0, 1]:
-        for dy in [-1, 0, 1]:
-            draw.text((x + dx, y + dy), text, font=font, fill=(0, 100, 180, 255))
-    draw.text((x, y), text, font=font, fill=(150, 220, 255, 255))
-    draw.text((x, y - 1), text, font=font, fill=(220, 240, 255, 100))
-
-
-def _apply_outline(draw, text, position, font, text_color=(255, 255, 255), outline_color=(0, 0, 0)):
-    """Texto con outline grueso."""
-    x, y = position
-    # Outline
-    for dx in range(-3, 4):
-        for dy in range(-3, 4):
-            draw.text((x + dx, y + dy), text, font=font, fill=outline_color + (255,))
-    # Texto principal
-    draw.text((x, y), text, font=font, fill=text_color + (255,))
-
-
-def _apply_shadow_3d(draw, text, position, font, color=(255, 255, 255)):
-    """Texto con efecto 3D (sombra desplazada)."""
-    x, y = position
-    # Sombra 3D
-    for i in range(8, 0, -1):
-        alpha = int(200 - i * 20)
-        draw.text((x + i, y + i), text, font=font, fill=(0, 0, 0, max(alpha, 30)))
-    draw.text((x, y), text, font=font, fill=color + (255,))
-
-
-def _apply_minimal(draw, text, position, font):
-    """Texto minimalista blanco limpio."""
-    x, y = position
-    draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
-
-
-def _apply_retro(draw, text, position, font):
-    """Texto estilo retro/synthwave."""
-    x, y = position
-    # Sombra cyan
-    draw.text((x + 3, y + 3), text, font=font, fill=(0, 255, 255, 150))
-    # Sombra magenta
-    draw.text((x - 2, y - 2), text, font=font, fill=(255, 0, 255, 150))
-    # Texto blanco
-    draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
-
-
-def _apply_gradient_text(draw, img, text, position, font, color1=(255, 0, 200), color2=(0, 200, 255)):
-    """Texto con gradiente de color."""
-    x, y = position
-    # Crear imagen temporal para el texto
-    bbox = font.getbbox(text)
-    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-
-    txt_img = Image.new("RGBA", (tw + 20, th + 20), (0, 0, 0, 0))
-    txt_draw = ImageDraw.Draw(txt_img)
-    txt_draw.text((10, 10), text, font=font, fill=(255, 255, 255, 255))
-
-    # Crear gradiente
-    gradient = Image.new("RGBA", txt_img.size, (0, 0, 0, 0))
-    for i in range(tw + 20):
-        ratio = i / (tw + 20)
-        r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
-        g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
-        b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
-        for j in range(th + 20):
-            if txt_img.getpixel((i, j))[3] > 0:
-                gradient.putpixel((i, j), (r, g, b, 255))
-
-    img.paste(gradient, (x - 10, y - 10), gradient)
 
 
 # ---------------------------------------------------------------------------
-# GEOMETRIAS — Formas de fondo/marco
+# FONDOS DINAMICOS — No estáticos, con partículas y profundidad
 # ---------------------------------------------------------------------------
+def _generate_dynamic_background(width, height, color=(200, 0, 255), bg_style="nebula"):
+    """Genera un fondo dinámico con profundidad, no plano/estático."""
+    img = Image.new("RGBA", (width, height), (5, 2, 15, 255))
+    draw = ImageDraw.Draw(img)
 
-def _draw_geometry(draw, img_size, geometry="none", color=(200, 0, 255, 100)):
+    if bg_style == "nebula":
+        # Nebulosa: manchas de color difuminadas
+        for _ in range(8):
+            cx = random.randint(0, width)
+            cy = random.randint(0, height)
+            r = random.randint(100, 400)
+            c = (color[0] // 4, color[1] // 4, color[2] // 4, random.randint(20, 60))
+            draw.ellipse([cx-r, cy-r, cx+r, cy+r], fill=c)
+        # Blur fuerte para difuminar
+        img = img.filter(ImageFilter.GaussianBlur(radius=40))
+        draw = ImageDraw.Draw(img)
+        # Estrellas/partículas
+        for _ in range(150):
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+            s = random.randint(1, 3)
+            alpha = random.randint(80, 255)
+            draw.ellipse([x, y, x+s, y+s], fill=(255, 255, 255, alpha))
+
+    elif bg_style == "particles":
+        # Partículas flotantes con glow
+        for _ in range(60):
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+            r = random.randint(2, 15)
+            alpha = random.randint(40, 150)
+            c = (color[0], color[1], color[2], alpha)
+            draw.ellipse([x-r, y-r, x+r, y+r], fill=c)
+        img = img.filter(ImageFilter.GaussianBlur(radius=8))
+        draw = ImageDraw.Draw(img)
+        # Particulas nítidas encima
+        for _ in range(30):
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+            s = random.randint(1, 4)
+            draw.ellipse([x, y, x+s, y+s], fill=(255, 255, 255, 200))
+
+    elif bg_style == "gradient_radial":
+        # Gradiente radial desde el centro
+        max_r = int(math.sqrt(width**2 + height**2) / 2)
+        for r in range(max_r, 0, -3):
+            ratio = r / max_r
+            c = (int(color[0] * (1-ratio) * 0.3),
+                 int(color[1] * (1-ratio) * 0.3),
+                 int(color[2] * (1-ratio) * 0.3), 255)
+            draw.ellipse([width//2-r, height//2-r, width//2+r, height//2+r], fill=c)
+
+    elif bg_style == "lines":
+        # Líneas diagonales con glow
+        for i in range(-height, width + height, 40):
+            alpha = random.randint(20, 80)
+            w = random.randint(1, 3)
+            draw.line([(i, 0), (i + height, height)],
+                     fill=(color[0], color[1], color[2], alpha), width=w)
+        img = img.filter(ImageFilter.GaussianBlur(radius=3))
+
+    elif bg_style == "grid":
+        # Grid futurista
+        spacing = 60
+        for x in range(0, width, spacing):
+            draw.line([(x, 0), (x, height)], fill=(color[0]//4, color[1]//4, color[2]//4, 60), width=1)
+        for y in range(0, height, spacing):
+            draw.line([(0, y), (width, y)], fill=(color[0]//4, color[1]//4, color[2]//4, 60), width=1)
+        # Puntos en intersecciones
+        for x in range(0, width, spacing):
+            for y in range(0, height, spacing):
+                if random.random() > 0.7:
+                    draw.ellipse([x-2, y-2, x+2, y+2], fill=(color[0], color[1], color[2], 100))
+        img = img.filter(ImageFilter.GaussianBlur(radius=1))
+
+    elif bg_style == "smoke":
+        # Humo/niebla
+        for _ in range(12):
+            cx = random.randint(-100, width+100)
+            cy = random.randint(-100, height+100)
+            r = random.randint(150, 500)
+            alpha = random.randint(10, 40)
+            draw.ellipse([cx-r, cy-r, cx+r, cy+r],
+                        fill=(color[0]//3, color[1]//3, color[2]//3, alpha))
+        img = img.filter(ImageFilter.GaussianBlur(radius=60))
+
+    return img
+
+
+
+# ---------------------------------------------------------------------------
+# EFECTOS DE TEXTO AVANZADOS — Con difuminación y profundidad
+# ---------------------------------------------------------------------------
+def _render_text_with_effects(img, text, position, font, style="neon", color=(200, 0, 255)):
+    """Renderiza texto con efectos avanzados usando capas y blur."""
+    width, height = img.size
+    x, y = position
+
+    if style == "neon":
+        # Capa de glow difuminado (blur gaussiano)
+        glow_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow_layer)
+        glow_draw.text((x, y), text, font=font, fill=(color[0], color[1], color[2], 200))
+        glow_blurred = glow_layer.filter(ImageFilter.GaussianBlur(radius=12))
+        img = Image.alpha_composite(img, glow_blurred)
+        # Segunda capa menos difuminada
+        glow2 = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        glow2_draw = ImageDraw.Draw(glow2)
+        glow2_draw.text((x, y), text, font=font, fill=(color[0], color[1], color[2], 255))
+        glow2_blurred = glow2.filter(ImageFilter.GaussianBlur(radius=5))
+        img = Image.alpha_composite(img, glow2_blurred)
+        # Texto nítido core
+        sharp = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        sharp_draw = ImageDraw.Draw(sharp)
+        sharp_draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
+        img = Image.alpha_composite(img, sharp)
+
+    elif style == "gold":
+        # Sombra difuminada
+        shadow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        shadow_draw = ImageDraw.Draw(shadow)
+        shadow_draw.text((x+4, y+4), text, font=font, fill=(40, 30, 0, 180))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(radius=4))
+        img = Image.alpha_composite(img, shadow)
+        # Texto dorado con borde
+        txt = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        txt_draw = ImageDraw.Draw(txt)
+        for dx in [-2, -1, 0, 1, 2]:
+            for dy in [-2, -1, 0, 1, 2]:
+                txt_draw.text((x+dx, y+dy), text, font=font, fill=(120, 80, 0, 255))
+        txt_draw.text((x, y), text, font=font, fill=(255, 215, 0, 255))
+        txt_draw.text((x, y-1), text, font=font, fill=(255, 245, 180, 120))
+        img = Image.alpha_composite(img, txt)
+
+    elif style == "chrome":
+        shadow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        shadow_draw = ImageDraw.Draw(shadow)
+        shadow_draw.text((x+3, y+3), text, font=font, fill=(0, 0, 0, 150))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(radius=5))
+        img = Image.alpha_composite(img, shadow)
+        txt = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        txt_draw = ImageDraw.Draw(txt)
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                txt_draw.text((x+dx, y+dy), text, font=font, fill=(80, 85, 95, 255))
+        txt_draw.text((x, y), text, font=font, fill=(200, 210, 225, 255))
+        txt_draw.text((x, y-1), text, font=font, fill=(240, 245, 255, 100))
+        img = Image.alpha_composite(img, txt)
+
+    elif style == "fire":
+        # Glow naranja difuminado
+        glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow)
+        glow_draw.text((x, y), text, font=font, fill=(255, 80, 0, 200))
+        glow = glow.filter(ImageFilter.GaussianBlur(radius=10))
+        img = Image.alpha_composite(img, glow)
+        txt = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        txt_draw = ImageDraw.Draw(txt)
+        txt_draw.text((x, y+2), text, font=font, fill=(255, 60, 0, 200))
+        txt_draw.text((x, y), text, font=font, fill=(255, 180, 0, 255))
+        txt_draw.text((x, y-1), text, font=font, fill=(255, 240, 100, 150))
+        img = Image.alpha_composite(img, txt)
+
+    elif style == "ice":
+        glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow)
+        glow_draw.text((x, y), text, font=font, fill=(0, 150, 255, 180))
+        glow = glow.filter(ImageFilter.GaussianBlur(radius=10))
+        img = Image.alpha_composite(img, glow)
+        txt = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        txt_draw = ImageDraw.Draw(txt)
+        txt_draw.text((x, y), text, font=font, fill=(150, 220, 255, 255))
+        txt_draw.text((x, y-1), text, font=font, fill=(220, 245, 255, 120))
+        img = Image.alpha_composite(img, txt)
+
+    elif style == "3d":
+        # Sombra 3D con profundidad real
+        for i in range(10, 0, -1):
+            layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            layer_draw = ImageDraw.Draw(layer)
+            alpha = max(30, 180 - i * 15)
+            layer_draw.text((x+i, y+i), text, font=font, fill=(0, 0, 0, alpha))
+            img = Image.alpha_composite(img, layer)
+        txt = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        txt_draw = ImageDraw.Draw(txt)
+        txt_draw.text((x, y), text, font=font, fill=(color[0], color[1], color[2], 255))
+        img = Image.alpha_composite(img, txt)
+
+    elif style == "retro":
+        # Efecto chromatic aberration (retro/synthwave)
+        r_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        ImageDraw.Draw(r_layer).text((x+3, y+3), text, font=font, fill=(0, 255, 255, 120))
+        r_layer = r_layer.filter(ImageFilter.GaussianBlur(radius=2))
+        img = Image.alpha_composite(img, r_layer)
+        b_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        ImageDraw.Draw(b_layer).text((x-2, y-2), text, font=font, fill=(255, 0, 255, 120))
+        b_layer = b_layer.filter(ImageFilter.GaussianBlur(radius=2))
+        img = Image.alpha_composite(img, b_layer)
+        txt = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        ImageDraw.Draw(txt).text((x, y), text, font=font, fill=(255, 255, 255, 255))
+        img = Image.alpha_composite(img, txt)
+
+    elif style == "gradient":
+        # Gradiente horizontal en el texto
+        bbox = font.getbbox(text)
+        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        mask = Image.new("L", (width, height), 0)
+        ImageDraw.Draw(mask).text((x, y), text, font=font, fill=255)
+        gradient = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        for i in range(tw):
+            ratio = i / max(tw, 1)
+            r = int(color[0] * (1-ratio) + 0 * ratio)
+            g = int(color[1] * (1-ratio) + 200 * ratio)
+            b = int(color[2] * (1-ratio) + 255 * ratio)
+            for j in range(height):
+                if x + i < width and mask.getpixel((x + i, j)) > 0:
+                    gradient.putpixel((x + i, j), (r, g, b, 255))
+        img = Image.alpha_composite(img, gradient)
+
+    else:  # minimal
+        txt = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        ImageDraw.Draw(txt).text((x, y), text, font=font, fill=(255, 255, 255, 255))
+        img = Image.alpha_composite(img, txt)
+
+    return img
+
+
+
+# ---------------------------------------------------------------------------
+# GEOMETRIAS
+# ---------------------------------------------------------------------------
+def _draw_geometry(draw, img_size, geometry="none", color=(200, 0, 255, 150)):
     """Dibuja geometria de fondo/marco."""
     w, h = img_size
     cx, cy = w // 2, h // 2
+    r = min(w, h) // 3
 
     if geometry == "circle":
-        r = min(w, h) // 3
-        draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=color, width=4)
+        draw.ellipse([cx-r, cy-r, cx+r, cy+r], outline=color, width=3)
     elif geometry == "double_circle":
-        r1 = min(w, h) // 3
-        r2 = r1 + 20
-        draw.ellipse([cx - r1, cy - r1, cx + r1, cy + r1], outline=color, width=3)
-        draw.ellipse([cx - r2, cy - r2, cx + r2, cy + r2], outline=color, width=2)
+        draw.ellipse([cx-r, cy-r, cx+r, cy+r], outline=color, width=3)
+        draw.ellipse([cx-r-20, cy-r-20, cx+r+20, cy+r+20], outline=color[:3]+(80,), width=2)
     elif geometry == "hexagon":
-        r = min(w, h) // 3
-        points = [(cx + r * math.cos(math.radians(60 * i - 30)),
-                   cy + r * math.sin(math.radians(60 * i - 30))) for i in range(6)]
-        draw.polygon(points, outline=color, width=4)
+        pts = [(cx + r*math.cos(math.radians(60*i-30)), cy + r*math.sin(math.radians(60*i-30))) for i in range(6)]
+        draw.polygon(pts, outline=color, width=4)
     elif geometry == "diamond":
-        r = min(w, h) // 3
-        points = [(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)]
-        draw.polygon(points, outline=color, width=4)
+        draw.polygon([(cx, cy-r), (cx+r, cy), (cx, cy+r), (cx-r, cy)], outline=color, width=4)
     elif geometry == "triangle":
-        r = min(w, h) // 3
-        points = [(cx, cy - r), (cx + r, cy + r), (cx - r, cy + r)]
-        draw.polygon(points, outline=color, width=4)
+        draw.polygon([(cx, cy-r), (cx+r, cy+r), (cx-r, cy+r)], outline=color, width=4)
     elif geometry == "shield":
-        r = min(w, h) // 3
-        points = [
-            (cx - r, cy - r),
-            (cx + r, cy - r),
-            (cx + r, cy + r // 2),
-            (cx, cy + r),
-            (cx - r, cy + r // 2),
-        ]
-        draw.polygon(points, outline=color, width=4)
+        pts = [(cx-r, cy-r), (cx+r, cy-r), (cx+r, cy+r//2), (cx, cy+r), (cx-r, cy+r//2)]
+        draw.polygon(pts, outline=color, width=4)
     elif geometry == "pentagon":
-        r = min(w, h) // 3
-        points = [(cx + r * math.cos(math.radians(72 * i - 90)),
-                   cy + r * math.sin(math.radians(72 * i - 90))) for i in range(5)]
-        draw.polygon(points, outline=color, width=4)
+        pts = [(cx + r*math.cos(math.radians(72*i-90)), cy + r*math.sin(math.radians(72*i-90))) for i in range(5)]
+        draw.polygon(pts, outline=color, width=4)
     elif geometry == "octagon":
-        r = min(w, h) // 3
-        points = [(cx + r * math.cos(math.radians(45 * i)),
-                   cy + r * math.sin(math.radians(45 * i))) for i in range(8)]
-        draw.polygon(points, outline=color, width=4)
+        pts = [(cx + r*math.cos(math.radians(45*i)), cy + r*math.sin(math.radians(45*i))) for i in range(8)]
+        draw.polygon(pts, outline=color, width=4)
     elif geometry == "star":
-        r_outer = min(w, h) // 3
-        r_inner = r_outer // 2
-        points = []
+        pts = []
         for i in range(10):
-            angle = math.radians(36 * i - 90)
-            r = r_outer if i % 2 == 0 else r_inner
-            points.append((cx + r * math.cos(angle), cy + r * math.sin(angle)))
-        draw.polygon(points, outline=color, width=3)
+            angle = math.radians(36*i - 90)
+            rv = r if i % 2 == 0 else r // 2
+            pts.append((cx + rv*math.cos(angle), cy + rv*math.sin(angle)))
+        draw.polygon(pts, outline=color, width=3)
     elif geometry == "square":
-        r = min(w, h) // 3
-        draw.rectangle([cx - r, cy - r, cx + r, cy + r], outline=color, width=4)
+        draw.rectangle([cx-r, cy-r, cx+r, cy+r], outline=color, width=4)
     elif geometry == "rounded_square":
-        r = min(w, h) // 3
-        draw.rounded_rectangle([cx - r, cy - r, cx + r, cy + r], radius=20, outline=color, width=4)
+        draw.rounded_rectangle([cx-r, cy-r, cx+r, cy+r], radius=25, outline=color, width=4)
+
 
 
 # ---------------------------------------------------------------------------
 # DETECCION DE PARAMETROS
 # ---------------------------------------------------------------------------
-
 def detect_text_from_prompt(prompt):
     """Extrae el texto que el usuario quiere en el logo."""
-    t = prompt.upper()
-
-    # Buscar patrones comunes
-    # C8L + algo
     import re
-    # Buscar "C8L XXX" o "C.8.L. XXX" o "C.8.L XXX"
+    t = prompt.upper()
     patterns = [
-        r'C\.?8\.?L\.?\s*(AGENCY|TV|RECORDS|MUSIC|STUDIO|GAMING|RADIO|BEATS|LIVE|PRO|MEDIA|FILMS|LABS|SHOP|STORE|NET|DIGITAL)',
+        r'C\.?8\.?L\.?\s*(AGENCY|TV|RECORDS|MUSIC|STUDIO|GAMING|RADIO|BEATS|LIVE|PRO|MEDIA|FILMS|LABS|SHOP|STORE|NET|DIGITAL|SPORTS|FASHION|ART|SOUND|CREW|GANG|WORLD|NATION|EMPIRE|KINGDOM)',
         r'C\.?8\.?L\.?',
     ]
-
     for pattern in patterns:
         match = re.search(pattern, t)
         if match:
             return match.group(0).replace(".", "").strip()
-
-    # Si no encuentra patron, buscar texto entre comillas
     quoted = re.findall(r'"([^"]+)"', prompt)
     if quoted:
         return quoted[0].upper()
-
-    # Default
     return "C8L"
 
 
 def detect_style_from_prompt(prompt):
     """Detecta el estilo de texto deseado."""
     t = prompt.lower()
-    if any(kw in t for kw in ["neon", "glow", "brillo", "brillante", "luz"]):
-        return "neon"
-    elif any(kw in t for kw in ["gold", "dorado", "oro", "golden", "metalico"]):
-        return "gold"
-    elif any(kw in t for kw in ["chrome", "plata", "plateado", "silver", "metal"]):
-        return "chrome"
-    elif any(kw in t for kw in ["fuego", "fire", "llama", "flame", "rojo"]):
-        return "fire"
-    elif any(kw in t for kw in ["hielo", "ice", "cristal", "frozen", "azul"]):
-        return "ice"
-    elif any(kw in t for kw in ["3d", "tridimensional", "profundidad", "relieve"]):
-        return "3d"
-    elif any(kw in t for kw in ["retro", "synthwave", "80s", "vaporwave"]):
-        return "retro"
-    elif any(kw in t for kw in ["minimal", "minimalista", "simple", "limpio", "clean"]):
-        return "minimal"
-    elif any(kw in t for kw in ["outline", "contorno", "borde"]):
-        return "outline"
-    elif any(kw in t for kw in ["gradient", "gradiente", "degradado", "rainbow"]):
-        return "gradient"
-    return "neon"  # Default: neon (identidad C8L)
+    if any(kw in t for kw in ["neon", "glow", "brillo"]): return "neon"
+    elif any(kw in t for kw in ["gold", "dorado", "oro"]): return "gold"
+    elif any(kw in t for kw in ["chrome", "plata", "plateado"]): return "chrome"
+    elif any(kw in t for kw in ["fuego", "fire", "llama"]): return "fire"
+    elif any(kw in t for kw in ["hielo", "ice", "cristal", "frozen"]): return "ice"
+    elif any(kw in t for kw in ["3d", "tridimensional", "relieve"]): return "3d"
+    elif any(kw in t for kw in ["retro", "synthwave", "80s", "vaporwave"]): return "retro"
+    elif any(kw in t for kw in ["minimal", "minimalista", "simple"]): return "minimal"
+    elif any(kw in t for kw in ["gradient", "gradiente", "degradado"]): return "gradient"
+    return "neon"
 
 
 def detect_geometry_from_prompt(prompt):
     """Detecta la geometria deseada."""
     t = prompt.lower()
-    if any(kw in t for kw in ["circulo", "circular", "redondo", "circle"]):
-        return "double_circle"
-    elif any(kw in t for kw in ["hexagono", "hexagonal", "hex"]):
-        return "hexagon"
-    elif any(kw in t for kw in ["diamante", "diamond", "rombo"]):
-        return "diamond"
-    elif any(kw in t for kw in ["triangulo", "triangle", "triangular"]):
-        return "triangle"
-    elif any(kw in t for kw in ["escudo", "shield", "insignia"]):
-        return "shield"
-    elif any(kw in t for kw in ["pentagono", "pentagon"]):
-        return "pentagon"
-    elif any(kw in t for kw in ["octagono", "octagon", "octagonal"]):
-        return "octagon"
-    elif any(kw in t for kw in ["estrella", "star"]):
-        return "star"
-    elif any(kw in t for kw in ["cuadrado", "square", "cuadro"]):
-        return "rounded_square"
-    elif any(kw in t for kw in ["poligono", "polygon", "geometr"]):
-        return "hexagon"  # Default geometrico
-    return "none"  # Sin geometria por defecto
+    if any(kw in t for kw in ["circulo", "circular"]): return "double_circle"
+    elif any(kw in t for kw in ["hexagono", "hexagonal"]): return "hexagon"
+    elif any(kw in t for kw in ["diamante", "diamond", "rombo"]): return "diamond"
+    elif any(kw in t for kw in ["triangulo", "triangle"]): return "triangle"
+    elif any(kw in t for kw in ["escudo", "shield", "insignia"]): return "shield"
+    elif any(kw in t for kw in ["pentagono"]): return "pentagon"
+    elif any(kw in t for kw in ["octagono", "octagon"]): return "octagon"
+    elif any(kw in t for kw in ["estrella", "star"]): return "star"
+    elif any(kw in t for kw in ["cuadrado", "square"]): return "rounded_square"
+    elif any(kw in t for kw in ["poligono", "polygon", "geometr"]): return "hexagon"
+    return "none"
+
+
+def detect_font_style_from_prompt(prompt):
+    """Detecta la tipografia deseada."""
+    t = prompt.lower()
+    if any(kw in t for kw in ["futurista", "futuristic", "cyber", "tech", "espacial"]): return "futurista"
+    elif any(kw in t for kw in ["pixel", "pixelado", "8bit", "arcade"]): return "pixel"
+    elif any(kw in t for kw in ["gaming", "gamer", "esport"]): return "gaming"
+    elif any(kw in t for kw in ["elegante", "elegant", "lujo", "luxury", "premium"]): return "elegante"
+    elif any(kw in t for kw in ["impacto", "impact", "heavy", "brutal"]): return "impacto"
+    elif any(kw in t for kw in ["graffiti", "urban", "street", "spray"]): return "graffiti"
+    elif any(kw in t for kw in ["militar", "army", "war", "tactical"]): return "militar"
+    elif any(kw in t for kw in ["codigo", "code", "hacker", "matrix"]): return "mono"
+    elif any(kw in t for kw in ["display", "decorativo", "fancy"]): return "display"
+    elif any(kw in t for kw in ["condensada", "narrow", "slim"]): return "condensada"
+    elif any(kw in t for kw in ["retro", "vintage", "80s"]): return "retro"
+    elif any(kw in t for kw in ["bold", "gordo", "grueso"]): return "bold"
+    return "futurista"
+
+
+def detect_neon_color_from_prompt(prompt):
+    """Detecta color."""
+    t = prompt.lower()
+    if any(kw in t for kw in ["rojo", "red"]): return (255, 30, 30)
+    elif any(kw in t for kw in ["azul", "blue", "cyan"]): return (0, 200, 255)
+    elif any(kw in t for kw in ["verde", "green"]): return (0, 255, 100)
+    elif any(kw in t for kw in ["rosa", "pink", "magenta"]): return (255, 0, 200)
+    elif any(kw in t for kw in ["dorado", "gold", "amarillo"]): return (255, 200, 0)
+    elif any(kw in t for kw in ["blanco", "white"]): return (255, 255, 255)
+    elif any(kw in t for kw in ["naranja", "orange"]): return (255, 140, 0)
+    return (200, 0, 255)
+
+
+def detect_bg_style_from_prompt(prompt):
+    """Detecta estilo de fondo dinámico."""
+    t = prompt.lower()
+    if any(kw in t for kw in ["nebula", "espacio", "galaxia", "space"]): return "nebula"
+    elif any(kw in t for kw in ["particulas", "particles", "flotante"]): return "particles"
+    elif any(kw in t for kw in ["lineas", "lines", "rayas"]): return "lines"
+    elif any(kw in t for kw in ["grid", "matrix", "cuadricula"]): return "grid"
+    elif any(kw in t for kw in ["humo", "smoke", "niebla", "fog"]): return "smoke"
+    # Aleatorio si no especifica
+    return random.choice(["nebula", "particles", "smoke", "gradient_radial"])
 
 
 def detect_dimensions_from_prompt(prompt):
     """Detecta dimensiones deseadas."""
     t = prompt.lower()
-    if any(kw in t for kw in ["banner", "horizontal", "panoram"]):
-        return (1200, 400)
-    elif any(kw in t for kw in ["vertical", "story", "stories", "portrait"]):
-        return (600, 1080)
-    elif any(kw in t for kw in ["icono", "icon", "favicon", "pequeno", "mini"]):
-        return (512, 512)
-    elif any(kw in t for kw in ["portada", "cover", "header"]):
-        return (1500, 500)
-    elif any(kw in t for kw in ["poster", "cartel", "afiche"]):
-        return (800, 1200)
-    return (1024, 1024)  # Default cuadrado
+    if any(kw in t for kw in ["banner", "horizontal"]): return (1200, 400)
+    elif any(kw in t for kw in ["vertical", "story"]): return (600, 1080)
+    elif any(kw in t for kw in ["icono", "icon", "mini"]): return (512, 512)
+    elif any(kw in t for kw in ["portada", "cover", "header"]): return (1500, 500)
+    elif any(kw in t for kw in ["poster", "cartel"]): return (800, 1200)
+    return (1024, 1024)
 
-
-def detect_neon_color_from_prompt(prompt):
-    """Detecta color del neon."""
-    t = prompt.lower()
-    if any(kw in t for kw in ["rojo", "red"]):
-        return (255, 30, 30)
-    elif any(kw in t for kw in ["azul", "blue", "cyan"]):
-        return (0, 200, 255)
-    elif any(kw in t for kw in ["verde", "green"]):
-        return (0, 255, 100)
-    elif any(kw in t for kw in ["rosa", "pink", "magenta"]):
-        return (255, 0, 200)
-    elif any(kw in t for kw in ["dorado", "gold", "amarillo", "yellow"]):
-        return (255, 200, 0)
-    elif any(kw in t for kw in ["blanco", "white"]):
-        return (255, 255, 255)
-    elif any(kw in t for kw in ["naranja", "orange"]):
-        return (255, 140, 0)
-    return (200, 0, 255)  # Default: purpura C8L
 
 
 # ---------------------------------------------------------------------------
-# GENERADOR PRINCIPAL
+# GENERADORES PRINCIPALES
 # ---------------------------------------------------------------------------
-
 def generate_logo_overlay(background_bytes, prompt):
-    """
-    Toma una imagen de fondo (generada por IA) y le superpone texto perfecto.
-
-    Args:
-        background_bytes: bytes de la imagen de fondo
-        prompt: prompt original del usuario (para detectar texto/estilo/geometria)
-
-    Returns:
-        bytes de la imagen final con texto superpuesto
-    """
+    """Toma imagen de fondo (IA) y superpone texto perfecto con efectos."""
     try:
-        # Abrir imagen de fondo
         bg = Image.open(io.BytesIO(background_bytes)).convert("RGBA")
         width, height = bg.size
 
-        # Crear capa de overlay
-        overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(overlay)
-
-        # Detectar parametros
         text = detect_text_from_prompt(prompt)
         style = detect_style_from_prompt(prompt)
         geometry = detect_geometry_from_prompt(prompt)
         color = detect_neon_color_from_prompt(prompt)
+        font_style = detect_font_style_from_prompt(prompt)
 
-        # Dibujar geometria
+        # Geometria sobre el fondo
         if geometry != "none":
-            _draw_geometry(draw, (width, height), geometry, color + (150,))
+            geo_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            geo_draw = ImageDraw.Draw(geo_layer)
+            _draw_geometry(geo_draw, (width, height), geometry, color + (150,))
+            # Difuminar ligeramente la geometria
+            geo_layer = geo_layer.filter(ImageFilter.GaussianBlur(radius=1))
+            bg = Image.alpha_composite(bg, geo_layer)
 
-        # Calcular tamano de fuente (adaptivo al tamaño de imagen y largo del texto)
-        max_font_size = min(width, height) // 4
-        font_size = min(max_font_size, int(width * 0.8 / max(len(text), 1) * 1.5))
-        font_size = max(font_size, 40)  # Minimo 40px
-        font = _get_font("bold", font_size)
+        # Calcular fuente
+        max_fs = min(width, height) // 4
+        font_size = min(max_fs, int(width * 0.75 / max(len(text), 1) * 1.5))
+        font_size = max(font_size, 40)
+        font = _get_font(font_style, font_size)
 
-        # Calcular posicion centrada
+        # Posicion centrada (un poco abajo)
         bbox = font.getbbox(text)
         tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
         x = (width - tw) // 2
-        y = (height - th) // 2 + height // 6  # Un poco abajo del centro
+        y = (height - th) // 2 + height // 8
 
-        # Aplicar estilo de texto
-        if style == "neon":
-            _apply_neon_glow(draw, overlay, text, (x, y), font, color)
-        elif style == "gold":
-            _apply_gold_metallic(draw, text, (x, y), font)
-        elif style == "chrome":
-            _apply_chrome(draw, text, (x, y), font)
-        elif style == "fire":
-            _apply_fire(draw, text, (x, y), font)
-        elif style == "ice":
-            _apply_ice(draw, text, (x, y), font)
-        elif style == "3d":
-            _apply_shadow_3d(draw, text, (x, y), font, color)
-        elif style == "retro":
-            _apply_retro(draw, text, (x, y), font)
-        elif style == "minimal":
-            _apply_minimal(draw, text, (x, y), font)
-        elif style == "outline":
-            _apply_outline(draw, text, (x, y), font, (255, 255, 255), color)
-        elif style == "gradient":
-            _apply_gradient_text(draw, overlay, text, (x, y), font, color, (0, 200, 255))
-        else:
-            _apply_neon_glow(draw, overlay, text, (x, y), font, color)
+        # Aplicar texto con efectos
+        result = _render_text_with_effects(bg, text, (x, y), font, style, color)
 
-        # Componer fondo + overlay
-        result = Image.alpha_composite(bg, overlay)
-
-        # Convertir a bytes JPEG
         output = io.BytesIO()
         result.convert("RGB").save(output, format="PNG", quality=95)
         return output.getvalue()
-
     except Exception as e:
         logger.error(f"Logo overlay error: {e}", exc_info=True)
         return None
 
 
 def generate_logo_standalone(prompt):
-    """
-    Genera un logo completo SIN imagen de fondo (fondo negro con geometria + texto).
-    Para cuando no se necesita imagen de fondo de IA.
-
-    Args:
-        prompt: prompt del usuario
-
-    Returns:
-        bytes de la imagen del logo
-    """
+    """Genera logo completo con fondo dinámico + geometría + texto."""
     try:
         dimensions = detect_dimensions_from_prompt(prompt)
         width, height = dimensions
 
-        # Crear fondo oscuro
-        img = Image.new("RGBA", (width, height), (10, 5, 20, 255))
-        draw = ImageDraw.Draw(img)
-
-        # Detectar parametros
         text = detect_text_from_prompt(prompt)
         style = detect_style_from_prompt(prompt)
         geometry = detect_geometry_from_prompt(prompt)
         color = detect_neon_color_from_prompt(prompt)
+        font_style = detect_font_style_from_prompt(prompt)
+        bg_style = detect_bg_style_from_prompt(prompt)
 
-        # Agregar un sutil gradiente radial al fondo
-        for i in range(min(width, height) // 2):
-            alpha = int(30 * (1 - i / (min(width, height) // 2)))
-            draw.ellipse([width//2 - i, height//2 - i, width//2 + i, height//2 + i],
-                        fill=(color[0] // 8, color[1] // 8, color[2] // 8, alpha))
+        # Fondo dinámico (NO estático)
+        img = _generate_dynamic_background(width, height, color, bg_style)
 
-        # Dibujar geometria
+        # Geometria
         if geometry == "none":
-            geometry = "double_circle"  # Default para standalone
-        _draw_geometry(draw, (width, height), geometry, color + (180,))
+            geometry = "double_circle"
+        geo_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        geo_draw = ImageDraw.Draw(geo_layer)
+        _draw_geometry(geo_draw, (width, height), geometry, color + (180,))
+        geo_layer = geo_layer.filter(ImageFilter.GaussianBlur(radius=1))
+        img = Image.alpha_composite(img, geo_layer)
 
-        # Calcular fuente
-        max_font_size = min(width, height) // 4
-        font_size = min(max_font_size, int(width * 0.7 / max(len(text), 1) * 1.5))
+        # Fuente
+        max_fs = min(width, height) // 3
+        font_size = min(max_fs, int(width * 0.7 / max(len(text), 1) * 1.5))
         font_size = max(font_size, 40)
-        font = _get_font("bold", font_size)
+        font = _get_font(font_style, font_size)
 
-        # Posicion centrada
+        # Posicion
         bbox = font.getbbox(text)
         tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
         x = (width - tw) // 2
         y = (height - th) // 2
 
-        # Aplicar estilo
-        if style == "neon":
-            _apply_neon_glow(draw, img, text, (x, y), font, color)
-        elif style == "gold":
-            _apply_gold_metallic(draw, text, (x, y), font)
-        elif style == "chrome":
-            _apply_chrome(draw, text, (x, y), font)
-        elif style == "fire":
-            _apply_fire(draw, text, (x, y), font)
-        elif style == "ice":
-            _apply_ice(draw, text, (x, y), font)
-        elif style == "3d":
-            _apply_shadow_3d(draw, text, (x, y), font, color)
-        elif style == "retro":
-            _apply_retro(draw, text, (x, y), font)
-        elif style == "minimal":
-            _apply_minimal(draw, text, (x, y), font)
-        elif style == "outline":
-            _apply_outline(draw, text, (x, y), font, (255, 255, 255), color)
-        elif style == "gradient":
-            _apply_gradient_text(draw, img, text, (x, y), font, color, (0, 200, 255))
-        else:
-            _apply_neon_glow(draw, img, text, (x, y), font, color)
+        # Texto con efectos
+        img = _render_text_with_effects(img, text, (x, y), font, style, color)
 
-        # Convertir a bytes
         output = io.BytesIO()
         img.convert("RGB").save(output, format="PNG", quality=95)
         return output.getvalue()
-
     except Exception as e:
         logger.error(f"Logo standalone error: {e}", exc_info=True)
         return None

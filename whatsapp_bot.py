@@ -60,6 +60,14 @@ guardian = Guardian()
 
 logger.info("🏛️ Panteon inicializado — 11 agentes + Guardian activos")
 
+# Descargar fuentes para el Logo Engine
+try:
+    from install_fonts import download_fonts
+    download_fonts()
+    logger.info("🎨 Fuentes del Logo Engine actualizadas")
+except Exception as e:
+    logger.warning(f"No pude descargar fuentes: {e}")
+
 
 # ---------------------------------------------------------------------------
 # Telegram helpers
