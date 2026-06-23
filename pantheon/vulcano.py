@@ -287,53 +287,60 @@ class Vulcano:
         return {"type": "error", "content": "No pude generar el logo."}
 
     def _create_mockup(self, prompt):
-        """Genera mockup realista: moneda, poster, TV, revista, etc con C8L.
-        Usa la IA directamente para generar el objeto con el logo integrado."""
+        """Genera mockup realista: el logo C8L en cualquier objeto/superficie/escenario.
+        Usa DeepSeek para interpretar TODA la petición (objeto + texto + escenario)."""
         logger.info(f"Vulcano MOCKUP MODE: {prompt[:80]}")
 
-        # Detectar tipo de mockup y construir prompt profesional
-        t = prompt.lower()
-        c8l_brand = "C8L Agency logo (a golden lion emblem with neon purple accents on dark background, text 'C8L' in futuristic font)"
+        # Usar DeepSeek para interpretar la petición COMPLETA
+        # Él entiende "pantalla gigante en New York" vs "TV en sala"
+        enhancer_prompt = f"""The user wants a photorealistic image of the C8L Agency brand/logo placed on a real object or in a real scene.
 
-        if any(kw in t for kw in ["moneda", "coin", "medal", "medalla", "token"]):
-            mockup_prompt = f"Photorealistic 3D gold coin with embossed lion emblem and text C8L, metallic shine, detailed relief engraving, dark velvet background, multiple angles showing front and edge, numismatic quality, studio lighting, {c8l_brand}, highly detailed, 8k"
-        elif any(kw in t for kw in ["poster", "cartel", "pared", "wall", "mural"]):
-            mockup_prompt = f"Photorealistic mockup of a large poster on a dark concrete wall, the poster shows {c8l_brand}, neon purple lighting illuminating the poster, urban night scene, perspective angle, realistic shadows, highly detailed, 8k"
-        elif any(kw in t for kw in ["tv", "pantalla", "screen", "monitor"]):
-            mockup_prompt = f"Photorealistic modern flat screen TV in a dark room displaying {c8l_brand}, the screen glows with neon purple light, minimalist dark interior, realistic screen reflection, highly detailed, 8k"
-        elif any(kw in t for kw in ["revista", "magazine", "portada"]):
-            mockup_prompt = f"Photorealistic luxury magazine cover mockup featuring {c8l_brand}, glossy paper, dramatic lighting, dark elegant table surface, slight angle showing pages, high-end editorial style, highly detailed, 8k"
-        elif any(kw in t for kw in ["camiseta", "shirt", "ropa"]):
-            mockup_prompt = f"Photorealistic black t-shirt mockup with {c8l_brand} printed on chest, fabric texture visible, professional product photography, dark background, highly detailed, 8k"
-        elif any(kw in t for kw in ["tarjeta", "card", "business", "credencial"]):
-            mockup_prompt = f"Photorealistic luxury black business card with gold foil stamping showing {c8l_brand}, dark marble surface, dramatic lighting, multiple cards stacked at angle, premium feel, highly detailed, 8k"
-        elif any(kw in t for kw in ["taza", "mug", "cup"]):
-            mockup_prompt = f"Photorealistic black ceramic mug with {c8l_brand} printed on it, studio lighting, dark surface, steam rising, professional product shot, highly detailed, 8k"
-        elif any(kw in t for kw in ["vinilo", "vinyl", "disco", "album"]):
-            mockup_prompt = f"Photorealistic vinyl record and album cover mockup featuring {c8l_brand}, the vinyl is partially out of sleeve, dark moody lighting, music studio atmosphere, highly detailed, 8k"
-        elif any(kw in t for kw in ["letrero", "sign", "neon sign"]):
-            mockup_prompt = f"Photorealistic neon sign on dark brick wall showing C8L in glowing purple neon tubes, lion emblem in gold neon, night atmosphere, realistic neon glow and reflection, highly detailed, 8k"
-        elif any(kw in t for kw in ["bandera", "flag", "estandarte"]):
-            mockup_prompt = f"Photorealistic black flag waving in wind with {c8l_brand} embroidered in gold and purple, dramatic sky background, epic angle, fabric texture, highly detailed, 8k"
-        elif any(kw in t for kw in ["tatuaje", "tattoo"]):
-            mockup_prompt = f"Photorealistic tattoo design of {c8l_brand} on skin, black and gold ink, professional tattoo art style, detailed linework, close-up shot, highly detailed, 8k"
-        elif any(kw in t for kw in ["sticker", "pegatina"]):
-            mockup_prompt = f"Photorealistic holographic sticker mockup showing {c8l_brand}, iridescent rainbow effect, dark surface, multiple angles, die-cut shape, highly detailed, 8k"
-        elif any(kw in t for kw in ["billboard", "valla", "anuncio"]):
-            mockup_prompt = f"Photorealistic large billboard mockup in a city at night showing {c8l_brand}, dramatic neon purple lighting, urban environment, perspective view from below, highly detailed, 8k"
-        else:
-            # Genérico: usar el prompt tal cual pero mejorado
-            mockup_prompt = f"Photorealistic mockup of: {prompt}. Brand: {c8l_brand}. Professional product photography, dramatic lighting, dark background, highly detailed, 8k resolution"
+User request: "{prompt}"
 
-        # Intentar con Gemini primero
-        image_bytes = self._generate_image_gemini(mockup_prompt)
-        if image_bytes:
-            return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
+C8L Agency brand description: A golden lion emblem with neon purple/magenta accents, the text "C8L" in futuristic font, dark luxurious aesthetic.
 
-        # Fallback: Pollinations
-        image_bytes = self._generate_image_pollinations(mockup_prompt, "photorealistic")
+Your job: Create a detailed image generation prompt in English that captures EVERY element the user mentioned:
+1. THE OBJECT/SURFACE (what the logo is ON: coin, billboard, screen, wall, etc)
+2. THE BRAND (C8L lion emblem, purple/gold, futuristic)
+3. THE LOCATION/SCENE (where it is: space, city, New York, a wall, etc)
+4. THE STYLE (realistic, 3D, perspective, lighting)
+
+IMPORTANT:
+- Include the SPECIFIC location/scene the user mentioned (New York = Times Square at night, space = floating in galaxy, etc)
+- The object should have REALISTIC perspective, size, and lighting matching the scene
+- Do NOT put the logo in a generic room if the user specified an outdoor location
+- Output ONLY the image prompt, nothing else
+- Keep under 150 words
+- End with: "photorealistic, highly detailed, 8k resolution"
+"""
+        enhanced = None
+        try:
+            enhanced = call_openrouter(
+                prompt=enhancer_prompt,
+                system_prompt="You are an expert image prompt engineer. Output ONLY the image prompt, no explanations.",
+                agent_name="vulcano",
+                temperature=0.7,
+                max_tokens=250
+            )
+            if enhanced:
+                enhanced = enhanced.strip().strip('"').strip("'").strip("`")
+                for prefix in ["Output:", "Prompt:", "Enhanced:", "Result:", "Here is"]:
+                    if enhanced.startswith(prefix):
+                        enhanced = enhanced[len(prefix):].strip()
+                logger.info(f"Mockup prompt: {enhanced[:150]}")
+        except Exception as e:
+            logger.warning(f"Mockup enhancer fallo: {e}")
+
+        # Fallback si el enhancer falla
+        if not enhanced or len(enhanced) < 30:
+            enhanced = f"Photorealistic mockup of {prompt}, C8L Agency brand (golden lion emblem, neon purple accents, futuristic text C8L), professional photography, dramatic lighting, highly detailed, 8k resolution"
+
+        # Generar con Gemini o Pollinations
+        image_bytes = self._generate_image_gemini(enhanced)
         if not image_bytes:
-            image_bytes = self._generate_image_huggingface(mockup_prompt)
+            image_bytes = self._generate_image_pollinations(enhanced, "photorealistic")
+        if not image_bytes:
+            image_bytes = self._generate_image_huggingface(enhanced)
 
         if image_bytes:
             return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
