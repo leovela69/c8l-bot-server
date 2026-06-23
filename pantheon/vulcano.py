@@ -379,11 +379,11 @@ RULES:
             from pantheon.logo_engine import _get_font
             font = _get_font("futurista", font_size)
 
-            # Calcular posicion (centrado, tercio inferior)
+            # Calcular posicion (centrado en la pantalla/objeto, no abajo)
             bbox = font.getbbox(text)
             tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
             x = (width - tw) // 2
-            y = int(height * 0.72)  # 72% abajo
+            y = int(height * 0.55)  # Centro-bajo de la imagen (donde suele estar la pantalla)
 
             # Capa de glow difuminado (púrpura)
             glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
