@@ -43,6 +43,9 @@ from pantheon.slaves.guardian import Guardian
 from group_personality import GROUP_SYSTEM_PROMPT, COMUNICADO_PROMPT, get_random_auto_message
 from group_scheduler import GroupScheduler
 
+# Import Evolution Engine
+from pantheon.evolution import evolution
+
 # ---------------------------------------------------------------------------
 # Inicializar agentes
 # ---------------------------------------------------------------------------
@@ -351,6 +354,9 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
             # Pasar el texto original del usuario para que el prompt enhancer lo interprete completo
             tg_typing(chat_id)
 
+            # Registrar generación para auto-evolución
+            evolution.record_generation(chat_id, text, "vulcano", "creation")
+
             # Detectar si quiere EDITAR la ultima imagen
             edit_keywords = ["mejora", "cambia", "edita", "modifica", "corrige", "arregla",
                             "hazla", "ponle", "quitale", "aclara", "oscurece", "voltea",
@@ -517,7 +523,7 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
 # Helper: enviar resultado de creacion (file/image/text/error)
 # ---------------------------------------------------------------------------
 def _send_creation_result(chat_id, result):
-    """Envia el resultado de una creacion al chat."""
+    """Envia el resultado de una creacion al chat + botones 👍👎."""
     if not result:
         tg_send(chat_id, "❌ Error en la creacion.")
         return
@@ -526,17 +532,41 @@ def _send_creation_result(chat_id, result):
 
     if rtype == "text":
         tg_send(chat_id, result["content"])
+        _send_feedback_buttons(chat_id)
     elif rtype == "image":
         tg_upload_action(chat_id)
         tg_send_photo(chat_id, result["content"], caption=result.get("caption", ""))
+        _send_feedback_buttons(chat_id)
     elif rtype == "file":
         tg_doc_action(chat_id)
         tg_send_document(chat_id, result["content"], result.get("filename", "archivo.txt"),
                          caption=result.get("caption", ""))
+        _send_feedback_buttons(chat_id)
     elif rtype == "error":
         tg_send(chat_id, f"❌ {result.get('content', 'Error desconocido')}")
     else:
         tg_send(chat_id, str(result.get("content", "Resultado no reconocido")))
+
+
+def _send_feedback_buttons(chat_id):
+    """Envía botones 👍👎 para feedback de auto-evolución."""
+    try:
+        keyboard = {
+            "inline_keyboard": [
+                [
+                    {"text": "👍 Me gusta", "callback_data": "feedback_positive"},
+                    {"text": "👎 No es lo que pedí", "callback_data": "feedback_negative"},
+                ]
+            ]
+        }
+        payload = {
+            "chat_id": chat_id,
+            "text": "¿Qué te pareció? Tu feedback ayuda al bot a evolucionar 🧬",
+            "reply_markup": json.dumps(keyboard)
+        }
+        requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
+    except:
+        pass
 
 
 # ---------------------------------------------------------------------------
@@ -1256,6 +1286,48 @@ def main():
 
         reply += "\n/ajedrez para nueva partida"
         tg_send(chat_id, reply, parse_mode="Markdown")
+
+    # === CALLBACK: Botones 👍👎 (Auto-Evolución) ===
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("feedback_"))
+    def handle_feedback(call):
+        """Procesa feedback 👍👎 para auto-evolución."""
+        chat_id = call.message.chat.id
+        is_positive = call.data == "feedback_positive"
+
+        # Registrar feedback
+        evolution.record_feedback(chat_id, is_positive)
+
+        # Responder al usuario
+        if is_positive:
+            bot.answer_callback_query(call.id, "👍 Gracias! El bot aprende de ti.")
+            try:
+                bot.edit_message_text(
+                    "👍 *Feedback registrado* — Seguiré haciéndolo así 🧬",
+                    chat_id=chat_id,
+                    message_id=call.message.message_id,
+                    parse_mode="Markdown"
+                )
+            except:
+                pass
+        else:
+            bot.answer_callback_query(call.id, "👎 Entendido. Aprenderé de esto.")
+            try:
+                bot.edit_message_text(
+                    "👎 *Feedback registrado* — Mejoraré la próxima vez 🧬\n\n"
+                    "💡 Tip: describe con más detalle lo que quieres para mejores resultados.",
+                    chat_id=chat_id,
+                    message_id=call.message.message_id,
+                    parse_mode="Markdown"
+                )
+            except:
+                pass
+
+    # === COMANDO /evolucion mejorado ===
+
+    @bot.message_handler(commands=["evolucion"])
+    def cmd_evolucion(msg):
+        tg_send(msg.chat.id, evolution.get_stats_report(), parse_mode="Markdown")
 
     # === HANDLER DE FOTOS — Edicion de imagenes con Gemini ===
 

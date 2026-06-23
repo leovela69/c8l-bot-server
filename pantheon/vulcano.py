@@ -24,6 +24,7 @@ from pantheon.logo_engine import (
     generate_logo_overlay, generate_logo_standalone,
     detect_text_from_prompt, detect_style_from_prompt
 )
+from pantheon.evolution import evolution
 
 logger = logging.getLogger("c8l.vulcano")
 
@@ -566,6 +567,9 @@ Make sure the text "C8L AGENCY" is prominent, centered on the main surface (scre
     def _enhance_image_prompt(self, user_prompt, style="digital_art"):
         """Usa IA para convertir la peticion del usuario en un prompt profesional en ingles."""
 
+        # Obtener contexto de evolución (reglas aprendidas de feedback)
+        evolution_context = evolution.get_evolution_context(user_prompt, "vulcano")
+
         # Instrucciones especificas por estilo
         style_instructions = {
             "3d": """IMPORTANT - The user wants 3D RENDER style. You MUST include these terms:
@@ -655,7 +659,7 @@ End with: "highly detailed, professional quality, beautiful lighting, 8k resolut
         enhancer_system = f"""You are an expert image prompt engineer for AI image generators (Stable Diffusion, Flux, Midjourney).
 
 Your job: Take the user's request (in any language) and transform it into a detailed, professional image generation prompt in ENGLISH.
-
+{evolution_context}
 CONTEXT - C8L Agency:
 C8L Agency (also written as "C.8.L" or "Corazones Locos") is a music production and technology company. When the user mentions "C8L", "C.8.L", or "C8L Agency" and asks for an IMAGE, they want a LOGO, EMBLEM, INSIGNIA or SHIELD design — NOT a portrait or character. Their brand aesthetic is: dark background, neon purple/magenta/gold accents, futuristic emblem design, lion silhouette integrated into logo, music/DJ culture symbols, cyberpunk-inspired. Generate it as a professional logo/emblem/shield design centered on dark background.
 
