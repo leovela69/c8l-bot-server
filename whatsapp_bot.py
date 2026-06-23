@@ -893,6 +893,60 @@ def main():
         if reply:
             broadcast_content_created(msg.from_user.first_name, "video", tema)
 
+    @bot.message_handler(commands=["video"])
+    def cmd_video_ia(msg):
+        """Genera video REAL con Veo 3.1 (IA de Google). 10 gratis/mes."""
+        desc = msg.text.replace("/video", "").strip()
+        if not desc:
+            bot.reply_to(msg,
+                "🎬 *Generador de Video IA (Veo 3.1)*\n\n"
+                "Uso: /video [descripción del video]\n\n"
+                "Ejemplos:\n"
+                "• /video león dorado rugiendo en Times Square de noche\n"
+                "• /video olas del mar al atardecer en cámara lenta\n"
+                "• /video logotipo C8L girando en el espacio con neon\n"
+                "• /video DJ mezclando música en club con luces neon\n\n"
+                "⏱️ Tarda 2-5 minutos. Genera 8 seg en 720p con audio.\n"
+                "📊 Límite: 10 videos/mes (cuenta Google).",
+                parse_mode="Markdown")
+            return
+
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id,
+            f"🎬 *Generando video con Veo 3.1...*\n\n"
+            f"📝 Prompt: {desc[:100]}\n"
+            f"⏱️ Esto tarda 2-5 minutos. Te aviso cuando esté listo.",
+            parse_mode="Markdown")
+
+        # Generar video en un thread para no bloquear el bot
+        def _generate_and_send():
+            try:
+                from pantheon.video_engine import generate_video
+                from config import GEMINI_API_KEY
+
+                video_bytes = generate_video(desc, GEMINI_API_KEY)
+
+                if video_bytes:
+                    # Enviar video al chat
+                    files = {"video": ("c8l_video.mp4", io.BytesIO(video_bytes), "video/mp4")}
+                    data = {"chat_id": msg.chat.id, "caption": f"🎬 {desc[:100]}\n\n🏛️ C8L Agency — Veo 3.1"}
+                    requests.post(f"{TG_API}/sendVideo", data=data, files=files, timeout=120)
+                    logger.info(f"Video enviado: {len(video_bytes)} bytes")
+                    estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "video_ia", "veo")
+                    broadcast_content_created(msg.from_user.first_name, "video", desc)
+                else:
+                    tg_send(msg.chat.id,
+                        "❌ No pude generar el video. Posibles causas:\n"
+                        "• Límite mensual alcanzado (10/mes)\n"
+                        "• Prompt no compatible\n"
+                        "• Error temporal de Google\n\n"
+                        "Intenta con otra descripción o espera unos minutos.")
+            except Exception as e:
+                logger.error(f"Error generando video: {e}")
+                tg_send(msg.chat.id, f"❌ Error: {str(e)[:150]}")
+
+        threading.Thread(target=_generate_and_send, daemon=True).start()
+
     @bot.message_handler(commands=["crear_imagen"])
     def cmd_imagen(msg):
         desc = msg.text.replace("/crear_imagen", "").strip()
