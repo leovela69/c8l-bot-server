@@ -28,7 +28,7 @@ GROUP_CHAT_ID: str = os.environ.get("GROUP_CHAT_ID", "-1002476372487")
 _GEMINI_P1 = "AQ.Ab8RN6K7V73RYhMVEMSvWjnxuwd"
 _GEMINI_P2 = "88vbylajVttxHAqVWLTBZXA"
 GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", _GEMINI_P1 + _GEMINI_P2)
-GEMINI_IMAGE_MODEL: str = "gemini-2.5-flash-preview-native-audio-dialog"
+GEMINI_IMAGE_MODEL: str = "gemini-2.5-flash-image"
 GEMINI_IMAGE_URL: str = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_IMAGE_MODEL}:generateContent"
 
 # ---------------------------------------------------------------------------

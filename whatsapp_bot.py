@@ -192,9 +192,22 @@ def broadcast_announcement(title, message):
 # ---------------------------------------------------------------------------
 _history = {}
 
+# Memoria de ultima imagen generada por chat (para edicion)
+_last_image = {}  # {chat_id: {"bytes": b"...", "prompt": "..."}}
+
 
 def get_history(chat_id):
     return _history.setdefault(chat_id, [])
+
+
+def save_last_image(chat_id, image_bytes, prompt=""):
+    """Guarda la ultima imagen generada para edicion posterior."""
+    _last_image[chat_id] = {"bytes": image_bytes, "prompt": prompt}
+
+
+def get_last_image(chat_id):
+    """Recupera la ultima imagen generada para este chat."""
+    return _last_image.get(chat_id)
 
 
 def add_history(chat_id, role, text):
@@ -329,8 +342,33 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
             # Creacion general (detecta tipo automaticamente)
             # Pasar el texto original del usuario para que el prompt enhancer lo interprete completo
             tg_typing(chat_id)
-            result = vulcano.create(text)
-            _send_creation_result(chat_id, result)
+
+            # Detectar si quiere EDITAR la ultima imagen
+            edit_keywords = ["mejora", "cambia", "edita", "modifica", "corrige", "arregla",
+                            "hazla", "ponle", "quitale", "aclara", "oscurece", "voltea",
+                            "rota", "agranda", "achica", "mas grande", "mas pequeño",
+                            "mas oscuro", "mas claro", "otro color", "sin fondo"]
+            is_edit = any(kw in text.lower() for kw in edit_keywords)
+            last_img = get_last_image(chat_id)
+
+            if is_edit and last_img:
+                tg_send(chat_id, "🎨 Editando imagen anterior...")
+                edited = vulcano.edit_image_gemini(last_img["bytes"], text)
+                if edited:
+                    save_last_image(chat_id, edited, text)
+                    tg_send_photo(chat_id, edited, caption=f"✅ {text[:100]}")
+                else:
+                    tg_send(chat_id, "⚠️ No pude editar. Generando nueva...")
+                    result = vulcano.create(text)
+                    _send_creation_result(chat_id, result)
+                    if result and result.get("type") == "image":
+                        save_last_image(chat_id, result["content"], text)
+            else:
+                result = vulcano.create(text)
+                _send_creation_result(chat_id, result)
+                # Guardar imagen si se genero una
+                if result and result.get("type") == "image":
+                    save_last_image(chat_id, result["content"], text)
 
         elif agent == "apolo":
             # Musica
@@ -1156,6 +1194,57 @@ def main():
 
         reply += "\n/ajedrez para nueva partida"
         tg_send(chat_id, reply, parse_mode="Markdown")
+
+    # === HANDLER DE FOTOS — Edicion de imagenes con Gemini ===
+
+    @bot.message_handler(content_types=["photo"])
+    def handle_photo(msg):
+        """Cuando el usuario manda una foto con texto, edita la imagen con Gemini."""
+        chat_id = msg.chat.id
+        user_name = msg.from_user.first_name or "Usuario"
+        caption = msg.caption or ""
+        chat_type = msg.chat.type
+
+        # En grupos: solo si mencionan al bot
+        if 'group' in chat_type:
+            is_mention = f"@{BOT_NAME}" in caption.lower() or "@leon_leo_bot" in caption.lower()
+            is_reply_to_bot = (msg.reply_to_message and
+                               msg.reply_to_message.from_user and
+                               msg.reply_to_message.from_user.username == BOT_NAME)
+            if not is_mention and not is_reply_to_bot:
+                return
+            caption = caption.replace(f"@{BOT_NAME}", "").replace("@leon_leo_bot", "").strip()
+
+        if not caption:
+            caption = "mejora esta imagen, hazla mas profesional y detallada"
+
+        logger.info(f"[FOTO] [{user_name}]: {caption[:80]}")
+        tg_typing(chat_id)
+        tg_send(chat_id, "🎨 Editando imagen con Gemini...")
+
+        # Descargar la foto del usuario
+        try:
+            file_id = msg.photo[-1].file_id  # Mejor resolucion
+            file_info = bot.get_file(file_id)
+            downloaded = bot.download_file(file_info.file_path)
+
+            # Editar con Gemini
+            edited = vulcano.edit_image_gemini(downloaded, caption)
+            if edited:
+                save_last_image(chat_id, edited, caption)
+                tg_send_photo(chat_id, edited, caption=f"✅ {caption[:100]}")
+            else:
+                # Si falla la edicion, intentar generar nueva basada en la descripcion
+                tg_send(chat_id, "⚠️ No pude editar. Generando nueva imagen basada en tu instrucción...")
+                result = vulcano.create(caption, creation_type="image")
+                if result and result.get("type") == "image":
+                    save_last_image(chat_id, result["content"], caption)
+                    tg_send_photo(chat_id, result["content"], caption=f"🎨 {caption[:100]}")
+                else:
+                    tg_send(chat_id, "❌ No pude procesar la imagen. Intenta de nuevo.")
+        except Exception as e:
+            logger.error(f"Error procesando foto: {e}")
+            tg_send(chat_id, "❌ Error al procesar la foto.")
 
     # === MENSAJE LIBRE (Zeus orquesta) ===
 

@@ -244,18 +244,18 @@ class Vulcano:
                 "contents": [
                     {
                         "parts": [
-                            {"text": f"Generate an image: {prompt}"}
+                            {"text": f"Generate a high quality image of: {prompt}. Do not include any text or watermarks in the image."}
                         ]
                     }
                 ],
                 "generationConfig": {
-                    "responseModalities": ["IMAGE", "TEXT"],
-                    "temperature": 1.0
+                    "responseModalities": ["IMAGE", "TEXT"]
                 }
             }
 
             url = f"{GEMINI_IMAGE_URL}?key={GEMINI_API_KEY}"
-            r = requests.post(url, headers=headers, json=payload, timeout=60)
+            logger.info(f"Gemini Image: llamando API con prompt: {prompt[:80]}")
+            r = requests.post(url, headers=headers, json=payload, timeout=90)
 
             if r.status_code == 200:
                 data = r.json()
@@ -267,14 +267,77 @@ class Vulcano:
                         if "inlineData" in part:
                             img_data = part["inlineData"]
                             if "image" in img_data.get("mimeType", ""):
-                                return base64.b64decode(img_data["data"])
-                logger.warning("Gemini: respuesta OK pero sin imagen en candidates")
+                                img_bytes = base64.b64decode(img_data["data"])
+                                logger.info(f"Gemini Image OK: {len(img_bytes)} bytes")
+                                return img_bytes
+                # Si no hay inlineData, tal vez respondio con texto solamente
+                logger.warning(f"Gemini: respuesta sin imagen. Candidates: {len(candidates)}")
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    for part in parts:
+                        if "text" in part:
+                            logger.warning(f"Gemini respondio texto: {part['text'][:100]}")
             else:
-                error_msg = r.text[:200] if r.text else "sin detalle"
+                error_msg = ""
+                try:
+                    error_data = r.json()
+                    error_msg = error_data.get("error", {}).get("message", r.text[:200])
+                except:
+                    error_msg = r.text[:200]
                 logger.warning(f"Gemini Image fallo: {r.status_code} — {error_msg}")
 
         except Exception as e:
             logger.warning(f"Gemini Image error: {e}")
+        return None
+
+    def edit_image_gemini(self, image_bytes, instruction):
+        """Edita una imagen existente con Gemini (image-to-image).
+        Envía la imagen original + instrucción de edición."""
+        try:
+            img_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "inlineData": {
+                                    "mimeType": "image/jpeg",
+                                    "data": img_base64
+                                }
+                            },
+                            {"text": f"Edit this image: {instruction}. Return the modified image."}
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "responseModalities": ["IMAGE", "TEXT"]
+                }
+            }
+
+            url = f"{GEMINI_IMAGE_URL}?key={GEMINI_API_KEY}"
+            logger.info(f"Gemini Edit: {instruction[:80]}")
+            r = requests.post(url, headers=headers, json=payload, timeout=90)
+
+            if r.status_code == 200:
+                data = r.json()
+                candidates = data.get("candidates", [])
+                for candidate in candidates:
+                    parts = candidate.get("content", {}).get("parts", [])
+                    for part in parts:
+                        if "inlineData" in part:
+                            img_data = part["inlineData"]
+                            if "image" in img_data.get("mimeType", ""):
+                                edited = base64.b64decode(img_data["data"])
+                                logger.info(f"Gemini Edit OK: {len(edited)} bytes")
+                                return edited
+                logger.warning("Gemini Edit: respuesta sin imagen editada")
+            else:
+                logger.warning(f"Gemini Edit fallo: {r.status_code}")
+
+        except Exception as e:
+            logger.warning(f"Gemini Edit error: {e}")
         return None
 
     def _detect_image_style(self, prompt):
