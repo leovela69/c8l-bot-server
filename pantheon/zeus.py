@@ -44,6 +44,7 @@ REGLAS:
 - Si pide diagnosticar la web -> primary_agent: "aries"
 - Si pide estrategia/marketing -> primary_agent: "atenea"
 - Si es un saludo simple -> primary_agent: "hermes"
+- PARA IMAGENES: En task_description incluye TODOS los detalles visuales que el usuario menciona (colores, estilo, objetos, escenario, mood, personajes). No resumas ni simplifiques. Pasa la descripcion completa y literal del usuario.
 - SIEMPRE responde con JSON valido, nada mas."""
 
 
@@ -89,7 +90,7 @@ def _local_intent_detection(text):
 
     # Mapeo de keywords a agentes
     mappings = [
-        (["imagen", "dibuja", "foto", "ilustra", "logo", "banner", "disena", "diseña", "genera una imagen"], "vulcano", "Generar imagen"),
+        (["imagen", "dibuja", "foto", "ilustra", "logo", "banner", "disena", "diseña", "genera una imagen", "crea una imagen", "hazme una imagen", "quiero una imagen", "pintame", "genera", "crea un"], "vulcano", "Generar imagen"),
         (["juego", "game", "codigo", "programa", "script", "app", "html", "snake", "tetris", "pong"], "hefesto", "Generar codigo/juego"),
         (["video", "clip", "animacion", "cortometraje", "storyboard"], "ares", "Generar guion de video"),
         (["cancion", "musica", "prompt para suno", "prompt para udio", "beat", "letra"], "apolo", "Generar musica/prompt musical"),

@@ -327,6 +327,7 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
 
         elif agent == "vulcano":
             # Creacion general (detecta tipo automaticamente)
+            # Pasar el texto original del usuario para que el prompt enhancer lo interprete completo
             tg_typing(chat_id)
             result = vulcano.create(text)
             _send_creation_result(chat_id, result)
@@ -811,7 +812,7 @@ def main():
         if not desc:
             desc = "leon dorado en escenario de neon, estilo cyberpunk"
         tg_upload_action(msg.chat.id)
-        tg_send(msg.chat.id, "🎨 Vulcano generando imagen...")
+        tg_send(msg.chat.id, "🎨 Vulcano interpretando tu idea y generando imagen...")
         result = vulcano.create(desc, creation_type="image")
         _send_creation_result(msg.chat.id, result)
         estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "imagen", "vulcano")
