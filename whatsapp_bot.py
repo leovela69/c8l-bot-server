@@ -39,6 +39,10 @@ from pantheon.slaves.atenea import Atenea
 from pantheon.slaves.estia import Estia
 from pantheon.slaves.guardian import Guardian
 
+# Import Group System
+from group_personality import GROUP_SYSTEM_PROMPT, COMUNICADO_PROMPT, get_random_auto_message
+from group_scheduler import GroupScheduler
+
 # ---------------------------------------------------------------------------
 # Inicializar agentes
 # ---------------------------------------------------------------------------
@@ -542,6 +546,11 @@ def main():
         daemon=True
     ).start()
 
+    # Scheduler de mensajes automaticos al grupo
+    scheduler = GroupScheduler(broadcast_to_group)
+    scheduler.start()
+    logger.info("📅 Scheduler de grupo activo — mensajes cada ~4h")
+
     bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
     # Notificar admin
@@ -660,6 +669,81 @@ def main():
             bot.reply_to(msg, "✅ Anuncio enviado al grupo!")
         else:
             bot.reply_to(msg, "❌ No pude enviar. ¿El bot está en el grupo? Usa /groupid en el grupo primero.")
+
+    @bot.message_handler(commands=["comunicado"])
+    def cmd_comunicado(msg):
+        """Admin: genera comunicado estilo Leo Vela con IA. Uso: /comunicado [tema] [pilar]"""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "🚫 Solo el admin.")
+        parts = msg.text.replace("/comunicado", "").strip()
+        if not parts:
+            return bot.reply_to(msg,
+                "📡 *Uso:* /comunicado [tema]\n\n"
+                "Ejemplos:\n"
+                "• /comunicado productividad\n"
+                "• /comunicado musica experimental\n"
+                "• /comunicado motivacion lunes\n"
+                "• /comunicado web registro\n\n"
+                "O usa /comunicado random para uno aleatorio.",
+                parse_mode="Markdown")
+
+        if parts.lower() == "random":
+            # Enviar mensaje aleatorio predefinido
+            message = get_random_auto_message()
+            ok = broadcast_to_group(message, "HTML")
+            if ok:
+                bot.reply_to(msg, "✅ Comunicado random enviado al grupo!")
+            else:
+                bot.reply_to(msg, "❌ No pude enviar.")
+            return
+
+        # Detectar pilar
+        pilar = "motivacion"
+        for p in ["tareas", "musica", "motivacion", "web"]:
+            if p in parts.lower():
+                pilar = p
+                break
+
+        # Generar con IA
+        tg_typing(msg.chat.id)
+        bot.reply_to(msg, f"📡 Generando comunicado ({pilar})...")
+
+        from openrouter_client import call_openrouter
+        prompt = COMUNICADO_PROMPT.format(tema=parts, pilar=pilar)
+        reply = call_openrouter(
+            prompt=prompt,
+            system_prompt="Eres el generador de comunicados de C8L Agency.",
+            agent_name="hermes",
+            temperature=0.9
+        )
+        if reply:
+            ok = broadcast_to_group(reply, "HTML")
+            if ok:
+                bot.reply_to(msg, f"✅ Comunicado enviado al grupo!\n\nPreview:\n{reply[:200]}...")
+            else:
+                # Si falla HTML, intentar sin parse_mode
+                ok2 = broadcast_to_group(reply, None)
+                if ok2:
+                    bot.reply_to(msg, "✅ Comunicado enviado (texto plano).")
+                else:
+                    bot.reply_to(msg, f"❌ No pude enviar al grupo. Preview:\n\n{reply[:500]}")
+        else:
+            bot.reply_to(msg, "❌ No pude generar el comunicado. Intenta con /comunicado random")
+
+    @bot.message_handler(commands=["grupo_msg"])
+    def cmd_grupo_msg(msg):
+        """Admin: envía mensaje predefinido por categoría. Uso: /grupo_msg tareas|musica|motivacion|web"""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "🚫 Solo el admin.")
+        cat = msg.text.replace("/grupo_msg", "").strip().lower()
+        if cat not in ["tareas", "musica", "motivacion", "web"]:
+            return bot.reply_to(msg, "Uso: /grupo_msg tareas|musica|motivacion|web")
+        message = get_random_auto_message(cat)
+        ok = broadcast_to_group(message, "HTML")
+        if ok:
+            bot.reply_to(msg, f"✅ Mensaje de {cat} enviado al grupo!")
+        else:
+            bot.reply_to(msg, "❌ No pude enviar.")
 
     @bot.message_handler(commands=["diagnosticar"])
     def cmd_diagnosticar(msg):
@@ -1054,7 +1138,14 @@ def main():
             if not text:
                 text = "hola"
 
-        logger.info(f"[{user_name}] ({chat_id}|{chat_type}): {text[:80]}")
+            # En grupo: usar personalidad villano empoderado
+            logger.info(f"[GRUPO] [{user_name}]: {text[:80]}")
+            tg_typing(chat_id)
+            _respond_in_group(chat_id, text, user_name)
+            return
+
+        # En PRIVADO: flujo normal con Zeus
+        logger.info(f"[{user_name}] ({chat_id}): {text[:80]}")
         tg_typing(chat_id)
 
         # Zeus analiza y decide
@@ -1063,6 +1154,25 @@ def main():
 
         # Dispatch al agente correcto
         dispatch_to_agent(intent_data, text, chat_id, user_name)
+
+
+    def _respond_in_group(chat_id, text, user_name):
+        """Responde en el grupo usando la personalidad del villano empoderado."""
+        from openrouter_client import call_openrouter
+        try:
+            reply = call_openrouter(
+                prompt=f"{user_name} dice en el grupo: {text}",
+                system_prompt=GROUP_SYSTEM_PROMPT,
+                agent_name="hermes",
+                temperature=0.9
+            )
+            if reply:
+                tg_send(chat_id, reply)
+            else:
+                tg_send(chat_id, "Rakata! 🎧 Error temporal, criaturas. Volved a intentarlo. (Boom!)")
+        except Exception as e:
+            logger.error(f"Error respondiendo en grupo: {e}")
+            tg_send(chat_id, "⚡ El Panteon recarga energia... un momento.")
 
     # === START POLLING ===
     logger.info("🏛️ PANTEON MASTER — POLLING activo")
