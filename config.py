@@ -9,8 +9,8 @@ import os
 # ---------------------------------------------------------------------------
 # Telegram
 # ---------------------------------------------------------------------------
-_TK_P1 = "8557275735:AAFfSXMax"
-_TK_P2 = "jnSOSJmu-QtN00sZUAwSwIK6Uo"
+_TK_P1 = "8557275735:AAFvVQaDkxp9"
+_TK_P2 = "E2ks_R0MYoVUrIDzz8EHT2w"
 TELEGRAM_BOT_TOKEN: str = os.environ.get("TELEGRAM_BOT_TOKEN", _TK_P1 + _TK_P2)
 ADMIN_CHAT_ID: str = os.environ.get("ADMIN_CHAT_ID", "1970956749")
 BOT_NAME: str = "leon_leo_bot"
