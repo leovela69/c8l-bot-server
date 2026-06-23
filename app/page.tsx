@@ -39,7 +39,9 @@ export default function Home() {
             <NavCard href="/bandos" icon="⚔️" title="Bandos" subtitle="Familias" color="gold" />
             <NavCard href="/tv" icon="📱" title="C8L TV" subtitle="Contenido" color="purple" />
             <NavCard href="/monedero" icon="💰" title="Monedero" subtitle="Wallet" color="gold" />
+            <NavCard href="/registro" icon="👤" title="Mi Cuenta" subtitle="Login" color="purple" />
             <NavCard href="/legal" icon="⚖️" title="Legal" subtitle="Normas" color="cyan" />
+            <NavCard href="/control" icon="🛡️" title="Control" subtitle="Admin" color="gold" />
           </div>
 
           <div className="mt-16 flex justify-center gap-8 md:gap-16">
