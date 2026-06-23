@@ -382,62 +382,74 @@ Make sure the text "C8L AGENCY" is prominent, centered on the main surface (scre
 
     def _generate_image_gemini(self, prompt):
         """Genera imagen con Gemini 2.5 Flash Image (Nano Banana).
-        Entiende español, 500 imgs/dia gratis, calidad superior."""
+        Usa la librería oficial google-genai (soporta todos los formatos de key)."""
         try:
+            from google import genai
+            from google.genai import types
+
+            client = genai.Client(api_key=GEMINI_API_KEY)
+
             # Agregar contexto de marca si menciona C8L
             c8l_context = ""
             if any(kw in prompt.lower() for kw in ["c8l", "c.8.l", "corazones locos"]):
                 c8l_context = " C8L Agency is a music brand. Generate a professional LOGO, EMBLEM or SHIELD design (not a character portrait). Style: dark background, neon purple and gold accents, lion silhouette integrated into geometric emblem, futuristic cyberpunk branding, centered composition."
 
+            full_prompt = f"Generate a high quality image of: {prompt}.{c8l_context} Do not include any text or watermarks in the image."
+
+            logger.info(f"Gemini Image (SDK): {prompt[:80]}")
+
+            response = client.models.generate_content(
+                model="gemini-2.5-flash-preview-native-audio-dialog",
+                contents=full_prompt,
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE", "TEXT"],
+                )
+            )
+
+            # Extraer imagen de la respuesta
+            if response and response.candidates:
+                for part in response.candidates[0].content.parts:
+                    if part.inline_data and "image" in (part.inline_data.mime_type or ""):
+                        img_bytes = part.inline_data.data
+                        logger.info(f"Gemini Image OK (SDK): {len(img_bytes)} bytes")
+                        return img_bytes
+
+            logger.warning("Gemini SDK: respuesta sin imagen")
+            return None
+
+        except ImportError:
+            logger.warning("Gemini SDK: google-genai no instalado, usando REST...")
+            return self._generate_image_gemini_rest(prompt)
+        except Exception as e:
+            logger.warning(f"Gemini SDK error: {str(e)[:150]}")
+            return None
+
+    def _generate_image_gemini_rest(self, prompt):
+        """Fallback: Gemini via REST API (para keys tipo AIzaSy)."""
+        try:
+            c8l_context = ""
+            if any(kw in prompt.lower() for kw in ["c8l", "c.8.l", "corazones locos"]):
+                c8l_context = " C8L Agency: professional logo/emblem, dark background, neon purple gold, lion silhouette."
+
             headers = {"Content-Type": "application/json"}
             payload = {
-                "contents": [
-                    {
-                        "parts": [
-                            {"text": f"Generate a high quality image of: {prompt}.{c8l_context} Do not include any text or watermarks in the image."}
-                        ]
-                    }
-                ],
-                "generationConfig": {
-                    "responseModalities": ["IMAGE", "TEXT"]
-                }
+                "contents": [{"parts": [{"text": f"Generate image: {prompt}.{c8l_context} No text in image."}]}],
+                "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
             }
-
             url = f"{GEMINI_IMAGE_URL}?key={GEMINI_API_KEY}"
-            logger.info(f"Gemini Image: llamando API con prompt: {prompt[:80]}")
             r = requests.post(url, headers=headers, json=payload, timeout=90)
 
             if r.status_code == 200:
                 data = r.json()
-                # Extraer imagen de la respuesta
-                candidates = data.get("candidates", [])
-                for candidate in candidates:
-                    parts = candidate.get("content", {}).get("parts", [])
-                    for part in parts:
+                for candidate in data.get("candidates", []):
+                    for part in candidate.get("content", {}).get("parts", []):
                         if "inlineData" in part:
-                            img_data = part["inlineData"]
-                            if "image" in img_data.get("mimeType", ""):
-                                img_bytes = base64.b64decode(img_data["data"])
-                                logger.info(f"Gemini Image OK: {len(img_bytes)} bytes")
-                                return img_bytes
-                # Si no hay inlineData, tal vez respondio con texto solamente
-                logger.warning(f"Gemini: respuesta sin imagen. Candidates: {len(candidates)}")
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    for part in parts:
-                        if "text" in part:
-                            logger.warning(f"Gemini respondio texto: {part['text'][:100]}")
+                            if "image" in part["inlineData"].get("mimeType", ""):
+                                return base64.b64decode(part["inlineData"]["data"])
             else:
-                error_msg = ""
-                try:
-                    error_data = r.json()
-                    error_msg = error_data.get("error", {}).get("message", r.text[:200])
-                except:
-                    error_msg = r.text[:200]
-                logger.warning(f"Gemini Image fallo: {r.status_code} — {error_msg}")
-
+                logger.warning(f"Gemini REST fallo: {r.status_code}")
         except Exception as e:
-            logger.warning(f"Gemini Image error: {e}")
+            logger.warning(f"Gemini REST error: {e}")
         return None
 
     def edit_image_gemini(self, image_bytes, instruction):
