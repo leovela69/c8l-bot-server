@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import LegalFooter from '@/components/legal/LegalFooter'
 
@@ -13,11 +13,11 @@ interface Video {
   views: number
   likes: number
   thumbnail: string
-  embedUrl: string
+  videoUrl: string
   uploadedAt: string
 }
 
-// 8 videos de contenido C8L — URLs de YouTube embed (videos públicos de categorías relevantes)
+// 8 videos de contenido C8L — Videos públicos MP4 que se pueden reproducir sin problemas
 const VIDEOS: Video[] = [
   {
     id: 'v1',
@@ -25,11 +25,11 @@ const VIDEOS: Video[] = [
     description: 'La primera producción oficial de C8L Agency mezclando Bolero clásico con House moderno.',
     author: 'LeoVela',
     category: '🎵 Música',
-    duration: '4:23',
+    duration: '0:10',
     views: 3420,
     likes: 567,
     thumbnail: '🎵',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
     uploadedAt: '2026-06-20',
   },
   {
@@ -38,11 +38,11 @@ const VIDEOS: Video[] = [
     description: 'Aprende a crear tu primera canción con IA en el Estudio Musical de C8L Agency.',
     author: 'C8L_Official',
     category: '📚 Tutorial',
-    duration: '8:15',
+    duration: '0:10',
     views: 5200,
     likes: 890,
     thumbnail: '🎹',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.w3schools.com/html/movie.mp4',
     uploadedAt: '2026-06-19',
   },
   {
@@ -51,11 +51,11 @@ const VIDEOS: Video[] = [
     description: 'La final épica del primer torneo de Casino Quantum. Jackpots, drama y emoción.',
     author: 'C8L_Official',
     category: '🎰 Gaming',
-    duration: '12:47',
+    duration: '0:12',
     views: 8900,
     likes: 1234,
     thumbnail: '🎰',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     uploadedAt: '2026-06-18',
   },
   {
@@ -64,11 +64,11 @@ const VIDEOS: Video[] = [
     description: 'Beat instrumental tipo Bolero-House. Disponible para usar en tus creaciones.',
     author: 'C8L_Beats',
     category: '🎵 Música',
-    duration: '3:56',
+    duration: '0:15',
     views: 2100,
     likes: 412,
     thumbnail: '🌃',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     uploadedAt: '2026-06-17',
   },
   {
@@ -77,11 +77,11 @@ const VIDEOS: Video[] = [
     description: 'Las mejores estrategias para maximizar tus C8L Coins en la Ruleta Quantum.',
     author: 'ProGamer',
     category: '🎮 Estrategia',
-    duration: '6:30',
+    duration: '0:15',
     views: 4500,
     likes: 678,
     thumbnail: '🎡',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
     uploadedAt: '2026-06-16',
   },
   {
@@ -90,11 +90,11 @@ const VIDEOS: Video[] = [
     description: 'Sesión en directo mezclando Bolero-House con electrónica experimental.',
     author: 'DJ_Quantum',
     category: '📺 Live',
-    duration: '45:12',
+    duration: '0:15',
     views: 6700,
     likes: 945,
     thumbnail: '🎧',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
     uploadedAt: '2026-06-15',
   },
   {
@@ -103,11 +103,11 @@ const VIDEOS: Video[] = [
     description: 'Todo lo que necesitas saber sobre Bandos — crear tu familia, guerras, y ranking.',
     author: 'C8L_Official',
     category: '📚 Tutorial',
-    duration: '10:05',
+    duration: '0:15',
     views: 3800,
     likes: 521,
     thumbnail: '⚔️',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
     uploadedAt: '2026-06-14',
   },
   {
@@ -116,11 +116,11 @@ const VIDEOS: Video[] = [
     description: 'La Bamba como nunca la habías escuchado. Fusión latina con drops electrónicos.',
     author: 'LeoVela',
     category: '🎵 Música',
-    duration: '3:28',
+    duration: '0:13',
     views: 7200,
     likes: 1089,
     thumbnail: '🎤',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
     uploadedAt: '2026-06-13',
   },
 ]
@@ -131,6 +131,7 @@ export default function TVPage() {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
   const [filter, setFilter] = useState('Todos')
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'likes'>('recent')
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const filteredVideos = VIDEOS
     .filter(v => filter === 'Todos' || v.category === filter)
@@ -139,6 +140,30 @@ export default function TVPage() {
       if (sortBy === 'likes') return b.likes - a.likes
       return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
     })
+
+  // Cuando cambia el video seleccionado, reproducir automáticamente
+  useEffect(() => {
+    if (selectedVideo && videoRef.current) {
+      videoRef.current.load()
+      videoRef.current.play().catch(() => {})
+    }
+  }, [selectedVideo])
+
+  const goToVideo = (direction: 'prev' | 'next') => {
+    if (!selectedVideo) return
+    const currentIdx = filteredVideos.findIndex(v => v.id === selectedVideo.id)
+    if (currentIdx === -1) {
+      setSelectedVideo(filteredVideos[0])
+      return
+    }
+    if (direction === 'next') {
+      const nextIdx = currentIdx < filteredVideos.length - 1 ? currentIdx + 1 : 0
+      setSelectedVideo(filteredVideos[nextIdx])
+    } else {
+      const prevIdx = currentIdx > 0 ? currentIdx - 1 : filteredVideos.length - 1
+      setSelectedVideo(filteredVideos[prevIdx])
+    }
+  }
 
   const challenges = [
     { title: 'Mejor cover de la semana', reward: '500 C8L', deadline: '3 días', participants: 12 },
@@ -166,15 +191,22 @@ export default function TVPage() {
         {selectedVideo && (
           <div className="mb-8">
             <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border border-c8l-purple/30 mb-4">
-              <iframe
-                src={selectedVideo.embedUrl}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={selectedVideo.title}
-              />
+              <video
+                ref={videoRef}
+                key={selectedVideo.id}
+                controls
+                autoPlay
+                playsInline
+                className="w-full h-full object-contain bg-black"
+                onEnded={() => goToVideo('next')}
+              >
+                <source src={selectedVideo.videoUrl} type="video/mp4" />
+                Tu navegador no soporta video HTML5.
+              </video>
             </div>
-            <div className="flex justify-between items-start">
+
+            {/* Info del video */}
+            <div className="flex justify-between items-start mb-4">
               <div>
                 <h2 className="text-2xl font-outfit font-bold text-white">{selectedVideo.title}</h2>
                 <p className="text-gray-400 text-sm mt-1">{selectedVideo.description}</p>
@@ -186,8 +218,29 @@ export default function TVPage() {
                   <span className="px-2 py-0.5 rounded bg-c8l-purple/20 text-c8l-purple">{selectedVideo.category}</span>
                 </div>
               </div>
-              <button onClick={() => setSelectedVideo(null)} className="text-gray-400 hover:text-white transition text-sm">
+              <button onClick={() => setSelectedVideo(null)} className="text-gray-400 hover:text-white transition text-sm px-3 py-1 rounded-lg hover:bg-gray-800">
                 ✕ Cerrar
+              </button>
+            </div>
+
+            {/* Navigation: Anterior / Siguiente */}
+            <div className="flex items-center justify-between gap-4">
+              <button
+                onClick={() => goToVideo('prev')}
+                className="flex items-center gap-2 px-5 py-3 glass rounded-xl hover:border-c8l-purple/50 transition hover:scale-105 text-sm font-medium"
+              >
+                <span className="text-lg">⏮</span>
+                <span className="text-gray-300">Anterior</span>
+              </button>
+              <span className="text-sm text-gray-400 font-mono">
+                {filteredVideos.findIndex(v => v.id === selectedVideo.id) + 1} / {filteredVideos.length}
+              </span>
+              <button
+                onClick={() => goToVideo('next')}
+                className="flex items-center gap-2 px-5 py-3 glass rounded-xl hover:border-c8l-purple/50 transition hover:scale-105 text-sm font-medium"
+              >
+                <span className="text-gray-300">Siguiente</span>
+                <span className="text-lg">⏭</span>
               </button>
             </div>
           </div>
@@ -242,7 +295,9 @@ export default function TVPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredVideos.map(video => (
             <div key={video.id} onClick={() => setSelectedVideo(video)}
-              className="glass rounded-xl overflow-hidden group cursor-pointer hover:border-c8l-purple/50 transition hover:scale-[1.02]">
+              className={`glass rounded-xl overflow-hidden group cursor-pointer hover:border-c8l-purple/50 transition hover:scale-[1.02] ${
+                selectedVideo?.id === video.id ? 'border-c8l-purple ring-2 ring-c8l-purple/30' : ''
+              }`}>
               <div className="relative h-36 bg-gradient-to-br from-c8l-purple/20 to-c8l-pink/10 flex items-center justify-center">
                 <span className="text-5xl group-hover:scale-125 transition-transform">{video.thumbnail}</span>
                 <div className="absolute bottom-2 right-2 bg-black/80 text-xs px-2 py-0.5 rounded">{video.duration}</div>
@@ -251,6 +306,12 @@ export default function TVPage() {
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                   <div className="w-14 h-14 rounded-full bg-c8l-purple/80 flex items-center justify-center text-2xl">▶</div>
                 </div>
+                {/* Now playing indicator */}
+                {selectedVideo?.id === video.id && (
+                  <div className="absolute top-2 right-2 bg-c8l-purple text-[10px] px-2 py-0.5 rounded font-bold animate-pulse">
+                    ▶ PLAYING
+                  </div>
+                )}
               </div>
               <div className="p-3">
                 <h4 className="font-semibold text-sm mb-1 line-clamp-2 group-hover:text-c8l-purple transition">{video.title}</h4>
