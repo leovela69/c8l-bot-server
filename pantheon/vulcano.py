@@ -219,8 +219,10 @@ class Vulcano:
             logger.info(f"Vulcano: imagen generada con Gemini OK ({len(image_bytes)} bytes)")
             return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
 
-        # Paso 3: Fallback a Pollinations (necesita prompt en ingles)
+        # Paso 3: Fallback a Pollinations (necesita prompt en ingles MEJORADO)
         logger.info("Vulcano: Gemini fallo, usando Pollinations como fallback...")
+
+        # SIEMPRE usar el enhancer para Pollinations (no entiende español)
         enhanced_prompt = self._enhance_image_prompt(prompt, style)
         logger.info(f"Vulcano prompt mejorado [{style}]: {enhanced_prompt[:200]}")
 
@@ -239,12 +241,17 @@ class Vulcano:
         """Genera imagen con Gemini 2.5 Flash Image (Nano Banana).
         Entiende español, 500 imgs/dia gratis, calidad superior."""
         try:
+            # Agregar contexto de marca si menciona C8L
+            c8l_context = ""
+            if any(kw in prompt.lower() for kw in ["c8l", "c.8.l", "corazones locos"]):
+                c8l_context = " C8L Agency brand style: dark futuristic theme, neon purple and gold accents, lion emblem, music/DJ culture, cyberpunk aesthetic."
+
             headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [
                     {
                         "parts": [
-                            {"text": f"Generate a high quality image of: {prompt}. Do not include any text or watermarks in the image."}
+                            {"text": f"Generate a high quality image of: {prompt}.{c8l_context} Do not include any text or watermarks in the image."}
                         ]
                     }
                 ],
@@ -473,6 +480,9 @@ End with: "highly detailed, professional quality, beautiful lighting, 8k resolut
 
 Your job: Take the user's request (in any language) and transform it into a detailed, professional image generation prompt in ENGLISH.
 
+CONTEXT - C8L Agency:
+C8L Agency (also written as "C.8.L" or "Corazones Locos") is a music production and technology company. Their brand aesthetic is: dark theme, neon purple/magenta/gold accents, futuristic, cyberpunk-inspired, lion emblems, music/DJ culture, Bolero-House genre. When the user mentions "C8L", "C.8.L", or "C8L Agency", incorporate this brand identity.
+
 {style_note}
 
 CRITICAL RULES:
@@ -532,11 +542,13 @@ CRITICAL RULES:
             "monstruo": "monster", "criatura": "creature", "bestia": "beast",
             "planeta": "planet", "galaxia": "galaxy", "estrella": "star",
             "samurai": "samurai", "ninja": "ninja", "pirata": "pirate", "vikingo": "viking",
-            "crea": "", "genera": "", "hazme": "", "quiero": "", "dame": "",
+            "crea": "", "genera": "", "hazme": "", "quiero": "", "dame": "", "damer": "",
             "una imagen de": "", "un": "a", "una": "a", "con": "with", "en": "in",
             "sobre": "on top of", "debajo": "below", "grande": "large", "pequeño": "small",
             "volando": "flying", "corriendo": "running", "peleando": "fighting",
             "brillante": "glowing", "oscuro": "dark", "epico": "epic", "gigante": "giant",
+            "c.8.l": "C8L Agency futuristic music brand with lion emblem neon purple gold",
+            "c8l": "C8L Agency futuristic music brand with lion emblem neon purple gold",
         }
 
         # Traducir palabras conocidas
