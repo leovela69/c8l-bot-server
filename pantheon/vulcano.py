@@ -288,63 +288,131 @@ class Vulcano:
 
     def _create_mockup(self, prompt):
         """Genera mockup realista: el logo C8L en cualquier objeto/superficie/escenario.
-        Usa DeepSeek para interpretar TODA la petición (objeto + texto + escenario)."""
+        PASO 1: IA genera la escena SIN texto (solo el objeto + escenario + león emblema)
+        PASO 2: Python superpone texto C8L perfecto"""
         logger.info(f"Vulcano MOCKUP MODE: {prompt[:80]}")
 
         # Usar DeepSeek para interpretar la petición COMPLETA
-        # Él entiende "pantalla gigante en New York" vs "TV en sala"
-        enhancer_prompt = f"""The user wants a photorealistic image of the C8L Agency brand/logo placed on a real object or in a real scene.
+        enhancer_prompt = f"""The user wants a photorealistic image of the C8L Agency brand placed on a real object or in a real scene.
 
 User request: "{prompt}"
 
-C8L Agency brand description: A golden lion emblem with neon purple/magenta accents, the text "C8L" in futuristic font, dark luxurious aesthetic.
+C8L Agency brand: A golden lion emblem with neon purple/magenta glow on dark background.
 
-Your job: Create a detailed image generation prompt in English that captures EVERY element the user mentioned:
-1. THE OBJECT/SURFACE (what the logo is ON: coin, billboard, screen, wall, etc)
-2. THE BRAND (C8L lion emblem, purple/gold, futuristic)
-3. THE LOCATION/SCENE (where it is: space, city, New York, a wall, etc)
-4. THE STYLE (realistic, 3D, perspective, lighting)
+IMPORTANT: Do NOT include any text, letters, or words in the image. The text will be added separately.
+Generate ONLY the visual elements: the lion emblem, the object, and the scene.
 
-IMPORTANT:
-- Include the SPECIFIC location/scene the user mentioned (New York = Times Square at night, space = floating in galaxy, etc)
-- The object should have REALISTIC perspective, size, and lighting matching the scene
-- Do NOT put the logo in a generic room if the user specified an outdoor location
-- Output ONLY the image prompt, nothing else
-- Keep under 150 words
-- End with: "photorealistic, highly detailed, 8k resolution"
+Your job: Create a detailed image prompt that captures EVERY element:
+1. THE OBJECT/SURFACE (billboard, coin, screen, wall, etc) - must have a clear area where a logo would go
+2. THE LION EMBLEM (golden lion head with purple neon glow) displayed on the object
+3. THE LOCATION/SCENE (the specific place: NYC Times Square, outer space, brick wall, etc)
+
+RULES:
+- Output ONLY the image prompt
+- NEVER include text/letters/words in the prompt (say "no text, no letters, no words, no writing")
+- Include the SPECIFIC location the user mentioned
+- Keep under 120 words
+- End with: "no text, no letters, no writing, photorealistic, highly detailed, 8k"
 """
         enhanced = None
         try:
             enhanced = call_openrouter(
                 prompt=enhancer_prompt,
-                system_prompt="You are an expert image prompt engineer. Output ONLY the image prompt, no explanations.",
+                system_prompt="You are an expert image prompt engineer. Output ONLY the image prompt.",
                 agent_name="vulcano",
                 temperature=0.7,
-                max_tokens=250
+                max_tokens=200
             )
             if enhanced:
                 enhanced = enhanced.strip().strip('"').strip("'").strip("`")
-                for prefix in ["Output:", "Prompt:", "Enhanced:", "Result:", "Here is"]:
-                    if enhanced.startswith(prefix):
+                for prefix in ["Output:", "Prompt:", "Enhanced:", "Result:", "Here is", "Here's"]:
+                    if enhanced.lower().startswith(prefix.lower()):
                         enhanced = enhanced[len(prefix):].strip()
-                logger.info(f"Mockup prompt: {enhanced[:150]}")
+                # Asegurar que NO pida texto
+                if "no text" not in enhanced.lower():
+                    enhanced += ", no text, no letters, no words, no writing"
+                logger.info(f"Mockup prompt (sin texto): {enhanced[:150]}")
         except Exception as e:
             logger.warning(f"Mockup enhancer fallo: {e}")
 
-        # Fallback si el enhancer falla
         if not enhanced or len(enhanced) < 30:
-            enhanced = f"Photorealistic mockup of {prompt}, C8L Agency brand (golden lion emblem, neon purple accents, futuristic text C8L), professional photography, dramatic lighting, highly detailed, 8k resolution"
+            enhanced = f"Photorealistic {prompt}, golden lion emblem with neon purple glow, no text, no letters, no words, no writing, highly detailed, 8k resolution"
 
-        # Generar con Gemini o Pollinations
+        # PASO 1: Generar imagen SIN texto
         image_bytes = self._generate_image_gemini(enhanced)
         if not image_bytes:
             image_bytes = self._generate_image_pollinations(enhanced, "photorealistic")
         if not image_bytes:
             image_bytes = self._generate_image_huggingface(enhanced)
 
-        if image_bytes:
-            return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
-        return {"type": "error", "content": "No pude generar el mockup."}
+        if not image_bytes:
+            return {"type": "error", "content": "No pude generar el mockup."}
+
+        # PASO 2: Superponer texto "C8L" perfecto con Pillow
+        from pantheon.logo_engine import detect_text_from_prompt, _get_font
+        text = detect_text_from_prompt(prompt)
+        try:
+            final = self._overlay_text_on_mockup(image_bytes, text)
+            if final:
+                return {"type": "image", "content": final, "caption": f"🎨 {prompt[:100]}"}
+        except Exception as e:
+            logger.warning(f"Overlay texto fallo: {e}")
+
+        # Si falla el overlay, devolver la imagen sin texto
+        return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
+
+    def _overlay_text_on_mockup(self, image_bytes, text="C8L"):
+        """Superpone texto perfecto sobre mockup.
+        El texto va centrado en la parte inferior con glow neon."""
+        try:
+            from PIL import Image, ImageDraw, ImageFont, ImageFilter
+            import io
+
+            img = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+            width, height = img.size
+
+            # Fuente grande y bold
+            font_size = width // (len(text) + 2)
+            font_size = max(font_size, 50)
+            font_size = min(font_size, 200)
+
+            from pantheon.logo_engine import _get_font
+            font = _get_font("futurista", font_size)
+
+            # Calcular posicion (centrado, tercio inferior)
+            bbox = font.getbbox(text)
+            tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+            x = (width - tw) // 2
+            y = int(height * 0.72)  # 72% abajo
+
+            # Capa de glow difuminado (púrpura)
+            glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            glow_draw = ImageDraw.Draw(glow)
+            glow_draw.text((x, y), text, font=font, fill=(200, 0, 255, 200))
+            glow = glow.filter(ImageFilter.GaussianBlur(radius=15))
+            img = Image.alpha_composite(img, glow)
+
+            # Capa de glow medio
+            glow2 = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            glow2_draw = ImageDraw.Draw(glow2)
+            glow2_draw.text((x, y), text, font=font, fill=(200, 50, 255, 255))
+            glow2 = glow2.filter(ImageFilter.GaussianBlur(radius=5))
+            img = Image.alpha_composite(img, glow2)
+
+            # Texto nítido blanco (core)
+            sharp = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            sharp_draw = ImageDraw.Draw(sharp)
+            sharp_draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
+            img = Image.alpha_composite(img, sharp)
+
+            # Convertir a bytes
+            output = io.BytesIO()
+            img.convert("RGB").save(output, format="PNG", quality=95)
+            return output.getvalue()
+
+        except Exception as e:
+            logger.warning(f"Overlay text error: {e}")
+            return None
 
     def _generate_image_gemini(self, prompt):
         """Genera imagen con Gemini 2.5 Flash Image (Nano Banana).
