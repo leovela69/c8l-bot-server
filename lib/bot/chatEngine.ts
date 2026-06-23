@@ -10,6 +10,7 @@ import { processCommand, CommandResult } from './commands'
 import { formatMissionsMessage, trackProgress } from './missions'
 import { analyzeMessage, getWarningMessage } from './vigilancia'
 import { updateMemory, getPersonalContext, getMemorySummary } from './memory'
+import { grantXP, registerDailyLogin, formatLevelProfile, formatRankingMessage } from './levels'
 
 const SYSTEM_PROMPT = `Eres el Bot Oficial de C8L Agency — "Corazones Locos Family".
 Tu personalidad: filósofo moderno, cercano, con humor inteligente. Hablas en español.
@@ -84,16 +85,52 @@ export async function sendChatMessage(
     // Si pidió misiones, generar el listado
     if (commandResult.action === 'mission') {
       const missionsMsg = formatMissionsMessage(username)
+      grantXP(username, 'use_command')
       return {
         message: missionsMsg,
         action: 'mission',
       }
     }
 
+    // Si pidió ranking, generar con XP real
+    if (commandResult.action === 'ranking') {
+      const rankingMsg = formatRankingMessage()
+      grantXP(username, 'use_command')
+      return {
+        message: rankingMsg,
+        action: 'ranking',
+      }
+    }
+
+    // Si pidió su nivel/XP
+    if (commandResult.action === 'profile') {
+      const levelProfile = formatLevelProfile(username)
+      grantXP(username, 'use_command')
+      return {
+        message: levelProfile,
+        action: 'profile',
+      }
+    }
+
+    // Si pidió perfil, incluir nivel
+    if (commandResult.action === 'navigate' && commandResult.navigateTo === '/registro') {
+      const levelProfile = formatLevelProfile(username)
+      grantXP(username, 'use_command')
+      return {
+        message: `👤 Tu perfil, @${username}:\n\n${levelProfile}\n\n👉 Te llevo a tu cuenta...`,
+        action: 'navigate',
+        navigateTo: '/registro',
+      }
+    }
+
     // Track progress en misiones por visitar secciones
     if (commandResult.navigateTo) {
       trackProgress(username, commandResult.navigateTo.replace('/', '') || 'home')
+      grantXP(username, 'visit_section')
     }
+
+    // XP por usar comando
+    grantXP(username, 'use_command')
 
     // Actualizar memoria
     updateMemory(username, userMessage, section)
@@ -111,6 +148,10 @@ export async function sendChatMessage(
   updateMemory(username, userMessage, section)
   trackProgress(username, section.toLowerCase())
   const personalContext = getPersonalContext(username)
+
+  // XP por enviar mensaje + login diario
+  const xpResult = grantXP(username, 'send_message')
+  const loginResult = registerDailyLogin(username)
 
   // ═══════════════════════════════════════
   // PASO 4: IA — Respuesta inteligente con contexto
@@ -150,6 +191,15 @@ export async function sendChatMessage(
 
     if (!botMessage) {
       botMessage = '🤖 Hmm, dame un segundo...'
+    }
+
+    // Append level up message if happened
+    if (xpResult.leveledUp && xpResult.message) {
+      botMessage += xpResult.message
+    }
+    // Append daily login if first time today
+    if (loginResult.bonusXP > 0) {
+      botMessage += `\n\n${loginResult.message}`
     }
 
     return {

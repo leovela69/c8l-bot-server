@@ -101,6 +101,14 @@ const COMMANDS: Command[] = [
       navigateTo: '/registro'
     })
   },
+  {
+    triggers: ['nivel', 'xp', 'experiencia', 'mi nivel', 'level'],
+    description: 'Ver tu nivel y XP',
+    handler: (_args, username) => ({
+      message: '', // Se rellena en chatEngine con formatLevelProfile
+      action: 'profile',
+    })
+  },
 
   // === MISIONES ===
   {
@@ -115,9 +123,9 @@ const COMMANDS: Command[] = [
   // === RANKING ===
   {
     triggers: ['ranking', 'top', 'mejores', 'leaderboard'],
-    description: 'Ver el ranking',
+    description: 'Ver el ranking de XP',
     handler: () => ({
-      message: '🏆 **Ranking C8L:**\n\n🥇 @LeoVela — 999,999 Coins\n🥈 @DJ_Quantum — 45,000 Coins\n🥉 @ProGamer — 32,000 Coins\n4. @NeonGirl — 28,500 Coins\n5. @C8L_Beats — 21,000 Coins\n\n¡Juega, canta y crea para subir! 🚀',
+      message: '', // Se rellena en chatEngine con datos reales
       action: 'ranking',
     })
   },
