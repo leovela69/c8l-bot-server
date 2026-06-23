@@ -37,6 +37,7 @@ from pantheon.slaves.hefesto import Hefesto
 from pantheon.slaves.artemisa import Artemisa
 from pantheon.slaves.atenea import Atenea
 from pantheon.slaves.estia import Estia
+from pantheon.slaves.guardian import Guardian
 
 # ---------------------------------------------------------------------------
 # Inicializar agentes
@@ -51,8 +52,9 @@ hefesto = Hefesto()
 artemisa = Artemisa()
 atenea = Atenea()
 estia = Estia()
+guardian = Guardian()
 
-logger.info("🏛️ Panteon inicializado — 11 agentes activos")
+logger.info("🏛️ Panteon inicializado — 11 agentes + Guardian activos")
 
 
 # ---------------------------------------------------------------------------
@@ -638,6 +640,267 @@ def main():
         else:
             tg_send(msg.chat.id, "❌ No pude crear el articulo.")
         estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "articulo", "atenea")
+
+    # === COMANDOS DE MODERACION (C8L Guardian) ===
+
+    def _is_admin(msg):
+        return str(msg.from_user.id) == str(ADMIN_CHAT_ID)
+
+    @bot.message_handler(commands=["warn"])
+    def cmd_warn(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin puede usar este comando.")
+        if not msg.reply_to_message:
+            return bot.reply_to(msg, "Uso: Responde al mensaje del usuario con /warn [motivo]")
+        target = msg.reply_to_message.from_user
+        reason = msg.text.replace("/warn", "").strip() or "Comportamiento inadecuado"
+        result = guardian.warn_user(target.id, target.first_name, reason, msg.from_user.first_name)
+        tg_send(msg.chat.id, result["message"], parse_mode="Markdown")
+        if result.get("auto_ban"):
+            tg_send(msg.chat.id, "\U0001f6a8 AUTO-BAN: 3 advertencias. Sancion 3 dias aplicada.", parse_mode="Markdown")
+
+    @bot.message_handler(commands=["ban"])
+    def cmd_ban(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin puede usar este comando.")
+        if not msg.reply_to_message:
+            return bot.reply_to(msg, "Uso: Responde con /ban 3d|7d|30d|perm [motivo]")
+        target = msg.reply_to_message.from_user
+        if str(target.id) == str(ADMIN_CHAT_ID):
+            return bot.reply_to(msg, "No puedes banearte a ti mismo.")
+        parts = msg.text.replace("/ban", "").strip().split(None, 1)
+        duration = parts[0] if parts else "3d"
+        reason = parts[1] if len(parts) > 1 else "Infraccion de normas"
+        if duration not in ["3d", "7d", "30d", "perm"]:
+            return bot.reply_to(msg, f"Duracion invalida: {duration}. Usa: 3d, 7d, 30d, perm")
+        result = guardian.ban_user(target.id, target.first_name, duration, reason, msg.from_user.first_name)
+        if result["success"]:
+            tg_send(msg.chat.id, result["message"], parse_mode="Markdown")
+            try:
+                tg_send(target.id, result["message"], parse_mode="Markdown")
+            except: pass
+            try:
+                bot.restrict_chat_member(msg.chat.id, target.id,
+                    until_date=int(time.time()) + (result["sanction_data"]["expires_at"] - time.time() if result["sanction_data"]["expires_at"] > 0 else 366*86400),
+                    can_send_messages=False, can_send_media_messages=False, can_send_other_messages=False)
+            except: pass
+
+    @bot.message_handler(commands=["unban"])
+    def cmd_unban(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        if msg.reply_to_message:
+            target_id = msg.reply_to_message.from_user.id
+        else:
+            parts = msg.text.replace("/unban", "").strip()
+            if parts.isdigit():
+                target_id = int(parts)
+            else:
+                return bot.reply_to(msg, "Uso: Responde o /unban [user_id]")
+        result = guardian.unban_user(target_id, msg.from_user.first_name)
+        tg_send(msg.chat.id, result["message"], parse_mode="Markdown")
+        if result["success"]:
+            try:
+                bot.restrict_chat_member(msg.chat.id, target_id, can_send_messages=True, can_send_media_messages=True, can_send_other_messages=True)
+            except: pass
+
+    @bot.message_handler(commands=["banlist"])
+    def cmd_banlist(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        tg_send(msg.chat.id, guardian.get_ban_list(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["infracciones"])
+    def cmd_infracciones(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        if msg.reply_to_message:
+            target_id = msg.reply_to_message.from_user.id
+        else:
+            parts = msg.text.replace("/infracciones", "").strip()
+            target_id = int(parts) if parts.isdigit() else msg.from_user.id
+        tg_send(msg.chat.id, guardian.get_user_infractions(target_id), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["modlog"])
+    def cmd_modlog(msg):
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        tg_send(msg.chat.id, guardian.get_mod_log(), parse_mode="Markdown")
+
+    # === Middleware: bloquear usuarios baneados ===
+    @bot.message_handler(func=lambda m: guardian.is_banned(m.from_user.id)["banned"],
+                         content_types=["text", "photo", "video", "audio", "document", "sticker"])
+    def handle_banned(msg):
+        ban = guardian.is_banned(msg.from_user.id)["sanction_data"]
+        try:
+            bot.reply_to(msg, f"\U0001f6ab Cuenta suspendida hasta: {ban.get('end_date','PERMANENTE')}\nContacto: moderacion@c8l.agency")
+            bot.delete_message(msg.chat.id, msg.message_id)
+        except: pass
+
+    # === COMANDOS DE AJEDREZ (C8L Chess Master) ===
+
+    @bot.message_handler(commands=["ajedrez", "chess"])
+    def cmd_chess(msg):
+        """Inicia partida de ajedrez. Uso: /ajedrez [nivel 1-6] [estilo]"""
+        from chess.chess_game import start_game, get_game, end_game
+        from chess.chess_ai import LEVEL_NAMES, STYLES
+        from chess.chess_ranking import update_after_game
+
+        chat_id = msg.chat.id
+        # Si ya hay partida activa
+        if get_game(chat_id):
+            bot.reply_to(msg, "Ya tienes una partida activa. Usa /mover [movimiento] o /rendirse")
+            return
+
+        parts = msg.text.replace("/ajedrez", "").replace("/chess", "").strip().split()
+        level = 3
+        style = 'balanced'
+        if parts:
+            try:
+                level = int(parts[0])
+                level = max(1, min(6, level))
+            except:
+                pass
+        if len(parts) > 1 and parts[1] in STYLES:
+            style = parts[1]
+
+        game = start_game(chat_id, msg.from_user.first_name, level, style)
+        info = game.ai.get_level_info()
+
+        reply = (
+            f"♟️ *C8L CHESS MASTER*\n\n"
+            f"Nivel: {info['level']} — {info['name']}\n"
+            f"Estilo: {info['style']}\n"
+            f"Tu: Blancas | IA: Negras\n\n"
+            f"{game.get_board_display('c8l')}\n\n"
+            f"Tu turno! Usa /mover [movimiento]\n"
+            f"Ej: /mover e4, /mover Nf3, /mover O-O\n\n"
+            f"Comandos: /mover | /rendirse | /tablero | /skin"
+        )
+        tg_send(chat_id, reply, parse_mode="Markdown")
+
+    @bot.message_handler(commands=["mover", "move"])
+    def cmd_move(msg):
+        """Hace un movimiento. Uso: /mover e4"""
+        from chess.chess_game import get_game, end_game
+        from chess.chess_ranking import update_after_game
+
+        chat_id = msg.chat.id
+        game = get_game(chat_id)
+        if not game:
+            bot.reply_to(msg, "No tienes partida activa. Usa /ajedrez para empezar.")
+            return
+
+        move_str = msg.text.replace("/mover", "").replace("/move", "").strip()
+        if not move_str:
+            bot.reply_to(msg, "Uso: /mover e4\nMovimientos legales: " + game._legal_moves_str())
+            return
+
+        # Movimiento del jugador
+        ok, result_msg = game.make_player_move(move_str)
+        if not ok:
+            bot.reply_to(msg, result_msg)
+            return
+
+        # Verificar estado
+        status = game.get_status()
+        if status in ('checkmate_win', 'stalemate', 'insufficient'):
+            _handle_game_end(msg, game, status)
+            return
+
+        # Movimiento de la IA
+        tg_typing(chat_id)
+        ai_move = game.make_ai_move()
+        if ai_move is None:
+            _handle_game_end(msg, game, 'checkmate_win')
+            return
+
+        # Verificar estado post-IA
+        status = game.get_status()
+        if status in ('checkmate_loss', 'stalemate', 'insufficient'):
+            _handle_game_end(msg, game, status)
+            return
+
+        check_text = " ⚠️ JAQUE!" if status == 'check' else ""
+        reply = (
+            f"♟️ Tu: {move_str} | IA: {ai_move}{check_text}\n\n"
+            f"{game.get_board_display('c8l')}\n\n"
+            f"Tu turno! /mover [movimiento]"
+        )
+        tg_send(chat_id, reply)
+
+    @bot.message_handler(commands=["rendirse", "resign"])
+    def cmd_resign(msg):
+        from chess.chess_game import get_game, end_game
+        from chess.chess_ranking import update_after_game
+        chat_id = msg.chat.id
+        game = get_game(chat_id)
+        if not game:
+            return bot.reply_to(msg, "No hay partida activa.")
+        stats, achievements = update_after_game(msg.from_user.id, msg.from_user.first_name, 'loss', game.ai.level)
+        end_game(chat_id)
+        tg_send(chat_id, f"🏳️ Te has rendido.\nELO: {stats['elo']} ({'-' if stats['elo'] < 1200 else '+'})\n\nUsa /ajedrez para nueva partida.")
+
+    @bot.message_handler(commands=["tablero", "board"])
+    def cmd_board(msg):
+        from chess.chess_game import get_game
+        game = get_game(msg.chat.id)
+        if not game:
+            return bot.reply_to(msg, "No hay partida activa.")
+        tg_send(msg.chat.id, game.get_board_display('c8l'))
+
+    @bot.message_handler(commands=["ranking_chess", "rankingchess"])
+    def cmd_ranking_chess(msg):
+        from chess.chess_ranking import get_ranking_text
+        tg_send(msg.chat.id, get_ranking_text(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["elo"])
+    def cmd_elo(msg):
+        from chess.chess_ranking import get_player_stats
+        stats = get_player_stats(msg.from_user.id)
+        tg_send(msg.chat.id,
+            f"📊 *Tu perfil Chess*\n\n"
+            f"ELO: {stats['elo']} (peak: {stats['peak']})\n"
+            f"Partidas: {stats['games']}\n"
+            f"Victorias: {stats['wins']} | Derrotas: {stats['losses']} | Tablas: {stats['draws']}\n"
+            f"Racha actual: {stats['streak']} | Max: {stats['max_streak']}\n\n"
+            f"🤖 C8L Chess Master",
+            parse_mode="Markdown")
+
+    def _handle_game_end(msg, game, status):
+        from chess.chess_game import end_game
+        from chess.chess_ranking import update_after_game
+        chat_id = msg.chat.id
+        if status == 'checkmate_win':
+            result = 'win'
+            text = "🎉 *JAQUE MATE!* Ganaste!"
+        elif status == 'checkmate_loss':
+            result = 'loss'
+            text = "💀 *JAQUE MATE.* La IA gano."
+        else:
+            result = 'draw'
+            text = "🤝 *TABLAS.* Empate."
+
+        stats, achievements = update_after_game(msg.from_user.id, msg.from_user.first_name, result, game.ai.level)
+        elo_change = stats['elo'] - 1200  # Simplified
+        pgn = game.get_pgn()
+        end_game(chat_id)
+
+        reply = (
+            f"{text}\n\n"
+            f"{game.get_board_display('c8l')}\n\n"
+            f"📊 ELO: {stats['elo']} | Racha: {stats['streak']}\n"
+            f"PGN: {pgn[:100]}{'...' if len(pgn) > 100 else ''}\n"
+        )
+
+        # Logros
+        if achievements:
+            reply += "\n🏆 *Logros desbloqueados:*\n"
+            for ach in achievements:
+                reply += f"  {ach['icon']} {ach['name']} (+{ach['coins']} C8L)\n"
+
+        reply += "\n/ajedrez para nueva partida"
+        tg_send(chat_id, reply, parse_mode="Markdown")
 
     # === MENSAJE LIBRE (Zeus orquesta) ===
 
