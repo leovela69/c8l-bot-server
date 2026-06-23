@@ -115,6 +115,75 @@ def tg_doc_action(chat_id):
 
 
 # ---------------------------------------------------------------------------
+# BROADCAST AL GRUPO — Corazones Locos
+# ---------------------------------------------------------------------------
+def broadcast_to_group(text, parse_mode="HTML"):
+    """Envia mensaje al grupo de Telegram (Corazones Locos).
+    Solo funciona si GROUP_CHAT_ID esta configurado."""
+    from config import GROUP_CHAT_ID
+    if not GROUP_CHAT_ID:
+        logger.debug("Broadcast ignorado: GROUP_CHAT_ID no configurado")
+        return False
+    try:
+        payload = {"chat_id": GROUP_CHAT_ID, "text": text[:4096], "parse_mode": parse_mode}
+        r = requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
+        if r.status_code == 200:
+            logger.info(f"📢 Broadcast al grupo OK")
+            return True
+        else:
+            logger.warning(f"Broadcast fallo: {r.status_code} — {r.text[:100]}")
+            return False
+    except Exception as e:
+        logger.warning(f"Broadcast error: {e}")
+        return False
+
+
+def broadcast_level_up(user_name, new_level, level_name):
+    """Notifica al grupo cuando un usuario sube de nivel."""
+    text = (
+        f"⬆️ <b>LEVEL UP!</b>\n\n"
+        f"🎮 <b>{user_name}</b> alcanzó nivel {new_level}!\n"
+        f"🏅 Rango: <i>{level_name}</i>\n\n"
+        f"🏛️ <i>C8L Agency — Panteón</i>"
+    )
+    broadcast_to_group(text)
+
+
+def broadcast_new_member(user_name):
+    """Notifica al grupo cuando se registra un nuevo miembro."""
+    text = (
+        f"🆕 <b>NUEVO MIEMBRO!</b>\n\n"
+        f"👋 <b>{user_name}</b> se unió a C8L Agency!\n"
+        f"Bienvenido al Panteón 🏛️\n\n"
+        f"<i>Escribe /start para comenzar</i>"
+    )
+    broadcast_to_group(text)
+
+
+def broadcast_content_created(user_name, content_type, description=""):
+    """Notifica al grupo cuando se crea contenido nuevo."""
+    icons = {"musica": "🎵", "video": "🎬", "imagen": "🖼️", "codigo": "💻", "articulo": "📝"}
+    icon = icons.get(content_type, "✨")
+    text = (
+        f"{icon} <b>NUEVO CONTENIDO!</b>\n\n"
+        f"👤 <b>{user_name}</b> creó: {content_type}\n"
+        f"{f'📌 {description[:100]}' if description else ''}\n\n"
+        f"🏛️ <i>C8L Agency — Creadores</i>"
+    )
+    broadcast_to_group(text)
+
+
+def broadcast_announcement(title, message):
+    """Envía un anuncio general al grupo."""
+    text = (
+        f"📢 <b>{title}</b>\n\n"
+        f"{message}\n\n"
+        f"🏛️ <i>C8L Agency</i>"
+    )
+    broadcast_to_group(text)
+
+
+# ---------------------------------------------------------------------------
 # History (conversacion)
 # ---------------------------------------------------------------------------
 _history = {}
@@ -494,9 +563,10 @@ def main():
 
     @bot.message_handler(commands=["start"])
     def cmd_start(msg):
+        user_name = msg.from_user.first_name
         bot.reply_to(msg,
             f"🏛️ *PANTEON MASTER v17.0*\n\n"
-            f"Hola {msg.from_user.first_name}! Soy el sistema multi-agente de C8L Agency.\n\n"
+            f"Hola {user_name}! Soy el sistema multi-agente de C8L Agency.\n\n"
             "Tengo 11 agentes especializados. Solo dime que necesitas "
             "y Zeus (mi director) asignara al mejor agente:\n\n"
             "🎵 Musica → Apolo\n"
@@ -508,6 +578,8 @@ def main():
             "💬 Chat → Hermes\n\n"
             "Usa /help para ver todos los comandos.",
             parse_mode="Markdown")
+        # Broadcast: nuevo miembro
+        broadcast_new_member(user_name)
 
     @bot.message_handler(commands=["help"])
     def cmd_help(msg):
@@ -537,6 +609,57 @@ def main():
     def cmd_clear(msg):
         _history.pop(msg.chat.id, None)
         bot.reply_to(msg, "🗑️ Historial limpiado.")
+
+    @bot.message_handler(commands=["groupid"])
+    def cmd_groupid(msg):
+        """Muestra el ID del chat actual y lo guarda si es grupo."""
+        import config as cfg
+        chat_id = msg.chat.id
+        chat_type = msg.chat.type
+        chat_title = msg.chat.title or "Privado"
+
+        # Si es grupo, guardar automaticamente
+        if 'group' in chat_type:
+            cfg.GROUP_CHAT_ID = str(chat_id)
+            bot.reply_to(msg,
+                f"✅ *Grupo detectado y guardado!*\n\n"
+                f"ID: `{chat_id}`\n"
+                f"Titulo: {chat_title}\n\n"
+                f"El bot ahora enviará broadcasts aquí automáticamente.\n"
+                f"🏛️ C8L Agency conectado!",
+                parse_mode="Markdown")
+            # Enviar mensaje de confirmacion al grupo
+            broadcast_to_group(
+                f"🏛️ <b>C8L AGENCY — BOT CONECTADO</b>\n\n"
+                f"✅ El Panteón está activo en este grupo.\n"
+                f"Aquí llegarán las notificaciones de:\n"
+                f"⬆️ Level ups\n"
+                f"🆕 Nuevos miembros\n"
+                f"✨ Contenido creado\n"
+                f"📢 Anuncios\n\n"
+                f"<i>@leon_leo_bot — 11 agentes a tu servicio</i>"
+            )
+        else:
+            bot.reply_to(msg,
+                f"📋 *Info del chat:*\n\n"
+                f"ID: `{chat_id}`\n"
+                f"Tipo: {chat_type}\n\n"
+                f"⚠️ Este es un chat privado. Usa este comando en el grupo.",
+                parse_mode="Markdown")
+
+    @bot.message_handler(commands=["anunciar"])
+    def cmd_anunciar(msg):
+        """Admin: envía un anuncio al grupo. Uso: /anunciar [mensaje]"""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "🚫 Solo el admin puede hacer anuncios.")
+        texto = msg.text.replace("/anunciar", "").strip()
+        if not texto:
+            return bot.reply_to(msg, "Uso: /anunciar [tu mensaje para el grupo]")
+        ok = broadcast_announcement("ANUNCIO", texto)
+        if ok:
+            bot.reply_to(msg, "✅ Anuncio enviado al grupo!")
+        else:
+            bot.reply_to(msg, "❌ No pude enviar. ¿El bot está en el grupo? Usa /groupid en el grupo primero.")
 
     @bot.message_handler(commands=["diagnosticar"])
     def cmd_diagnosticar(msg):
@@ -575,6 +698,8 @@ def main():
         else:
             tg_send(msg.chat.id, "❌ No pude componer la cancion.")
         estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "musica", "apolo")
+        if reply:
+            broadcast_content_created(msg.from_user.first_name, "musica", tema)
 
     @bot.message_handler(commands=["crear_video"])
     def cmd_video(msg):
@@ -593,6 +718,8 @@ def main():
         else:
             tg_send(msg.chat.id, "❌ No pude crear el guion.")
         estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "video", "ares")
+        if reply:
+            broadcast_content_created(msg.from_user.first_name, "video", tema)
 
     @bot.message_handler(commands=["crear_imagen"])
     def cmd_imagen(msg):
@@ -604,6 +731,8 @@ def main():
         result = vulcano.create(desc, creation_type="image")
         _send_creation_result(msg.chat.id, result)
         estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "imagen", "vulcano")
+        if result and result.get("type") == "image":
+            broadcast_content_created(msg.from_user.first_name, "imagen", desc)
 
     @bot.message_handler(commands=["crear_landing"])
     def cmd_landing(msg):
@@ -909,8 +1038,23 @@ def main():
         chat_id = msg.chat.id
         user_name = msg.from_user.first_name or "Usuario"
         text = msg.text
+        chat_type = msg.chat.type
 
-        logger.info(f"[{user_name}] ({chat_id}): {text[:80]}")
+        # En GRUPOS: solo responder si mencionan al bot o hacen reply a un mensaje del bot
+        if 'group' in chat_type:
+            is_mention = f"@{BOT_NAME}" in text.lower() or "@leon_leo_bot" in text.lower()
+            is_reply_to_bot = (msg.reply_to_message and
+                               msg.reply_to_message.from_user and
+                               msg.reply_to_message.from_user.username == BOT_NAME)
+            if not is_mention and not is_reply_to_bot:
+                return  # No responder a mensajes normales del grupo
+
+            # Limpiar la mencion del texto
+            text = text.replace(f"@{BOT_NAME}", "").replace("@leon_leo_bot", "").strip()
+            if not text:
+                text = "hola"
+
+        logger.info(f"[{user_name}] ({chat_id}|{chat_type}): {text[:80]}")
         tg_typing(chat_id)
 
         # Zeus analiza y decide

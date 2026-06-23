@@ -16,6 +16,12 @@ ADMIN_CHAT_ID: str = os.environ.get("ADMIN_CHAT_ID", "1970956749")
 BOT_NAME: str = "leon_leo_bot"
 
 # ---------------------------------------------------------------------------
+# Grupo Telegram — Corazones Locos (C8L Community)
+# Link: https://t.me/+c9cJksqbLCwzYzlh
+# ---------------------------------------------------------------------------
+GROUP_CHAT_ID: str = os.environ.get("GROUP_CHAT_ID", "")  # Se llenara con /groupid
+
+# ---------------------------------------------------------------------------
 # OpenRouter — Motor central del Panteon (300+ modelos, 1 API key)
 # Endpoint: https://openrouter.ai/api/v1/chat/completions
 # ---------------------------------------------------------------------------
