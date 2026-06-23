@@ -25,8 +25,8 @@ GROUP_CHAT_ID: str = os.environ.get("GROUP_CHAT_ID", "-1002476372487")
 # Google AI Studio — Gemini 2.5 Flash Image (Nano Banana)
 # 500 imagenes/dia GRATIS. Generacion directa de imagenes.
 # ---------------------------------------------------------------------------
-_GEMINI_P1 = "AQ.Ab8RN6K7V73RYhMVEMSvWjnxuwd"
-_GEMINI_P2 = "88vbylajVttxHAqVWLTBZXA"
+_GEMINI_P1 = "AQ.Ab8RN6LNVQlOfGJNw8FfAiQrDL"
+_GEMINI_P2 = "Pb8c2so_i0m54DlhtwuiXcHw"
 GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", _GEMINI_P1 + _GEMINI_P2)
 GEMINI_IMAGE_MODEL: str = "gemini-2.5-flash-image"
 GEMINI_IMAGE_URL: str = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_IMAGE_MODEL}:generateContent"
