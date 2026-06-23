@@ -287,79 +287,45 @@ class Vulcano:
         return {"type": "error", "content": "No pude generar el logo."}
 
     def _create_mockup(self, prompt):
-        """Genera mockup realista: el logo C8L en cualquier objeto/superficie/escenario.
-        PASO 1: IA genera la escena SIN texto (solo el objeto + escenario + león emblema)
-        PASO 2: Python superpone texto C8L perfecto"""
-        logger.info(f"Vulcano MOCKUP MODE: {prompt[:80]}")
+        """Genera mockup realista con Gemini directamente (él pone las letras).
+        Gemini entiende español y es mejor escribiendo texto que Pollinations."""
+        logger.info(f"Vulcano MOCKUP MODE (Gemini directo): {prompt[:80]}")
 
-        # Usar DeepSeek para interpretar la petición COMPLETA
-        enhancer_prompt = f"""The user wants a photorealistic image of the C8L Agency brand placed on a real object or in a real scene.
+        # Dejar que Gemini interprete TODO: objeto + escenario + texto C8L
+        # Gemini es mejor que Flux/SD para escribir texto legible
+        gemini_prompt = f"""Generate a photorealistic image of: {prompt}
 
-User request: "{prompt}"
+The C8L Agency brand must show clearly:
+- A golden lion emblem with neon purple glow
+- The text "C8L AGENCY" must be clearly visible and legible on the object/screen
+- Write the letters C, 8, L exactly — do not invent other letters
 
-C8L Agency brand: A golden lion emblem with neon purple/magenta glow on dark background.
+Make sure the text "C8L AGENCY" is prominent, centered on the main surface (screen, billboard, coin, etc), and perfectly readable."""
 
-IMPORTANT: Do NOT include any text, letters, or words in the image. The text will be added separately.
-Generate ONLY the visual elements: the lion emblem, the object, and the scene.
+        # Intentar con Gemini (mejor con texto que Pollinations)
+        image_bytes = self._generate_image_gemini(gemini_prompt)
+        if image_bytes:
+            return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
 
-Your job: Create a detailed image prompt that captures EVERY element:
-1. THE OBJECT/SURFACE (billboard, coin, screen, wall, etc) - must have a clear area where a logo would go
-2. THE LION EMBLEM (golden lion head with purple neon glow) displayed on the object
-3. THE LOCATION/SCENE (the specific place: NYC Times Square, outer space, brick wall, etc)
+        # Fallback: Pollinations SIN texto + overlay Python
+        logger.info("Mockup: Gemini fallo, usando Pollinations + overlay...")
+        from pantheon.logo_engine import detect_text_from_prompt
+        text = detect_text_from_prompt(prompt)
 
-RULES:
-- Output ONLY the image prompt
-- NEVER include text/letters/words in the prompt (say "no text, no letters, no words, no writing")
-- Include the SPECIFIC location the user mentioned
-- Keep under 120 words
-- End with: "no text, no letters, no writing, photorealistic, highly detailed, 8k"
-"""
-        enhanced = None
-        try:
-            enhanced = call_openrouter(
-                prompt=enhancer_prompt,
-                system_prompt="You are an expert image prompt engineer. Output ONLY the image prompt.",
-                agent_name="vulcano",
-                temperature=0.7,
-                max_tokens=200
-            )
-            if enhanced:
-                enhanced = enhanced.strip().strip('"').strip("'").strip("`")
-                for prefix in ["Output:", "Prompt:", "Enhanced:", "Result:", "Here is", "Here's"]:
-                    if enhanced.lower().startswith(prefix.lower()):
-                        enhanced = enhanced[len(prefix):].strip()
-                # Asegurar que NO pida texto
-                if "no text" not in enhanced.lower():
-                    enhanced += ", no text, no letters, no words, no writing"
-                logger.info(f"Mockup prompt (sin texto): {enhanced[:150]}")
-        except Exception as e:
-            logger.warning(f"Mockup enhancer fallo: {e}")
-
-        if not enhanced or len(enhanced) < 30:
-            enhanced = f"Photorealistic {prompt}, golden lion emblem with neon purple glow, no text, no letters, no words, no writing, highly detailed, 8k resolution"
-
-        # PASO 1: Generar imagen SIN texto
-        image_bytes = self._generate_image_gemini(enhanced)
-        if not image_bytes:
-            image_bytes = self._generate_image_pollinations(enhanced, "photorealistic")
+        # Generar escena sin texto
+        enhanced = f"Photorealistic {prompt}, golden lion emblem with neon purple glow, empty dark space in lower area for branding, no text, no letters, no words, highly detailed, 8k"
+        image_bytes = self._generate_image_pollinations(enhanced, "photorealistic")
         if not image_bytes:
             image_bytes = self._generate_image_huggingface(enhanced)
 
-        if not image_bytes:
-            return {"type": "error", "content": "No pude generar el mockup."}
-
-        # PASO 2: Superponer texto "C8L" perfecto con Pillow
-        from pantheon.logo_engine import detect_text_from_prompt, _get_font
-        text = detect_text_from_prompt(prompt)
-        try:
+        if image_bytes:
+            # Intentar overlay
             final = self._overlay_text_on_mockup(image_bytes, text)
             if final:
                 return {"type": "image", "content": final, "caption": f"🎨 {prompt[:100]}"}
-        except Exception as e:
-            logger.warning(f"Overlay texto fallo: {e}")
+            return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
 
-        # Si falla el overlay, devolver la imagen sin texto
-        return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
+        return {"type": "error", "content": "No pude generar el mockup."}
 
     def _overlay_text_on_mockup(self, image_bytes, text="C8L"):
         """Superpone texto perfecto sobre mockup.
