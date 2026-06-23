@@ -222,6 +222,10 @@ class Vulcano:
         if style == "logo":
             return self._create_logo(prompt)
 
+        # MOCKUP MODE: Objetos reales con el logo (moneda, poster, TV, etc)
+        if style == "mockup":
+            return self._create_mockup(prompt)
+
         # Paso 2: Intentar con Gemini (Nano Banana) — MEJOR CALIDAD
         image_bytes = self._generate_image_gemini(prompt)
         if image_bytes:
@@ -247,10 +251,7 @@ class Vulcano:
         return {"type": "error", "content": "No pude generar la imagen. Intenta con otra descripcion."}
 
     def _create_logo(self, prompt):
-        """Genera logo con texto perfecto usando Logo Engine.
-        Opcion 1: Fondo IA + texto overlay
-        Opcion 2: Logo standalone (fondo negro + geometria + texto)
-        """
+        """Genera logo con texto perfecto usando Logo Engine."""
         logger.info(f"Vulcano LOGO MODE: {prompt[:80]}")
         text = detect_text_from_prompt(prompt)
         style = detect_style_from_prompt(prompt)
@@ -258,38 +259,85 @@ class Vulcano:
         # Intentar generar fondo con IA (sin texto)
         bg_prompt = f"abstract dark futuristic background for logo, neon purple and gold accents, geometric patterns, no text, no letters, no words, dark moody atmosphere"
 
-        # Si piden geometria especifica, ajustar fondo
         t = prompt.lower()
         if any(kw in t for kw in ["escudo", "shield"]):
             bg_prompt = "dark metallic shield shape background, ornate edges, neon purple gold accents, no text, heraldic style, dark background"
         elif any(kw in t for kw in ["3d", "tridimensional"]):
             bg_prompt = "abstract 3D dark geometric shapes background, neon purple and gold lighting, volumetric, no text, futuristic, dark"
-        elif any(kw in t for kw in ["espacio", "space", "galaxia", "galaxy"]):
+        elif any(kw in t for kw in ["espacio", "space", "galaxia"]):
             bg_prompt = "deep space galaxy nebula background, purple and gold cosmic colors, no text, dark, stars"
         elif any(kw in t for kw in ["fuego", "fire"]):
             bg_prompt = "dark background with fire and flames, orange red glow, no text, dramatic"
         elif any(kw in t for kw in ["hielo", "ice"]):
             bg_prompt = "dark background with ice crystals and frost, blue cyan glow, no text, frozen"
 
-        # Generar fondo con Gemini o Pollinations
         bg_bytes = self._generate_image_gemini(bg_prompt)
         if not bg_bytes:
             bg_bytes = self._generate_image_pollinations(bg_prompt, "digital_art")
 
         if bg_bytes:
-            # Superponer texto perfecto
             final = generate_logo_overlay(bg_bytes, prompt)
             if final:
-                logger.info(f"Logo generado: {text} estilo {style}")
                 return {"type": "image", "content": final, "caption": f"🎨 Logo: {text}"}
 
-        # Fallback: logo standalone (solo texto + geometria, sin fondo IA)
-        logger.info("Logo: usando modo standalone (sin fondo IA)")
         standalone = generate_logo_standalone(prompt)
         if standalone:
             return {"type": "image", "content": standalone, "caption": f"🎨 Logo: {text}"}
 
         return {"type": "error", "content": "No pude generar el logo."}
+
+    def _create_mockup(self, prompt):
+        """Genera mockup realista: moneda, poster, TV, revista, etc con C8L.
+        Usa la IA directamente para generar el objeto con el logo integrado."""
+        logger.info(f"Vulcano MOCKUP MODE: {prompt[:80]}")
+
+        # Detectar tipo de mockup y construir prompt profesional
+        t = prompt.lower()
+        c8l_brand = "C8L Agency logo (a golden lion emblem with neon purple accents on dark background, text 'C8L' in futuristic font)"
+
+        if any(kw in t for kw in ["moneda", "coin", "medal", "medalla", "token"]):
+            mockup_prompt = f"Photorealistic 3D gold coin with embossed lion emblem and text C8L, metallic shine, detailed relief engraving, dark velvet background, multiple angles showing front and edge, numismatic quality, studio lighting, {c8l_brand}, highly detailed, 8k"
+        elif any(kw in t for kw in ["poster", "cartel", "pared", "wall", "mural"]):
+            mockup_prompt = f"Photorealistic mockup of a large poster on a dark concrete wall, the poster shows {c8l_brand}, neon purple lighting illuminating the poster, urban night scene, perspective angle, realistic shadows, highly detailed, 8k"
+        elif any(kw in t for kw in ["tv", "pantalla", "screen", "monitor"]):
+            mockup_prompt = f"Photorealistic modern flat screen TV in a dark room displaying {c8l_brand}, the screen glows with neon purple light, minimalist dark interior, realistic screen reflection, highly detailed, 8k"
+        elif any(kw in t for kw in ["revista", "magazine", "portada"]):
+            mockup_prompt = f"Photorealistic luxury magazine cover mockup featuring {c8l_brand}, glossy paper, dramatic lighting, dark elegant table surface, slight angle showing pages, high-end editorial style, highly detailed, 8k"
+        elif any(kw in t for kw in ["camiseta", "shirt", "ropa"]):
+            mockup_prompt = f"Photorealistic black t-shirt mockup with {c8l_brand} printed on chest, fabric texture visible, professional product photography, dark background, highly detailed, 8k"
+        elif any(kw in t for kw in ["tarjeta", "card", "business", "credencial"]):
+            mockup_prompt = f"Photorealistic luxury black business card with gold foil stamping showing {c8l_brand}, dark marble surface, dramatic lighting, multiple cards stacked at angle, premium feel, highly detailed, 8k"
+        elif any(kw in t for kw in ["taza", "mug", "cup"]):
+            mockup_prompt = f"Photorealistic black ceramic mug with {c8l_brand} printed on it, studio lighting, dark surface, steam rising, professional product shot, highly detailed, 8k"
+        elif any(kw in t for kw in ["vinilo", "vinyl", "disco", "album"]):
+            mockup_prompt = f"Photorealistic vinyl record and album cover mockup featuring {c8l_brand}, the vinyl is partially out of sleeve, dark moody lighting, music studio atmosphere, highly detailed, 8k"
+        elif any(kw in t for kw in ["letrero", "sign", "neon sign"]):
+            mockup_prompt = f"Photorealistic neon sign on dark brick wall showing C8L in glowing purple neon tubes, lion emblem in gold neon, night atmosphere, realistic neon glow and reflection, highly detailed, 8k"
+        elif any(kw in t for kw in ["bandera", "flag", "estandarte"]):
+            mockup_prompt = f"Photorealistic black flag waving in wind with {c8l_brand} embroidered in gold and purple, dramatic sky background, epic angle, fabric texture, highly detailed, 8k"
+        elif any(kw in t for kw in ["tatuaje", "tattoo"]):
+            mockup_prompt = f"Photorealistic tattoo design of {c8l_brand} on skin, black and gold ink, professional tattoo art style, detailed linework, close-up shot, highly detailed, 8k"
+        elif any(kw in t for kw in ["sticker", "pegatina"]):
+            mockup_prompt = f"Photorealistic holographic sticker mockup showing {c8l_brand}, iridescent rainbow effect, dark surface, multiple angles, die-cut shape, highly detailed, 8k"
+        elif any(kw in t for kw in ["billboard", "valla", "anuncio"]):
+            mockup_prompt = f"Photorealistic large billboard mockup in a city at night showing {c8l_brand}, dramatic neon purple lighting, urban environment, perspective view from below, highly detailed, 8k"
+        else:
+            # Genérico: usar el prompt tal cual pero mejorado
+            mockup_prompt = f"Photorealistic mockup of: {prompt}. Brand: {c8l_brand}. Professional product photography, dramatic lighting, dark background, highly detailed, 8k resolution"
+
+        # Intentar con Gemini primero
+        image_bytes = self._generate_image_gemini(mockup_prompt)
+        if image_bytes:
+            return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
+
+        # Fallback: Pollinations
+        image_bytes = self._generate_image_pollinations(mockup_prompt, "photorealistic")
+        if not image_bytes:
+            image_bytes = self._generate_image_huggingface(mockup_prompt)
+
+        if image_bytes:
+            return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
+        return {"type": "error", "content": "No pude generar el mockup."}
 
     def _generate_image_gemini(self, prompt):
         """Genera imagen con Gemini 2.5 Flash Image (Nano Banana).
@@ -404,11 +452,29 @@ class Vulcano:
     def _detect_image_style(self, prompt):
         """Detecta el estilo visual que el usuario quiere."""
         t = prompt.lower()
-        # C8L Agency = siempre logo/escudo/insignia
+        # MOCKUPS — Objetos reales con el logo (NO usar logo engine, dejar que IA genere)
+        if any(kw in t for kw in ["moneda", "coin", "medalla", "medal", "token",
+                                    "poster", "cartel", "pared", "wall", "mural",
+                                    "tv", "pantalla", "screen", "monitor",
+                                    "revista", "magazine", "portada", "cover",
+                                    "camiseta", "shirt", "tshirt", "ropa",
+                                    "tarjeta", "card", "business card", "credencial",
+                                    "taza", "mug", "cup", "vaso",
+                                    "vinilo", "vinyl", "disco", "album",
+                                    "letrero", "sign", "neon sign",
+                                    "bandera", "flag", "estandarte",
+                                    "tatuaje", "tattoo",
+                                    "graffiti en pared", "sticker",
+                                    "billboard", "valla", "anuncio",
+                                    "rotacion", "perspectiva", "angulo"]):
+            return "mockup"
+        # C8L Agency = logo solo si NO es mockup
         if any(kw in t for kw in ["c8l", "c.8.l", "corazones locos"]):
+            # Si tiene keywords de mockup arriba ya se fue, si no, es logo plano
             return "logo"
         if any(kw in t for kw in ["3d", "render", "blender", "cinema 4d", "octane", "unreal",
                                     "tridimensional", "cgi", "modelado", "sculpt"]):
+            return "3d"
             return "3d"
         elif any(kw in t for kw in ["anime", "manga", "japones", "japonés", "otaku", "kawaii",
                                      "chibi", "shonen", "seinen"]):
