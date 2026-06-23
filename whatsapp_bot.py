@@ -569,6 +569,47 @@ def main():
     except Exception as e:
         logger.warning(f"No pude notificar admin: {e}")
 
+    # Enviar foto de saludo al grupo
+    def _send_startup_photo():
+        """Genera y envia una imagen de saludo al grupo al arrancar."""
+        try:
+            from config import GROUP_CHAT_ID
+            if not GROUP_CHAT_ID:
+                return
+            time.sleep(5)  # Esperar a que todo este listo
+            logger.info("📸 Generando imagen de saludo para el grupo...")
+            greeting_prompt = "Epic futuristic pantheon temple with neon lights and digital energy, cyberpunk style, a glowing lion emblem at the center, text-free, dramatic cinematic lighting, purple and gold color scheme, digital art, highly detailed, 8k resolution"
+            img = vulcano._generate_image_pollinations(greeting_prompt, "cyberpunk")
+            if img:
+                caption = (
+                    "🏛️ <b>C8L AGENCY — PANTEÓN ACTIVO</b>\n\n"
+                    "✅ 11 agentes listos para servir.\n"
+                    "🎨 Vulcano ahora genera imágenes PRO en cualquier estilo:\n"
+                    "• 3D, Anime, Pixel Art, Fotorealista\n"
+                    "• Logo, Pintura, Cyberpunk, Comic\n"
+                    "• Y mucho más...\n\n"
+                    "Escribe: <i>imagen [lo que quieras]</i>\n"
+                    "O usa: /crear_imagen [descripción]\n\n"
+                    "🔥 <i>@leon_leo_bot — C8L Agency v17.0</i>"
+                )
+                files = {"photo": ("saludo.jpg", io.BytesIO(img), "image/jpeg")}
+                data = {"chat_id": GROUP_CHAT_ID, "caption": caption, "parse_mode": "HTML"}
+                requests.post(f"{TG_API}/sendPhoto", data=data, files=files, timeout=30)
+                logger.info("📸 Foto de saludo enviada al grupo!")
+            else:
+                # Si no se pudo generar imagen, al menos enviar texto
+                broadcast_to_group(
+                    "🏛️ <b>C8L AGENCY — PANTEÓN ACTIVO</b>\n\n"
+                    "✅ 11 agentes operativos.\n"
+                    "🎨 Nuevo: imágenes PRO en cualquier estilo (3D, anime, realista...)\n\n"
+                    "Escribe: <i>imagen [lo que quieras]</i>\n\n"
+                    "🔥 <i>@leon_leo_bot — v17.0</i>"
+                )
+        except Exception as e:
+            logger.warning(f"No pude enviar foto de saludo al grupo: {e}")
+
+    threading.Thread(target=_send_startup_photo, daemon=True).start()
+
     # === COMANDOS ===
 
     @bot.message_handler(commands=["start"])

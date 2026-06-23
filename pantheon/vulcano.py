@@ -169,13 +169,18 @@ class Vulcano:
     def _detect_creation_type(self, text):
         """Detecta que tipo de creacion se pide."""
         t = text.lower()
-        if any(kw in t for kw in ["cancion", "musica", "beat", "letra", "suno", "udio", "prompt musical"]):
+        if any(kw in t for kw in ["cancion", "musica", "beat", "letra", "suno", "udio", "prompt musical", "compone"]):
             return "music"
         elif any(kw in t for kw in ["video", "clip", "animacion", "storyboard", "cortometraje"]):
             return "video"
-        elif any(kw in t for kw in ["imagen", "foto", "dibuja", "ilustra", "logo", "banner"]):
+        elif any(kw in t for kw in ["imagen", "foto", "dibuja", "ilustra", "logo", "banner", "render",
+                                     "3d", "retrato", "paisaje", "diseña", "disena", "genera",
+                                     "crea una", "hazme", "pintame", "wallpaper", "fondo",
+                                     "personaje", "mascota", "avatar", "icono", "poster",
+                                     "portada", "thumbnail", "meme", "sticker", "comic",
+                                     "concept art", "arte"]):
             return "image"
-        elif any(kw in t for kw in ["landing", "pagina web", "web", "diseño web", "diseno"]):
+        elif any(kw in t for kw in ["landing", "pagina web", "web", "diseño web", "diseno web"]):
             return "design"
         elif any(kw in t for kw in ["juego", "game", "codigo", "programa", "script", "app", "html"]):
             return "code"
@@ -203,12 +208,15 @@ class Vulcano:
     def _create_image(self, prompt):
         """Skill: inference-sh-cli + comfyui (via Pollinations + HuggingFace)
         Usa IA para mejorar el prompt antes de generar."""
-        # Paso 1: Mejorar prompt con IA (traducir + detallar)
-        enhanced_prompt = self._enhance_image_prompt(prompt)
-        logger.info(f"Vulcano prompt mejorado: {enhanced_prompt[:120]}")
+        # Paso 1: Detectar estilo especifico
+        style = self._detect_image_style(prompt)
 
-        # Paso 2: Generar imagen con el prompt mejorado
-        image_bytes = self._generate_image_pollinations(enhanced_prompt)
+        # Paso 2: Mejorar prompt con IA (traducir + detallar)
+        enhanced_prompt = self._enhance_image_prompt(prompt, style)
+        logger.info(f"Vulcano prompt mejorado [{style}]: {enhanced_prompt[:120]}")
+
+        # Paso 3: Generar imagen con el prompt mejorado (modelo segun estilo)
+        image_bytes = self._generate_image_pollinations(enhanced_prompt, style)
         if not image_bytes:
             image_bytes = self._generate_image_huggingface(enhanced_prompt)
 
@@ -216,28 +224,149 @@ class Vulcano:
             return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
         return {"type": "error", "content": "No pude generar la imagen. Intenta con otra descripcion."}
 
-    def _enhance_image_prompt(self, user_prompt):
+    def _detect_image_style(self, prompt):
+        """Detecta el estilo visual que el usuario quiere."""
+        t = prompt.lower()
+        if any(kw in t for kw in ["3d", "render", "blender", "cinema 4d", "octane", "unreal",
+                                    "tridimensional", "cgi", "modelado", "sculpt"]):
+            return "3d"
+        elif any(kw in t for kw in ["anime", "manga", "japones", "japonés", "otaku", "kawaii",
+                                     "chibi", "shonen", "seinen"]):
+            return "anime"
+        elif any(kw in t for kw in ["pixel", "pixel art", "retro", "8bit", "16bit", "8 bit", "16 bit",
+                                     "gameboy", "nes", "snes"]):
+            return "pixel"
+        elif any(kw in t for kw in ["realista", "fotorealista", "foto", "fotografía", "fotografia",
+                                     "realistic", "hiperrealista", "retrato real", "como foto"]):
+            return "photorealistic"
+        elif any(kw in t for kw in ["logo", "logotipo", "marca", "brand", "icono", "emblema",
+                                     "insignia", "escudo"]):
+            return "logo"
+        elif any(kw in t for kw in ["pintura", "oleo", "óleo", "acuarela", "painting", "oil",
+                                     "impresionista", "van gogh", "monet", "renacentista"]):
+            return "painting"
+        elif any(kw in t for kw in ["cartoon", "caricatura", "dibujo animado", "disney",
+                                     "pixar", "animado"]):
+            return "cartoon"
+        elif any(kw in t for kw in ["cyberpunk", "neon", "futurista", "sci-fi", "scifi"]):
+            return "cyberpunk"
+        elif any(kw in t for kw in ["dark", "horror", "terror", "gotico", "gótico", "oscuro", "siniestro"]):
+            return "dark"
+        elif any(kw in t for kw in ["minimalista", "minimal", "simple", "flat", "clean"]):
+            return "minimal"
+        elif any(kw in t for kw in ["watercolor", "acuarela", "pastel", "suave", "dreamy"]):
+            return "watercolor"
+        elif any(kw in t for kw in ["comic", "marvel", "dc", "superheroe", "superhero"]):
+            return "comic"
+        elif any(kw in t for kw in ["isometric", "isometrico", "isométrico"]):
+            return "isometric"
+        elif any(kw in t for kw in ["concept art", "concept", "arte conceptual"]):
+            return "concept_art"
+        return "digital_art"
+
+    def _enhance_image_prompt(self, user_prompt, style="digital_art"):
         """Usa IA para convertir la peticion del usuario en un prompt profesional en ingles."""
-        enhancer_system = """You are an expert image prompt engineer for AI image generators (Stable Diffusion, DALL-E, Midjourney).
+
+        # Instrucciones especificas por estilo
+        style_instructions = {
+            "3d": """IMPORTANT - The user wants 3D RENDER style. You MUST include these terms:
+- "3D render, CGI, octane render, cinema 4d, blender cycles"
+- Add: volumetric lighting, subsurface scattering, ambient occlusion, ray tracing
+- Mention materials: glossy, metallic, glass, matte, subsurface
+- Add depth of field and realistic shadows
+- End with: "unreal engine 5, octane render, 3d art, highly detailed, 8k"
+""",
+            "anime": """IMPORTANT - The user wants ANIME style. Include:
+- "anime style, manga art, cel shading, vibrant colors"
+- Reference: studio ghibli, makoto shinkai, or similar aesthetic
+- Add: clean linework, expressive eyes, dynamic pose
+- End with: "anime key visual, detailed illustration, pixiv trending"
+""",
+            "pixel": """IMPORTANT - The user wants PIXEL ART style. Include:
+- "pixel art, 16-bit, retro gaming aesthetic"
+- Add: limited color palette, crisp pixels, no anti-aliasing
+- End with: "pixel perfect, retro game art, nostalgic"
+""",
+            "photorealistic": """IMPORTANT - The user wants PHOTOREALISTIC style. Include:
+- "photorealistic, DSLR photography, 85mm lens"
+- Add: natural lighting, bokeh, shallow depth of field
+- Mention camera settings when relevant
+- End with: "hyperrealistic, RAW photo, film grain, professional photography"
+""",
+            "logo": """IMPORTANT - The user wants a LOGO/BRAND design. Include:
+- "logo design, vector art, clean minimalist"
+- Add: simple shapes, scalable, centered on solid background
+- Mention: flat design, modern branding, geometric
+- End with: "professional logo, brand identity, clean vector, white background"
+""",
+            "painting": """IMPORTANT - The user wants PAINTING style. Include:
+- "oil painting, fine art, masterpiece, canvas texture"
+- Add: visible brushstrokes, rich color palette, classical composition
+- End with: "museum quality, art gallery, fine art print"
+""",
+            "cartoon": """IMPORTANT - The user wants CARTOON style. Include:
+- "cartoon style, vibrant colors, exaggerated proportions"
+- Add: bold outlines, playful, dynamic composition
+- End with: "illustration, colorful cartoon, character design"
+""",
+            "cyberpunk": """IMPORTANT - The user wants CYBERPUNK/FUTURISTIC style. Include:
+- "cyberpunk aesthetic, neon lights, futuristic city"
+- Add: rain-slicked streets, holographic displays, dark atmosphere with neon accents
+- Colors: electric blue, hot pink, purple, cyan glow
+- End with: "cyberpunk 2077 style, blade runner aesthetic, neon noir, highly detailed, 8k"
+""",
+            "dark": """IMPORTANT - The user wants DARK/HORROR style. Include:
+- "dark gothic atmosphere, dramatic shadows, horror aesthetic"
+- Add: moody lighting, fog, desaturated colors with red/purple accents
+- Mood: ominous, mysterious, unsettling
+- End with: "dark fantasy art, gothic horror, cinematic lighting, highly detailed"
+""",
+            "minimal": """IMPORTANT - The user wants MINIMALIST style. Include:
+- "minimalist design, clean lines, negative space"
+- Add: simple geometric shapes, limited color palette, elegant
+- End with: "minimalist art, clean design, modern aesthetic, flat design"
+""",
+            "watercolor": """IMPORTANT - The user wants WATERCOLOR style. Include:
+- "watercolor painting, soft washes, wet on wet technique"
+- Add: paper texture, bleeding colors, delicate, pastel palette
+- End with: "watercolor illustration, dreamy, soft art, traditional media"
+""",
+            "comic": """IMPORTANT - The user wants COMIC BOOK style. Include:
+- "comic book art, bold ink lines, dynamic action"
+- Add: halftone dots, speech bubble style, dramatic poses
+- End with: "comic book cover, Marvel style, dynamic illustration, ink and color"
+""",
+            "isometric": """IMPORTANT - The user wants ISOMETRIC style. Include:
+- "isometric view, 3D isometric illustration, geometric precision"
+- Add: clean edges, flat shading, architectural perspective
+- End with: "isometric art, low poly, clean vector isometric, detailed"
+""",
+            "concept_art": """IMPORTANT - The user wants CONCEPT ART style. Include:
+- "concept art, digital painting, cinematic composition"
+- Add: atmospheric perspective, painterly brushwork, mood lighting
+- End with: "concept art, artstation trending, professional illustration, cinematic"
+""",
+            "digital_art": """Style: high quality digital art. Interpret the subject matter and add the most fitting visual style.
+End with: "highly detailed, professional quality, beautiful lighting, 8k resolution"
+"""
+        }
+
+        style_note = style_instructions.get(style, style_instructions["digital_art"])
+
+        enhancer_system = f"""You are an expert image prompt engineer for AI image generators (Stable Diffusion, Flux, Midjourney).
 
 Your job: Take the user's request (in any language) and transform it into a detailed, professional image generation prompt in ENGLISH.
 
+{style_note}
+
 RULES:
-- Output ONLY the enhanced prompt, nothing else (no explanations, no quotes)
+- Output ONLY the enhanced prompt text, nothing else (no explanations, no quotes, no labels)
 - Always write in English
-- Add specific details: lighting, style, composition, camera angle, atmosphere, colors
-- Keep it under 200 words
-- If the user mentions a style (anime, realistic, etc.) respect it. Default: high quality digital art
-- If the user describes something vague, interpret creatively but stay faithful to their core idea
-- Never include text/words IN the image prompt (AI generators handle text badly)
-- Add quality boosters at the end: "highly detailed, professional quality, 8k resolution"
-
-EXAMPLES:
-User: "un leon con alas en el cielo"
-Output: A majestic winged lion soaring through dramatic clouds at golden hour, powerful spread eagle-like wings with detailed feathers, mane flowing in the wind, ethereal sunlight breaking through cumulus clouds, fantasy art style, epic composition, volumetric lighting, highly detailed, professional quality, 8k resolution
-
-User: "logo para mi marca de musica"
-Output: Modern minimalist music brand logo design, sleek geometric shapes forming a musical note combined with soundwave elements, gradient from deep purple to electric blue, clean vector style, centered composition on dark background, professional branding, highly detailed, sharp edges, 8k resolution"""
+- Add specific details: lighting, composition, camera angle, atmosphere, colors
+- Keep it under 150 words
+- Stay faithful to the user's core idea — do NOT change what they asked for
+- Never include readable text/words in the prompt (AI generators handle text badly)
+- Be SPECIFIC and VISUAL — describe what you SEE, not abstract concepts"""
 
         try:
             result = call_openrouter(
@@ -245,19 +374,66 @@ Output: Modern minimalist music brand logo design, sleek geometric shapes formin
                 system_prompt=enhancer_system,
                 agent_name="vulcano",
                 temperature=0.7,
-                max_tokens=300
+                max_tokens=250
             )
             if result and len(result.strip()) > 10:
                 # Limpiar: quitar comillas, markdown, etc.
                 cleaned = result.strip().strip('"').strip("'").strip("`")
                 if cleaned.startswith("```"):
                     cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0]
+                # Quitar etiquetas tipo "Output:" o "Prompt:" si las pone
+                for prefix in ["Output:", "Prompt:", "Enhanced:", "Result:"]:
+                    if cleaned.startswith(prefix):
+                        cleaned = cleaned[len(prefix):].strip()
                 return cleaned
         except Exception as e:
             logger.warning(f"Prompt enhancer fallo: {e}")
 
-        # Fallback: traduccion basica
-        return f"high quality, detailed, professional, 4k: {user_prompt}"
+        # Fallback LOCAL inteligente (sin IA) — para cuando el rate limit pega
+        return self._local_prompt_enhance(user_prompt, style)
+
+    def _local_prompt_enhance(self, prompt, style="digital_art"):
+        """Fallback: mejora el prompt sin usar IA cuando hay rate limit."""
+        # Traducciones basicas comunes
+        translations = {
+            "leon": "lion", "gato": "cat", "perro": "dog", "dragon": "dragon",
+            "ciudad": "city", "bosque": "forest", "montaña": "mountain",
+            "oceano": "ocean", "espacio": "space", "noche": "night",
+            "fuego": "fire", "agua": "water", "cielo": "sky",
+            "guerrero": "warrior", "mago": "wizard", "robot": "robot",
+            "mujer": "woman", "hombre": "man", "niño": "child",
+            "coche": "car", "nave": "spaceship", "castillo": "castle",
+            "flores": "flowers", "arbol": "tree", "sol": "sun", "luna": "moon",
+            "musica": "music", "guitarra": "guitar", "corona": "crown",
+            "alas": "wings", "espada": "sword", "escudo": "shield",
+        }
+
+        # Traducir palabras conocidas
+        result = prompt.lower()
+        for es, en in translations.items():
+            result = result.replace(es, en)
+
+        # Agregar estilo segun tipo
+        style_suffixes = {
+            "3d": ", 3D render, octane render, volumetric lighting, CGI, unreal engine 5, highly detailed, 8k",
+            "anime": ", anime style, vibrant colors, detailed illustration, studio ghibli aesthetic, anime key visual",
+            "pixel": ", pixel art, 16-bit style, retro gaming, limited palette, pixel perfect",
+            "photorealistic": ", photorealistic, DSLR photo, natural lighting, 85mm lens, hyperrealistic, 8k",
+            "logo": ", logo design, minimalist vector, clean design, centered, white background, professional branding",
+            "painting": ", oil painting style, fine art, visible brushstrokes, masterpiece, canvas texture",
+            "cartoon": ", cartoon style, vibrant colors, bold outlines, playful illustration",
+            "cyberpunk": ", cyberpunk aesthetic, neon lights, futuristic, electric blue and pink, blade runner style, 8k",
+            "dark": ", dark gothic atmosphere, dramatic shadows, horror aesthetic, moody lighting, dark fantasy",
+            "minimal": ", minimalist design, clean lines, negative space, simple elegant, flat design",
+            "watercolor": ", watercolor painting, soft washes, pastel palette, paper texture, dreamy",
+            "comic": ", comic book art, bold ink lines, dynamic action, halftone dots, Marvel style",
+            "isometric": ", isometric view, 3D isometric illustration, geometric precision, clean edges",
+            "concept_art": ", concept art, digital painting, cinematic composition, artstation trending",
+            "digital_art": ", digital art, highly detailed, professional quality, beautiful lighting, 8k resolution",
+        }
+
+        suffix = style_suffixes.get(style, style_suffixes["digital_art"])
+        return result + suffix
 
     def _create_code(self, prompt):
         """Skill: generacion de codigo funcional"""
@@ -298,13 +474,25 @@ Output: Modern minimalist music brand logo design, sleek geometric shapes formin
 
     # --- Utilidades ---
 
-    def _generate_image_pollinations(self, prompt):
-        """Genera imagen con Pollinations.ai (gratis). El prompt ya viene mejorado por IA."""
+    def _generate_image_pollinations(self, prompt, style="digital_art"):
+        """Genera imagen con Pollinations.ai (gratis, modelo Flux).
+        Ajusta parametros segun el estilo detectado."""
         try:
             from urllib.parse import quote
-            # El prompt ya viene optimizado del enhancer, no agregar prefijos genericos
-            url = f"https://image.pollinations.ai/prompt/{quote(prompt)}?width=1024&height=1024&nologo=true"
-            r = requests.get(url, timeout=90)
+
+            # Configuracion por estilo
+            width, height = 1024, 1024
+            model = "flux"  # Flux da mejor calidad que el default
+
+            if style == "pixel":
+                width, height = 512, 512
+            elif style == "logo":
+                width, height = 1024, 1024
+            elif style in ("3d", "photorealistic"):
+                width, height = 1024, 1024
+
+            url = f"https://image.pollinations.ai/prompt/{quote(prompt)}?width={width}&height={height}&model={model}&nologo=true&enhance=true"
+            r = requests.get(url, timeout=120)  # Timeout amplio para renders complejos
             if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
                 return r.content
         except Exception as e:
@@ -318,10 +506,20 @@ Output: Modern minimalist music brand logo design, sleek geometric shapes formin
             payload = {"inputs": prompt}
             r = requests.post(
                 "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-                headers=headers, json=payload, timeout=90
+                headers=headers, json=payload, timeout=120
             )
             if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
                 return r.content
+            # Si el modelo esta cargando, esperar e intentar una vez mas
+            if r.status_code == 503:
+                logger.info("HuggingFace: modelo cargando, esperando 10s...")
+                time.sleep(10)
+                r = requests.post(
+                    "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+                    headers=headers, json=payload, timeout=120
+                )
+                if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
+                    return r.content
         except Exception as e:
             logger.warning(f"HuggingFace error: {e}")
         return None
