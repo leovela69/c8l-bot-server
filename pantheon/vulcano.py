@@ -244,7 +244,7 @@ class Vulcano:
             # Agregar contexto de marca si menciona C8L
             c8l_context = ""
             if any(kw in prompt.lower() for kw in ["c8l", "c.8.l", "corazones locos"]):
-                c8l_context = " C8L Agency brand style: dark futuristic theme, neon purple and gold accents, lion emblem, music/DJ culture, cyberpunk aesthetic."
+                c8l_context = " C8L Agency is a music brand. Generate a professional LOGO, EMBLEM or SHIELD design (not a character portrait). Style: dark background, neon purple and gold accents, lion silhouette integrated into geometric emblem, futuristic cyberpunk branding, centered composition."
 
             headers = {"Content-Type": "application/json"}
             payload = {
@@ -350,6 +350,9 @@ class Vulcano:
     def _detect_image_style(self, prompt):
         """Detecta el estilo visual que el usuario quiere."""
         t = prompt.lower()
+        # C8L Agency = siempre logo/escudo/insignia
+        if any(kw in t for kw in ["c8l", "c.8.l", "corazones locos"]):
+            return "logo"
         if any(kw in t for kw in ["3d", "render", "blender", "cinema 4d", "octane", "unreal",
                                     "tridimensional", "cgi", "modelado", "sculpt"]):
             return "3d"
@@ -481,7 +484,7 @@ End with: "highly detailed, professional quality, beautiful lighting, 8k resolut
 Your job: Take the user's request (in any language) and transform it into a detailed, professional image generation prompt in ENGLISH.
 
 CONTEXT - C8L Agency:
-C8L Agency (also written as "C.8.L" or "Corazones Locos") is a music production and technology company. Their brand aesthetic is: dark theme, neon purple/magenta/gold accents, futuristic, cyberpunk-inspired, lion emblems, music/DJ culture, Bolero-House genre. When the user mentions "C8L", "C.8.L", or "C8L Agency", incorporate this brand identity.
+C8L Agency (also written as "C.8.L" or "Corazones Locos") is a music production and technology company. When the user mentions "C8L", "C.8.L", or "C8L Agency" and asks for an IMAGE, they want a LOGO, EMBLEM, INSIGNIA or SHIELD design — NOT a portrait or character. Their brand aesthetic is: dark background, neon purple/magenta/gold accents, futuristic emblem design, lion silhouette integrated into logo, music/DJ culture symbols, cyberpunk-inspired. Generate it as a professional logo/emblem/shield design centered on dark background.
 
 {style_note}
 
@@ -547,8 +550,8 @@ CRITICAL RULES:
             "sobre": "on top of", "debajo": "below", "grande": "large", "pequeño": "small",
             "volando": "flying", "corriendo": "running", "peleando": "fighting",
             "brillante": "glowing", "oscuro": "dark", "epico": "epic", "gigante": "giant",
-            "c.8.l": "C8L Agency futuristic music brand with lion emblem neon purple gold",
-            "c8l": "C8L Agency futuristic music brand with lion emblem neon purple gold",
+            "c.8.l": "C8L Agency professional logo emblem shield design, lion silhouette, neon purple gold, dark background, centered, futuristic branding",
+            "c8l": "C8L Agency professional logo emblem shield design, lion silhouette, neon purple gold, dark background, centered, futuristic branding",
         }
 
         # Traducir palabras conocidas
