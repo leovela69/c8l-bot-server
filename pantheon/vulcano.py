@@ -17,8 +17,9 @@ Skills integrados:
 import logging
 import requests
 import time
+import base64
 from openrouter_client import call_openrouter
-from config import HUGGINGFACE_TOKEN
+from config import HUGGINGFACE_TOKEN, GEMINI_API_KEY, GEMINI_IMAGE_URL
 
 logger = logging.getLogger("c8l.vulcano")
 
@@ -206,23 +207,26 @@ class Vulcano:
         return {"type": "error", "content": "No pude generar el guion de video."}
 
     def _create_image(self, prompt):
-        """Skill: inference-sh-cli + comfyui (via Pollinations + HuggingFace)
-        Usa IA para mejorar el prompt antes de generar."""
+        """Genera imagen usando Nano Banana (Gemini 2.5 Flash Image) como motor principal.
+        Fallback: Pollinations + HuggingFace."""
         # Paso 1: Detectar estilo especifico
         style = self._detect_image_style(prompt)
         logger.info(f"Vulcano: estilo detectado = {style} | peticion: {prompt[:80]}")
 
-        # Paso 2: Mejorar prompt con IA (traducir + detallar)
+        # Paso 2: Intentar con Gemini (Nano Banana) — MEJOR CALIDAD
+        image_bytes = self._generate_image_gemini(prompt)
+        if image_bytes:
+            logger.info(f"Vulcano: imagen generada con Gemini OK ({len(image_bytes)} bytes)")
+            return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
+
+        # Paso 3: Fallback a Pollinations (necesita prompt en ingles)
+        logger.info("Vulcano: Gemini fallo, usando Pollinations como fallback...")
         enhanced_prompt = self._enhance_image_prompt(prompt, style)
         logger.info(f"Vulcano prompt mejorado [{style}]: {enhanced_prompt[:200]}")
 
-        # Paso 3: Validar que el prompt mejorado NO sea generico/irrelevante
-        # Si el enhanced es muy corto o parece un fallback malo, usar el local
         if not enhanced_prompt or len(enhanced_prompt) < 30:
             enhanced_prompt = self._local_prompt_enhance(prompt, style)
-            logger.warning("Vulcano: enhanced prompt muy corto, usando local")
 
-        # Paso 4: Generar imagen con el prompt mejorado (modelo segun estilo)
         image_bytes = self._generate_image_pollinations(enhanced_prompt, style)
         if not image_bytes:
             image_bytes = self._generate_image_huggingface(enhanced_prompt)
@@ -230,6 +234,48 @@ class Vulcano:
         if image_bytes:
             return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
         return {"type": "error", "content": "No pude generar la imagen. Intenta con otra descripcion."}
+
+    def _generate_image_gemini(self, prompt):
+        """Genera imagen con Gemini 2.5 Flash Image (Nano Banana).
+        Entiende español, 500 imgs/dia gratis, calidad superior."""
+        try:
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": f"Generate an image: {prompt}"}
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "responseModalities": ["IMAGE", "TEXT"],
+                    "temperature": 1.0
+                }
+            }
+
+            url = f"{GEMINI_IMAGE_URL}?key={GEMINI_API_KEY}"
+            r = requests.post(url, headers=headers, json=payload, timeout=60)
+
+            if r.status_code == 200:
+                data = r.json()
+                # Extraer imagen de la respuesta
+                candidates = data.get("candidates", [])
+                for candidate in candidates:
+                    parts = candidate.get("content", {}).get("parts", [])
+                    for part in parts:
+                        if "inlineData" in part:
+                            img_data = part["inlineData"]
+                            if "image" in img_data.get("mimeType", ""):
+                                return base64.b64decode(img_data["data"])
+                logger.warning("Gemini: respuesta OK pero sin imagen en candidates")
+            else:
+                error_msg = r.text[:200] if r.text else "sin detalle"
+                logger.warning(f"Gemini Image fallo: {r.status_code} — {error_msg}")
+
+        except Exception as e:
+            logger.warning(f"Gemini Image error: {e}")
+        return None
 
     def _detect_image_style(self, prompt):
         """Detecta el estilo visual que el usuario quiere."""

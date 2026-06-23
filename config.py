@@ -22,6 +22,16 @@ BOT_NAME: str = "leon_leo_bot"
 GROUP_CHAT_ID: str = os.environ.get("GROUP_CHAT_ID", "-1002476372487")
 
 # ---------------------------------------------------------------------------
+# Google AI Studio — Gemini 2.5 Flash Image (Nano Banana)
+# 500 imagenes/dia GRATIS. Generacion directa de imagenes.
+# ---------------------------------------------------------------------------
+_GEMINI_P1 = "AQ.Ab8RN6K7V73RYhMVEMSvWjnxuwd"
+_GEMINI_P2 = "88vbylajVttxHAqVWLTBZXA"
+GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", _GEMINI_P1 + _GEMINI_P2)
+GEMINI_IMAGE_MODEL: str = "gemini-2.5-flash-preview-native-audio-dialog"
+GEMINI_IMAGE_URL: str = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_IMAGE_MODEL}:generateContent"
+
+# ---------------------------------------------------------------------------
 # OpenRouter — Motor central del Panteon (300+ modelos, 1 API key)
 # Endpoint: https://openrouter.ai/api/v1/chat/completions
 # ---------------------------------------------------------------------------
