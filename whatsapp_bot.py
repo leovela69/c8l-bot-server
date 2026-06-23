@@ -38,6 +38,7 @@ from pantheon.slaves.artemisa import Artemisa
 from pantheon.slaves.atenea import Atenea
 from pantheon.slaves.estia import Estia
 from pantheon.slaves.guardian import Guardian
+from pantheon.slaves.tv_publisher import TVPublisher
 
 # ---------------------------------------------------------------------------
 # Inicializar agentes
@@ -53,8 +54,9 @@ artemisa = Artemisa()
 atenea = Atenea()
 estia = Estia()
 guardian = Guardian()
+tv_publisher = TVPublisher()
 
-logger.info("🏛️ Panteon inicializado — 11 agentes + Guardian activos")
+logger.info("🏛️ Panteon inicializado — 12 agentes + Guardian + TVPublisher activos")
 
 
 # ---------------------------------------------------------------------------
@@ -479,16 +481,30 @@ def main():
     try:
         bot.send_message(int(ADMIN_CHAT_ID),
             "🏛️ *PANTEON MASTER v17.0* — ACTIVO\n\n"
-            "11 agentes operativos:\n"
+            "12 agentes operativos:\n"
             "👑 Zeus | 🧠 Minerva | 🎨 Vulcano\n"
             "🛡️ Aries | 📢 Hermes | 🎵 Apolo\n"
             "🎬 Ares | 🖥️ Hefesto | ⚙️ Artemisa\n"
-            "📊 Atenea | 🧬 Estia\n\n"
+            "📊 Atenea | 🧬 Estia | 📺 TVPublisher\n\n"
             "Motor: OpenRouter (gratuito)\n"
-            "Comandos: /help",
+            "📺 C8L TV: Canal Oficial ACTIVO\n"
+            "Comandos: /help | /publicar_tv | /llenar_tv",
             parse_mode="Markdown")
     except Exception as e:
         logger.warning(f"No pude notificar admin: {e}")
+
+    # Auto-publicar contenido inicial en C8L TV (en background)
+    def _auto_publish_tv():
+        """Publica los 8 videos iniciales en C8L TV al arrancar."""
+        time.sleep(5)  # Esperar a que el bot este estable
+        try:
+            logger.info("📺 Auto-publicando contenido inicial en C8L TV...")
+            result = tv_publisher.publish_initial_content()
+            logger.info(f"📺 Batch TV: {result['success']}/{result['total']} publicados")
+        except Exception as e:
+            logger.error(f"📺 Error en auto-publish TV: {e}")
+
+    threading.Thread(target=_auto_publish_tv, daemon=True).start()
 
     # === COMANDOS ===
 
@@ -513,18 +529,23 @@ def main():
     def cmd_help(msg):
         bot.reply_to(msg,
             "📚 *Comandos del Panteon:*\n\n"
-            "/crear\\_musica [tema] — Componer cancion\n"
-            "/crear\\_video [concepto] — Guion + storyboard\n"
-            "/crear\\_imagen [descripcion] — Generar imagen\n"
-            "/crear\\_landing [descripcion] — Landing page\n"
-            "/crear\\_api [descripcion] — API backend\n"
-            "/crear\\_articulo [tema] — Articulo SEO\n"
-            "/diagnosticar — Escanear web C8L\n"
-            "/aprender [leccion] — Registrar aprendizaje\n"
-            "/estado — Estado de todos los agentes\n"
-            "/informe — Informe de actividad\n"
-            "/evolucion — Evolucion del sistema\n"
-            "/clear — Limpiar historial\n\n"
+            "🎵 /crear\\_musica [tema] — Componer cancion\n"
+            "🎬 /crear\\_video [concepto] — Guion + storyboard\n"
+            "🖼️ /crear\\_imagen [descripcion] — Generar imagen\n"
+            "🖥️ /crear\\_landing [descripcion] — Landing page\n"
+            "⚙️ /crear\\_api [descripcion] — API backend\n"
+            "📝 /crear\\_articulo [tema] — Articulo SEO\n"
+            "🛡️ /diagnosticar — Escanear web C8L\n"
+            "🧬 /aprender [leccion] — Registrar aprendizaje\n"
+            "📊 /estado — Estado de todos los agentes\n"
+            "📄 /informe — Informe de actividad\n"
+            "🔄 /evolucion — Evolucion del sistema\n"
+            "🗑️ /clear — Limpiar historial\n\n"
+            "*📺 C8L TV (Canal Oficial):*\n"
+            "/publicar\\_tv [tema] — Publicar en TV\n"
+            "/llenar\\_tv — Subir 8 videos iniciales\n"
+            "/tv\\_generar [tema] — Generar con IA y publicar\n"
+            "/tv\\_stats — Stats del canal\n\n"
             "O simplemente escribe lo que necesitas "
             "y Zeus lo asignara automaticamente.",
             parse_mode="Markdown")
@@ -736,6 +757,63 @@ def main():
             bot.reply_to(msg, f"\U0001f6ab Cuenta suspendida hasta: {ban.get('end_date','PERMANENTE')}\nContacto: moderacion@c8l.agency")
             bot.delete_message(msg.chat.id, msg.message_id)
         except: pass
+
+    # === COMANDOS DE C8L TV (Canal Oficial del Bot) ===
+
+    @bot.message_handler(commands=["publicar_tv", "tv_publish"])
+    def cmd_publicar_tv(msg):
+        """Publica contenido en C8L TV. Solo admin."""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin puede publicar en TV.")
+        tema = msg.text.replace("/publicar_tv", "").replace("/tv_publish", "").strip()
+        if not tema:
+            bot.reply_to(msg, "📺 Generando contenido automatico para C8L TV...")
+            result = tv_publisher.generate_and_publish()
+        else:
+            bot.reply_to(msg, f"📺 Publicando en C8L TV: {tema[:50]}...")
+            result = tv_publisher.publish(
+                title=tema[:60],
+                description=f"Publicado manualmente por el admin",
+                content_type="video",
+                emoji="🎬"
+            )
+        if result["success"]:
+            tg_send(msg.chat.id, f"✅ Publicado en C8L TV!\n\nID: {result.get('postId', 'N/A')}\n{result['message']}")
+        else:
+            tg_send(msg.chat.id, f"❌ Error: {result['message']}")
+
+    @bot.message_handler(commands=["tv_batch", "llenar_tv"])
+    def cmd_tv_batch(msg):
+        """Publica los 8 videos iniciales en C8L TV. Solo admin."""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        bot.reply_to(msg, "📺 Subiendo 8 videos al canal oficial de C8L TV...\nEsto tarda unos segundos.")
+        result = tv_publisher.publish_initial_content()
+        tg_send(msg.chat.id,
+            f"📺 *C8L TV — Batch completado*\n\n"
+            f"✅ Exitosos: {result['success']}\n"
+            f"❌ Fallidos: {result['failed']}\n"
+            f"📊 Total: {result['total']}\n\n"
+            f"El canal oficial ya tiene contenido!",
+            parse_mode="Markdown")
+
+    @bot.message_handler(commands=["tv_stats", "tv_estado"])
+    def cmd_tv_stats(msg):
+        """Ver estadisticas del canal de TV."""
+        tg_send(msg.chat.id, tv_publisher.get_stats(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["tv_generar"])
+    def cmd_tv_generar(msg):
+        """Genera contenido con IA y lo publica. Solo admin."""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "\U0001f6ab Solo el admin.")
+        tema = msg.text.replace("/tv_generar", "").strip()
+        bot.reply_to(msg, f"🤖 Generando contenido{'  sobre: ' + tema if tema else ' aleatorio'}...")
+        result = tv_publisher.generate_and_publish(tema)
+        if result["success"]:
+            tg_send(msg.chat.id, f"✅ Video generado y publicado!\n{result['message']}")
+        else:
+            tg_send(msg.chat.id, f"❌ Fallo: {result['message']}")
 
     # === COMANDOS DE AJEDREZ (C8L Chess Master) ===
 
