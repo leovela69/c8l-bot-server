@@ -1,0 +1,10 @@
+*.py
+chess/
+pantheon/
+bots/
+panteon-master/
+data/
+Dockerfile
+render.yaml
+install.sh
+requirements.txt
