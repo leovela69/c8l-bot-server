@@ -20,6 +20,10 @@ import time
 import base64
 from openrouter_client import call_openrouter
 from config import HUGGINGFACE_TOKEN, GEMINI_API_KEY, GEMINI_IMAGE_URL
+from pantheon.logo_engine import (
+    generate_logo_overlay, generate_logo_standalone,
+    detect_text_from_prompt, detect_style_from_prompt
+)
 
 logger = logging.getLogger("c8l.vulcano")
 
@@ -208,10 +212,15 @@ class Vulcano:
 
     def _create_image(self, prompt):
         """Genera imagen usando Nano Banana (Gemini 2.5 Flash Image) como motor principal.
+        Si es logo/marca: usa Logo Engine (texto perfecto con Pillow).
         Fallback: Pollinations + HuggingFace."""
         # Paso 1: Detectar estilo especifico
         style = self._detect_image_style(prompt)
         logger.info(f"Vulcano: estilo detectado = {style} | peticion: {prompt[:80]}")
+
+        # LOGO MODE: Si es logo/marca/escudo, usar el Logo Engine
+        if style == "logo":
+            return self._create_logo(prompt)
 
         # Paso 2: Intentar con Gemini (Nano Banana) — MEJOR CALIDAD
         image_bytes = self._generate_image_gemini(prompt)
@@ -236,6 +245,51 @@ class Vulcano:
         if image_bytes:
             return {"type": "image", "content": image_bytes, "caption": f"🎨 {prompt[:100]}"}
         return {"type": "error", "content": "No pude generar la imagen. Intenta con otra descripcion."}
+
+    def _create_logo(self, prompt):
+        """Genera logo con texto perfecto usando Logo Engine.
+        Opcion 1: Fondo IA + texto overlay
+        Opcion 2: Logo standalone (fondo negro + geometria + texto)
+        """
+        logger.info(f"Vulcano LOGO MODE: {prompt[:80]}")
+        text = detect_text_from_prompt(prompt)
+        style = detect_style_from_prompt(prompt)
+
+        # Intentar generar fondo con IA (sin texto)
+        bg_prompt = f"abstract dark futuristic background for logo, neon purple and gold accents, geometric patterns, no text, no letters, no words, dark moody atmosphere"
+
+        # Si piden geometria especifica, ajustar fondo
+        t = prompt.lower()
+        if any(kw in t for kw in ["escudo", "shield"]):
+            bg_prompt = "dark metallic shield shape background, ornate edges, neon purple gold accents, no text, heraldic style, dark background"
+        elif any(kw in t for kw in ["3d", "tridimensional"]):
+            bg_prompt = "abstract 3D dark geometric shapes background, neon purple and gold lighting, volumetric, no text, futuristic, dark"
+        elif any(kw in t for kw in ["espacio", "space", "galaxia", "galaxy"]):
+            bg_prompt = "deep space galaxy nebula background, purple and gold cosmic colors, no text, dark, stars"
+        elif any(kw in t for kw in ["fuego", "fire"]):
+            bg_prompt = "dark background with fire and flames, orange red glow, no text, dramatic"
+        elif any(kw in t for kw in ["hielo", "ice"]):
+            bg_prompt = "dark background with ice crystals and frost, blue cyan glow, no text, frozen"
+
+        # Generar fondo con Gemini o Pollinations
+        bg_bytes = self._generate_image_gemini(bg_prompt)
+        if not bg_bytes:
+            bg_bytes = self._generate_image_pollinations(bg_prompt, "digital_art")
+
+        if bg_bytes:
+            # Superponer texto perfecto
+            final = generate_logo_overlay(bg_bytes, prompt)
+            if final:
+                logger.info(f"Logo generado: {text} estilo {style}")
+                return {"type": "image", "content": final, "caption": f"🎨 Logo: {text}"}
+
+        # Fallback: logo standalone (solo texto + geometria, sin fondo IA)
+        logger.info("Logo: usando modo standalone (sin fondo IA)")
+        standalone = generate_logo_standalone(prompt)
+        if standalone:
+            return {"type": "image", "content": standalone, "caption": f"🎨 Logo: {text}"}
+
+        return {"type": "error", "content": "No pude generar el logo."}
 
     def _generate_image_gemini(self, prompt):
         """Genera imagen con Gemini 2.5 Flash Image (Nano Banana).
