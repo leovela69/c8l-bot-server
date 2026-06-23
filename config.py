@@ -32,25 +32,26 @@ OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
 # ---------------------------------------------------------------------------
 # Modelos asignados a cada agente del Panteon
-# Modelos gratuitos de OpenRouter (sin costo)
+# DeepSeek V4 Flash FREE — mejor que Qwen3 para seguir instrucciones
+# Qwen3-30b como fallback rapido
 # ---------------------------------------------------------------------------
 MODELS = {
     # Bot Maestro — orquestacion inteligente
-    "zeus": "qwen/qwen3-30b-a3b:free",
+    "zeus": "deepseek/deepseek-v4-flash:free",
 
     # Skills Maestros
-    "minerva": "qwen/qwen3-235b-a22b:free",          # Sabio/Conocimiento
-    "vulcano": "qwen/qwen3-30b-a3b:free",            # Artesano/Creacion
+    "minerva": "deepseek/deepseek-v4-flash:free",          # Sabio/Conocimiento
+    "vulcano": "deepseek/deepseek-v4-flash:free",          # Artesano/Creacion (CRITICO para prompts)
 
     # Bots Esclavos
-    "aries": "qwen/qwen3-30b-a3b:free",              # Seguridad
-    "hermes": "qwen/qwen3-30b-a3b:free",             # Comunicacion
-    "apolo": "qwen/qwen3-235b-a22b:free",            # Musica
-    "ares": "qwen/qwen3-235b-a22b:free",             # Video
-    "hefesto": "qwen/qwen3-235b-a22b:free",          # Diseno/Frontend
-    "artemisa": "qwen/qwen3-30b-a3b:free",           # Backend/API
-    "atenea": "qwen/qwen3-235b-a22b:free",           # Estrategia
-    "estia": "qwen/qwen3-30b-a3b:free",              # Aprendizaje
+    "aries": "qwen/qwen3-30b-a3b:free",              # Seguridad (ligero)
+    "hermes": "deepseek/deepseek-v4-flash:free",      # Comunicacion (principal)
+    "apolo": "deepseek/deepseek-v4-flash:free",       # Musica
+    "ares": "deepseek/deepseek-v4-flash:free",        # Video
+    "hefesto": "deepseek/deepseek-v4-flash:free",     # Diseno/Frontend
+    "artemisa": "deepseek/deepseek-v4-flash:free",    # Backend/API
+    "atenea": "deepseek/deepseek-v4-flash:free",      # Estrategia
+    "estia": "qwen/qwen3-30b-a3b:free",              # Aprendizaje (ligero)
 
     # Fallback general
     "fallback": "qwen/qwen3-30b-a3b:free",

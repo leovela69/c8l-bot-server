@@ -210,12 +210,19 @@ class Vulcano:
         Usa IA para mejorar el prompt antes de generar."""
         # Paso 1: Detectar estilo especifico
         style = self._detect_image_style(prompt)
+        logger.info(f"Vulcano: estilo detectado = {style} | peticion: {prompt[:80]}")
 
         # Paso 2: Mejorar prompt con IA (traducir + detallar)
         enhanced_prompt = self._enhance_image_prompt(prompt, style)
-        logger.info(f"Vulcano prompt mejorado [{style}]: {enhanced_prompt[:120]}")
+        logger.info(f"Vulcano prompt mejorado [{style}]: {enhanced_prompt[:200]}")
 
-        # Paso 3: Generar imagen con el prompt mejorado (modelo segun estilo)
+        # Paso 3: Validar que el prompt mejorado NO sea generico/irrelevante
+        # Si el enhanced es muy corto o parece un fallback malo, usar el local
+        if not enhanced_prompt or len(enhanced_prompt) < 30:
+            enhanced_prompt = self._local_prompt_enhance(prompt, style)
+            logger.warning("Vulcano: enhanced prompt muy corto, usando local")
+
+        # Paso 4: Generar imagen con el prompt mejorado (modelo segun estilo)
         image_bytes = self._generate_image_pollinations(enhanced_prompt, style)
         if not image_bytes:
             image_bytes = self._generate_image_huggingface(enhanced_prompt)
@@ -359,14 +366,17 @@ Your job: Take the user's request (in any language) and transform it into a deta
 
 {style_note}
 
-RULES:
-- Output ONLY the enhanced prompt text, nothing else (no explanations, no quotes, no labels)
+CRITICAL RULES:
+- Output ONLY the enhanced prompt text, nothing else (no explanations, no quotes, no labels, no "Output:", no "Here is")
 - Always write in English
+- FAITHFULLY represent what the user asked for — do NOT invent a different subject
+- If user says "dragon", the image MUST be about a dragon. If user says "car", it MUST be a car.
 - Add specific details: lighting, composition, camera angle, atmosphere, colors
 - Keep it under 150 words
-- Stay faithful to the user's core idea — do NOT change what they asked for
-- Never include readable text/words in the prompt (AI generators handle text badly)
-- Be SPECIFIC and VISUAL — describe what you SEE, not abstract concepts"""
+- Stay faithful to the user's core idea — do NOT change the SUBJECT
+- Never include readable text/words in the prompt
+- Be SPECIFIC and VISUAL — describe what you SEE, not abstract concepts
+- The FIRST sentence must describe the EXACT subject the user requested"""
 
         try:
             result = call_openrouter(
@@ -397,15 +407,27 @@ RULES:
         # Traducciones basicas comunes
         translations = {
             "leon": "lion", "gato": "cat", "perro": "dog", "dragon": "dragon",
-            "ciudad": "city", "bosque": "forest", "montaña": "mountain",
-            "oceano": "ocean", "espacio": "space", "noche": "night",
-            "fuego": "fire", "agua": "water", "cielo": "sky",
-            "guerrero": "warrior", "mago": "wizard", "robot": "robot",
-            "mujer": "woman", "hombre": "man", "niño": "child",
-            "coche": "car", "nave": "spaceship", "castillo": "castle",
+            "ciudad": "city", "bosque": "forest", "montaña": "mountain", "montana": "mountain",
+            "oceano": "ocean", "espacio": "space", "noche": "night", "dia": "day",
+            "fuego": "fire", "agua": "water", "cielo": "sky", "tierra": "earth",
+            "guerrero": "warrior", "mago": "wizard", "robot": "robot", "alien": "alien",
+            "mujer": "woman", "hombre": "man", "niño": "child", "nina": "girl",
+            "coche": "car", "nave": "spaceship", "castillo": "castle", "torre": "tower",
             "flores": "flowers", "arbol": "tree", "sol": "sun", "luna": "moon",
-            "musica": "music", "guitarra": "guitar", "corona": "crown",
-            "alas": "wings", "espada": "sword", "escudo": "shield",
+            "musica": "music", "guitarra": "guitar", "corona": "crown", "trono": "throne",
+            "alas": "wings", "espada": "sword", "escudo": "shield", "armadura": "armor",
+            "casa": "house", "edificio": "building", "puente": "bridge", "rio": "river",
+            "lobo": "wolf", "aguila": "eagle", "serpiente": "snake", "fenix": "phoenix",
+            "demonio": "demon", "angel": "angel", "dios": "god", "diosa": "goddess",
+            "oro": "gold", "plata": "silver", "cristal": "crystal", "diamante": "diamond",
+            "monstruo": "monster", "criatura": "creature", "bestia": "beast",
+            "planeta": "planet", "galaxia": "galaxy", "estrella": "star",
+            "samurai": "samurai", "ninja": "ninja", "pirata": "pirate", "vikingo": "viking",
+            "crea": "", "genera": "", "hazme": "", "quiero": "", "dame": "",
+            "una imagen de": "", "un": "a", "una": "a", "con": "with", "en": "in",
+            "sobre": "on top of", "debajo": "below", "grande": "large", "pequeño": "small",
+            "volando": "flying", "corriendo": "running", "peleando": "fighting",
+            "brillante": "glowing", "oscuro": "dark", "epico": "epic", "gigante": "giant",
         }
 
         # Traducir palabras conocidas
@@ -479,6 +501,7 @@ RULES:
         Ajusta parametros segun el estilo detectado."""
         try:
             from urllib.parse import quote
+            import random
 
             # Configuracion por estilo
             width, height = 1024, 1024
@@ -491,10 +514,17 @@ RULES:
             elif style in ("3d", "photorealistic"):
                 width, height = 1024, 1024
 
-            url = f"https://image.pollinations.ai/prompt/{quote(prompt)}?width={width}&height={height}&model={model}&nologo=true&enhance=true"
+            # Seed aleatorio para evitar cache y repeticiones
+            seed = random.randint(1, 999999)
+
+            url = f"https://image.pollinations.ai/prompt/{quote(prompt)}?width={width}&height={height}&model={model}&nologo=true&seed={seed}"
+            logger.info(f"Pollinations URL: {url[:200]}...")
             r = requests.get(url, timeout=120)  # Timeout amplio para renders complejos
             if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
+                logger.info(f"Pollinations OK: {len(r.content)} bytes")
                 return r.content
+            else:
+                logger.warning(f"Pollinations fallo: status={r.status_code}")
         except Exception as e:
             logger.warning(f"Pollinations error: {e}")
         return None

@@ -8,104 +8,131 @@ Skills: popular-web-designs, claude-design, architecture-diagram, concept-diagra
 """
 
 import logging
+import time
 from openrouter_client import call_openrouter
 
 logger = logging.getLogger("c8l.hefesto")
 
-HEFESTO_SYSTEM_PROMPT = """Eres HEFESTO, el Disenador de C8L Agency. Experto en frontend, UI/UX y diseno web.
+HEFESTO_SYSTEM_PROMPT = """You are HEFESTO, a world-class frontend developer for C8L Agency.
+Generate COMPLETE, WORKING HTML files with inline CSS and JS.
 
-Tu expertise:
-- HTML5, CSS3, JavaScript moderno
-- Diseno responsivo (mobile-first)
-- 54 sistemas de diseno reales (Stripe, Linear, Vercel, Notion, etc.)
-- Landing pages de alta conversion
-- Animaciones CSS y efectos visuales
-- Juegos web (HTML5 Canvas, CSS games)
-- Prototipos interactivos
-
-Estetica C8L Agency:
-- Tema oscuro con acentos neon (magenta #FF00FF, cyan #00FFFF, dorado #FFD700)
-- Tipografia: moderna, sans-serif, bold
-- Gradientes sutiles
-- Glass morphism + neon glow
-- Animaciones suaves
-
-REGLAS AL GENERAR CODIGO:
-- SIEMPRE genera UN archivo HTML completo con CSS y JS inline
-- El codigo debe funcionar al abrirlo en un navegador
-- Responsive design (funciona en movil y desktop)
-- NO expliques nada, solo genera el codigo
-- Empieza con <!DOCTYPE html>
-- Sin markdown, sin bloques de codigo ``` """
+ABSOLUTE RULES:
+- Output ONLY the HTML code, nothing else
+- Start with <!DOCTYPE html>
+- All CSS must be in <style> tags
+- All JS must be in <script> tags
+- Dark theme with neon accents (#FF00FF magenta, #00FFFF cyan, #FFD700 gold)
+- Mobile responsive
+- NO explanations, NO markdown, NO code blocks (```)
+- The code must work when opened in a browser"""
 
 
 class Hefesto:
     """Bot Disenador — Frontend y UI."""
 
+    def _generate_with_retry(self, prompt, max_tokens=6000):
+        """Genera codigo con retry y logging."""
+        logger.info(f"Hefesto generando: {prompt[:80]}")
+
+        # Intento 1: modelo asignado
+        result = call_openrouter(prompt, HEFESTO_SYSTEM_PROMPT, agent_name="hefesto",
+                                 temperature=0.7, max_tokens=max_tokens)
+        if result and result.strip().startswith("<!") or (result and "<html" in result[:200].lower()):
+            logger.info("Hefesto: generacion OK")
+            return result
+
+        # Si el resultado no empieza con HTML, puede ser que el modelo hablo en vez de generar
+        if result and len(result) > 100:
+            # Intentar extraer HTML de la respuesta
+            if "<!DOCTYPE" in result or "<html" in result:
+                idx = result.find("<!DOCTYPE")
+                if idx == -1:
+                    idx = result.find("<html")
+                if idx > 0:
+                    logger.info("Hefesto: extrayendo HTML de respuesta mixta")
+                    return result[idx:]
+
+        # Intento 2: retry con prompt mas enfatico
+        logger.warning("Hefesto: primer intento fallo, reintentando...")
+        time.sleep(1)
+        retry_prompt = f"IMPORTANT: Output ONLY raw HTML code. No text, no explanations.\n\n{prompt}"
+        result = call_openrouter(retry_prompt, HEFESTO_SYSTEM_PROMPT, agent_name="hefesto",
+                                 temperature=0.5, max_tokens=max_tokens)
+        if result:
+            cleaned = self._clean_code(result)
+            if cleaned and len(cleaned) > 50:
+                return cleaned
+
+        logger.error("Hefesto: todos los intentos fallaron")
+        return None
+
     def create_landing(self, description, style="c8l"):
         """Genera landing page completa."""
-        prompt = f"""Genera una landing page profesional completa:
-Descripcion: {description}
-Estilo: {style}
+        if not description or description.strip() == "":
+            description = "landing page para C8L Agency - produccion musical y tecnologia"
 
-Debe incluir:
-- Hero section con titulo impactante
-- Features/beneficios
-- Call to action
-- Footer
-- Responsive design
-- Animaciones CSS sutiles
-- Tema oscuro con acentos neon (estilo C8L)
+        prompt = f"""Create a complete landing page HTML file.
+Topic: {description}
+Style: dark theme, neon accents (magenta/cyan/gold), modern, glass morphism
 
-SOLO el codigo HTML completo, sin explicaciones."""
+Include: hero section with big title, 3 feature cards, call-to-action button, footer.
+Add smooth CSS animations. Responsive design.
+Start with <!DOCTYPE html>"""
 
-        result = call_openrouter(prompt, HEFESTO_SYSTEM_PROMPT, agent_name="hefesto", temperature=0.7, max_tokens=8000)
+        result = self._generate_with_retry(prompt, max_tokens=6000)
         if result:
             return {"type": "file", "content": self._clean_code(result).encode("utf-8"),
                     "filename": "c8l_landing.html", "caption": f"🖥️ Landing: {description[:60]}"}
-        return {"type": "error", "content": "No pude generar la landing page."}
+        return {"type": "error", "content": "No pude generar la landing page. Intenta de nuevo en unos segundos."}
 
     def create_game(self, description):
         """Genera juego web HTML5."""
-        prompt = f"""Genera un juego web completo en HTML5:
-Juego: {description}
+        if not description or description.strip() == "":
+            description = "snake game retro con neon"
 
-REQUISITOS:
-- UN archivo HTML con CSS y JS inline
-- Canvas o DOM-based
-- Controles: teclado y/o mouse
-- Score system
-- Game over y restart
-- Visualmente atractivo (tema neon/oscuro)
-- Responsive
+        prompt = f"""Create a complete HTML5 game:
+Game: {description}
 
-SOLO codigo, sin explicaciones."""
+Requirements: single HTML file, Canvas or DOM-based, keyboard/mouse controls,
+score system, game over + restart, dark neon theme.
+Start with <!DOCTYPE html>"""
 
-        result = call_openrouter(prompt, HEFESTO_SYSTEM_PROMPT, agent_name="hefesto", temperature=0.7, max_tokens=8000)
+        result = self._generate_with_retry(prompt, max_tokens=8000)
         if result:
             return {"type": "file", "content": self._clean_code(result).encode("utf-8"),
                     "filename": f"c8l_game.html", "caption": f"🎮 Juego: {description[:60]}"}
-        return {"type": "error", "content": "No pude generar el juego."}
+        return {"type": "error", "content": "No pude generar el juego. Intenta de nuevo en unos segundos."}
 
     def create_component(self, description):
         """Genera componente UI aislado."""
-        prompt = f"""Genera un componente UI moderno: {description}
+        prompt = f"""Create a modern UI component: {description}
+Complete HTML file with inline CSS. Dark theme + neon accents.
+Start with <!DOCTYPE html>"""
 
-HTML completo con CSS inline. Estilo: dark theme + neon accents.
-SOLO codigo."""
-
-        result = call_openrouter(prompt, HEFESTO_SYSTEM_PROMPT, agent_name="hefesto", temperature=0.7, max_tokens=4000)
+        result = self._generate_with_retry(prompt, max_tokens=4000)
         if result:
             return {"type": "file", "content": self._clean_code(result).encode("utf-8"),
                     "filename": "c8l_component.html", "caption": f"🧩 Componente: {description[:60]}"}
         return {"type": "error", "content": "No pude generar el componente."}
 
     def _clean_code(self, text):
-        """Limpia markdown."""
+        """Limpia markdown y extrae HTML puro."""
+        if not text:
+            return ""
+        # Quitar bloques markdown
         if text.startswith("```"):
             lines = text.split("\n")
             lines = lines[1:]
             if lines and lines[-1].strip() == "```":
                 lines = lines[:-1]
-            return "\n".join(lines)
-        return text
+            text = "\n".join(lines)
+        # Si hay ``` en medio, quitarlos
+        text = text.replace("```html", "").replace("```", "")
+        # Buscar inicio de HTML
+        if "<!DOCTYPE" in text:
+            idx = text.find("<!DOCTYPE")
+            text = text[idx:]
+        elif "<html" in text:
+            idx = text.find("<html")
+            text = text[idx:]
+        return text.strip()
