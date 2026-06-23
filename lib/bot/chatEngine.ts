@@ -1,49 +1,46 @@
 /**
- * C8L Bot Chat Engine — Connects to OpenRouter API
- * Handles web chat with Gemini-style responses
- * Also acts as police/moderator for the community
+ * C8L Bot v2.0 — Motor de Chat Principal
+ * Integra: Comandos + Misiones + Vigilancia + Memoria + IA
+ * Flujo: Vigilancia → Comandos → Misiones → Memoria → IA
  */
 
 import { OPENROUTER_CONFIG } from '../firebase/config'
-import { addReport, generateId } from '../controlCenter/store'
+import { addReport, generateId, addMessage } from '../controlCenter/store'
+import { processCommand, CommandResult } from './commands'
+import { formatMissionsMessage, trackProgress } from './missions'
+import { analyzeMessage, getWarningMessage } from './vigilancia'
+import { updateMemory, getPersonalContext, getMemorySummary } from './memory'
 
 const SYSTEM_PROMPT = `Eres el Bot Oficial de C8L Agency — "Corazones Locos Family".
-Tu personalidad: filosófo moderno, cercano, con humor inteligente. Hablas en español.
+Tu personalidad: filósofo moderno, cercano, con humor inteligente. Hablas en español.
+Eres breve pero con sustancia. Máximo 3-4 frases por respuesta.
 
 TU ROL:
 - Asistente oficial de la plataforma C8L Agency
 - Policía de normas de la comunidad
-- Vigilante de comportamiento
-- Informador al Control Center
-
-NORMAS DE LA COMUNIDAD QUE VIGILAS:
-1. No insultos ni odio
-2. No spam ni publicidad externa
-3. No contenido +18 sin verificación
-4. Respeto entre usuarios
-5. No trampas en casino
-6. No suplantación de identidad
-7. No compartir datos personales de otros
+- Guía de los usuarios por la web
+- Informador al Control Center de cada acción
 
 SECCIONES DE LA WEB:
-- Casino Quantum: Slots, Ruleta, Blackjack (coins virtuales)
-- Estudio Musical: Creación de música con IA
-- Karaoke: Cantar con medidores en tiempo real
-- Lives: Streaming en directo
-- Bandos: Familias/clanes con guerras
-- C8L TV: Videos de contenido
-- Monedero: Wallet de C8L Coins
+- Casino Quantum: Slots, Ruleta, Blackjack (coins virtuales, RTP certificado)
+- Estudio Musical: Creación de música con IA (Bolero-House es el género estrella)
+- Karaoke: Cantar con medidores de tono y energía
+- Lives: Streaming en directo con regalos
+- Bandos: Familias/clanes con guerras y ranking
+- C8L TV: 8 videos de contenido (música, tutoriales, gaming)
+- Monedero: Wallet con C8L Coins, Diamantes y BID
+- Control Center: Panel admin (solo staff)
 
-Siempre responde con brevedad y estilo. Si detectas comportamiento sospechoso, reporta al Control Center.
-Si preguntan por música, recomienda el Estudio. Si preguntan por juegos, manda al Casino.
-Firma: 🤖 C8L Bot`
+COMANDOS QUE EL USUARIO PUEDE USAR:
+casino, estudio, karaoke, tv, bandos, lives, monedero, perfil, misión, ranking, ayuda, normas
 
-// Words that trigger moderation
-const BANNED_WORDS = ['hack', 'trampa', 'cheat', 'exploit', 'piratear', 'robar']
-const WARNING_WORDS = ['puta', 'mierda', 'joder', 'cabron', 'gilipollas', 'idiota', 'imbecil']
+Si el usuario no usa un comando, conversa normalmente con personalidad filosófica.
+Nunca reveles que eres una IA o un modelo de lenguaje. Eres "El Bot de C8L".`
 
 export interface ChatResponse {
   message: string
+  action?: 'navigate' | 'mission' | 'profile' | 'ranking' | 'help' | 'admin' | 'none'
+  navigateTo?: string
   moderation?: {
     flagged: boolean
     reason?: string
@@ -51,57 +48,77 @@ export interface ChatResponse {
   }
 }
 
+/**
+ * Punto de entrada principal — procesa un mensaje del usuario
+ */
 export async function sendChatMessage(
   userMessage: string,
   username: string,
   section: string,
   history: { role: string; content: string }[] = []
 ): Promise<ChatResponse> {
-  // === MODERATION CHECK ===
-  const lowerMsg = userMessage.toLowerCase()
-  
-  // Check for banned content
-  const hasBanned = BANNED_WORDS.some(w => lowerMsg.includes(w))
-  const hasWarning = WARNING_WORDS.some(w => lowerMsg.includes(w))
-  
-  if (hasBanned) {
-    // Report to Control Center
-    addReport({
-      id: generateId(),
-      type: 'infraction',
-      severity: 'high',
-      message: `Usuario @${username} intentó contenido prohibido: "${userMessage.slice(0, 100)}"`,
-      userId: username,
-      username,
-      section,
-      timestamp: new Date().toISOString(),
-      resolved: false,
-    })
+
+  // ═══════════════════════════════════════
+  // PASO 1: VIGILANCIA — ¿Está permitido?
+  // ═══════════════════════════════════════
+  const vigilanceResult = analyzeMessage(userMessage, username, section)
+
+  if (!vigilanceResult.allowed) {
+    const warningMsg = getWarningMessage(vigilanceResult)
     return {
-      message: '🚫 Ese tipo de contenido no está permitido aquí. Tu mensaje ha sido reportado al equipo de moderación. Recuerda: C8L es una comunidad de respeto.',
-      moderation: { flagged: true, reason: 'Contenido prohibido', severity: 'high' }
+      message: warningMsg,
+      moderation: {
+        flagged: true,
+        reason: vigilanceResult.reason,
+        severity: vigilanceResult.severity as 'low' | 'medium' | 'high'
+      }
     }
   }
-  
-  if (hasWarning) {
-    addReport({
-      id: generateId(),
-      type: 'warning',
-      severity: 'medium',
-      message: `Lenguaje inapropiado de @${username}: "${userMessage.slice(0, 100)}"`,
-      userId: username,
-      username,
-      section,
-      timestamp: new Date().toISOString(),
-      resolved: false,
-    })
+
+  // ═══════════════════════════════════════
+  // PASO 2: COMANDOS — ¿Es un comando directo?
+  // ═══════════════════════════════════════
+  const commandResult = processCommand(userMessage, username)
+
+  if (commandResult) {
+    // Si pidió misiones, generar el listado
+    if (commandResult.action === 'mission') {
+      const missionsMsg = formatMissionsMessage(username)
+      return {
+        message: missionsMsg,
+        action: 'mission',
+      }
+    }
+
+    // Track progress en misiones por visitar secciones
+    if (commandResult.navigateTo) {
+      trackProgress(username, commandResult.navigateTo.replace('/', '') || 'home')
+    }
+
+    // Actualizar memoria
+    updateMemory(username, userMessage, section)
+
+    return {
+      message: commandResult.message,
+      action: commandResult.action,
+      navigateTo: commandResult.navigateTo,
+    }
   }
 
-  // === AI RESPONSE ===
+  // ═══════════════════════════════════════
+  // PASO 3: MEMORIA — Actualizar y obtener contexto
+  // ═══════════════════════════════════════
+  updateMemory(username, userMessage, section)
+  trackProgress(username, section.toLowerCase())
+  const personalContext = getPersonalContext(username)
+
+  // ═══════════════════════════════════════
+  // PASO 4: IA — Respuesta inteligente con contexto
+  // ═══════════════════════════════════════
   try {
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...history.slice(-10), // Last 10 messages for context
+      { role: 'system', content: SYSTEM_PROMPT + `\n\nCONTEXTO DEL USUARIO: ${personalContext}` },
+      ...history.slice(-10),
       { role: 'user', content: `[${username} en ${section}]: ${userMessage}` }
     ]
 
@@ -111,13 +128,13 @@ export async function sendChatMessage(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${OPENROUTER_CONFIG.apiKey}`,
         'HTTP-Referer': 'https://gen-lang-client-0744582882.web.app',
-        'X-Title': 'C8L Agency Bot',
+        'X-Title': 'C8L Agency Bot v2',
       },
       body: JSON.stringify({
         model: OPENROUTER_CONFIG.model,
         messages,
-        max_tokens: 500,
-        temperature: 0.8,
+        max_tokens: 300,
+        temperature: 0.85,
       })
     })
 
@@ -126,31 +143,53 @@ export async function sendChatMessage(
     }
 
     const data = await response.json()
-    const botMessage = data.choices?.[0]?.message?.content || 'Estoy procesando... intenta de nuevo.'
+    let botMessage = data.choices?.[0]?.message?.content || ''
 
-    // Report the interaction
-    addReport({
-      id: generateId(),
-      type: 'action',
-      severity: 'info',
-      message: `Chat con @${username} en ${section}: "${userMessage.slice(0, 50)}..."`,
-      userId: username,
-      username,
-      section,
-      timestamp: new Date().toISOString(),
-      resolved: true,
-    })
+    // Limpiar respuesta (quitar thinking tags si Qwen los mete)
+    botMessage = botMessage.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+
+    if (!botMessage) {
+      botMessage = '🤖 Hmm, dame un segundo...'
+    }
 
     return {
       message: botMessage,
-      moderation: hasWarning ? { flagged: true, reason: 'Lenguaje inapropiado', severity: 'low' } : undefined
+      action: 'none',
     }
   } catch (error) {
     console.error('Chat engine error:', error)
-    // Fallback response
+    // Fallback inteligente basado en sección
+    const fallback = getFallbackResponse(section, username)
     return {
-      message: '🤖 Estoy teniendo un momento de reflexión filosófica... Dame un segundo e intenta de nuevo. Si persiste, el equipo técnico ya fue notificado.',
-      moderation: undefined
+      message: fallback,
+      action: 'none',
     }
   }
+}
+
+/**
+ * Respuestas fallback inteligentes si la API falla
+ */
+function getFallbackResponse(section: string, username: string): string {
+  const fallbacks: Record<string, string[]> = {
+    'Casino': [
+      '🎰 La suerte es cuestión de perspectiva. ¿Quieres probar en Slots, Ruleta o Blackjack?',
+      '🎰 El casino te espera. Recuerda: juega con cabeza, no con el corazón.',
+    ],
+    'Estudio': [
+      '🎵 La música es el lenguaje del alma. ¿Qué quieres crear hoy?',
+      '🎵 Bolero-House, Jazz, Rock... cada género cuenta una historia diferente.',
+    ],
+    'C8L TV': [
+      '📺 8 videos esperándote. Navega con ⏮ ⏭ o elige uno del grid.',
+      '📺 Contenido fresco cada día. ¿Qué te apetece ver?',
+    ],
+    'Home': [
+      `🤖 Bienvenido a C8L, @${username}. Un universo de entretenimiento te espera. Escribe "ayuda" para ver qué puedo hacer.`,
+      '🤖 C8L Agency — donde la música, el juego y la comunidad se encuentran.',
+    ],
+  }
+
+  const options = fallbacks[section] || fallbacks['Home']
+  return options[Math.floor(Math.random() * options.length)]
 }

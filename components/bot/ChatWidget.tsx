@@ -88,6 +88,13 @@ export default function ChatWidget() {
       }
       setMessages(prev => [...prev, botMsg])
 
+      // Handle navigation action
+      if (response.action === 'navigate' && response.navigateTo) {
+        setTimeout(() => {
+          window.location.href = response.navigateTo!
+        }, 1500)
+      }
+
       // Store bot response too
       addMessage({
         id: botMsg.id,
