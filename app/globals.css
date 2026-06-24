@@ -10,11 +10,15 @@
   --c8l-purple: #8A2BE2;
   --c8l-pink: #FF69B4;
   --c8l-cyan: #00F3FF;
+  --c8l-red: #DC2626;
 }
 
 * { box-sizing: border-box; }
 body { background: var(--c8l-black); color: white; font-family: 'Inter', sans-serif; }
 h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
+
+/* Selection color */
+::selection { background: rgba(220, 38, 38, 0.3); color: white; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
