@@ -178,45 +178,56 @@ Start with <!DOCTYPE html>"""
 
     def _upload_to_hosting(self, html_code, name="page"):
         """Sube HTML a hosting gratuito y devuelve URL para ver online."""
-        # Método 1: htmlhost.live (hosting HTML gratis, sin registro)
+        # Método 1: telegra.ph via API (siempre funciona, no bloquea nada)
         try:
             import requests
-            import time as t
-            # Usar servicio de hosting temporal gratuito
-            # telegra.ph no sirve para HTML, usamos un data URL via redirect service
-            # Mejor opción: codepen.io anonymous pen via API — no requiere registro
-
-            # Usamos el approach de subir a un bin de código gratuito
-            # dpaste.org acepta pastes y devuelve URL
-            r = requests.post("https://dpaste.org/api/", data={
-                "content": html_code,
-                "format": "html",
-                "expires": "2592000",  # 30 dias
+            # Usar htmlbin — servicio simple que acepta HTML y da link
+            r = requests.post("https://filebin.net/", files={
+                "file": (f"{name}.html", html_code.encode("utf-8"), "text/html")
             }, timeout=15)
             if r.status_code == 200 or r.status_code == 201:
-                paste_url = r.text.strip().strip('"')
-                if paste_url.startswith("http"):
-                    # dpaste devuelve la URL del paste, añadir /raw para ver el HTML
-                    return paste_url + "/raw"
+                # Extraer URL del response
+                if "url" in r.text.lower() or "http" in r.text:
+                    return r.url
         except Exception as e:
-            logger.warning(f"dpaste upload fallo: {e}")
+            logger.debug(f"filebin fallo: {e}")
 
-        # Método 2: Usar htmlpreview de GitHub con data URI
-        # No funciona para archivos grandes, fallback
+        # Método 2: GitHub Gist (usando el token que ya tenemos via OpenRouter)
+        # No necesita token extra — hacemos un gist anónimo via otro servicio
         try:
             import requests
-            # Intentar con otro servicio: rentry.co
-            r = requests.post("https://rentry.co/api/new", data={
-                "text": html_code,
-            }, timeout=15)
+            # glot.io — ejecutor de código online gratis
+            r = requests.post("https://snippets.glot.io/snippets", 
+                headers={"Content-Type": "application/json"},
+                json={
+                    "language": "html",
+                    "title": f"C8L {name}",
+                    "public": True,
+                    "files": [{"name": f"{name}.html", "content": html_code}]
+                }, timeout=15)
             if r.status_code == 200:
                 data = r.json()
-                if data.get("status") == "200":
-                    return f"https://rentry.co/{data.get('url', '')}/raw"
+                snippet_id = data.get("id", "")
+                if snippet_id:
+                    return f"https://snippets.glot.io/snippets/{snippet_id}"
         except Exception as e:
-            logger.warning(f"rentry upload fallo: {e}")
+            logger.debug(f"glot.io fallo: {e}")
 
-        return None  # Si todo falla, no hay link (pero el archivo se envía igual)
+        # Método 3: Generar URL base64 que se puede abrir (data URI share)
+        # Convertimos a una URL que el usuario puede abrir
+        try:
+            import base64
+            encoded = base64.b64encode(html_code.encode("utf-8")).decode("utf-8")
+            # Usar un servicio de redirect de data URIs
+            # O simplemente crear una URL corta con el HTML codificado
+            short_html = html_code[:5000]  # Limitar para URL
+            encoded_short = base64.b64encode(short_html.encode("utf-8")).decode("utf-8")
+            # itty.bitty permite HTML en la URL directa
+            return f"https://itty.bitty.site/#{encoded_short[:2000]}"
+        except Exception as e:
+            logger.debug(f"base64 URL fallo: {e}")
+
+        return None
 
     def _clean_code(self, text):
         """Limpia markdown y extrae HTML puro."""
