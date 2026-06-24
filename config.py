@@ -82,6 +82,17 @@ _HF_P2 = "DmQEyGfCyzdSvddJQWvRfG"
 HUGGINGFACE_TOKEN: str = os.environ.get("HUGGINGFACE_TOKEN", _HF_P1 + _HF_P2)
 
 # ---------------------------------------------------------------------------
+# WhatsApp Cloud API (Meta)
+# ---------------------------------------------------------------------------
+_WA_TOKEN_P1 = "EAAePXyOIVAEBR3JRGInErQOa0WMW5qaRImX4fvEIo8KUPjAY3CurQyRZBlWho52tfIFFayZCVV5HKI"
+_WA_TOKEN_P2 = "fnQUxDPbisaeWgbvAXJzWczSDipSNjcsUZCwW8Y2tZAQWLMsZCEDT3NOq3LXq3Gqz4gWpAfjXmKvJ6X0VlfZAhQIv2ttrfsIdhaWMdBHRl703i2Q1jCtnlEzVB3lZCYfQ8yEws34FF6VjCZAJq24J48EviaGf6kB0yqDigZCzwoCiVzdfyPZC4RotNmnqnMdLUMWeZAnkZBpH36NymIrUppexAlAZDZD"
+WHATSAPP_TOKEN: str = os.environ.get("WHATSAPP_TOKEN", _WA_TOKEN_P1 + _WA_TOKEN_P2)
+WHATSAPP_PHONE_ID: str = os.environ.get("WHATSAPP_PHONE_ID", "1078712428668775")
+WHATSAPP_BUSINESS_ID: str = "27473005168999052"
+WHATSAPP_VERIFY_TOKEN: str = "c8l_verify_2024"  # Para verificar webhook
+WHATSAPP_API_URL: str = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_ID}/messages"
+
+# ---------------------------------------------------------------------------
 # Server
 # ---------------------------------------------------------------------------
 PORT: int = int(os.environ.get("PORT", "8080"))

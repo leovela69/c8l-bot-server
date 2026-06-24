@@ -584,19 +584,156 @@ def _send_feedback_buttons(chat_id):
 
 
 # ---------------------------------------------------------------------------
-# Health check server
+# Health check server + WhatsApp Webhook
 # ---------------------------------------------------------------------------
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        # WhatsApp webhook verification
+        if self.path.startswith("/webhook"):
+            from urllib.parse import urlparse, parse_qs
+            params = parse_qs(urlparse(self.path).query)
+            flat_params = {k: v[0] for k, v in params.items()}
+
+            from whatsapp_handler import verify_webhook
+            challenge = verify_webhook(flat_params)
+            if challenge:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(challenge.encode())
+                return
+
+        # Normal health check
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         info = {"status": "healthy", "bot": BOT_NAME, "version": "17.0",
-                "architecture": "PANTEON_MASTER", "agents": 11, "time": time.time()}
+                "architecture": "PANTEON_MASTER", "agents": 11, "time": time.time(),
+                "whatsapp": True}
         self.wfile.write(json.dumps(info).encode())
+
+    def do_POST(self):
+        # WhatsApp incoming messages
+        if self.path.startswith("/webhook"):
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length)
+
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"OK")
+
+            # Procesar en background
+            try:
+                data = json.loads(body)
+                threading.Thread(
+                    target=_handle_whatsapp_message, args=(data,), daemon=True
+                ).start()
+            except:
+                pass
+            return
+
+        self.send_response(404)
+        self.end_headers()
 
     def log_message(self, fmt, *args):
         return
+
+
+def _handle_whatsapp_message(data):
+    """Procesa mensaje de WhatsApp en background."""
+    try:
+        from whatsapp_handler import process_webhook, wa_send_text, wa_send_image, wa_send_document
+        from pantheon.zeus import analyze_intent
+
+        msg = process_webhook(data)
+        if not msg:
+            return
+
+        from_number = msg["from"]
+        user_name = msg["name"]
+
+        if msg["type"] == "text":
+            text = msg["text"]
+            logger.info(f"[WA] [{user_name}] ({from_number}): {text[:80]}")
+
+            # Procesar con Zeus (mismo flujo que Telegram)
+            intent_data = analyze_intent(text, user_name)
+            agent = intent_data.get("primary_agent", "hermes")
+
+            # Dispatch simplificado para WhatsApp
+            _dispatch_whatsapp(from_number, user_name, text, intent_data)
+
+        elif msg["type"] == "image":
+            caption = msg.get("caption", "mejora esta imagen")
+            wa_send_text(from_number, f"🎨 Recibí tu imagen. Procesando: {caption[:50]}...")
+            # TODO: descargar imagen y editar con Gemini
+
+        elif msg["type"] == "unsupported":
+            wa_send_text(from_number, "📱 Por ahora solo proceso texto e imágenes. Escríbeme qué necesitas!")
+
+    except Exception as e:
+        logger.error(f"WA handler error: {e}")
+
+
+def _dispatch_whatsapp(from_number, user_name, text, intent_data):
+    """Dispatch de mensajes de WhatsApp a los agentes."""
+    from whatsapp_handler import wa_send_text, wa_send_image, wa_send_document
+
+    agent = intent_data.get("primary_agent", "hermes")
+    task = intent_data.get("task_description", text)
+
+    try:
+        if agent == "hermes":
+            history_text = get_history_text(from_number)
+            reply = hermes.chat(text, user_name, history_text)
+            if reply:
+                add_history(from_number, "user", text)
+                add_history(from_number, "assistant", reply)
+                wa_send_text(from_number, reply)
+            else:
+                wa_send_text(from_number, "🔄 Error temporal. Intenta en unos segundos.")
+
+        elif agent == "vulcano":
+            wa_send_text(from_number, "🎨 Generando...")
+            result = vulcano.create(text)
+            if result:
+                rtype = result.get("type", "error")
+                if rtype == "image":
+                    wa_send_image(from_number, result["content"], caption=result.get("caption", ""))
+                elif rtype == "file":
+                    wa_send_document(from_number, result["content"],
+                                    result.get("filename", "archivo.txt"),
+                                    caption=result.get("caption", ""))
+                elif rtype == "text":
+                    wa_send_text(from_number, result["content"])
+                else:
+                    wa_send_text(from_number, f"❌ {result.get('content', 'Error')}")
+            else:
+                wa_send_text(from_number, "❌ No pude generar el contenido.")
+
+        elif agent == "apolo":
+            wa_send_text(from_number, "🎵 Componiendo...")
+            reply = apolo.compose(text)
+            wa_send_text(from_number, reply or "❌ No pude componer.")
+
+        elif agent == "minerva":
+            reply = minerva.research(text)
+            wa_send_text(from_number, reply or "❌ No pude investigar eso.")
+
+        elif agent == "atenea":
+            reply = atenea.create_article(text)
+            wa_send_text(from_number, reply or "❌ No pude generar el contenido.")
+
+        else:
+            # Default: Hermes
+            history_text = get_history_text(from_number)
+            reply = hermes.chat(text, user_name, history_text)
+            wa_send_text(from_number, reply or "🔄 Error temporal.")
+
+    except Exception as e:
+        logger.error(f"WA dispatch error [{agent}]: {e}")
+        wa_send_text(from_number, f"⚠️ Error: {str(e)[:100]}")
 
 
 # ---------------------------------------------------------------------------
