@@ -424,7 +424,7 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
         elif agent == "hefesto":
             # Diseno / Codigo / Juegos
             tg_typing(chat_id)
-            tg_send(chat_id, "🖥️ Generando...")
+            tg_send(chat_id, "🖥️ Hefesto generando...")
             t = text.lower()
             if any(kw in t for kw in ["juego", "game", "snake", "tetris", "pong"]):
                 result = hefesto.create_game(text)
@@ -432,7 +432,29 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
                 result = hefesto.create_landing(text)
             else:
                 result = hefesto.create_component(text)
-            _send_creation_result(chat_id, result)
+
+            # Enviar resultado + preview de imagen
+            if result and result.get("type") == "file":
+                tg_doc_action(chat_id)
+                caption = result.get("caption", "")
+                tg_send_document(chat_id, result["content"], result.get("filename", "code.html"), caption=caption)
+                # Generar preview visual de la landing
+                url = result.get("url", "")
+                if url:
+                    tg_send(chat_id, f"🌐 *Abrir en navegador:*\n{url}", parse_mode="Markdown")
+                # Generar imagen preview
+                try:
+                    preview_prompt = f"screenshot of a modern dark website with neon purple accents, {text[:50]}, web design mockup, browser window, highly detailed"
+                    preview_img = vulcano._generate_image_pollinations(preview_prompt, "digital_art")
+                    if preview_img:
+                        tg_send_photo(chat_id, preview_img, caption="👁️ Preview visual (aproximado)")
+                except:
+                    pass
+                _send_feedback_buttons(chat_id)
+            elif result:
+                _send_creation_result(chat_id, result)
+            else:
+                tg_send(chat_id, "❌ No pude generar el código.")
 
         elif agent == "artemisa":
             # Backend / API

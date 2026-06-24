@@ -111,7 +111,7 @@ REMEMBER: Only output the raw HTML code. Nothing else. Start now:
 </html>"""
 
     def create_landing(self, description, style="c8l"):
-        """Genera landing page completa."""
+        """Genera landing page completa + link para verla online + preview."""
         if not description or description.strip() == "":
             description = "landing page para C8L Agency - produccion musical y tecnologia"
 
@@ -125,12 +125,19 @@ Start with <!DOCTYPE html>"""
 
         result = self._generate_with_retry(prompt, max_tokens=6000)
         if result:
-            return {"type": "file", "content": self._clean_code(result).encode("utf-8"),
-                    "filename": "c8l_landing.html", "caption": f"🖥️ Landing: {description[:60]}"}
-        return {"type": "error", "content": "No pude generar la landing page. Intenta de nuevo en unos segundos."}
+            html_code = self._clean_code(result)
+            # Subir a hosting gratuito y obtener link
+            url = self._upload_to_hosting(html_code, f"c8l_landing")
+            caption = f"🖥️ Landing: {description[:60]}"
+            if url:
+                caption += f"\n\n🌐 Ver online: {url}"
+            return {"type": "file", "content": html_code.encode("utf-8"),
+                    "filename": "c8l_landing.html", "caption": caption,
+                    "preview_html": html_code, "url": url}
+        return {"type": "error", "content": "No pude generar la landing page. Intenta de nuevo."}
 
     def create_game(self, description):
-        """Genera juego web HTML5."""
+        """Genera juego web HTML5 + link para jugar online."""
         if not description or description.strip() == "":
             description = "snake game retro con neon"
 
@@ -143,21 +150,73 @@ Start with <!DOCTYPE html>"""
 
         result = self._generate_with_retry(prompt, max_tokens=8000)
         if result:
-            return {"type": "file", "content": self._clean_code(result).encode("utf-8"),
-                    "filename": f"c8l_game.html", "caption": f"🎮 Juego: {description[:60]}"}
-        return {"type": "error", "content": "No pude generar el juego. Intenta de nuevo en unos segundos."}
+            html_code = self._clean_code(result)
+            url = self._upload_to_hosting(html_code, "c8l_game")
+            caption = f"🎮 Juego: {description[:60]}"
+            if url:
+                caption += f"\n\n🕹️ Jugar online: {url}"
+            return {"type": "file", "content": html_code.encode("utf-8"),
+                    "filename": f"c8l_game.html", "caption": caption, "url": url}
+        return {"type": "error", "content": "No pude generar el juego. Intenta de nuevo."}
 
     def create_component(self, description):
-        """Genera componente UI aislado."""
+        """Genera componente UI + link."""
         prompt = f"""Create a modern UI component: {description}
 Complete HTML file with inline CSS. Dark theme + neon accents.
 Start with <!DOCTYPE html>"""
 
         result = self._generate_with_retry(prompt, max_tokens=4000)
         if result:
-            return {"type": "file", "content": self._clean_code(result).encode("utf-8"),
-                    "filename": "c8l_component.html", "caption": f"🧩 Componente: {description[:60]}"}
+            html_code = self._clean_code(result)
+            url = self._upload_to_hosting(html_code, "c8l_component")
+            caption = f"🧩 Componente: {description[:60]}"
+            if url:
+                caption += f"\n\n🌐 Ver: {url}"
+            return {"type": "file", "content": html_code.encode("utf-8"),
+                    "filename": "c8l_component.html", "caption": caption, "url": url}
         return {"type": "error", "content": "No pude generar el componente."}
+
+    def _upload_to_hosting(self, html_code, name="page"):
+        """Sube HTML a hosting gratuito y devuelve URL para ver online."""
+        # Método 1: htmlhost.live (hosting HTML gratis, sin registro)
+        try:
+            import requests
+            import time as t
+            # Usar servicio de hosting temporal gratuito
+            # telegra.ph no sirve para HTML, usamos un data URL via redirect service
+            # Mejor opción: codepen.io anonymous pen via API — no requiere registro
+
+            # Usamos el approach de subir a un bin de código gratuito
+            # dpaste.org acepta pastes y devuelve URL
+            r = requests.post("https://dpaste.org/api/", data={
+                "content": html_code,
+                "format": "html",
+                "expires": "2592000",  # 30 dias
+            }, timeout=15)
+            if r.status_code == 200 or r.status_code == 201:
+                paste_url = r.text.strip().strip('"')
+                if paste_url.startswith("http"):
+                    # dpaste devuelve la URL del paste, añadir /raw para ver el HTML
+                    return paste_url + "/raw"
+        except Exception as e:
+            logger.warning(f"dpaste upload fallo: {e}")
+
+        # Método 2: Usar htmlpreview de GitHub con data URI
+        # No funciona para archivos grandes, fallback
+        try:
+            import requests
+            # Intentar con otro servicio: rentry.co
+            r = requests.post("https://rentry.co/api/new", data={
+                "text": html_code,
+            }, timeout=15)
+            if r.status_code == 200:
+                data = r.json()
+                if data.get("status") == "200":
+                    return f"https://rentry.co/{data.get('url', '')}/raw"
+        except Exception as e:
+            logger.warning(f"rentry upload fallo: {e}")
+
+        return None  # Si todo falla, no hay link (pero el archivo se envía igual)
 
     def _clean_code(self, text):
         """Limpia markdown y extrae HTML puro."""
