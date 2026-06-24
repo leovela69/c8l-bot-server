@@ -433,23 +433,15 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
             else:
                 result = hefesto.create_component(text)
 
-            # Enviar resultado + preview de imagen
+            # Enviar resultado + link
             if result and result.get("type") == "file":
                 tg_doc_action(chat_id)
                 caption = result.get("caption", "")
                 tg_send_document(chat_id, result["content"], result.get("filename", "code.html"), caption=caption)
-                # Generar preview visual de la landing
+                # Mandar link para abrir
                 url = result.get("url", "")
                 if url:
                     tg_send(chat_id, f"🌐 *Abrir en navegador:*\n{url}", parse_mode="Markdown")
-                # Generar imagen preview
-                try:
-                    preview_prompt = f"screenshot of a modern dark website with neon purple accents, {text[:50]}, web design mockup, browser window, highly detailed"
-                    preview_img = vulcano._generate_image_pollinations(preview_prompt, "digital_art")
-                    if preview_img:
-                        tg_send_photo(chat_id, preview_img, caption="👁️ Preview visual (aproximado)")
-                except:
-                    pass
                 _send_feedback_buttons(chat_id)
             elif result:
                 _send_creation_result(chat_id, result)
