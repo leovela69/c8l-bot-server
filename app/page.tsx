@@ -2,373 +2,246 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { Providers } from './providers'
+import { useAuth } from '@/lib/auth/context'
+import AgeGate from '@/components/auth/AgeGate'
+import AppShell from '@/components/layout/AppShell'
 import { VIDEOS, CATEGORIES, CREATORS } from '@/lib/videos/data'
 
-// ==================== COMPONENTS ====================
-
-function TopNav() {
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#0D0D0D] border-b border-gray-800">
-      <div className="flex items-center justify-between px-4 h-14">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center">
-            <span className="text-sm font-bold">C8L</span>
-          </div>
-          <div className="hidden md:block">
-            <h1 className="text-sm font-outfit font-bold text-white leading-tight">C8L Corazones Locos</h1>
-            <p className="text-[10px] text-gray-500 leading-tight">Agency</p>
-          </div>
-        </div>
-
-        {/* Nav Center */}
-        <nav className="hidden lg:flex items-center gap-1">
-          <NavLink href="/" icon="📺" label="C8L TV" active />
-          <NavLink href="/karaoke" icon="🎵" label="SALAS" />
-          <NavLink href="/streaming" icon="🎧" label="STREAMING" />
-          <NavLink href="/monetizacion" icon="💰" label="MONETIZACIÓN" />
-          <NavLink href="/bandos" icon="👥" label="COMUNIDAD" />
-          <NavLink href="/registro" icon="👤" label="PERFIL" />
-          <NavLink href="/studio" icon="🤖" label="ESTUDIO IA" />
-        </nav>
-
-        {/* Right */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1 bg-gray-800/60 rounded-full px-3 py-1">
-            <span className="text-c8l-gold text-xs">●</span>
-            <span className="text-xs font-bold text-white">9999</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1 bg-gradient-to-r from-red-600 to-orange-500 rounded px-2 py-0.5">
-            <span className="text-[10px] font-bold text-white">Reset</span>
-            <span className="text-[8px] text-white/80">Gold</span>
-          </div>
-          <div className="flex items-center gap-0.5 text-[10px]">
-            <span className="px-1.5 py-0.5 rounded bg-gray-700 text-gray-300">EN</span>
-            <span className="px-1.5 py-0.5 rounded bg-c8l-cyan/20 text-c8l-cyan font-bold">ES</span>
-          </div>
-          <button className="text-[10px] border border-gray-600 rounded px-2 py-1 text-gray-300 hover:text-white hover:border-gray-400 transition">
-            CERRAR SESIÓN
-          </button>
-        </div>
-      </div>
-    </header>
-  )
-}
-
-function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active?: boolean }) {
-  return (
-    <Link href={href} className={`flex flex-col items-center px-3 py-1 rounded-lg transition text-[10px] ${
-      active ? 'text-c8l-cyan' : 'text-gray-400 hover:text-white'
-    }`}>
-      <span className="text-base">{icon}</span>
-      <span className="font-medium mt-0.5">{label}</span>
-    </Link>
-  )
-}
-
-function NavItem({ icon, label, active }: { icon: string; label: string; active?: boolean }) {
-  return (
-    <button className={`flex flex-col items-center px-3 py-1 rounded-lg transition text-[10px] ${
-      active ? 'text-c8l-cyan' : 'text-gray-400 hover:text-white'
-    }`}>
-      <span className="text-base">{icon}</span>
-      <span className="font-medium mt-0.5">{label}</span>
-    </button>
-  )
-}
-
-function Sidebar() {
-  return (
-    <aside className="fixed left-0 top-14 bottom-0 w-48 bg-[#0D0D0D] border-r border-gray-800/50 overflow-y-auto z-40 hidden lg:block">
-      <div className="p-3 space-y-1">
-        <SidebarItem icon="🏠" label="INICIO" active />
-        <SidebarItem icon="🧭" label="EXPLORAR" />
-        <SidebarItem icon="📂" label="SUSCRIPCIONES" />
-        
-        <div className="border-t border-gray-800 my-3" />
-        
-        <div className="px-2 py-1">
-          <span className="text-[10px] text-gray-600 uppercase tracking-wider">Teca</span>
-        </div>
-        <SidebarItem icon="📚" label="BIBLIOTECA" />
-        <SidebarItem icon="🕐" label="HISTORIAL" />
-        <SidebarItem icon="🎬" label="MIS VIDEOS" />
-        <SidebarItem icon="⏰" label="VER MÁS TARDE" />
-        <SidebarItem icon="❤️" label="VIDEOS GUSTADOS" />
-
-        <div className="border-t border-gray-800 my-3" />
-        
-        <div className="px-2 py-1">
-          <span className="text-[10px] text-gray-600 uppercase tracking-wider">Suscripciones</span>
-        </div>
-        {CREATORS.map((c, i) => (
-          <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800/50 cursor-pointer transition">
-            <span className="text-sm">{c.emoji}</span>
-            <span className="text-xs text-gray-300">{c.name}</span>
-            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-green-500" />
-          </div>
-        ))}
-
-      </div>
-    </aside>
-  )
-}
-
-function SidebarItem({ icon, label, active }: { icon: string; label: string; active?: boolean }) {
-  return (
-    <button className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition text-left ${
-      active 
-        ? 'bg-gradient-to-r from-c8l-pink/20 to-transparent text-c8l-pink border-l-2 border-c8l-pink' 
-        : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
-    }`}>
-      <span className="text-sm">{icon}</span>
-      <span className="text-xs font-medium">{label}</span>
-    </button>
-  )
-}
-
-function SearchBar() {
-  return (
-    <div className="flex items-center gap-3 mb-6">
-      <button className="text-gray-400 hover:text-white text-xl">☰</button>
-      <div className="flex-1 flex items-center bg-gray-800/60 rounded-full border border-gray-700 overflow-hidden">
-        <input
-          type="text"
-          placeholder="Buscar creadores o videos en C8L TV..."
-          className="flex-1 bg-transparent px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none"
-        />
-        <button className="px-4 text-gray-400 hover:text-white transition">🔍</button>
-      </div>
-      <button className="text-gray-400 hover:text-white text-lg">🎙</button>
-      <button className="bg-c8l-cyan text-black font-bold text-xs px-4 py-2.5 rounded-full hover:bg-c8l-cyan/80 transition">
-        + SUBIR
-      </button>
-    </div>
-  )
-}
-
-function CategoryPills({ selected, onSelect }: { selected: string; onSelect: (c: string) => void }) {
-  return (
-    <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-      {CATEGORIES.map(cat => (
-        <button
-          key={cat}
-          onClick={() => onSelect(cat)}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition border ${
-            selected === cat
-              ? 'bg-white text-black border-white'
-              : 'bg-transparent text-gray-300 border-gray-600 hover:border-gray-400 hover:text-white'
-          }`}
-        >
-          {cat}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function VideoCardComponent({ video }: { video: typeof VIDEOS[0] }) {
-  return (
-    <div className="group">
-      {/* Thumbnail - clickeable */}
-      <Link href={`/watch?v=${video.id}`}>
-        <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-gray-800 group-hover:border-c8l-purple/50 transition cursor-pointer">
-          <img
-            src={video.thumbnail}
-            alt={video.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          {/* Duration badge */}
-          <div className="absolute bottom-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-c8l-pink font-mono">
-            {video.duration}
-          </div>
-          {/* Clock icon top-right */}
-          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-            <span className="text-[10px]">🕐</span>
-          </div>
-          {/* Play overlay */}
-          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-              <span className="text-white text-xl ml-0.5">▶</span>
-            </div>
-          </div>
-        </div>
-      </Link>
-
-      {/* Info */}
-      <div className="px-1">
-        <Link href={`/watch?v=${video.id}`}>
-          <h3 className="text-xs font-bold text-white leading-tight mb-1 line-clamp-2 group-hover:text-c8l-cyan transition cursor-pointer">
-            {video.title}
-          </h3>
-        </Link>
-        <div className="flex items-center gap-1 mb-2">
-          <span className="text-xs">{video.authorEmoji}</span>
-          <span className="text-[11px] text-gray-400">{video.author}</span>
-        </div>
-        <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-3">
-          <span>{video.views.toLocaleString()} VISTAS</span>
-          <span>•</span>
-          <span>HACE {video.daysAgo} DÍAS</span>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 mb-2">
-          <button className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition bg-gray-800/50 rounded-full px-2.5 py-1">
-            <span>♡</span> <span>{video.likes}</span>
-          </button>
-          <Link href={`/watch?v=${video.id}`} className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition bg-gray-800/50 rounded-full px-2.5 py-1">
-            <span>💬</span> <span>COMENTAR</span>
-          </Link>
-        </div>
-
-        {/* Duet Challenge Button */}
-        <button className="w-full py-2 rounded-lg bg-gradient-to-r from-c8l-pink to-c8l-pink/80 text-[10px] font-bold text-white hover:from-c8l-pink/90 hover:to-c8l-pink/70 transition uppercase tracking-wider">
-          🎵 Duet Challenge
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function Footer() {
-  return (
-    <>
-      {/* Main Footer */}
-      <footer className="border-t border-gray-800 mt-16 pt-12 pb-8 px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-          {/* Brand */}
-          <div>
-            <h3 className="text-xl font-outfit font-bold text-c8l-gold mb-3">C.8.L. AGENCY</h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              El Salto Cuántico en la Creación de Contenido. Únete a la Familia Corazones Locos y alcanza la soberanía del mercado con calidad y lealtad inigualables.
-            </p>
-          </div>
-
-          {/* Navigation */}
-          <div>
-            <h4 className="text-sm font-bold text-white mb-3">NAVEGACIÓN</h4>
-            <div className="space-y-2">
-              <a href="#" className="block text-xs text-gray-400 hover:text-c8l-cyan transition">La Misión</a>
-              <a href="#" className="block text-xs text-gray-400 hover:text-c8l-cyan transition">Inteligencia de Negocios</a>
-              <a href="#" className="block text-xs text-gray-400 hover:text-c8l-cyan transition">Panel de Control</a>
-            </div>
-          </div>
-
-          {/* Social */}
-          <div>
-            <h4 className="text-sm font-bold text-white mb-3">CONECTAR</h4>
-            <div className="flex gap-3">
-              <SocialIcon icon="🎮" />
-              <SocialIcon icon="📺" />
-              <SocialIcon icon="🐦" />
-              <SocialIcon icon="📷" />
-            </div>
-          </div>
-        </div>
-
-        {/* Copyright line */}
-        <div className="max-w-6xl mx-auto mt-8 pt-6 border-t border-gray-800 flex flex-wrap justify-between items-center gap-4">
-          <span className="text-[10px] text-gray-600">
-            © 2026 C.8.L. Agency (Corazones Locos Family). Todos los derechos reservados.
-          </span>
-          <div className="flex gap-4 text-[10px] text-gray-500">
-            <a href="#" className="hover:text-c8l-cyan transition">Política de Privacidad (RGPD / LOPD)</a>
-            <a href="#" className="hover:text-c8l-cyan transition">Términos de Servicio</a>
-            <a href="#" className="hover:text-c8l-cyan transition">Configuración de Cookies</a>
-          </div>
-        </div>
-      </footer>
-
-      {/* Bottom Bar */}
-      <div className="bg-[#0A0A0A] border-t border-gray-800 py-4">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex justify-center gap-6 text-[10px] text-gray-500 mb-4">
-            <a href="#" className="hover:text-white transition">Términos de Uso</a>
-            <a href="#" className="hover:text-white transition">Privacidad</a>
-            <a href="#" className="hover:text-white transition">Cookies</a>
-            <a href="#" className="hover:text-white transition">Contacto</a>
-          </div>
-          <div className="mx-auto max-w-lg bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-red-800/50 rounded-xl p-4 text-center">
-            <p className="text-xs font-bold text-red-400 mb-1">
-              ⚠️ 🔞 PLATAFORMA EXCLUSIVA PARA MAYORES DE 18 AÑOS ⚠️
-            </p>
-            <p className="text-[10px] text-gray-400">
-              C8L Agency no permite el acceso a menores de edad. La verificación de edad es obligatoria.<br />
-              Reportaremos cualquier intento de acceso fraudulento a las autoridades competentes.
-            </p>
-          </div>
-          <p className="text-center text-[10px] text-gray-600 mt-4">© 2026 C8L Agency - Todos los derechos reservados</p>
-        </div>
-      </div>
-    </>
-  )
-}
-
-function SocialIcon({ icon }: { icon: string }) {
-  return (
-    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-c8l-purple/30 transition cursor-pointer">
-      <span className="text-sm">{icon}</span>
-    </div>
-  )
-}
-
-// ==================== MAIN PAGE ====================
-
-export default function Home() {
+function HomeContent() {
+  const { isAgeVerified, isLoading } = useAuth()
   const [selectedCategory, setSelectedCategory] = useState('Todas')
-  const [ageVerified, setAgeVerified] = useState(false)
 
-  if (!ageVerified) {
-    return <AgeGate onVerify={() => setAgeVerified(true)} />
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center animate-pulse">
+            <span className="text-xl font-black">C8L</span>
+          </div>
+          <p className="text-gray-400 text-sm">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAgeVerified) {
+    return <AgeGate />
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
-      <TopNav />
-      <Sidebar />
-
-      {/* Main Content */}
-      <main className="lg:ml-48 pt-14">
-        <div className="p-6">
-          <SearchBar />
-          <CategoryPills selected={selectedCategory} onSelect={setSelectedCategory} />
-
-          {/* Section Title */}
-          <div className="flex items-center justify-between mb-6 mt-4">
-            <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2">
-              <span>🐱</span> C8L TV RECOMIENDA
-            </h2>
-            <span className="text-[10px] text-gray-500 uppercase">{VIDEOS.length * 4 + 4} VIDEOS ENCONTRADOS</span>
+    <AppShell>
+      <div className="p-4 md:p-6 pb-20 lg:pb-6">
+        {/* Search Bar */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex-1 flex items-center bg-gray-800/60 rounded-full border border-gray-700/50 overflow-hidden group focus-within:border-c8l-cyan/50 transition">
+            <input
+              type="text"
+              placeholder="Buscar en C8L TV..."
+              className="flex-1 bg-transparent px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none"
+            />
+            <button className="px-4 text-gray-400 hover:text-white transition">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
           </div>
+          <button className="bg-gradient-to-r from-c8l-pink to-c8l-purple text-white font-bold text-xs px-4 py-2.5 rounded-full hover:opacity-90 transition">
+            + SUBIR
+          </button>
+        </div>
 
-          {/* Video Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {VIDEOS.map(video => (
-              <VideoCardComponent key={video.id} video={video} />
+        {/* Category Pills */}
+        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition border ${
+                selectedCategory === cat
+                  ? 'bg-c8l-cyan text-black border-c8l-cyan font-bold'
+                  : 'bg-transparent text-gray-300 border-gray-700 hover:border-gray-500 hover:text-white'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Featured Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative rounded-2xl overflow-hidden mb-8 border border-gray-800/50"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-c8l-purple/80 via-c8l-pink/40 to-transparent z-10" />
+          <img
+            src="https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=1200&h=400&fit=crop"
+            alt="Featured"
+            className="w-full h-48 md:h-56 object-cover"
+          />
+          <div className="absolute inset-0 z-20 flex items-center px-6 md:px-10">
+            <div>
+              <span className="inline-block px-2 py-0.5 bg-red-500 rounded text-[10px] font-bold mb-2">🔴 LIVE</span>
+              <h2 className="text-xl md:text-3xl font-outfit font-bold mb-1">Bolero-House Session Vol. 4</h2>
+              <p className="text-sm text-gray-200 mb-3">Leo Vela • Estreno mundial en C8L TV</p>
+              <button className="bg-white text-black font-bold text-xs px-5 py-2 rounded-full hover:bg-gray-200 transition">
+                ▶ Ver Ahora
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Section: Trending */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2">
+            <span>🔥</span> Tendencia en C8L
+          </h2>
+          <span className="text-[10px] text-gray-500">{VIDEOS.length} videos</span>
+        </div>
+
+        {/* Video Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-12">
+          {VIDEOS.map((video, i) => (
+            <motion.div
+              key={video.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="group"
+            >
+              <Link href={`/watch?v=${video.id}`}>
+                <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-gray-800/50 group-hover:border-c8l-purple/50 transition">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute bottom-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-white font-mono">
+                    {video.duration}
+                  </div>
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                      <span className="text-white text-xl ml-0.5">▶</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+              <div className="px-1">
+                <Link href={`/watch?v=${video.id}`}>
+                  <h3 className="text-xs font-bold text-white leading-tight mb-1 line-clamp-2 group-hover:text-c8l-cyan transition">
+                    {video.title}
+                  </h3>
+                </Link>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-xs">{video.authorEmoji}</span>
+                  <span className="text-[11px] text-gray-400">{video.author}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                  <span>{video.views.toLocaleString()} vistas</span>
+                  <span>•</span>
+                  <span>hace {video.daysAgo}d</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Creators Section */}
+        <div className="mb-12">
+          <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2 mb-4">
+            <span>⭐</span> Creadores C8L
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {CREATORS.map((creator, i) => (
+              <motion.div
+                key={creator.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.1 }}
+                className="glass rounded-xl p-4 text-center hover:border-c8l-gold/50 transition cursor-pointer group"
+              >
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-c8l-gold/30 to-c8l-purple/30 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                  {creator.emoji}
+                </div>
+                <p className="text-xs font-bold text-white">{creator.name}</p>
+                <p className="text-[10px] text-gray-500">{creator.subscribers} subs</p>
+                {creator.verified && <span className="text-[10px] text-c8l-cyan">✓ Verificado</span>}
+              </motion.div>
             ))}
           </div>
         </div>
 
-        <Footer />
-      </main>
-    </div>
+        {/* Quick Access Cards */}
+        <div className="mb-12">
+          <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2 mb-4">
+            <span>🚀</span> Acceso Rápido
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <QuickCard href="/casino" icon="🎰" title="Casino" desc="Slots, Blackjack, Ruleta" color="from-purple-600 to-pink-600" />
+            <QuickCard href="/studio" icon="🎹" title="Estudio IA" desc="Crea música con IA" color="from-cyan-600 to-blue-600" />
+            <QuickCard href="/streaming" icon="🎧" title="Streaming" desc="En vivo 24/7" color="from-red-600 to-orange-600" />
+            <QuickCard href="/comunidad" icon="👥" title="Comunidad" desc="Posts y social" color="from-green-600 to-emerald-600" />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="border-t border-gray-800/50 pt-8 pb-4">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h3 className="text-sm font-outfit font-bold text-c8l-gold mb-2">C8L AGENCY</h3>
+              <p className="text-[11px] text-gray-500 leading-relaxed">
+                Plataforma de entretenimiento, música y comunidad. El Salto Cuántico en la creación de contenido.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white mb-2">ENLACES</h4>
+              <div className="space-y-1">
+                <a href="/legal" className="block text-[11px] text-gray-500 hover:text-c8l-cyan transition">Términos y Condiciones</a>
+                <a href="/legal" className="block text-[11px] text-gray-500 hover:text-c8l-cyan transition">Política de Privacidad</a>
+                <a href="/legal" className="block text-[11px] text-gray-500 hover:text-c8l-cyan transition">Cookies</a>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white mb-2">CONECTAR</h4>
+              <div className="flex gap-2">
+                <span className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center cursor-pointer hover:bg-c8l-purple/30 transition">🎮</span>
+                <span className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center cursor-pointer hover:bg-c8l-purple/30 transition">📺</span>
+                <span className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center cursor-pointer hover:bg-c8l-purple/30 transition">🐦</span>
+                <span className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center cursor-pointer hover:bg-c8l-purple/30 transition">📷</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 bg-red-900/20 border border-red-800/40 rounded-full px-4 py-1.5 mb-3">
+              <span>🔞</span>
+              <span className="text-[10px] text-red-300 font-bold">PLATAFORMA +18 AÑOS</span>
+            </div>
+            <p className="text-[10px] text-gray-600">© 2026 C8L Agency - Todos los derechos reservados</p>
+          </div>
+        </footer>
+      </div>
+    </AppShell>
   )
 }
 
-function AgeGate({ onVerify }: { onVerify: () => void }) {
+function QuickCard({ href, icon, title, desc, color }: { href: string; icon: string; title: string; desc: string; color: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] p-6">
-      <div className="glass rounded-2xl p-8 max-w-md w-full text-center">
-        <div className="text-6xl mb-6">🔞</div>
-        <h1 className="text-3xl font-outfit font-bold text-c8l-gold mb-4">Verificación de Edad</h1>
-        <p className="text-gray-400 mb-8">Esta plataforma contiene juegos de azar y contenido para mayores de 18 años.</p>
-        <button onClick={onVerify}
-          className="w-full py-4 bg-gradient-to-r from-c8l-purple to-c8l-gold rounded-xl font-bold text-lg hover:scale-105 transition-transform">
-          Soy mayor de 18 años
-        </button>
-        <p className="text-xs text-gray-600 mt-4">Al continuar aceptas los Términos de Servicio. RGPD + LO 3/2018.</p>
+    <Link href={href}>
+      <div className={`bg-gradient-to-br ${color} rounded-xl p-4 hover:scale-[1.02] active:scale-[0.98] transition-transform cursor-pointer`}>
+        <span className="text-2xl">{icon}</span>
+        <h3 className="text-sm font-bold mt-2">{title}</h3>
+        <p className="text-[10px] text-white/70">{desc}</p>
       </div>
-    </div>
+    </Link>
+  )
+}
+
+export default function Home() {
+  return (
+    <Providers>
+      <HomeContent />
+    </Providers>
   )
 }

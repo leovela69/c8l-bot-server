@@ -1,248 +1,201 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import LegalFooter from '@/components/legal/LegalFooter'
+import { motion } from 'framer-motion'
+import { Providers } from '../providers'
+import { useAuth } from '@/lib/auth/context'
+import AgeGate from '@/components/auth/AgeGate'
+import AppShell from '@/components/layout/AppShell'
 
-const LIVE_STREAMS = [
-  { id: '1', user: 'Leo Vela', emoji: '🧡', viewers: 342, title: 'Producción Bolero-House en VIVO', category: 'Música', gifts: 67, isLive: true },
-  { id: '2', user: 'DJ Rayo', emoji: '⚡', viewers: 189, title: 'Acid Lounge Session — 3 horas non-stop', category: 'DJ Set', gifts: 45, isLive: true },
-  { id: '3', user: 'Reina Melody', emoji: '👑', viewers: 567, title: 'Karaoke Party + Retos de la comunidad', category: 'Karaoke', gifts: 128, isLive: true },
-  { id: '4', user: 'BeatMaster', emoji: '🎧', viewers: 98, title: 'Tutorial: Cómo hacer un beat en 10 min', category: 'Tutorial', gifts: 22, isLive: true },
+const STREAMS = [
+  { id: 1, title: 'Bolero-House Production Live', streamer: 'Leo Vela', emoji: '🧡', viewers: 142, thumbnail: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&h=340&fit=crop', category: 'Producción Musical', isLive: true },
+  { id: 2, title: 'Acid House DJ Set — Saturday Night', streamer: 'DJ Rayo', emoji: '⚡', viewers: 89, thumbnail: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=600&h=340&fit=crop', category: 'DJ Set', isLive: true },
+  { id: 3, title: 'Vocal Recording Session', streamer: 'Reina Melody', emoji: '👑', viewers: 234, thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&h=340&fit=crop', category: 'Vocals', isLive: true },
+  { id: 4, title: 'Beat Making con Ableton', streamer: 'BeatMaster', emoji: '🎧', viewers: 67, thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=340&fit=crop', category: 'Tutorial', isLive: true },
+  { id: 5, title: 'Freestyle Battle Night', streamer: 'MC Fuego', emoji: '🔥', viewers: 0, thumbnail: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&h=340&fit=crop', category: 'Freestyle', isLive: false },
+  { id: 6, title: 'C8L Radio — 24/7 Music', streamer: 'C8L Bot', emoji: '🤖', viewers: 456, thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=340&fit=crop', category: 'Radio', isLive: true },
 ]
 
-const SCHEDULED = [
-  { id: 's1', user: 'Leo Vela', emoji: '🧡', title: 'C8L Agency — Presentación Estudio Antigravity', time: '20:00', date: 'Hoy', category: 'Evento' },
-  { id: 's2', user: 'C8L Official', emoji: '🏆', title: 'Torneo Casino Champions — Semifinal', time: '22:00', date: 'Hoy', category: 'Gaming' },
-  { id: 's3', user: 'DJ Rayo', emoji: '⚡', title: 'Neon Nights Vol. 5 — Deep House Marathon', time: '00:00', date: 'Mañana', category: 'DJ Set' },
-]
+function StreamingContent() {
+  const { isAgeVerified, isLoading } = useAuth()
+  const [selectedStream, setSelectedStream] = useState<typeof STREAMS[0] | null>(null)
 
-export default function StreamingPage() {
-  const [tab, setTab] = useState<'live' | 'scheduled' | 'mystream'>('live')
+  if (isLoading) return <div className="min-h-screen bg-[#0A0A0A]" />
+  if (!isAgeVerified) return <AgeGate />
+
+  const liveStreams = STREAMS.filter(s => s.isLive)
+  const upcomingStreams = STREAMS.filter(s => !s.isLive)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-c8l-black via-cyan-950/10 to-c8l-black">
-      <header className="glass border-b border-c8l-cyan/20 p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-2xl font-outfit font-bold text-c8l-gold">C8L</Link>
-            <span className="text-gray-500">|</span>
-            <h1 className="text-xl font-outfit font-semibold text-c8l-cyan">🎧 Streaming</h1>
+    <AppShell>
+      <div className="p-4 md:p-6 pb-20 lg:pb-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-outfit font-bold text-white flex items-center gap-2">
+              <span>🎧</span> Streaming
+            </h1>
+            <p className="text-sm text-gray-400 mt-1">Streams en vivo y radio 24/7</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-red-600/20 rounded-full px-3 py-1">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs text-red-400 font-bold">{LIVE_STREAMS.length} EN VIVO</span>
+          <button className="bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold text-xs px-4 py-2.5 rounded-full hover:opacity-90 transition flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            INICIAR STREAM
+          </button>
+        </div>
+
+        {/* Featured Stream */}
+        {liveStreams[0] && !selectedStream && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative rounded-2xl overflow-hidden mb-8 cursor-pointer group"
+            onClick={() => setSelectedStream(liveStreams[0])}
+          >
+            <img
+              src={liveStreams[0].thumbnail}
+              alt={liveStreams[0].title}
+              className="w-full h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+            <div className="absolute top-4 left-4 flex items-center gap-2">
+              <span className="flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                LIVE
+              </span>
+              <span className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">
+                👁 {liveStreams[0].viewers} viendo
+              </span>
             </div>
-            <Link href="/" className="text-xs text-gray-400 hover:text-white transition">← Volver</Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Tabs */}
-      <div className="max-w-6xl mx-auto px-6 pt-4">
-        <div className="flex gap-2 border-b border-gray-800 pb-2">
-          {([
-            ['live', '🔴 En Vivo'],
-            ['scheduled', '📅 Programados'],
-            ['mystream', '🎬 Mi Stream'],
-          ] as [string, string][]).map(([id, label]) => (
-            <button key={id} onClick={() => setTab(id as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition ${
-                tab === id ? 'bg-c8l-cyan text-black' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-              }`}>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <main className="max-w-6xl mx-auto p-6">
-        {tab === 'live' && <LiveStreams />}
-        {tab === 'scheduled' && <ScheduledStreams />}
-        {tab === 'mystream' && <MyStream />}
-      </main>
-
-      <LegalFooter onOpenModal={() => {}} />
-    </div>
-  )
-}
-
-function LiveStreams() {
-  return (
-    <div>
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-outfit font-bold mb-2">🔴 En Vivo Ahora</h2>
-        <p className="text-gray-400 text-sm">Streams activos de la comunidad C8L</p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {LIVE_STREAMS.map(stream => (
-          <div key={stream.id} className="glass rounded-2xl overflow-hidden group cursor-pointer hover:border-c8l-cyan/50 transition">
-            {/* Preview */}
-            <div className="relative h-52 bg-gradient-to-br from-c8l-purple/30 to-c8l-cyan/20 flex items-center justify-center">
-              <span className="text-7xl group-hover:scale-110 transition">{stream.emoji}</span>
-              
-              {/* Badges */}
-              <div className="absolute top-3 left-3 flex gap-2">
-                <span className="bg-red-600 text-xs font-bold px-2.5 py-1 rounded animate-pulse">🔴 LIVE</span>
-                <span className="bg-black/60 text-xs px-2 py-1 rounded">👁 {stream.viewers}</span>
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <span className="text-[10px] text-c8l-cyan font-medium">{liveStreams[0].category}</span>
+              <h2 className="text-xl md:text-2xl font-outfit font-bold text-white mt-1">{liveStreams[0].title}</h2>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-lg">{liveStreams[0].emoji}</span>
+                <span className="text-sm text-gray-300">{liveStreams[0].streamer}</span>
               </div>
-              <div className="absolute top-3 right-3 bg-black/60 text-xs px-2 py-1 rounded text-c8l-gold">
-                🎁 {stream.gifts}
-              </div>
-              <div className="absolute bottom-3 left-3 bg-black/60 text-[10px] px-2 py-1 rounded text-c8l-cyan">
-                {stream.category}
-              </div>
+            </div>
+          </motion.div>
+        )}
 
-              {/* Play overlay */}
-              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-red-600/80 flex items-center justify-center">
-                  <span className="text-white text-2xl ml-1">▶</span>
+        {/* Stream Player */}
+        {selectedStream && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-8"
+          >
+            <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border border-gray-800">
+              <img
+                src={selectedStream.thumbnail}
+                alt={selectedStream.title}
+                className="w-full h-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center mb-3 mx-auto">
+                    <span className="text-3xl">▶</span>
+                  </div>
+                  <p className="text-sm text-gray-300">Reproduce el stream</p>
                 </div>
               </div>
-            </div>
-            
-            {/* Info */}
-            <div className="p-4">
-              <h3 className="font-bold text-sm group-hover:text-c8l-cyan transition mb-1">{stream.title}</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm">{stream.emoji}</span>
-                <span className="text-xs text-gray-400">@{stream.user}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="px-4 pb-4 flex gap-2">
-              <button className="flex-1 py-2 bg-red-600/20 text-red-400 text-xs font-bold rounded-lg hover:bg-red-600/30 transition">
-                ▶ Ver Stream
-              </button>
-              <button className="px-4 py-2 bg-c8l-gold/20 text-c8l-gold text-xs font-bold rounded-lg hover:bg-c8l-gold/30 transition">
-                🎁 Regalar
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ScheduledStreams() {
-  return (
-    <div>
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-outfit font-bold mb-2">📅 Próximos Streams</h2>
-        <p className="text-gray-400 text-sm">No te pierdas los eventos programados</p>
-      </div>
-
-      <div className="space-y-4">
-        {SCHEDULED.map(stream => (
-          <div key={stream.id} className="glass rounded-xl p-5 flex items-center justify-between hover:border-c8l-cyan/30 transition">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-c8l-purple/30 to-c8l-cyan/20 flex items-center justify-center text-2xl">
-                {stream.emoji}
-              </div>
-              <div>
-                <h3 className="font-bold text-sm">{stream.title}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-gray-400">@{stream.user}</span>
-                  <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded text-c8l-cyan">{stream.category}</span>
-                </div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-bold text-c8l-gold">{stream.time}</div>
-              <div className="text-[10px] text-gray-500">{stream.date}</div>
-              <button className="mt-2 px-3 py-1 bg-c8l-cyan/20 text-c8l-cyan text-[10px] font-bold rounded-full hover:bg-c8l-cyan/30 transition">
-                🔔 Recordar
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MyStream() {
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('Música')
-  const [isStreaming, setIsStreaming] = useState(false)
-
-  return (
-    <div>
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-outfit font-bold mb-2">🎬 Iniciar Stream</h2>
-        <p className="text-gray-400 text-sm">Transmite en vivo para la comunidad C8L</p>
-      </div>
-
-      {!isStreaming ? (
-        <div className="max-w-lg mx-auto">
-          <div className="glass rounded-2xl p-8 space-y-5">
-            <div>
-              <label className="text-xs text-gray-400 mb-1 block">Título del stream</label>
-              <input value={title} onChange={e => setTitle(e.target.value)}
-                placeholder="Ej: Producción en vivo — Bolero-House Session"
-                className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-c8l-cyan" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 mb-1 block">Categoría</label>
-              <select value={category} onChange={e => setCategory(e.target.value)}
-                className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white">
-                <option>Música</option>
-                <option>DJ Set</option>
-                <option>Tutorial</option>
-                <option>Gaming</option>
-                <option>Karaoke</option>
-                <option>Charla</option>
-                <option>Evento</option>
-              </select>
-            </div>
-            <div className="glass rounded-xl p-4 text-center">
-              <p className="text-xs text-gray-400 mb-1">Tips que recibes:</p>
-              <p className="text-xl font-bold text-c8l-gold">70% para ti / 30% plataforma</p>
-            </div>
-            <button
-              onClick={() => setIsStreaming(true)}
-              disabled={!title}
-              className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 rounded-xl font-bold text-lg hover:scale-105 transition disabled:opacity-50 disabled:hover:scale-100">
-              🔴 Iniciar Transmisión
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="max-w-2xl mx-auto">
-          <div className="glass rounded-2xl overflow-hidden">
-            {/* Fake stream preview */}
-            <div className="relative aspect-video bg-gradient-to-br from-c8l-purple/30 to-c8l-cyan/20 flex items-center justify-center">
-              <div className="text-center">
-                <span className="text-6xl">📡</span>
-                <p className="text-lg font-bold mt-4">EN VIVO</p>
-                <p className="text-sm text-gray-400">{title}</p>
-              </div>
-              <div className="absolute top-3 left-3 flex gap-2">
-                <span className="bg-red-600 text-xs font-bold px-2.5 py-1 rounded animate-pulse">🔴 LIVE</span>
-                <span className="bg-black/60 text-xs px-2 py-1 rounded">👁 0</span>
-              </div>
-              <div className="absolute top-3 right-3 text-xs bg-black/60 px-2 py-1 rounded">
-                00:00:00
-              </div>
-            </div>
-            <div className="p-4 flex justify-between items-center">
-              <div>
-                <h3 className="font-bold">{title}</h3>
-                <span className="text-xs text-gray-500">{category}</span>
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <span className="flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  LIVE
+                </span>
+                <span className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded">
+                  👁 {selectedStream.viewers}
+                </span>
               </div>
               <button
-                onClick={() => setIsStreaming(false)}
-                className="px-6 py-2 bg-red-600 rounded-lg text-sm font-bold hover:bg-red-700 transition">
-                ⏹ Finalizar
+                onClick={() => setSelectedStream(null)}
+                className="absolute top-4 right-4 bg-black/60 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/80 transition"
+              >
+                ✕
               </button>
             </div>
+            <div className="mt-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold">{selectedStream.title}</h3>
+                <p className="text-sm text-gray-400">{selectedStream.streamer} • {selectedStream.category}</p>
+              </div>
+              <div className="flex gap-2">
+                <button className="bg-c8l-pink text-white text-xs font-bold px-4 py-2 rounded-full">❤️ Seguir</button>
+                <button className="bg-gray-700 text-white text-xs px-4 py-2 rounded-full">💬 Chat</button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Live Streams Grid */}
+        <div className="mb-8">
+          <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2 mb-4">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            En Vivo Ahora
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {liveStreams.map((stream, i) => (
+              <motion.div
+                key={stream.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => setSelectedStream(stream)}
+                className="group cursor-pointer"
+              >
+                <div className="relative aspect-video rounded-xl overflow-hidden border border-gray-800/50 group-hover:border-c8l-purple/50 transition mb-2">
+                  <img src={stream.thumbnail} alt={stream.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition" />
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                    <span className="flex items-center gap-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                      LIVE
+                    </span>
+                    <span className="bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded">
+                      👁 {stream.viewers}
+                    </span>
+                  </div>
+                </div>
+                <h3 className="text-xs font-bold text-white group-hover:text-c8l-cyan transition line-clamp-2">{stream.title}</h3>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-xs">{stream.emoji}</span>
+                  <span className="text-[11px] text-gray-400">{stream.streamer}</span>
+                  <span className="text-[10px] text-gray-600 ml-auto">{stream.category}</span>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Upcoming */}
+        {upcomingStreams.length > 0 && (
+          <div>
+            <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2 mb-4">
+              <span>📅</span> Próximamente
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {upcomingStreams.map(stream => (
+                <div key={stream.id} className="glass rounded-xl p-4 flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <img src={stream.thumbnail} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-white">{stream.title}</h3>
+                    <p className="text-[11px] text-gray-400">{stream.streamer} • {stream.category}</p>
+                    <p className="text-[10px] text-c8l-gold mt-1">📅 Programado para hoy 22:00</p>
+                  </div>
+                  <button className="bg-gray-700 text-xs px-3 py-1.5 rounded-full font-bold hover:bg-gray-600 transition">
+                    🔔
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
   )
+}
+
+export default function StreamingPage() {
+  return <Providers><StreamingContent /></Providers>
 }
