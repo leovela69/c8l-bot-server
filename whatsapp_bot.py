@@ -606,13 +606,28 @@ def _send_feedback_buttons(chat_id):
 
 
 # ---------------------------------------------------------------------------
-# Health check server + WhatsApp Webhook
+# Health check server + WhatsApp Webhook + Páginas HTML
 # ---------------------------------------------------------------------------
+# Almacén en memoria de páginas generadas (no se pierde mientras el bot viva)
+_generated_pages = {}  # {page_id: html_content}
+
+
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        # Servir páginas HTML generadas por Hefesto
+        # Servir páginas HTML generadas por Hefesto (desde memoria)
         if self.path.startswith("/pages/"):
             page_id = self.path.replace("/pages/", "").split("?")[0].split("/")[0]
+
+            # Buscar en memoria primero
+            if page_id in _generated_pages:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(_generated_pages[page_id].encode("utf-8"))
+                return
+
+            # Buscar en disco como fallback
             pages_dir = os.path.join(BASE_DIR, "data", "pages")
             page_path = os.path.join(pages_dir, f"{page_id}.html")
             if os.path.exists(page_path):
@@ -621,14 +636,22 @@ class HealthHandler(BaseHTTPRequestHandler):
                 self.send_header("Access-Control-Allow-Origin", "*")
                 self.end_headers()
                 with open(page_path, "r", encoding="utf-8") as f:
-                    self.wfile.write(f.read().encode("utf-8"))
+                    content = f.read()
+                    _generated_pages[page_id] = content  # Cachear en memoria
+                    self.wfile.write(content.encode("utf-8"))
                 return
-            else:
-                self.send_response(404)
-                self.send_header("Content-Type", "text/html")
-                self.end_headers()
-                self.wfile.write(b"<h1>Pagina no encontrada</h1><p>Esta pagina ya no existe.</p>")
-                return
+
+            # No encontrada
+            self.send_response(404)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(
+                b"<!DOCTYPE html><html><head><style>body{background:#0a0a1a;color:white;font-family:sans-serif;"
+                b"display:flex;align-items:center;justify-content:center;height:100vh;}"
+                b"h1{color:#ff00ff;}</style></head><body><h1>Pagina expirada</h1>"
+                b"<p>Genera una nueva con /crear_landing</p></body></html>"
+            )
+            return
 
         # WhatsApp webhook verification
         if "/webhook" in self.path:

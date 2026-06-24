@@ -177,7 +177,7 @@ Start with <!DOCTYPE html>"""
         return {"type": "error", "content": "No pude generar el componente."}
 
     def _upload_to_hosting(self, html_code, name="page"):
-        """Sirve el HTML desde el propio bot (self-hosting).
+        """Sirve el HTML desde el propio bot (self-hosting en memoria).
         URL: https://c8l-bot-server.onrender.com/pages/ID"""
         import hashlib
         import os
@@ -186,15 +186,22 @@ Start with <!DOCTYPE html>"""
         # Generar ID único para esta página
         page_id = hashlib.md5((html_code[:100] + str(time.time())).encode()).hexdigest()[:8]
 
-        # Guardar HTML en carpeta de páginas (misma ruta que usa el servidor)
+        # Guardar en disco
         pages_dir = os.path.join(BASE_DIR, "data", "pages")
         os.makedirs(pages_dir, exist_ok=True)
-
         page_path = os.path.join(pages_dir, f"{page_id}.html")
         with open(page_path, "w", encoding="utf-8") as f:
             f.write(html_code)
 
-        logger.info(f"Página guardada: {page_id} en {page_path}")
+        # También guardar en memoria global del bot (para acceso inmediato)
+        try:
+            import whatsapp_bot
+            if hasattr(whatsapp_bot, '_generated_pages'):
+                whatsapp_bot._generated_pages[page_id] = html_code
+        except:
+            pass
+
+        logger.info(f"Página guardada: {page_id}")
         return f"https://c8l-bot-server.onrender.com/pages/{page_id}"
 
     def _clean_code(self, text):
