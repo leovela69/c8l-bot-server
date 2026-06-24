@@ -1200,10 +1200,17 @@ def main():
                 video_bytes = generate_video(desc, GEMINI_API_KEY)
 
                 if video_bytes:
-                    # Enviar video al chat
-                    files = {"video": ("c8l_video.mp4", io.BytesIO(video_bytes), "video/mp4")}
-                    data = {"chat_id": msg.chat.id, "caption": f"🎬 {desc[:100]}\n\n🏛️ C8L Agency — Veo 3.1"}
-                    requests.post(f"{TG_API}/sendVideo", data=data, files=files, timeout=120)
+                    # Detectar si es GIF o MP4
+                    if video_bytes[:4] == b'GIF8':
+                        # Enviar como animación GIF
+                        files = {"animation": ("c8l_video.gif", io.BytesIO(video_bytes), "image/gif")}
+                        data = {"chat_id": msg.chat.id, "caption": f"🎬 {desc[:80]}\n\n🏛️ C8L Agency"}
+                        requests.post(f"{TG_API}/sendAnimation", data=data, files=files, timeout=120)
+                    else:
+                        # Enviar como video MP4
+                        files = {"video": ("c8l_video.mp4", io.BytesIO(video_bytes), "video/mp4")}
+                        data = {"chat_id": msg.chat.id, "caption": f"🎬 {desc[:80]}\n\n🏛️ C8L Agency"}
+                        requests.post(f"{TG_API}/sendVideo", data=data, files=files, timeout=120)
                     logger.info(f"Video enviado: {len(video_bytes)} bytes")
                     estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "video_ia", "veo")
                     broadcast_content_created(msg.from_user.first_name, "video", desc)
