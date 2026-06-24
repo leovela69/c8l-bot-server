@@ -27,11 +27,18 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isAgeVerified, setIsAgeVerified] = useState(false)
+  // IMPORTANTE: Inicializar como TRUE si ya está en localStorage
+  // Así NUNCA se muestra el age gate si ya lo pasaste antes
+  const [isAgeVerified, setIsAgeVerified] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('c8l_age_verified') === 'true'
+    }
+    return false
+  })
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check localStorage for age verification
+    // Double-check localStorage on mount (por si el estado inicial no lo cogió)
     const ageVerified = localStorage.getItem('c8l_age_verified')
     if (ageVerified === 'true') {
       setIsAgeVerified(true)
@@ -79,11 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const verifyAge = (birthDate: Date): boolean => {
     const today = new Date()
-    const age = today.getFullYear() - birthDate.getFullYear()
+    let age = today.getFullYear() - birthDate.getFullYear()
     const monthDiff = today.getMonth() - birthDate.getMonth()
-    const isOldEnough = age > 18 || (age === 18 && (monthDiff > 0 || (monthDiff === 0 && today.getDate() >= birthDate.getDate())))
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
     
-    if (isOldEnough) {
+    if (age >= 18) {
+      // Guardar en localStorage para que NUNCA vuelva a salir
       localStorage.setItem('c8l_age_verified', 'true')
       localStorage.setItem('c8l_age_verified_date', new Date().toISOString())
       setIsAgeVerified(true)
@@ -123,8 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     supabase.auth.signOut()
     setUser(null)
-    localStorage.removeItem('c8l_age_verified')
-    setIsAgeVerified(false)
+    // NO borramos c8l_age_verified al hacer logout
+    // Solo se borra la sesión, pero la edad ya está verificada
   }
 
   return (
