@@ -80,61 +80,236 @@ REMEMBER: Only output the raw HTML code. Nothing else. Start now:
         return self._generate_minimal_html(prompt)
 
     def _generate_minimal_html(self, description):
-        """Genera un HTML mínimo cuando todo falla."""
+        """Genera un HTML mínimo COMPLETO cuando la IA falla."""
+        # Limpiar el prompt del description (no mostrar instrucciones)
+        clean_desc = description.replace("Create a complete landing page HTML file.", "")
+        clean_desc = clean_desc.replace("Topic:", "").replace("Style:", "").strip()
+        clean_desc = clean_desc.split("Include:")[0].strip()
+        if not clean_desc:
+            clean_desc = "Producción Musical y Tecnología"
+
         return f"""<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C8L Agency</title>
+    <title>C8L Agency — {clean_desc[:30]}</title>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ background: #0a0a1a; color: white; font-family: 'Segoe UI', sans-serif;
-               min-height: 100vh; display: flex; align-items: center; justify-content: center;
-               flex-direction: column; text-align: center; padding: 20px; }}
-        h1 {{ font-size: 3rem; background: linear-gradient(135deg, #ff00ff, #00ffff);
+        body {{ background: #0a0a1a; color: white; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }}
+        .hero {{ min-height: 100vh; display: flex; align-items: center; justify-content: center;
+                 flex-direction: column; text-align: center; padding: 40px 20px;
+                 background: radial-gradient(circle at 50% 50%, rgba(128,0,255,0.1) 0%, transparent 70%); }}
+        h1 {{ font-size: clamp(2rem, 8vw, 4rem); font-weight: 900;
+             background: linear-gradient(135deg, #ff00ff, #00ffff, #ffd700);
              -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-             margin-bottom: 20px; }}
-        p {{ color: #aaa; font-size: 1.2rem; max-width: 600px; margin-bottom: 30px; }}
-        .btn {{ padding: 15px 40px; background: linear-gradient(135deg, #ff00ff, #8b00ff);
-               color: white; border: none; border-radius: 30px; font-size: 1.1rem;
-               cursor: pointer; text-decoration: none; transition: transform 0.3s; }}
-        .btn:hover {{ transform: scale(1.05); }}
-        .glow {{ text-shadow: 0 0 20px rgba(255,0,255,0.5); }}
+             margin-bottom: 20px; text-shadow: 0 0 40px rgba(255,0,255,0.3); }}
+        .subtitle {{ color: #aaa; font-size: 1.2rem; max-width: 600px; margin-bottom: 40px; line-height: 1.6; }}
+        .features {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 30px; padding: 60px 40px; max-width: 1200px; margin: 0 auto; }}
+        .card {{ background: rgba(255,255,255,0.03); border: 1px solid rgba(255,0,255,0.2);
+                border-radius: 16px; padding: 30px; text-align: center;
+                transition: transform 0.3s, box-shadow 0.3s; }}
+        .card:hover {{ transform: translateY(-5px); box-shadow: 0 10px 40px rgba(255,0,255,0.2); }}
+        .card h3 {{ color: #ff00ff; margin: 15px 0; font-size: 1.3rem; }}
+        .card p {{ color: #888; line-height: 1.5; }}
+        .card .icon {{ font-size: 2.5rem; }}
+        .btn {{ display: inline-block; padding: 18px 50px;
+               background: linear-gradient(135deg, #ff00ff, #8b00ff);
+               color: white; border: none; border-radius: 50px; font-size: 1.1rem;
+               cursor: pointer; text-decoration: none; font-weight: 600;
+               transition: transform 0.3s, box-shadow 0.3s;
+               box-shadow: 0 5px 30px rgba(255,0,255,0.4); }}
+        .btn:hover {{ transform: scale(1.05); box-shadow: 0 8px 40px rgba(255,0,255,0.6); }}
+        footer {{ text-align: center; padding: 40px; color: #555; border-top: 1px solid rgba(255,255,255,0.05); }}
+        footer a {{ color: #ff00ff; text-decoration: none; }}
     </style>
 </head>
 <body>
-    <h1 class="glow">C8L Agency</h1>
-    <p>{description[:200]}</p>
-    <a href="#" class="btn">Explorar</a>
+    <section class="hero">
+        <h1>C8L Agency</h1>
+        <p class="subtitle">{clean_desc[:150]}</p>
+        <a href="#" class="btn">Comenzar</a>
+    </section>
+    <section class="features">
+        <div class="card">
+            <div class="icon">🎵</div>
+            <h3>Producción Musical</h3>
+            <p>Beats, mezcla y master profesional con estilo Bolero-House único.</p>
+        </div>
+        <div class="card">
+            <div class="icon">🎨</div>
+            <h3>Diseño Visual</h3>
+            <p>Identidad visual, logos y contenido con estética neon futurista.</p>
+        </div>
+        <div class="card">
+            <div class="icon">🚀</div>
+            <h3>Tecnología</h3>
+            <p>Bots con IA, automatización y herramientas digitales de vanguardia.</p>
+        </div>
+    </section>
+    <footer>
+        <p>© 2026 <a href="#">C8L Agency</a> — El Panteón Digital</p>
+    </footer>
 </body>
 </html>"""
 
     def create_landing(self, description, style="c8l"):
-        """Genera landing page completa + link para verla online + preview."""
+        """Genera landing page FUNCIONAL completa + link para verla online."""
         if not description or description.strip() == "":
             description = "landing page para C8L Agency - produccion musical y tecnologia"
 
-        prompt = f"""Create a complete landing page HTML file.
-Topic: {description}
-Style: dark theme, neon accents (magenta/cyan/gold), modern, glass morphism
-
-Include: hero section with big title, 3 feature cards, call-to-action button, footer.
-Add smooth CSS animations. Responsive design.
-Start with <!DOCTYPE html>"""
+        # Prompt más corto y directo (DeepSeek falla con prompts largos)
+        prompt = f"""<!DOCTYPE html>
+<html lang="es">
+<!-- Generate a COMPLETE working landing page about: {description}
+     Dark theme, neon purple/cyan/gold accents, responsive.
+     Must include: hero, features/products, CTA button, footer.
+     Make it SPECIFIC to the topic (not generic). -->"""
 
         result = self._generate_with_retry(prompt, max_tokens=6000)
         if result:
             html_code = self._clean_code(result)
-            # Subir a hosting gratuito y obtener link
-            url = self._upload_to_hosting(html_code, f"c8l_landing")
-            caption = f"🖥️ Landing: {description[:60]}"
-            if url:
-                caption += f"\n\n🌐 Ver online: {url}"
-            return {"type": "file", "content": html_code.encode("utf-8"),
-                    "filename": "c8l_landing.html", "caption": caption,
-                    "preview_html": html_code, "url": url}
-        return {"type": "error", "content": "No pude generar la landing page. Intenta de nuevo."}
+            # Verificar que es HTML real y no el prompt repetido
+            if len(html_code) > 500 and "<body" in html_code.lower():
+                url = self._upload_to_hosting(html_code, "c8l_landing")
+                caption = f"🖥️ Landing: {description[:60]}"
+                if url:
+                    caption += f"\n\n🌐 Ver online: {url}"
+                return {"type": "file", "content": html_code.encode("utf-8"),
+                        "filename": "c8l_landing.html", "caption": caption,
+                        "preview_html": html_code, "url": url}
+
+        # Fallback: generar landing específica basada en el tema
+        logger.warning("Hefesto: usando template específico")
+        html_code = self._generate_specific_template(description)
+        url = self._upload_to_hosting(html_code, "c8l_landing")
+        caption = f"🖥️ Landing: {description[:60]}"
+        if url:
+            caption += f"\n\n🌐 Ver online: {url}"
+        return {"type": "file", "content": html_code.encode("utf-8"),
+                "filename": "c8l_landing.html", "caption": caption, "url": url}
+
+    def _generate_specific_template(self, description):
+        """Genera template específico basado en el tema (cuando la IA falla)."""
+        desc_lower = description.lower()
+
+        # Detectar tipo de landing y generar contenido apropiado
+        if any(kw in desc_lower for kw in ["beat", "beats", "musica", "music", "producer"]):
+            title = "C8L Beats Store"
+            subtitle = "Los mejores beats Bolero-House para tu próximo hit"
+            cards = [
+                ("🎵", "Beats Premium", "$29.99", "Licencia básica — MP3 + WAV"),
+                ("🔥", "Beats Exclusivos", "$149.99", "Licencia exclusiva — Stems incluidos"),
+                ("🎧", "Pack Producer", "$79.99", "5 beats + efectos + samples"),
+            ]
+            cta = "Escuchar Catálogo"
+        elif any(kw in desc_lower for kw in ["gaming", "juego", "game", "esport"]):
+            title = "C8L Gaming"
+            subtitle = "Torneos, ranking y comunidad gamer"
+            cards = [
+                ("🎮", "Torneos Semanales", "GRATIS", "Compite y gana C8L Coins"),
+                ("🏆", "Ranking Global", "ELO", "Demuestra tu nivel"),
+                ("💰", "Premios Reales", "$$", "Los mejores ganan recompensas"),
+            ]
+            cta = "Unirse Ahora"
+        elif any(kw in desc_lower for kw in ["tienda", "shop", "store", "venta"]):
+            title = "C8L Shop"
+            subtitle = "Merch exclusivo de la agencia"
+            cards = [
+                ("👕", "Camisetas", "$24.99", "Diseño neon exclusivo"),
+                ("🧢", "Gorras", "$19.99", "Logo bordado premium"),
+                ("🎧", "Accesorios", "$14.99", "Stickers, pins, posters"),
+            ]
+            cta = "Ver Catálogo"
+        else:
+            title = "C8L Agency"
+            subtitle = description[:100]
+            cards = [
+                ("🎵", "Música", "Pro", "Producción Bolero-House"),
+                ("🎨", "Diseño", "Premium", "Identidad visual futurista"),
+                ("🚀", "Tech", "IA", "Bots y automatización"),
+            ]
+            cta = "Contactar"
+
+        cards_html = ""
+        for icon, name, price, desc in cards:
+            cards_html += f"""
+        <div class="card">
+            <div class="icon">{icon}</div>
+            <h3>{name}</h3>
+            <div class="price">{price}</div>
+            <p>{desc}</p>
+            <a href="#" class="card-btn">Ver más</a>
+        </div>"""
+
+        return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ background: #0a0a1a; color: white; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }}
+        .hero {{ min-height: 80vh; display: flex; align-items: center; justify-content: center;
+                 flex-direction: column; text-align: center; padding: 60px 20px;
+                 background: radial-gradient(ellipse at 50% 0%, rgba(128,0,255,0.15) 0%, transparent 60%); }}
+        h1 {{ font-size: clamp(2.5rem, 10vw, 5rem); font-weight: 900;
+             background: linear-gradient(135deg, #ff00ff, #00ffff, #ffd700);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+             margin-bottom: 20px; animation: glow 3s ease-in-out infinite alternate; }}
+        @keyframes glow {{ from {{ filter: drop-shadow(0 0 20px rgba(255,0,255,0.5)); }}
+                          to {{ filter: drop-shadow(0 0 40px rgba(0,255,255,0.5)); }} }}
+        .subtitle {{ color: #aaa; font-size: 1.3rem; max-width: 600px; margin-bottom: 40px; line-height: 1.6; }}
+        .btn {{ display: inline-block; padding: 18px 50px;
+               background: linear-gradient(135deg, #ff00ff, #8b00ff);
+               color: white; border: none; border-radius: 50px; font-size: 1.1rem;
+               cursor: pointer; text-decoration: none; font-weight: 700;
+               transition: all 0.3s; box-shadow: 0 5px 30px rgba(255,0,255,0.4); }}
+        .btn:hover {{ transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 50px rgba(255,0,255,0.6); }}
+        .products {{ padding: 80px 40px; max-width: 1200px; margin: 0 auto; }}
+        .products h2 {{ text-align: center; font-size: 2rem; margin-bottom: 50px; color: #00ffff; }}
+        .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }}
+        .card {{ background: rgba(255,255,255,0.03); border: 1px solid rgba(255,0,255,0.2);
+                border-radius: 20px; padding: 40px 30px; text-align: center;
+                transition: all 0.3s; position: relative; overflow: hidden; }}
+        .card::before {{ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+                        background: linear-gradient(90deg, #ff00ff, #00ffff); opacity: 0; transition: opacity 0.3s; }}
+        .card:hover {{ transform: translateY(-8px); box-shadow: 0 20px 60px rgba(255,0,255,0.15); }}
+        .card:hover::before {{ opacity: 1; }}
+        .card .icon {{ font-size: 3rem; margin-bottom: 15px; }}
+        .card h3 {{ color: white; margin: 10px 0; font-size: 1.4rem; }}
+        .card .price {{ color: #ffd700; font-size: 1.8rem; font-weight: 900; margin: 10px 0; }}
+        .card p {{ color: #888; line-height: 1.5; margin-bottom: 20px; }}
+        .card-btn {{ display: inline-block; padding: 10px 25px; border: 1px solid #ff00ff;
+                    color: #ff00ff; border-radius: 25px; text-decoration: none;
+                    transition: all 0.3s; font-size: 0.9rem; }}
+        .card-btn:hover {{ background: #ff00ff; color: white; }}
+        footer {{ text-align: center; padding: 50px 20px; color: #555;
+                 border-top: 1px solid rgba(255,255,255,0.05); margin-top: 60px; }}
+        footer a {{ color: #ff00ff; text-decoration: none; }}
+        @media (max-width: 768px) {{ .hero {{ padding: 40px 15px; min-height: 60vh; }}
+            .products {{ padding: 40px 15px; }} }}
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <h1>{title}</h1>
+        <p class="subtitle">{subtitle}</p>
+        <a href="#products" class="btn">{cta}</a>
+    </section>
+    <section class="products" id="products">
+        <h2>Nuestros Productos</h2>
+        <div class="grid">{cards_html}
+        </div>
+    </section>
+    <footer>
+        <p>© 2026 <a href="#">C8L Agency</a> — Panteón Digital</p>
+        <p style="margin-top:10px;font-size:0.8rem;color:#333;">Generado por @leon_leo_bot</p>
+    </footer>
+</body>
+</html>"""
 
     def create_game(self, description):
         """Genera juego web HTML5 + link para jugar online."""
