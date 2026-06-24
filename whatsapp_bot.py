@@ -610,6 +610,25 @@ def _send_feedback_buttons(chat_id):
 # ---------------------------------------------------------------------------
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        # Servir páginas HTML generadas por Hefesto
+        if self.path.startswith("/pages/"):
+            page_id = self.path.replace("/pages/", "").split("?")[0].split("/")[0]
+            pages_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "pages")
+            page_path = os.path.join(pages_dir, f"{page_id}.html")
+            if os.path.exists(page_path):
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                with open(page_path, "r", encoding="utf-8") as f:
+                    self.wfile.write(f.read().encode("utf-8"))
+                return
+            else:
+                self.send_response(404)
+                self.send_header("Content-Type", "text/html")
+                self.end_headers()
+                self.wfile.write(b"<h1>Pagina no encontrada</h1><p>Esta pagina ya no existe o expiro.</p>")
+                return
+
         # WhatsApp webhook verification
         if "/webhook" in self.path:
             from urllib.parse import urlparse, parse_qs

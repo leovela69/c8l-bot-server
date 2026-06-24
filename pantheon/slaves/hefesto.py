@@ -177,57 +177,24 @@ Start with <!DOCTYPE html>"""
         return {"type": "error", "content": "No pude generar el componente."}
 
     def _upload_to_hosting(self, html_code, name="page"):
-        """Sube HTML a hosting gratuito y devuelve URL para ver online."""
-        # Método 1: telegra.ph via API (siempre funciona, no bloquea nada)
-        try:
-            import requests
-            # Usar htmlbin — servicio simple que acepta HTML y da link
-            r = requests.post("https://filebin.net/", files={
-                "file": (f"{name}.html", html_code.encode("utf-8"), "text/html")
-            }, timeout=15)
-            if r.status_code == 200 or r.status_code == 201:
-                # Extraer URL del response
-                if "url" in r.text.lower() or "http" in r.text:
-                    return r.url
-        except Exception as e:
-            logger.debug(f"filebin fallo: {e}")
+        """Sirve el HTML desde el propio bot (self-hosting).
+        URL: https://c8l-bot-server.onrender.com/pages/ID"""
+        import hashlib
+        import os
 
-        # Método 2: GitHub Gist (usando el token que ya tenemos via OpenRouter)
-        # No necesita token extra — hacemos un gist anónimo via otro servicio
-        try:
-            import requests
-            # glot.io — ejecutor de código online gratis
-            r = requests.post("https://snippets.glot.io/snippets", 
-                headers={"Content-Type": "application/json"},
-                json={
-                    "language": "html",
-                    "title": f"C8L {name}",
-                    "public": True,
-                    "files": [{"name": f"{name}.html", "content": html_code}]
-                }, timeout=15)
-            if r.status_code == 200:
-                data = r.json()
-                snippet_id = data.get("id", "")
-                if snippet_id:
-                    return f"https://snippets.glot.io/snippets/{snippet_id}"
-        except Exception as e:
-            logger.debug(f"glot.io fallo: {e}")
+        # Generar ID único para esta página
+        page_id = hashlib.md5(html_code[:100].encode()).hexdigest()[:8]
 
-        # Método 3: Generar URL base64 que se puede abrir (data URI share)
-        # Convertimos a una URL que el usuario puede abrir
-        try:
-            import base64
-            encoded = base64.b64encode(html_code.encode("utf-8")).decode("utf-8")
-            # Usar un servicio de redirect de data URIs
-            # O simplemente crear una URL corta con el HTML codificado
-            short_html = html_code[:5000]  # Limitar para URL
-            encoded_short = base64.b64encode(short_html.encode("utf-8")).decode("utf-8")
-            # itty.bitty permite HTML en la URL directa
-            return f"https://itty.bitty.site/#{encoded_short[:2000]}"
-        except Exception as e:
-            logger.debug(f"base64 URL fallo: {e}")
+        # Guardar HTML en carpeta de páginas
+        pages_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "pages")
+        os.makedirs(pages_dir, exist_ok=True)
 
-        return None
+        page_path = os.path.join(pages_dir, f"{page_id}.html")
+        with open(page_path, "w", encoding="utf-8") as f:
+            f.write(html_code)
+
+        logger.info(f"Página guardada: {page_id}")
+        return f"https://c8l-bot-server.onrender.com/pages/{page_id}"
 
     def _clean_code(self, text):
         """Limpia markdown y extrae HTML puro."""
