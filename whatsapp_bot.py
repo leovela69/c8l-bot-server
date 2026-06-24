@@ -653,97 +653,105 @@ class HealthHandler(BaseHTTPRequestHandler):
 def _handle_whatsapp_message(data):
     """Procesa mensaje de WhatsApp en background."""
     try:
-        from whatsapp_handler import process_webhook, wa_send_text, wa_send_image, wa_send_document
+        from whatsapp_handler import wa_send_text, wa_send_image
         from pantheon.zeus import analyze_intent
 
-        msg = process_webhook(data)
-        if not msg:
+        # Extraer mensaje del webhook de Meta
+        entry = data.get("entry", [])
+        if not entry:
             return
+        changes = entry[0].get("changes", [])
+        if not changes:
+            return
+        value = changes[0].get("value", {})
+        messages = value.get("messages", [])
+        if not messages:
+            return  # Es un status update, no un mensaje
 
-        from_number = msg["from"]
-        user_name = msg["name"]
+        msg = messages[0]
+        msg_type = msg.get("type", "")
+        from_number = msg.get("from", "")
 
-        if msg["type"] == "text":
-            text = msg["text"]
-            logger.info(f"[WA] [{user_name}] ({from_number}): {text[:80]}")
+        # Nombre del contacto
+        contacts = value.get("contacts", [])
+        user_name = "Usuario"
+        if contacts:
+            user_name = contacts[0].get("profile", {}).get("name", "Usuario")
 
-            # Procesar con Zeus (mismo flujo que Telegram)
+        logger.info(f"[WA] [{user_name}] ({from_number}): type={msg_type}")
+
+        if msg_type == "text":
+            text = msg.get("text", {}).get("body", "")
+            if not text:
+                return
+
+            logger.info(f"[WA] Mensaje: {text[:80]}")
+
+            # Procesar con Zeus
             intent_data = analyze_intent(text, user_name)
             agent = intent_data.get("primary_agent", "hermes")
+            logger.info(f"[WA] Zeus -> {agent}")
 
-            # Dispatch simplificado para WhatsApp
-            _dispatch_whatsapp(from_number, user_name, text, intent_data)
-
-        elif msg["type"] == "image":
-            caption = msg.get("caption", "mejora esta imagen")
-            wa_send_text(from_number, f"🎨 Recibí tu imagen. Procesando: {caption[:50]}...")
-            # TODO: descargar imagen y editar con Gemini
-
-        elif msg["type"] == "unsupported":
-            wa_send_text(from_number, "📱 Por ahora solo proceso texto e imágenes. Escríbeme qué necesitas!")
-
-    except Exception as e:
-        logger.error(f"WA handler error: {e}")
-
-
-def _dispatch_whatsapp(from_number, user_name, text, intent_data):
-    """Dispatch de mensajes de WhatsApp a los agentes."""
-    from whatsapp_handler import wa_send_text, wa_send_image, wa_send_document
-
-    agent = intent_data.get("primary_agent", "hermes")
-    task = intent_data.get("task_description", text)
-
-    try:
-        if agent == "hermes":
-            history_text = get_history_text(from_number)
-            reply = hermes.chat(text, user_name, history_text)
-            if reply:
-                add_history(from_number, "user", text)
-                add_history(from_number, "assistant", reply)
-                wa_send_text(from_number, reply)
-            else:
-                wa_send_text(from_number, "🔄 Error temporal. Intenta en unos segundos.")
-
-        elif agent == "vulcano":
-            wa_send_text(from_number, "🎨 Generando...")
-            result = vulcano.create(text)
-            if result:
-                rtype = result.get("type", "error")
-                if rtype == "image":
+            # Dispatch
+            if agent == "vulcano":
+                wa_send_text(from_number, "🎨 Generando...")
+                result = vulcano.create(text)
+                if result and result.get("type") == "image":
                     wa_send_image(from_number, result["content"], caption=result.get("caption", ""))
-                elif rtype == "file":
-                    wa_send_document(from_number, result["content"],
-                                    result.get("filename", "archivo.txt"),
-                                    caption=result.get("caption", ""))
-                elif rtype == "text":
+                elif result and result.get("type") == "text":
                     wa_send_text(from_number, result["content"])
                 else:
-                    wa_send_text(from_number, f"❌ {result.get('content', 'Error')}")
+                    wa_send_text(from_number, "❌ No pude generar el contenido.")
+
+            elif agent == "apolo":
+                wa_send_text(from_number, "🎵 Componiendo...")
+                reply = apolo.compose(text)
+                wa_send_text(from_number, reply or "❌ No pude componer.")
+
+            elif agent == "minerva":
+                reply = minerva.research(text)
+                wa_send_text(from_number, reply or "❌ No encontré información.")
+
+            elif agent == "atenea":
+                reply = atenea.create_article(text)
+                wa_send_text(from_number, reply or "❌ No pude generar.")
+
+            elif agent == "hefesto":
+                wa_send_text(from_number, "🖥️ Generando código...")
+                result = hefesto.create_landing(text) if "landing" in text.lower() else hefesto.create_component(text)
+                if result and result.get("type") == "text":
+                    wa_send_text(from_number, result["content"])
+                elif result and result.get("type") == "file":
+                    wa_send_text(from_number, f"💻 Código generado:\n\n{result['content'].decode('utf-8')[:3000]}")
+                else:
+                    wa_send_text(from_number, "❌ No pude generar.")
+
             else:
-                wa_send_text(from_number, "❌ No pude generar el contenido.")
+                # Default: Hermes (chat)
+                history_text = get_history_text(from_number)
+                reply = hermes.chat(text, user_name, history_text)
+                if reply:
+                    add_history(from_number, "user", text)
+                    add_history(from_number, "assistant", reply)
+                    wa_send_text(from_number, reply)
+                else:
+                    wa_send_text(from_number, "🔄 Error temporal. Intenta de nuevo.")
 
-        elif agent == "apolo":
-            wa_send_text(from_number, "🎵 Componiendo...")
-            reply = apolo.compose(text)
-            wa_send_text(from_number, reply or "❌ No pude componer.")
-
-        elif agent == "minerva":
-            reply = minerva.research(text)
-            wa_send_text(from_number, reply or "❌ No pude investigar eso.")
-
-        elif agent == "atenea":
-            reply = atenea.create_article(text)
-            wa_send_text(from_number, reply or "❌ No pude generar el contenido.")
+        elif msg_type == "image":
+            caption = msg.get("image", {}).get("caption", "")
+            wa_send_text(from_number, f"📸 Recibí tu imagen. {caption or 'Dime qué quieres que haga con ella.'}")
 
         else:
-            # Default: Hermes
-            history_text = get_history_text(from_number)
-            reply = hermes.chat(text, user_name, history_text)
-            wa_send_text(from_number, reply or "🔄 Error temporal.")
+            wa_send_text(from_number, "📱 Escríbeme en texto. ¿Qué necesitas?")
 
     except Exception as e:
-        logger.error(f"WA dispatch error [{agent}]: {e}")
-        wa_send_text(from_number, f"⚠️ Error: {str(e)[:100]}")
+        logger.error(f"WA handler error: {e}", exc_info=True)
+        try:
+            from whatsapp_handler import wa_send_text
+            if from_number:
+                wa_send_text(from_number, f"⚠️ Error procesando tu mensaje. Intenta de nuevo.")
+        except:
+            pass
 
 
 # ---------------------------------------------------------------------------
