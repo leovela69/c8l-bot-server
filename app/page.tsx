@@ -23,13 +23,13 @@ function TopNav() {
 
         {/* Nav Center */}
         <nav className="hidden lg:flex items-center gap-1">
-          <NavItem icon="📺" label="C8L TV" active />
-          <NavItem icon="🎵" label="SALAS" />
-          <NavItem icon="🎧" label="STREAMING" />
-          <NavItem icon="💰" label="MONETIZACIÓN" />
-          <NavItem icon="👥" label="COMUNIDAD" />
-          <NavItem icon="👤" label="PERFIL" />
-          <NavItem icon="🤖" label="ESTUDIO IA" />
+          <NavLink href="/" icon="📺" label="C8L TV" active />
+          <NavLink href="/karaoke" icon="🎵" label="SALAS" />
+          <NavLink href="/streaming" icon="🎧" label="STREAMING" />
+          <NavLink href="/monetizacion" icon="💰" label="MONETIZACIÓN" />
+          <NavLink href="/bandos" icon="👥" label="COMUNIDAD" />
+          <NavLink href="/registro" icon="👤" label="PERFIL" />
+          <NavLink href="/studio" icon="🤖" label="ESTUDIO IA" />
         </nav>
 
         {/* Right */}
@@ -52,6 +52,17 @@ function TopNav() {
         </div>
       </div>
     </header>
+  )
+}
+
+function NavLink({ href, icon, label, active }: { href: string; icon: string; label: string; active?: boolean }) {
+  return (
+    <Link href={href} className={`flex flex-col items-center px-3 py-1 rounded-lg transition text-[10px] ${
+      active ? 'text-c8l-cyan' : 'text-gray-400 hover:text-white'
+    }`}>
+      <span className="text-base">{icon}</span>
+      <span className="font-medium mt-0.5">{label}</span>
+    </Link>
   )
 }
 

@@ -5,3 +5,6 @@ data/memory/
 data/reports/
 *.log
 .env
+node_modules/
+.next/
+out/
