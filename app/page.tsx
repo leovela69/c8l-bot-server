@@ -3,32 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Providers } from './providers'
-import { useAuth } from '@/lib/auth/context'
-import AgeGate from '@/components/auth/AgeGate'
 import AppShell from '@/components/layout/AppShell'
 import { VIDEOS, CATEGORIES, CREATORS } from '@/lib/videos/data'
 
-function HomeContent() {
-  const { isAgeVerified, isLoading } = useAuth()
+export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('Todas')
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center animate-pulse">
-            <span className="text-xl font-black">C8L</span>
-          </div>
-          <p className="text-gray-400 text-sm">Cargando...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAgeVerified) {
-    return <AgeGate />
-  }
 
   return (
     <AppShell>
@@ -85,7 +64,7 @@ function HomeContent() {
             <div>
               <span className="inline-block px-2 py-0.5 bg-red-500 rounded text-[10px] font-bold mb-2">🔴 LIVE</span>
               <h2 className="text-xl md:text-3xl font-outfit font-bold mb-1">Bolero-House Session Vol. 4</h2>
-              <p className="text-sm text-gray-200 mb-3">Leo Vela • Estreno mundial en C8L TV</p>
+              <p className="text-sm text-gray-200 mb-3">Leo Vela - Estreno mundial en C8L TV</p>
               <button className="bg-white text-black font-bold text-xs px-5 py-2 rounded-full hover:bg-gray-200 transition">
                 ▶ Ver Ahora
               </button>
@@ -176,11 +155,11 @@ function HomeContent() {
         {/* Quick Access Cards */}
         <div className="mb-12">
           <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2 mb-4">
-            <span>🚀</span> Acceso Rápido
+            <span>🚀</span> Acceso Rapido
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <QuickCard href="/casino" icon="🎰" title="Casino" desc="Slots, Blackjack, Ruleta" color="from-purple-600 to-pink-600" />
-            <QuickCard href="/studio" icon="🎹" title="Estudio IA" desc="Crea música con IA" color="from-cyan-600 to-blue-600" />
+            <QuickCard href="/studio" icon="🎹" title="Estudio IA" desc="Crea musica con IA" color="from-cyan-600 to-blue-600" />
             <QuickCard href="/streaming" icon="🎧" title="Streaming" desc="En vivo 24/7" color="from-red-600 to-orange-600" />
             <QuickCard href="/comunidad" icon="👥" title="Comunidad" desc="Posts y social" color="from-green-600 to-emerald-600" />
           </div>
@@ -192,14 +171,14 @@ function HomeContent() {
             <div>
               <h3 className="text-sm font-outfit font-bold text-c8l-gold mb-2">C8L AGENCY</h3>
               <p className="text-[11px] text-gray-500 leading-relaxed">
-                Plataforma de entretenimiento, música y comunidad. El Salto Cuántico en la creación de contenido.
+                Plataforma de entretenimiento, musica y comunidad. El Salto Cuantico en la creacion de contenido.
               </p>
             </div>
             <div>
               <h4 className="text-xs font-bold text-white mb-2">ENLACES</h4>
               <div className="space-y-1">
-                <a href="/legal" className="block text-[11px] text-gray-500 hover:text-c8l-cyan transition">Términos y Condiciones</a>
-                <a href="/legal" className="block text-[11px] text-gray-500 hover:text-c8l-cyan transition">Política de Privacidad</a>
+                <a href="/legal" className="block text-[11px] text-gray-500 hover:text-c8l-cyan transition">Terminos y Condiciones</a>
+                <a href="/legal" className="block text-[11px] text-gray-500 hover:text-c8l-cyan transition">Politica de Privacidad</a>
                 <a href="/legal" className="block text-[11px] text-gray-500 hover:text-c8l-cyan transition">Cookies</a>
               </div>
             </div>
@@ -216,9 +195,9 @@ function HomeContent() {
           <div className="text-center">
             <div className="inline-flex items-center gap-2 bg-red-900/20 border border-red-800/40 rounded-full px-4 py-1.5 mb-3">
               <span>🔞</span>
-              <span className="text-[10px] text-red-300 font-bold">PLATAFORMA +18 AÑOS</span>
+              <span className="text-[10px] text-red-300 font-bold">PLATAFORMA +18 ANOS</span>
             </div>
-            <p className="text-[10px] text-gray-600">© 2026 C8L Agency - Todos los derechos reservados</p>
+            <p className="text-[10px] text-gray-600">&copy; 2026 C8L Agency - Todos los derechos reservados</p>
           </div>
         </footer>
       </div>
@@ -235,13 +214,5 @@ function QuickCard({ href, icon, title, desc, color }: { href: string; icon: str
         <p className="text-[10px] text-white/70">{desc}</p>
       </div>
     </Link>
-  )
-}
-
-export default function Home() {
-  return (
-    <Providers>
-      <HomeContent />
-    </Providers>
   )
 }
