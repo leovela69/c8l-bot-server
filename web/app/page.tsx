@@ -32,6 +32,7 @@ export default function Home() {
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            <NavCard href="/feed" icon="🔥" title="Feed" subtitle="Creaciones IA" color="gold" />
             <NavCard href="/casino" icon="🎰" title="Casino" subtitle="Juegos" color="purple" />
             <NavCard href="/studio" icon="🎵" title="Estudio" subtitle="Crea musica" color="gold" />
             <NavCard href="/karaoke" icon="🎤" title="Karaoke" subtitle="Canta" color="pink" />
