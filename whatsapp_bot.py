@@ -9,7 +9,7 @@ Arquitectura: 1 Bot Maestro (Zeus) + 2 Skills Maestros (Minerva, Vulcano)
 Motor: OpenRouter (DeepSeek V3 + Qwen3) — 100% gratuito
 """
 
-import io, os, sys, logging, threading, requests, json, time
+import io, os, sys, logging, threading, requests, json, time, traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime
 
@@ -55,6 +55,9 @@ from pantheon.tools import (
     generate_social_post, get_shop_text,
     get_pending_scheduled
 )
+
+# Import Auto-Repair Engine
+from pantheon.auto_repair import auto_repair, auto_capture
 
 # ---------------------------------------------------------------------------
 # Inicializar agentes
@@ -331,15 +334,7 @@ def generate_pdf(content, title="Documento C8L"):
 def dispatch_to_agent(intent_data, text, chat_id, user_name):
     """
     Ejecuta la tarea en el agente correcto segun la decision de Zeus.
-
-    Args:
-        intent_data: dict de Zeus con primary_agent, task_description, etc.
-        text: mensaje original del usuario
-        chat_id: ID del chat
-        user_name: nombre del usuario
-
-    Returns:
-        None (envia respuesta directamente por Telegram)
+    Errores se capturan automáticamente para auto-repair.
     """
     agent = intent_data.get("primary_agent", "hermes")
     task = intent_data.get("task_description", text)
@@ -521,6 +516,15 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
     except Exception as e:
         logger.error(f"Error en dispatch [{agent}]: {e}", exc_info=True)
         tg_send(chat_id, f"⚠️ Error en {agent}: {str(e)[:150]}")
+        # Auto-repair: capturar error
+        auto_repair.capture_error(
+            error_type=type(e).__name__,
+            error_msg=str(e),
+            file_path="whatsapp_bot.py",
+            function_name=f"dispatch_to_agent/{agent}",
+            code_context=f"agent={agent}, text={text[:50]}",
+            full_traceback=traceback.format_exc()
+        )
 
     # Registrar en Estia (aprendizaje)
     try:
@@ -637,6 +641,10 @@ def main():
     scheduler = GroupScheduler(broadcast_to_group)
     scheduler.start()
     logger.info("📅 Scheduler de grupo activo — mensajes cada ~4h")
+
+    # Auto-Repair: el bot se auto-corrige cada 6 horas
+    auto_repair.start_scheduler(interval_hours=6)
+    logger.info("🔧 Auto-repair activo — ciclo cada 6h")
 
     bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
@@ -1517,6 +1525,28 @@ def main():
     def cmd_memoria(msg):
         """Muestra tu perfil de memoria."""
         tg_send(msg.chat.id, smart_memory.get_user_profile_text(msg.from_user.id), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["autorepair", "repair"])
+    def cmd_autorepair(msg):
+        """Muestra estado del sistema de auto-reparación."""
+        tg_send(msg.chat.id, auto_repair.get_report(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["fixnow"])
+    def cmd_fixnow(msg):
+        """Admin: fuerza un ciclo de auto-reparación ahora."""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "🚫 Solo el admin.")
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "🔧 Ejecutando ciclo de auto-reparación...")
+        result = auto_repair.run_repair_cycle()
+        if result:
+            tg_send(msg.chat.id,
+                f"✅ *Fix aplicado!*\n\n"
+                f"Error: `{result['error_type']}`\n"
+                f"Fix: {result.get('fix_applied', '')[:200]}",
+                parse_mode="Markdown")
+        else:
+            tg_send(msg.chat.id, "ℹ️ No hay errores que necesiten fix (o límite diario alcanzado).")
 
     @bot.message_handler(commands=["recordar", "remember"])
     def cmd_recordar(msg):
