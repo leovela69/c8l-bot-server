@@ -1210,75 +1210,105 @@ def main():
         if not tema:
             tema = "Videoclip para cancion Bolero-House nocturna"
         tg_typing(msg.chat.id)
-        tg_send(msg.chat.id, "🎬 Ares creando guion...")
-        reply = ares_bot.create_script(tema)
-        if reply:
-            if len(reply) > 3000:
-                pdf_bytes = generate_pdf(reply, f"Guion: {tema[:40]}")
-                tg_send_document(msg.chat.id, pdf_bytes, "guion_c8l.pdf", caption=f"🎬 {tema[:60]}")
-            else:
-                tg_send(msg.chat.id, reply)
-        else:
-            tg_send(msg.chat.id, "❌ No pude crear el guion.")
-        estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "video", "ares")
-        if reply:
-            broadcast_content_created(msg.from_user.first_name, "video", tema)
+        tg_send(msg.chat.id, "🎬 Generando video con IA... (puede tardar 1-3 min)")
+        tg_video_action(msg.chat.id)
+
+        # Generar video REAL con VideoEngine multi-motor
+        def _gen():
+            try:
+                result = ares_bot.process(tema, msg.from_user.first_name)
+                if result and result.get("type") == "video":
+                    tg_video_action(msg.chat.id)
+                    video_bytes = result["content"]
+                    filename = result.get("filename", "c8l_video.mp4")
+                    caption = result.get("caption", "🎬 Video generado")
+                    fmt = result.get("format", "mp4")
+                    if fmt == "gif":
+                        tg_send_animation(msg.chat.id, video_bytes, caption=caption)
+                    else:
+                        tg_send_video(msg.chat.id, video_bytes, filename=filename, caption=caption)
+                    _send_feedback_buttons(msg.chat.id)
+                    broadcast_content_created(msg.from_user.first_name, "video", tema)
+                elif result and result.get("type") == "text":
+                    content = result["content"]
+                    if len(content) > 3000:
+                        pdf_bytes = generate_pdf(content, f"Video: {tema[:40]}")
+                        tg_send_document(msg.chat.id, pdf_bytes, "video_c8l.pdf", caption=f"🎬 {tema[:60]}")
+                    else:
+                        tg_send(msg.chat.id, content)
+                else:
+                    tg_send(msg.chat.id, "❌ No pude generar el video. Intenta de nuevo en unos minutos.")
+            except Exception as e:
+                logger.error(f"cmd_video error: {e}")
+                tg_send(msg.chat.id, f"❌ Error generando video: {str(e)[:100]}")
+            estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "video", "ares")
+
+        threading.Thread(target=_gen, daemon=True).start()
 
     @bot.message_handler(commands=["video"])
     def cmd_video_ia(msg):
-        """Genera video REAL con Veo 3.1 (IA de Google). 10 gratis/mes."""
+        """Genera video REAL con IA (VideoEngine Multi-Motor)."""
         desc = msg.text.replace("/video", "").strip()
         if not desc:
             bot.reply_to(msg,
-                "🎬 *Generador de Video IA (Veo 3.1)*\n\n"
+                "🎬 *Generador de Video IA (Multi-Motor)*\n\n"
                 "Uso: /video [descripción del video]\n\n"
                 "Ejemplos:\n"
                 "• /video león dorado rugiendo en Times Square de noche\n"
                 "• /video olas del mar al atardecer en cámara lenta\n"
                 "• /video logotipo C8L girando en el espacio con neon\n"
                 "• /video DJ mezclando música en club con luces neon\n\n"
-                "⏱️ Tarda 2-5 minutos. Genera 8 seg en 720p con audio.\n"
-                "📊 Límite: 10 videos/mes (cuenta Google).",
+                "🤖 Motores: Veo, Seedance, Wan, LTX, Nova Reel\n"
+                "⏱️ Tarda 1-3 minutos. Hasta 15 seg con audio.\n"
+                "💰 100% GRATIS — sin límites.",
                 parse_mode="Markdown")
             return
 
         tg_typing(msg.chat.id)
         tg_send(msg.chat.id,
-            f"🎬 *Generando video con Veo 3.1...*\n\n"
+            f"🎬 *Generando video con IA...*\n\n"
             f"📝 Prompt: {desc[:100]}\n"
-            f"⏱️ Esto tarda 2-5 minutos. Te aviso cuando esté listo.",
+            f"⏱️ Esto tarda 1-3 minutos. Te aviso cuando esté listo.\n"
+            f"🤖 Probando 12 motores hasta encontrar el mejor...",
             parse_mode="Markdown")
 
         # Generar video en un thread para no bloquear el bot
         def _generate_and_send():
             try:
-                from pantheon.video_engine import generate_video
-                from config import GEMINI_API_KEY
+                result = ares_bot.process(desc, msg.from_user.first_name)
 
-                video_bytes = generate_video(desc, GEMINI_API_KEY)
+                if result and result.get("type") == "video":
+                    video_bytes = result["content"]
+                    filename = result.get("filename", "c8l_video.mp4")
+                    caption = result.get("caption", f"🎬 {desc[:80]}")
+                    fmt = result.get("format", "mp4")
 
-                if video_bytes:
-                    # Detectar si es GIF o MP4
-                    if video_bytes[:4] == b'GIF8':
-                        # Enviar como animación GIF
-                        files = {"animation": ("c8l_video.gif", io.BytesIO(video_bytes), "image/gif")}
-                        data = {"chat_id": msg.chat.id, "caption": f"🎬 {desc[:80]}\n\n🏛️ C8L Agency"}
-                        requests.post(f"{TG_API}/sendAnimation", data=data, files=files, timeout=120)
+                    if fmt == "gif":
+                        tg_send_animation(msg.chat.id, video_bytes, caption=caption)
                     else:
-                        # Enviar como video MP4
-                        files = {"video": ("c8l_video.mp4", io.BytesIO(video_bytes), "video/mp4")}
-                        data = {"chat_id": msg.chat.id, "caption": f"🎬 {desc[:80]}\n\n🏛️ C8L Agency"}
-                        requests.post(f"{TG_API}/sendVideo", data=data, files=files, timeout=120)
+                        tg_send_video(msg.chat.id, video_bytes, filename=filename, caption=caption)
+
                     logger.info(f"Video enviado: {len(video_bytes)} bytes")
-                    estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "video_ia", "veo")
+                    _send_feedback_buttons(msg.chat.id)
+                    estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "video_ia", "ares")
                     broadcast_content_created(msg.from_user.first_name, "video", desc)
+
+                elif result and result.get("type") == "text":
+                    content = result["content"]
+                    if len(content) > 3000:
+                        pdf_bytes = generate_pdf(content, f"Video: {desc[:40]}")
+                        tg_send_document(msg.chat.id, pdf_bytes, "video_c8l.pdf", caption=f"🎬 {desc[:60]}")
+                    else:
+                        tg_send(msg.chat.id, content)
+
                 else:
                     tg_send(msg.chat.id,
                         "❌ No pude generar el video. Posibles causas:\n"
-                        "• Límite mensual alcanzado (10/mes)\n"
-                        "• Prompt no compatible\n"
-                        "• Error temporal de Google\n\n"
-                        "Intenta con otra descripción o espera unos minutos.")
+                        "• Todos los motores saturados\n"
+                        "• Prompt muy largo o complejo\n"
+                        "• Error temporal\n\n"
+                        "💡 Intenta con otra descripción o en unos minutos.")
+
             except Exception as e:
                 logger.error(f"Error generando video: {e}")
                 tg_send(msg.chat.id, f"❌ Error: {str(e)[:150]}")
