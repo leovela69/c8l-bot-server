@@ -15,6 +15,17 @@ ZEUS_SYSTEM_PROMPT = """Eres ZEUS, el Orquestador Supremo de C8L Agency.
 
 Tu rol es analizar la intencion del usuario y decidir QUE AGENTE debe encargarse.
 
+REGLA CRITICA: Los usuarios escriben MAL — con faltas de ortografia, abreviaciones, jerga, spanglish.
+Tu trabajo es INTERPRETAR lo que quieren decir, NO lo que escriben literalmente.
+Ejemplos:
+- "kiero una img de un leon" = quiere imagen → vulcano
+- "azte un logo" = quiere imagen/logo → vulcano
+- "q pasa" = saludo casual → hermes
+- "me ases una cancion" = quiere musica → apolo
+- "programame algo" = quiere codigo → hefesto
+- "xq no funca la web" = diagnostico → aries
+- "dime algo de marketing" = estrategia → atenea
+
 AGENTES DISPONIBLES:
 - MINERVA: Investigacion, memoria, conocimiento, contexto, ideas
 - VULCANO: Creacion de contenido (musica, imagenes, video, codigo, diseno)
@@ -45,6 +56,7 @@ REGLAS:
 - Si pide estrategia/marketing -> primary_agent: "atenea"
 - Si es un saludo simple -> primary_agent: "hermes"
 - PARA IMAGENES: En task_description incluye TODOS los detalles visuales que el usuario menciona (colores, estilo, objetos, escenario, mood, personajes). No resumas ni simplifiques. Pasa la descripcion completa y literal del usuario.
+- Si NO entiendes el mensaje, usa "hermes" (él sabe manejar cualquier cosa)
 - SIEMPRE responde con JSON valido, nada mas."""
 
 
@@ -88,18 +100,18 @@ def _local_intent_detection(text):
     """Deteccion de intent local cuando Zeus no puede responder."""
     t = text.lower().strip()
 
-    # Mapeo de keywords a agentes
+    # Mapeo de keywords a agentes (incluye jerga, abreviaciones, faltas)
     mappings = [
-        (["imagen", "dibuja", "foto", "ilustra", "logo", "banner", "disena", "diseña", "genera una imagen", "crea una imagen", "hazme una imagen", "quiero una imagen", "pintame", "genera", "crea un"], "vulcano", "Generar imagen"),
-        (["juego", "game", "codigo", "programa", "script", "app", "html", "snake", "tetris", "pong"], "hefesto", "Generar codigo/juego"),
-        (["video", "clip", "animacion", "cortometraje", "storyboard"], "ares", "Generar guion de video"),
-        (["cancion", "musica", "prompt para suno", "prompt para udio", "beat", "letra"], "apolo", "Generar musica/prompt musical"),
-        (["pdf", "documento", "informe", "reporte", "ensayo", "articulo"], "atenea", "Generar documento"),
-        (["diagnostica", "escanea", "seguridad", "vulnerabilidad", "web caida"], "aries", "Diagnosticar seguridad"),
-        (["estrategia", "marketing", "seo", "plan de contenido", "redes sociales"], "atenea", "Generar estrategia"),
-        (["investiga", "busca", "que es", "explicame", "informacion sobre"], "minerva", "Investigar/explicar"),
-        (["landing", "pagina web", "frontend", "ui", "diseno web"], "hefesto", "Diseno frontend"),
-        (["api", "backend", "servidor", "base de datos", "endpoint"], "artemisa", "Backend/API"),
+        (["imagen", "dibuja", "foto", "ilustra", "logo", "banner", "disena", "diseña", "genera una imagen", "crea una imagen", "hazme una imagen", "quiero una imagen", "pintame", "genera", "crea un", "img", "imgen", "azte un logo", "aste un logo", "dame una img", "dibujo", "render", "3d", "hazme un", "quiero un"], "vulcano", "Generar imagen"),
+        (["juego", "game", "codigo", "programa", "script", "app", "html", "snake", "tetris", "pong", "codea", "programame", "code", "webapp", "landing"], "hefesto", "Generar codigo/juego"),
+        (["video", "clip", "animacion", "cortometraje", "storyboard", "videoclip"], "ares", "Generar guion de video"),
+        (["cancion", "musica", "prompt para suno", "prompt para udio", "beat", "letra", "muzica", "musika", "song", "track", "componme", "compone"], "apolo", "Generar musica/prompt musical"),
+        (["pdf", "documento", "informe", "reporte", "ensayo", "articulo", "doc"], "atenea", "Generar documento"),
+        (["diagnostica", "escanea", "seguridad", "vulnerabilidad", "web caida", "no funca", "esta rota", "no funciona"], "aries", "Diagnosticar seguridad"),
+        (["estrategia", "marketing", "seo", "plan de contenido", "redes sociales", "como vendo", "como promociono", "branding"], "atenea", "Generar estrategia"),
+        (["investiga", "busca", "que es", "explicame", "informacion sobre", "dime sobre", "como funciona", "que sabes de", "info"], "minerva", "Investigar/explicar"),
+        (["pagina web", "frontend", "ui", "diseno web", "web"], "hefesto", "Diseno frontend"),
+        (["api", "backend", "servidor", "base de datos", "endpoint", "server"], "artemisa", "Backend/API"),
     ]
 
     for keywords, agent, desc in mappings:
