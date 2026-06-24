@@ -98,14 +98,15 @@ WHATSAPP_API_URL: str = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_ID}/m
 PORT: int = int(os.environ.get("PORT", "8080"))
 
 # ---------------------------------------------------------------------------
-# Pollinations API — Video + Imagen (100% GRATIS, sin key)
+# Pollinations API — Video + Imagen (requiere API key)
 # Endpoint: https://gen.pollinations.ai
-# Video: /video/{prompt}?model=X&duration=Y
-# Imagen: /image/{prompt}?model=X
+# Video: /video/{prompt}?model=X&duration=Y&key=KEY
+# Imagen: /image/{prompt}?model=X&key=KEY
 # Modelos video: veo, seedance-pro, seedance-2.0, wan, wan-fast, wan-pro,
 #                wan-pro-1080p, grok-video-pro, ltx-2, nova-reel
 # Modelos imagen: flux, zimage, kontext (edición), gptimage, seedream5
 # ---------------------------------------------------------------------------
+POLLINATIONS_API_KEY_P: str = os.environ.get("POLLINATIONS_API_KEY", "sk_NCU6ElY6L4i0KhoMODTxNqj3QJRGetyS")
 POLLINATIONS_BASE_URL: str = "https://gen.pollinations.ai"
 POLLINATIONS_VIDEO_URL: str = f"{POLLINATIONS_BASE_URL}/video"
 POLLINATIONS_IMAGE_URL: str = f"{POLLINATIONS_BASE_URL}/image"

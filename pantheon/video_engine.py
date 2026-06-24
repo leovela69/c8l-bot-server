@@ -34,6 +34,12 @@ from urllib.parse import quote
 
 logger = logging.getLogger("c8l.video_engine")
 
+# Import API key
+try:
+    from config import POLLINATIONS_API_KEY_P
+except ImportError:
+    POLLINATIONS_API_KEY_P = ""
+
 # ---------------------------------------------------------------------------
 # CONFIGURACION DE MODELOS
 # ---------------------------------------------------------------------------
@@ -483,6 +489,7 @@ class VideoEngine:
             params = {
                 "model": model,
                 "duration": duration,
+                "key": POLLINATIONS_API_KEY_P,
             }
 
             # Audio (solo para modelos que lo soportan)
