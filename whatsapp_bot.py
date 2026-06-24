@@ -589,19 +589,27 @@ def _send_feedback_buttons(chat_id):
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         # WhatsApp webhook verification
-        if self.path.startswith("/webhook"):
+        if "/webhook" in self.path:
             from urllib.parse import urlparse, parse_qs
-            params = parse_qs(urlparse(self.path).query)
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
             flat_params = {k: v[0] for k, v in params.items()}
 
-            from whatsapp_handler import verify_webhook
-            challenge = verify_webhook(flat_params)
-            if challenge:
+            logger.info(f"Webhook GET: {flat_params}")
+
+            mode = flat_params.get("hub.mode", "")
+            token = flat_params.get("hub.verify_token", "")
+            challenge = flat_params.get("hub.challenge", "")
+
+            if mode == "subscribe" and token == "c8l_verify_2024":
+                logger.info(f"✅ WhatsApp webhook verificado! Challenge: {challenge}")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/plain")
                 self.end_headers()
                 self.wfile.write(challenge.encode())
                 return
+            else:
+                logger.warning(f"❌ Webhook verification failed: mode={mode}, token={token}")
 
         # Normal health check
         self.send_response(200)
@@ -614,10 +622,11 @@ class HealthHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         # WhatsApp incoming messages
-        if self.path.startswith("/webhook"):
+        if "/webhook" in self.path:
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length)
 
+            # Responder INMEDIATAMENTE (Meta requiere 200 en <5s)
             self.send_response(200)
             self.send_header("Content-Type", "text/plain")
             self.end_headers()
@@ -626,11 +635,12 @@ class HealthHandler(BaseHTTPRequestHandler):
             # Procesar en background
             try:
                 data = json.loads(body)
+                logger.info(f"Webhook POST recibido: {json.dumps(data)[:200]}")
                 threading.Thread(
                     target=_handle_whatsapp_message, args=(data,), daemon=True
                 ).start()
-            except:
-                pass
+            except Exception as e:
+                logger.error(f"Webhook POST error: {e}")
             return
 
         self.send_response(404)
@@ -768,11 +778,24 @@ def main():
     except:
         pass
 
-    # Health check
+    # Health check + WhatsApp webhook
     threading.Thread(
         target=lambda: HTTPServer(("0.0.0.0", PORT), HealthHandler).serve_forever(),
         daemon=True
     ).start()
+
+    # Keep-alive: ping cada 5 min para que Render no duerma el servicio
+    def _keep_alive():
+        import time as t
+        while True:
+            try:
+                requests.get(f"https://c8l-bot-server.onrender.com/", timeout=10)
+            except:
+                pass
+            t.sleep(300)  # Cada 5 minutos
+
+    threading.Thread(target=_keep_alive, daemon=True).start()
+    logger.info("💓 Keep-alive activo (ping cada 5 min)")
 
     # Scheduler de mensajes automaticos al grupo
     scheduler = GroupScheduler(broadcast_to_group)
