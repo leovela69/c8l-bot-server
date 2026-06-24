@@ -1,162 +1,669 @@
 # -*- coding: utf-8 -*-
 """
-🎬 VIDEO ENGINE — Generación de video con MÚLTIPLES servicios gratuitos
-Si uno falla, usa el siguiente hasta lograr el resultado.
+🎬 VIDEO ENGINE v3.0 — Multi-Motor Inteligente
+Genera videos REALES usando Pollinations API (gen.pollinations.ai)
 
-Cadena de fallback:
-1. Pollinations Video (gratis, sin key)
-2. Veo 3.1 (Google, si la key funciona)
-3. Animated GIF con Pollinations Images (genera 4 frames y anima)
+Modelos disponibles (TODOS GRATUITOS sin key):
+- veo: Google Veo (alta calidad, 4-8s) — MEJOR para cinematico
+- seedance-pro: ByteDance (alta calidad, 2-10s) — MEJOR para movimiento
+- seedance-2.0: ByteDance v2 (4-15s) — MEJOR para duracion larga
+- wan: Alibaba Wan (2-15s, con audio) — MEJOR para audio integrado
+- wan-fast: Wan rapido (2-15s) — MEJOR balance velocidad/calidad
+- wan-pro: Wan premium (2-15s) — Alta calidad
+- wan-pro-1080p: Wan 1080p — MEJOR resolucion
+- grok-video-pro: xAI Grok Video — Creativo/artistico
+- ltx-2: LTX Video (rapido) — MEJOR para prototipos rapidos
+- nova-reel: Amazon Nova (6-120s) — MEJOR para videos largos
+- p-video-720p: Video general 720p
+- p-video-1080p: Video general 1080p
+
+Estrategia:
+1. Zeus/Ares analiza el prompt y decide el MEJOR modelo
+2. Si falla → intenta con el siguiente en la cadena de fallback
+3. Si todo falla → genera GIF animado con frames de imagen
+4. SIEMPRE entrega algo al usuario
 """
 
 import logging
 import time
-import os
 import io
-import tempfile
+import os
+import random
 import requests
 from urllib.parse import quote
 
 logger = logging.getLogger("c8l.video_engine")
 
+# ---------------------------------------------------------------------------
+# CONFIGURACION DE MODELOS
+# ---------------------------------------------------------------------------
 
-def generate_video(prompt, api_key="", duration=8, aspect_ratio="16:9"):
+# Modelos ordenados por prioridad/calidad
+VIDEO_MODELS = {
+    "wan-fast": {
+        "name": "Wan Fast",
+        "description": "Rapido y bueno, con audio",
+        "duration_range": (2, 15),
+        "default_duration": 5,
+        "has_audio": True,
+        "best_for": ["general", "musica", "rapido"],
+        "quality": 7,
+        "speed": 9,
+    },
+    "veo": {
+        "name": "Google Veo",
+        "description": "Maxima calidad cinematica",
+        "duration_range": (4, 8),
+        "default_duration": 6,
+        "has_audio": True,
+        "best_for": ["cinematico", "profesional", "alta_calidad", "paisaje"],
+        "quality": 10,
+        "speed": 4,
+    },
+    "seedance-pro": {
+        "name": "Seedance Pro",
+        "description": "Excelente movimiento y dinamismo",
+        "duration_range": (2, 10),
+        "default_duration": 5,
+        "has_audio": False,
+        "best_for": ["movimiento", "danza", "accion", "dinamico"],
+        "quality": 9,
+        "speed": 6,
+    },
+    "seedance-2.0": {
+        "name": "Seedance 2.0",
+        "description": "Videos mas largos con calidad",
+        "duration_range": (4, 15),
+        "default_duration": 8,
+        "has_audio": False,
+        "best_for": ["largo", "narrativo", "historia"],
+        "quality": 8,
+        "speed": 5,
+    },
+    "wan": {
+        "name": "Wan Standard",
+        "description": "Balanceado con audio incluido",
+        "duration_range": (2, 15),
+        "default_duration": 5,
+        "has_audio": True,
+        "best_for": ["audio", "sonido", "musica", "general"],
+        "quality": 7,
+        "speed": 7,
+    },
+    "wan-pro": {
+        "name": "Wan Pro",
+        "description": "Alta calidad con audio",
+        "duration_range": (2, 15),
+        "default_duration": 6,
+        "has_audio": True,
+        "best_for": ["premium", "alta_calidad", "profesional"],
+        "quality": 9,
+        "speed": 5,
+    },
+    "wan-pro-1080p": {
+        "name": "Wan Pro 1080p",
+        "description": "Maxima resolucion 1080p",
+        "duration_range": (2, 15),
+        "default_duration": 5,
+        "has_audio": True,
+        "best_for": ["hd", "1080p", "alta_resolucion", "profesional"],
+        "quality": 9,
+        "speed": 4,
+    },
+    "grok-video-pro": {
+        "name": "Grok Video Pro",
+        "description": "Creativo y artistico (xAI)",
+        "duration_range": (4, 8),
+        "default_duration": 5,
+        "has_audio": False,
+        "best_for": ["creativo", "artistico", "abstracto", "experimental"],
+        "quality": 8,
+        "speed": 6,
+    },
+    "ltx-2": {
+        "name": "LTX Video 2",
+        "description": "Ultra rapido para prototipos",
+        "duration_range": (3, 8),
+        "default_duration": 4,
+        "has_audio": False,
+        "best_for": ["rapido", "prototipo", "test", "preview"],
+        "quality": 6,
+        "speed": 10,
+    },
+    "nova-reel": {
+        "name": "Amazon Nova Reel",
+        "description": "Videos largos hasta 2 min",
+        "duration_range": (6, 120),
+        "default_duration": 12,
+        "has_audio": False,
+        "best_for": ["largo", "narrativo", "documental", "presentacion"],
+        "quality": 7,
+        "speed": 3,
+    },
+    "p-video-720p": {
+        "name": "P-Video 720p",
+        "description": "Video general 720p",
+        "duration_range": (3, 10),
+        "default_duration": 5,
+        "has_audio": False,
+        "best_for": ["general", "fallback"],
+        "quality": 6,
+        "speed": 7,
+    },
+    "p-video-1080p": {
+        "name": "P-Video 1080p",
+        "description": "Video general 1080p",
+        "duration_range": (3, 10),
+        "default_duration": 5,
+        "has_audio": False,
+        "best_for": ["general", "hd", "fallback"],
+        "quality": 7,
+        "speed": 6,
+    },
+}
+
+# Cadena de fallback (orden en que se intentan si el modelo elegido falla)
+FALLBACK_CHAIN = [
+    "wan-fast", "ltx-2", "wan", "seedance-pro", "veo",
+    "seedance-2.0", "grok-video-pro", "p-video-720p",
+    "wan-pro", "nova-reel", "p-video-1080p"
+]
+
+# Pollinations API base
+POLLINATIONS_VIDEO_URL = "https://gen.pollinations.ai/video"
+
+
+# ---------------------------------------------------------------------------
+# CLASE PRINCIPAL
+# ---------------------------------------------------------------------------
+
+class VideoEngine:
     """
-    Genera video intentando TODOS los servicios gratuitos.
-    Si uno falla, pasa al siguiente.
+    Motor de video inteligente multi-modelo.
+    Analiza el prompt, elige el mejor modelo, genera el video.
+    Si falla, intenta con el siguiente hasta entregar resultado.
     """
-    logger.info(f"Video Engine: '{prompt[:60]}' — probando servicios...")
 
-    # 1. Pollinations Video
-    result = _try_pollinations_video(prompt)
-    if result:
-        return result
+    def __init__(self):
+        self.generations_count = 0
+        self.last_model_used = None
+        self.last_generation_time = 0
 
-    # 2. Veo 3.1 (si hay key)
-    if api_key:
-        result = _try_veo(prompt, api_key, duration, aspect_ratio)
-        if result:
-            return result
+    def generate(self, prompt, preferred_model=None, duration=None,
+                 aspect_ratio="16:9", image_url=None, with_audio=None):
+        """
+        Genera un video a partir de un prompt.
 
-    # 3. GIF animado (genera frames con Pollinations Image y los anima)
-    result = _try_animated_gif(prompt)
-    if result:
-        return result
+        Args:
+            prompt: Descripcion del video a generar
+            preferred_model: Modelo preferido (None = auto-seleccion)
+            duration: Duracion en segundos (None = auto)
+            aspect_ratio: "16:9" o "9:16"
+            image_url: URL de imagen para Image-to-Video (opcional)
+            with_audio: True/False/None(auto) — generar audio
 
-    logger.error("Video Engine: TODOS los servicios fallaron")
-    return None
+        Returns:
+            dict: {
+                "video_bytes": bytes,  # El video MP4
+                "model_used": str,     # Que modelo lo genero
+                "duration": int,       # Duracion real
+                "format": "mp4"|"gif", # Formato del archivo
+                "has_audio": bool,     # Si incluye audio
+                "attempts": int,       # Cuantos intentos necesito
+            }
+            O None si todo fallo.
+        """
+        logger.info(f"🎬 VideoEngine: '{prompt[:80]}' | model={preferred_model} | dur={duration}")
 
+        # 1. Mejorar prompt para generacion de video
+        enhanced_prompt = self._enhance_video_prompt(prompt)
 
-def _try_pollinations_video(prompt):
-    """Pollinations Video — GRATIS sin key."""
-    try:
-        logger.info("Video: intentando Pollinations...")
-        url = f"https://video.pollinations.ai/generate?prompt={quote(prompt)}&model=fast-svd"
-        r = requests.get(url, timeout=120, stream=True)
-
-        if r.status_code == 200:
-            content = r.content
-            if len(content) > 10000:  # Video real tiene más de 10KB
-                logger.info(f"Pollinations Video OK: {len(content)} bytes")
-                return content
-            else:
-                logger.warning(f"Pollinations Video: respuesta muy pequeña ({len(content)} bytes)")
+        # 2. Determinar modelo optimo si no se especifico
+        if preferred_model and preferred_model in VIDEO_MODELS:
+            model_order = [preferred_model] + [m for m in FALLBACK_CHAIN if m != preferred_model]
         else:
-            logger.warning(f"Pollinations Video: status {r.status_code}")
-    except Exception as e:
-        logger.warning(f"Pollinations Video error: {e}")
-    return None
+            model_order = self._select_best_models(prompt, with_audio)
 
+        # 3. Intentar cada modelo en orden
+        attempts = 0
+        for model_id in model_order:
+            attempts += 1
+            model_info = VIDEO_MODELS[model_id]
 
-def _try_veo(prompt, api_key, duration=8, aspect_ratio="16:9"):
-    """Google Veo 3.1 — requiere key funcional."""
-    try:
-        from google import genai
-        from google.genai import types
+            # Calcular duracion optima para este modelo
+            model_duration = self._get_optimal_duration(duration, model_info)
 
-        logger.info("Video: intentando Veo 3.1...")
-        client = genai.Client(api_key=api_key)
+            # Determinar si pedir audio
+            request_audio = False
+            if model_info["has_audio"]:
+                if with_audio is True:
+                    request_audio = True
+                elif with_audio is None:
+                    # Auto: si el prompt menciona sonido/musica, activar
+                    request_audio = self._wants_audio(prompt)
 
-        operation = client.models.generate_videos(
-            model="veo-3.1-generate-preview",
-            prompt=prompt,
-            config=types.GenerateVideosConfig(
+            logger.info(f"  Intento {attempts}: {model_info['name']} ({model_id}) | {model_duration}s | audio={request_audio}")
+
+            video_bytes = self._call_pollinations(
+                prompt=enhanced_prompt,
+                model=model_id,
+                duration=model_duration,
                 aspect_ratio=aspect_ratio,
-                resolution="720p",
-                duration_seconds=duration,
-            ),
-        )
+                image_url=image_url,
+                audio=request_audio,
+            )
 
-        elapsed = 0
-        while not operation.done:
-            time.sleep(15)
-            elapsed += 15
-            operation = client.operations.get(operation)
-            if elapsed > 300:
-                logger.warning("Veo 3.1: timeout")
+            if video_bytes:
+                self.generations_count += 1
+                self.last_model_used = model_id
+                self.last_generation_time = time.time()
+
+                logger.info(f"  ✅ Video generado con {model_info['name']} ({len(video_bytes)} bytes, {attempts} intentos)")
+                return {
+                    "video_bytes": video_bytes,
+                    "model_used": model_id,
+                    "model_name": model_info["name"],
+                    "duration": model_duration,
+                    "format": "mp4",
+                    "has_audio": request_audio and model_info["has_audio"],
+                    "attempts": attempts,
+                }
+            else:
+                logger.warning(f"  ❌ {model_info['name']} fallo, siguiente...")
+
+        # 4. Ultimo recurso: GIF animado
+        logger.info("  🔄 Todos los modelos fallaron, generando GIF animado...")
+        gif_bytes = self._generate_animated_gif(enhanced_prompt)
+        if gif_bytes:
+            self.generations_count += 1
+            return {
+                "video_bytes": gif_bytes,
+                "model_used": "gif_fallback",
+                "model_name": "GIF Animado",
+                "duration": 4,
+                "format": "gif",
+                "has_audio": False,
+                "attempts": attempts + 1,
+            }
+
+        logger.error("  💀 VideoEngine: TODOS los metodos fallaron")
+        return None
+
+    # ---------------------------------------------------------------------------
+    # SELECCION INTELIGENTE DE MODELO
+    # ---------------------------------------------------------------------------
+
+    def _select_best_models(self, prompt, with_audio=None):
+        """
+        Analiza el prompt y devuelve la lista de modelos ordenada
+        del mejor al peor para esta peticion especifica.
+        """
+        t = prompt.lower()
+        scores = {}
+
+        for model_id, info in VIDEO_MODELS.items():
+            score = info["quality"] * 2 + info["speed"]  # Base: calidad pesa mas
+
+            # Bonus por match con "best_for"
+            for tag in info["best_for"]:
+                if tag in t:
+                    score += 15
+
+            # Bonus contextuales
+            if any(kw in t for kw in ["rapido", "quick", "fast", "preview", "test"]):
+                score += info["speed"] * 2
+
+            if any(kw in t for kw in ["cinematico", "cine", "pelicula", "film", "cinematic",
+                                       "profesional", "premium", "calidad"]):
+                score += info["quality"] * 2
+
+            if any(kw in t for kw in ["baile", "danza", "dance", "movimiento", "accion",
+                                       "correr", "saltar", "pelea", "fight"]):
+                if "seedance" in model_id:
+                    score += 20
+
+            if any(kw in t for kw in ["musica", "music", "cancion", "sonido", "audio",
+                                       "ritmo", "beat", "bolero"]):
+                if info["has_audio"]:
+                    score += 15
+
+            if any(kw in t for kw in ["largo", "long", "historia", "narrativa", "documental"]):
+                max_dur = info["duration_range"][1]
+                score += min(max_dur, 30)  # Bonus por duracion maxima
+
+            if any(kw in t for kw in ["hd", "1080", "alta resolucion", "high res"]):
+                if "1080" in model_id or "pro" in model_id:
+                    score += 15
+
+            if any(kw in t for kw in ["abstracto", "arte", "artistico", "experimental",
+                                       "creativo", "surrealista"]):
+                if "grok" in model_id:
+                    score += 20
+
+            if any(kw in t for kw in ["paisaje", "landscape", "naturaleza", "nature",
+                                       "atardecer", "sunset", "oceano", "montaña"]):
+                if model_id == "veo":
+                    score += 15
+
+            # Si el usuario pidio audio explicitamente
+            if with_audio is True and info["has_audio"]:
+                score += 20
+            elif with_audio is True and not info["has_audio"]:
+                score -= 30  # Penalizar modelos sin audio si se pidio
+
+            scores[model_id] = score
+
+        # Ordenar de mayor a menor score
+        sorted_models = sorted(scores.keys(), key=lambda m: scores[m], reverse=True)
+        logger.info(f"  Ranking modelos: {[(m, scores[m]) for m in sorted_models[:5]]}")
+        return sorted_models
+
+    def _get_optimal_duration(self, requested_duration, model_info):
+        """Calcula la duracion optima respetando limites del modelo."""
+        min_dur, max_dur = model_info["duration_range"]
+
+        if requested_duration:
+            # Clamp al rango del modelo
+            return max(min_dur, min(requested_duration, max_dur))
+        else:
+            return model_info["default_duration"]
+
+    def _wants_audio(self, prompt):
+        """Detecta si el usuario quiere audio en el video."""
+        t = prompt.lower()
+        audio_keywords = ["musica", "music", "sonido", "sound", "audio",
+                         "cancion", "song", "ritmo", "beat", "voz", "voice",
+                         "habla", "speak", "canta", "sing", "bolero",
+                         "con sonido", "con audio", "con musica"]
+        return any(kw in t for kw in audio_keywords)
+
+    # ---------------------------------------------------------------------------
+    # ENHANCER DE PROMPTS PARA VIDEO
+    # ---------------------------------------------------------------------------
+
+    def _enhance_video_prompt(self, prompt):
+        """
+        Mejora el prompt del usuario para generacion de video.
+        Traduce a ingles si esta en español y agrega descriptores cinematicos.
+        """
+        t = prompt.lower()
+
+        # Si ya esta en ingles (tiene palabras clave en ingles), no traducir mucho
+        english_indicators = ["the", "and", "with", "create", "make", "generate",
+                            "scene", "video", "animation", "cinematic"]
+        is_english = sum(1 for w in english_indicators if w in t) >= 2
+
+        if is_english:
+            enhanced = prompt
+        else:
+            # Traducir conceptos clave español → ingles
+            enhanced = self._translate_prompt(prompt)
+
+        # Agregar descriptores cinematicos si no los tiene
+        if not any(kw in enhanced.lower() for kw in ["cinematic", "4k", "hd", "realistic",
+                                                      "professional", "smooth", "dynamic"]):
+            enhanced += ", cinematic quality, smooth motion, professional lighting"
+
+        # Limpiar
+        enhanced = enhanced.strip()
+        if len(enhanced) > 500:
+            enhanced = enhanced[:500]
+
+        return enhanced
+
+    def _translate_prompt(self, prompt):
+        """Traduccion basica español → ingles para prompts de video."""
+        # Diccionario de traduccion rapida para conceptos comunes
+        translations = {
+            "gato": "cat", "perro": "dog", "persona": "person",
+            "hombre": "man", "mujer": "woman", "niño": "child",
+            "ciudad": "city", "playa": "beach", "montaña": "mountain",
+            "oceano": "ocean", "bosque": "forest", "desierto": "desert",
+            "espacio": "space", "galaxia": "galaxy", "luna": "moon",
+            "sol": "sun", "estrella": "star", "noche": "night",
+            "dia": "day", "atardecer": "sunset", "amanecer": "sunrise",
+            "lluvia": "rain", "nieve": "snow", "fuego": "fire",
+            "agua": "water", "viento": "wind", "tormenta": "storm",
+            "carro": "car", "avion": "airplane", "barco": "ship",
+            "robot": "robot", "dragon": "dragon", "leon": "lion",
+            "aguila": "eagle", "lobo": "wolf", "caballo": "horse",
+            "bailando": "dancing", "corriendo": "running",
+            "volando": "flying", "nadando": "swimming",
+            "caminando": "walking", "peleando": "fighting",
+            "cantando": "singing", "tocando": "playing music",
+            "cocinando": "cooking", "pintando": "painting",
+            "explotar": "exploding", "caer": "falling",
+            "hermoso": "beautiful", "oscuro": "dark",
+            "brillante": "bright", "magico": "magical",
+            "epico": "epic", "dramatico": "dramatic",
+            "tranquilo": "peaceful", "misterioso": "mysterious",
+            "futurista": "futuristic", "retro": "retro",
+            "neon": "neon", "dorado": "golden",
+            "cinematico": "cinematic", "lento": "slow motion",
+            "rapido": "fast", "camara lenta": "slow motion",
+            "primer plano": "close up", "plano general": "wide shot",
+            "timelapse": "timelapse", "drone": "aerial drone shot",
+            "bajo el agua": "underwater", "en el cielo": "in the sky",
+            "hazme": "create", "genera": "generate", "crea": "create",
+            "un video de": "a video of", "video de": "video of",
+            "quiero": "I want", "dame": "give me",
+            "con musica": "with music", "con sonido": "with sound",
+        }
+
+        result = prompt
+        for es, en in translations.items():
+            if es in result.lower():
+                # Reemplazar manteniendo el caso general
+                import re
+                result = re.sub(re.escape(es), en, result, flags=re.IGNORECASE)
+
+        return result
+
+    # ---------------------------------------------------------------------------
+    # LLAMADA A POLLINATIONS API
+    # ---------------------------------------------------------------------------
+
+    def _call_pollinations(self, prompt, model, duration, aspect_ratio="16:9",
+                           image_url=None, audio=False):
+        """
+        Llama a la API de Pollinations para generar video.
+
+        Endpoint: GET https://gen.pollinations.ai/video/{prompt}
+        Params: model, duration, aspectRatio, audio, image, width, height, seed
+        """
+        try:
+            # Codificar prompt para URL
+            encoded_prompt = quote(prompt, safe='')
+
+            # Construir URL
+            url = f"{POLLINATIONS_VIDEO_URL}/{encoded_prompt}"
+
+            # Parametros
+            params = {
+                "model": model,
+                "duration": duration,
+                "aspectRatio": aspect_ratio,
+                "seed": random.randint(1, 2147483647),
+            }
+
+            # Resolucion basada en aspect ratio
+            if aspect_ratio == "16:9":
+                params["width"] = 1280
+                params["height"] = 720
+            elif aspect_ratio == "9:16":
+                params["width"] = 720
+                params["height"] = 1280
+            else:
+                params["width"] = 1024
+                params["height"] = 1024
+
+            # Audio (solo para modelos que lo soportan)
+            if audio:
+                params["audio"] = "true"
+
+            # Image-to-Video (si se proporciona imagen de referencia)
+            if image_url:
+                params["image"] = image_url
+
+            logger.info(f"  Pollinations API: model={model}, dur={duration}s, aspect={aspect_ratio}")
+
+            # Timeout largo porque la generacion de video tarda
+            # veo/seedance pueden tardar 60-180s, wan-fast ~30-60s, ltx ~20-40s
+            timeout = 300  # 5 minutos maximo
+
+            r = requests.get(url, params=params, timeout=timeout, stream=True)
+
+            if r.status_code == 200:
+                content_type = r.headers.get("content-type", "")
+                if "video" in content_type or "octet-stream" in content_type:
+                    # Leer todo el contenido
+                    video_bytes = b""
+                    for chunk in r.iter_content(chunk_size=1024 * 1024):  # 1MB chunks
+                        video_bytes += chunk
+
+                    if len(video_bytes) > 50000:  # Video real > 50KB
+                        logger.info(f"  ✅ Pollinations OK: {len(video_bytes)} bytes ({model})")
+                        return video_bytes
+                    else:
+                        logger.warning(f"  Pollinations: respuesta muy pequeña ({len(video_bytes)} bytes)")
+                        return None
+                else:
+                    logger.warning(f"  Pollinations: content-type inesperado: {content_type}")
+                    # Puede ser un error JSON
+                    try:
+                        error_data = r.json()
+                        logger.warning(f"  Pollinations error: {error_data}")
+                    except:
+                        pass
+                    return None
+            elif r.status_code == 402:
+                logger.warning(f"  Pollinations 402: modelo {model} requiere pago o balance agotado")
+                return None
+            elif r.status_code == 422:
+                logger.warning(f"  Pollinations 422: prompt rechazado o parametros invalidos")
+                return None
+            elif r.status_code == 429:
+                logger.warning(f"  Pollinations 429: rate limited, esperando...")
+                time.sleep(10)
+                return None
+            elif r.status_code == 503:
+                logger.warning(f"  Pollinations 503: servicio no disponible temporalmente")
+                return None
+            else:
+                logger.warning(f"  Pollinations: status {r.status_code}")
                 return None
 
-        if operation.result and operation.result.generated_videos:
-            video = operation.result.generated_videos[0]
-            client.files.download(file=video.video)
-            tmp_path = os.path.join(tempfile.gettempdir(), f"c8l_veo_{int(time.time())}.mp4")
-            video.video.save(tmp_path)
-            with open(tmp_path, "rb") as f:
-                video_bytes = f.read()
-            try:
-                os.remove(tmp_path)
-            except:
-                pass
-            logger.info(f"Veo 3.1 OK: {len(video_bytes)} bytes")
-            return video_bytes
+        except requests.Timeout:
+            logger.warning(f"  Pollinations timeout ({model}) — video tardo demasiado")
+            return None
+        except Exception as e:
+            logger.warning(f"  Pollinations error ({model}): {str(e)[:150]}")
+            return None
 
-    except Exception as e:
-        logger.warning(f"Veo 3.1 error: {str(e)[:100]}")
-    return None
+    # ---------------------------------------------------------------------------
+    # FALLBACK: GIF ANIMADO
+    # ---------------------------------------------------------------------------
 
+    def _generate_animated_gif(self, prompt):
+        """
+        Ultimo recurso: genera GIF animado con 4-6 frames de Pollinations Images.
+        SIEMPRE funciona porque la API de imagenes es muy estable.
+        """
+        try:
+            from PIL import Image
 
-def _try_animated_gif(prompt):
-    """Genera GIF animado con 4 frames de Pollinations (siempre funciona)."""
-    try:
-        from PIL import Image
-        import random
+            logger.info("  Generando GIF animado (fallback)...")
+            frames = []
 
-        logger.info("Video: generando GIF animado con Pollinations Images...")
-        frames = []
+            # Generar 4 frames con variaciones
+            frame_prompts = [
+                f"{prompt}, establishing shot, beginning of sequence",
+                f"{prompt}, action building, dynamic composition",
+                f"{prompt}, peak moment, dramatic lighting",
+                f"{prompt}, resolution, cinematic ending",
+            ]
 
-        # Generar 4 frames con variaciones del prompt
-        variations = [
-            f"{prompt}, frame 1, beginning",
-            f"{prompt}, frame 2, action",
-            f"{prompt}, frame 3, climax",
-            f"{prompt}, frame 4, ending",
-        ]
+            for i, frame_prompt in enumerate(frame_prompts):
+                try:
+                    encoded = quote(frame_prompt, safe='')
+                    seed = random.randint(1, 99999) + i * 1000
+                    url = f"https://gen.pollinations.ai/image/{encoded}?width=640&height=360&model=flux&seed={seed}"
 
-        for i, var_prompt in enumerate(variations):
-            try:
-                seed = random.randint(1, 99999)
-                url = f"https://image.pollinations.ai/prompt/{quote(var_prompt)}?width=512&height=512&model=flux&seed={seed}&nologo=true"
-                r = requests.get(url, timeout=60)
-                if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
-                    img = Image.open(io.BytesIO(r.content)).convert("RGB")
-                    frames.append(img)
-                    logger.info(f"  Frame {i+1}/4 OK")
-            except Exception as e:
-                logger.debug(f"  Frame {i+1} fallo: {e}")
+                    r = requests.get(url, timeout=60)
+                    if r.status_code == 200:
+                        ct = r.headers.get("content-type", "")
+                        if "image" in ct:
+                            img = Image.open(io.BytesIO(r.content)).convert("RGB")
+                            frames.append(img)
+                            logger.info(f"    Frame {i+1}/4 OK")
+                except Exception as e:
+                    logger.debug(f"    Frame {i+1} fallo: {e}")
 
-        if len(frames) >= 2:
-            # Crear GIF animado
-            output = io.BytesIO()
-            frames[0].save(
-                output, format="GIF", save_all=True,
-                append_images=frames[1:],
-                duration=1000,  # 1 segundo por frame
-                loop=0
+            if len(frames) >= 2:
+                output = io.BytesIO()
+                frames[0].save(
+                    output, format="GIF", save_all=True,
+                    append_images=frames[1:],
+                    duration=1200,  # 1.2s por frame
+                    loop=0
+                )
+                gif_bytes = output.getvalue()
+                logger.info(f"  GIF OK: {len(gif_bytes)} bytes, {len(frames)} frames")
+                return gif_bytes
+
+        except ImportError:
+            logger.warning("  GIF fallback requiere Pillow (PIL)")
+        except Exception as e:
+            logger.warning(f"  GIF fallback error: {e}")
+        return None
+
+    # ---------------------------------------------------------------------------
+    # UTILIDADES
+    # ---------------------------------------------------------------------------
+
+    def get_status(self):
+        """Devuelve estado del engine."""
+        return {
+            "total_generations": self.generations_count,
+            "last_model": self.last_model_used,
+            "last_time": self.last_generation_time,
+            "models_available": len(VIDEO_MODELS),
+        }
+
+    def list_models(self):
+        """Lista todos los modelos disponibles con info."""
+        lines = ["🎬 **MODELOS DE VIDEO DISPONIBLES:**\n"]
+        for model_id, info in VIDEO_MODELS.items():
+            audio_icon = "🔊" if info["has_audio"] else "🔇"
+            dur = f"{info['duration_range'][0]}-{info['duration_range'][1]}s"
+            lines.append(
+                f"• **{info['name']}** ({model_id})\n"
+                f"  {info['description']} | {dur} | {audio_icon}\n"
+                f"  Calidad: {'⭐' * min(info['quality'], 10)} | Velocidad: {'⚡' * min(info['speed'], 10)}\n"
             )
-            gif_bytes = output.getvalue()
-            logger.info(f"GIF animado OK: {len(gif_bytes)} bytes, {len(frames)} frames")
-            return gif_bytes
+        return "\n".join(lines)
 
-    except Exception as e:
-        logger.warning(f"GIF animado error: {e}")
+
+# ---------------------------------------------------------------------------
+# INSTANCIA GLOBAL
+# ---------------------------------------------------------------------------
+video_engine = VideoEngine()
+
+
+# ---------------------------------------------------------------------------
+# FUNCION LEGACY (compatibilidad con codigo existente)
+# ---------------------------------------------------------------------------
+def generate_video(prompt, api_key="", duration=8, aspect_ratio="16:9"):
+    """
+    Funcion legacy — llama al nuevo VideoEngine.
+    Mantiene compatibilidad con codigo que ya usaba generate_video().
+    """
+    result = video_engine.generate(
+        prompt=prompt,
+        duration=duration,
+        aspect_ratio=aspect_ratio,
+        with_audio=True,
+    )
+    if result:
+        return result["video_bytes"]
     return None

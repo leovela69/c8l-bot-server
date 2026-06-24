@@ -98,12 +98,41 @@ WHATSAPP_API_URL: str = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_ID}/m
 PORT: int = int(os.environ.get("PORT", "8080"))
 
 # ---------------------------------------------------------------------------
+# Pollinations API — Video + Imagen (100% GRATIS, sin key)
+# Endpoint: https://gen.pollinations.ai
+# Video: /video/{prompt}?model=X&duration=Y
+# Imagen: /image/{prompt}?model=X
+# Modelos video: veo, seedance-pro, seedance-2.0, wan, wan-fast, wan-pro,
+#                wan-pro-1080p, grok-video-pro, ltx-2, nova-reel
+# Modelos imagen: flux, zimage, kontext (edición), gptimage, seedream5
+# ---------------------------------------------------------------------------
+POLLINATIONS_BASE_URL: str = "https://gen.pollinations.ai"
+POLLINATIONS_VIDEO_URL: str = f"{POLLINATIONS_BASE_URL}/video"
+POLLINATIONS_IMAGE_URL: str = f"{POLLINATIONS_BASE_URL}/image"
+POLLINATIONS_EDIT_URL: str = f"{POLLINATIONS_BASE_URL}/v1/images/edits"
+
+# ---------------------------------------------------------------------------
+# Design Studio — APIs gratuitas de edición de imagen
+# ---------------------------------------------------------------------------
+# Photoroom Sandbox (gratis con watermark, 1000 imágenes)
+PHOTOROOM_API_KEY: str = os.environ.get("PHOTOROOM_API_KEY", "")
+PHOTOROOM_API_URL: str = "https://image-api.photoroom.com/v2/edit"
+
+# Remove.bg (50 previews gratis/mes)
+REMOVEBG_API_KEY: str = os.environ.get("REMOVEBG_API_KEY", "")
+REMOVEBG_API_URL: str = "https://api.remove.bg/v1.0/removebg"
+
+# Image Upscaling (gratis, sin key)
+IMAGE_UPSCALE_URL: str = "https://image-upscaling.net"
+
+# ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
 import os as _os
 BASE_DIR = _os.path.dirname(_os.path.abspath(__file__))
 DATA_DIR = _os.path.join(BASE_DIR, "data")
 MEMORY_DIR = _os.path.join(DATA_DIR, "memory")
+PAGES_DIR = _os.path.join(DATA_DIR, "pages")
 REPORTS_DIR = _os.path.join(DATA_DIR, "reports")
 
 _os.makedirs(MEMORY_DIR, exist_ok=True)

@@ -142,6 +142,40 @@ def tg_doc_action(chat_id):
         pass
 
 
+def tg_send_video(chat_id, video_bytes, filename="video.mp4", caption=""):
+    """Envia video MP4 o GIF animado."""
+    mime = "video/mp4" if filename.endswith(".mp4") else "image/gif"
+    files = {"video": (filename, io.BytesIO(video_bytes), mime)}
+    data = {"chat_id": chat_id, "caption": caption[:1024]}
+    try:
+        r = requests.post(f"{TG_API}/sendVideo", data=data, files=files, timeout=120)
+        if r.status_code != 200:
+            logger.warning(f"sendVideo fallo ({r.status_code}), enviando como documento...")
+            # Fallback: enviar como documento si es muy grande
+            files2 = {"document": (filename, io.BytesIO(video_bytes), mime)}
+            requests.post(f"{TG_API}/sendDocument", data=data, files=files2, timeout=120)
+    except Exception as e:
+        logger.warning(f"tg_send_video error: {e}")
+
+
+def tg_send_animation(chat_id, gif_bytes, caption=""):
+    """Envia GIF animado como animacion."""
+    files = {"animation": ("animation.gif", io.BytesIO(gif_bytes), "image/gif")}
+    data = {"chat_id": chat_id, "caption": caption[:1024]}
+    try:
+        requests.post(f"{TG_API}/sendAnimation", data=data, files=files, timeout=60)
+    except Exception as e:
+        logger.warning(f"tg_send_animation error: {e}")
+
+
+def tg_video_action(chat_id):
+    """Muestra 'subiendo video...'"""
+    try:
+        requests.post(f"{TG_API}/sendChatAction", json={"chat_id": chat_id, "action": "upload_video"}, timeout=5)
+    except:
+        pass
+
+
 # ---------------------------------------------------------------------------
 # BROADCAST AL GRUPO — Corazones Locos
 # ---------------------------------------------------------------------------
@@ -402,24 +436,48 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
                 tg_send(chat_id, "❌ No pude generar la musica.")
 
         elif agent == "ares":
-            # Video
+            # Video — Genera VIDEO REAL con VideoEngine multi-motor
             tg_typing(chat_id)
-            tg_send(chat_id, "🎬 Creando guion y storyboard...")
-            reply = ares_bot.create_script(text)
-            if reply:
-                if len(reply) > 3000:
-                    pdf_bytes = generate_pdf(reply, f"Guion: {text[:40]}")
-                    tg_send_document(chat_id, pdf_bytes, "guion_c8l.pdf",
-                                     caption=f"🎬 Guion: {text[:60]}")
+            tg_send(chat_id, "🎬 Generando video con IA... (puede tardar 1-3 min)")
+            tg_video_action(chat_id)
+
+            # Registrar para auto-evolución
+            evolution.record_generation(chat_id, text, "ares", "video")
+
+            result = ares_bot.process(text, user_name)
+            if result:
+                rtype = result.get("type", "error")
+                if rtype == "video":
+                    # Video real generado — enviar como video MP4/GIF
+                    tg_video_action(chat_id)
+                    video_bytes = result["content"]
+                    filename = result.get("filename", "c8l_video.mp4")
+                    caption = result.get("caption", "🎬 Video generado por ARES")
+                    fmt = result.get("format", "mp4")
+
+                    if fmt == "gif":
+                        tg_send_animation(chat_id, video_bytes, caption=caption)
+                    else:
+                        tg_send_video(chat_id, video_bytes, filename=filename, caption=caption)
+                    _send_feedback_buttons(chat_id)
+
+                elif rtype == "text":
+                    # Guion/storyboard o fallback texto
+                    content = result["content"]
+                    if len(content) > 3000:
+                        pdf_bytes = generate_pdf(content, f"Video: {text[:40]}")
+                        tg_send_document(chat_id, pdf_bytes, "video_c8l.pdf",
+                                         caption=f"🎬 {text[:60]}")
+                    else:
+                        tg_send(chat_id, content)
+                    _send_feedback_buttons(chat_id)
+
+                elif rtype == "error":
+                    tg_send(chat_id, result.get("content", "❌ Error generando video."))
                 else:
-                    tg_send(chat_id, reply)
-                # Bonus: imagen de primera escena
-                tg_upload_action(chat_id)
-                img = vulcano._generate_image_pollinations(f"cinematic scene: {text}")
-                if img:
-                    tg_send_photo(chat_id, img, caption="🎥 Preview escena 1")
+                    tg_send(chat_id, str(result.get("content", "Resultado no reconocido")))
             else:
-                tg_send(chat_id, "❌ No pude generar el guion.")
+                tg_send(chat_id, "❌ No pude generar el video. Intenta de nuevo en unos minutos.")
 
         elif agent == "hefesto":
             # Diseno / Codigo / Juegos
