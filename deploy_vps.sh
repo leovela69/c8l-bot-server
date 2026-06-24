@@ -31,8 +31,8 @@ apt update -y && apt upgrade -y
 # ---------------------------------------------------------------------------
 echo "🔧 [2/8] Instalando dependencias del sistema..."
 apt install -y \
-    python3.11 \
-    python3.11-venv \
+    python3 \
+    python3-venv \
     python3-pip \
     ffmpeg \
     git \
@@ -46,7 +46,7 @@ apt install -y \
     imagemagick
 
 # Verificar instalaciones
-echo "   Python: $(python3.11 --version)"
+echo "   Python: $(python3 --version)"
 echo "   FFmpeg: $(ffmpeg -version 2>&1 | head -1)"
 echo "   Git: $(git --version)"
 
@@ -75,7 +75,7 @@ fi
 # 5. CREAR ENTORNO VIRTUAL E INSTALAR DEPENDENCIAS PYTHON
 # ---------------------------------------------------------------------------
 echo "🐍 [5/8] Configurando Python..."
-python3.11 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 # Instalar dependencias
