@@ -2,84 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-
-// ==================== DATA ====================
-const CATEGORIES = [
-  'Todas', 'Música', 'C8L Live', 'Beat', 'En Vivo', 'Dom', 'Bow',
-  'Cluster', 'Freestyle', 'Beats', 'Salsa', 'Trap', 'Mixes', 'Comunidad'
-]
-
-const CREATORS = [
-  { name: 'Leo Vela', emoji: '🧡', badge: '', color: '#FF6B00' },
-  { name: 'DJ Rayo', emoji: '⚡', badge: '', color: '#FFD700' },
-  { name: 'BeatMaster', emoji: '🎧', badge: '', color: '#00F3FF' },
-  { name: 'Reina Melody', emoji: '👑', badge: '', color: '#FF69B4' },
-  { name: 'MC Fuego', emoji: '🔥', badge: '', color: '#FF4500' },
-]
-
-interface VideoCard {
-  id: string
-  title: string
-  author: string
-  authorEmoji: string
-  views: number
-  daysAgo: number
-  likes: number
-  duration: string
-  thumbnail: string
-  gradient: string
-}
-
-const VIDEOS: VideoCard[] = [
-  {
-    id: 'v1', title: 'LEO VELA - RITMO DE LA SELVA (DEEP HOUSE...', author: 'Leo Vela',
-    authorEmoji: '🧡', views: 3120, daysAgo: 1, likes: 14, duration: '04:40',
-    thumbnail: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&h=250&fit=crop',
-    gradient: 'from-green-900/60 to-yellow-900/40'
-  },
-  {
-    id: 'v2', title: 'DJ RAYO - UNDERGROUND ACID LOUNGE SET', author: 'DJ Rayo',
-    authorEmoji: '⚡', views: 4500, daysAgo: 1, likes: 26, duration: '68:00',
-    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=250&fit=crop',
-    gradient: 'from-blue-900/60 to-purple-900/40'
-  },
-  {
-    id: 'v3', title: 'REINA MELODY - BACHATA CYBERPUNK (LIVE COVER)', author: 'Reina Melody',
-    authorEmoji: '👑', views: 8900, daysAgo: 1, likes: 87, duration: '05:30',
-    thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=250&fit=crop',
-    gradient: 'from-purple-900/60 to-pink-900/40'
-  },
-  {
-    id: 'v4', title: 'BEATMASTER - DAW HACKS: CREANDO...', author: 'BeatMaster',
-    authorEmoji: '🎧', views: 3200, daysAgo: 1, likes: 11, duration: '18:20',
-    thumbnail: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&h=250&fit=crop',
-    gradient: 'from-cyan-900/60 to-blue-900/40'
-  },
-  {
-    id: 'v5', title: 'LEO VELA - BOLERO HOUSE SESSION VOL. 3', author: 'Leo Vela',
-    authorEmoji: '🧡', views: 5600, daysAgo: 2, likes: 45, duration: '03:15',
-    thumbnail: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=250&fit=crop',
-    gradient: 'from-orange-900/60 to-red-900/40'
-  },
-  {
-    id: 'v6', title: 'DJ RAYO - NEON NIGHTS DEEP MIX', author: 'DJ Rayo',
-    authorEmoji: '⚡', views: 7200, daysAgo: 3, likes: 63, duration: '20:00',
-    thumbnail: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400&h=250&fit=crop',
-    gradient: 'from-indigo-900/60 to-violet-900/40'
-  },
-  {
-    id: 'v7', title: 'REINA MELODY - TECHNO SALSA DUET', author: 'Reina Melody',
-    authorEmoji: '👑', views: 4100, daysAgo: 2, likes: 38, duration: '04:05',
-    thumbnail: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&h=250&fit=crop',
-    gradient: 'from-pink-900/60 to-rose-900/40'
-  },
-  {
-    id: 'v8', title: 'BEATMASTER - LIVE CODING BEATS SESSION', author: 'BeatMaster',
-    authorEmoji: '🎧', views: 2800, daysAgo: 4, likes: 19, duration: '14:50',
-    thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=250&fit=crop',
-    gradient: 'from-emerald-900/60 to-teal-900/40'
-  },
-]
+import { VIDEOS, CATEGORIES, CREATORS } from '@/lib/videos/data'
 
 // ==================== COMPONENTS ====================
 
@@ -174,6 +97,7 @@ function Sidebar() {
             <span className="ml-auto w-1.5 h-1.5 rounded-full bg-green-500" />
           </div>
         ))}
+
       </div>
     </aside>
   )
@@ -232,37 +156,41 @@ function CategoryPills({ selected, onSelect }: { selected: string; onSelect: (c:
   )
 }
 
-function VideoCardComponent({ video }: { video: VideoCard }) {
+function VideoCardComponent({ video }: { video: typeof VIDEOS[0] }) {
   return (
-    <div className="group cursor-pointer">
-      {/* Thumbnail */}
-      <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-gray-800 group-hover:border-c8l-purple/50 transition">
-        <img
-          src={video.thumbnail}
-          alt={video.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        {/* Duration badge */}
-        <div className="absolute bottom-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-c8l-pink font-mono">
-          {video.duration}
-        </div>
-        {/* Clock icon top-right */}
-        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-          <span className="text-[10px]">🕐</span>
-        </div>
-        {/* Play overlay */}
-        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-            <span className="text-white text-xl ml-0.5">▶</span>
+    <div className="group">
+      {/* Thumbnail - clickeable */}
+      <Link href={`/watch?v=${video.id}`}>
+        <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-gray-800 group-hover:border-c8l-purple/50 transition cursor-pointer">
+          <img
+            src={video.thumbnail}
+            alt={video.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          {/* Duration badge */}
+          <div className="absolute bottom-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-c8l-pink font-mono">
+            {video.duration}
+          </div>
+          {/* Clock icon top-right */}
+          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+            <span className="text-[10px]">🕐</span>
+          </div>
+          {/* Play overlay */}
+          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+              <span className="text-white text-xl ml-0.5">▶</span>
+            </div>
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* Info */}
       <div className="px-1">
-        <h3 className="text-xs font-bold text-white leading-tight mb-1 line-clamp-2 group-hover:text-c8l-cyan transition">
-          {video.title}
-        </h3>
+        <Link href={`/watch?v=${video.id}`}>
+          <h3 className="text-xs font-bold text-white leading-tight mb-1 line-clamp-2 group-hover:text-c8l-cyan transition cursor-pointer">
+            {video.title}
+          </h3>
+        </Link>
         <div className="flex items-center gap-1 mb-2">
           <span className="text-xs">{video.authorEmoji}</span>
           <span className="text-[11px] text-gray-400">{video.author}</span>
@@ -278,9 +206,9 @@ function VideoCardComponent({ video }: { video: VideoCard }) {
           <button className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition bg-gray-800/50 rounded-full px-2.5 py-1">
             <span>♡</span> <span>{video.likes}</span>
           </button>
-          <button className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition bg-gray-800/50 rounded-full px-2.5 py-1">
+          <Link href={`/watch?v=${video.id}`} className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition bg-gray-800/50 rounded-full px-2.5 py-1">
             <span>💬</span> <span>COMENTAR</span>
-          </button>
+          </Link>
         </div>
 
         {/* Duet Challenge Button */}
