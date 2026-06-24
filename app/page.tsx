@@ -2,11 +2,382 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import LegalFooter from '@/components/legal/LegalFooter'
-import LegalModal from '@/components/legal/LegalModal'
+
+// ==================== DATA ====================
+const CATEGORIES = [
+  'Todas', 'Música', 'C8L Live', 'Beat', 'En Vivo', 'Dom', 'Bow',
+  'Cluster', 'Freestyle', 'Beats', 'Salsa', 'Trap', 'Mixes', 'Comunidad'
+]
+
+const CREATORS = [
+  { name: 'Leo Vela', emoji: '🧡', badge: '', color: '#FF6B00' },
+  { name: 'DJ Rayo', emoji: '⚡', badge: '', color: '#FFD700' },
+  { name: 'BeatMaster', emoji: '🎧', badge: '', color: '#00F3FF' },
+  { name: 'Reina Melody', emoji: '👑', badge: '', color: '#FF69B4' },
+  { name: 'MC Fuego', emoji: '🔥', badge: '', color: '#FF4500' },
+]
+
+interface VideoCard {
+  id: string
+  title: string
+  author: string
+  authorEmoji: string
+  views: number
+  daysAgo: number
+  likes: number
+  duration: string
+  thumbnail: string
+  gradient: string
+}
+
+const VIDEOS: VideoCard[] = [
+  {
+    id: 'v1', title: 'LEO VELA - RITMO DE LA SELVA (DEEP HOUSE...', author: 'Leo Vela',
+    authorEmoji: '🧡', views: 3120, daysAgo: 1, likes: 14, duration: '04:40',
+    thumbnail: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&h=250&fit=crop',
+    gradient: 'from-green-900/60 to-yellow-900/40'
+  },
+  {
+    id: 'v2', title: 'DJ RAYO - UNDERGROUND ACID LOUNGE SET', author: 'DJ Rayo',
+    authorEmoji: '⚡', views: 4500, daysAgo: 1, likes: 26, duration: '68:00',
+    thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=250&fit=crop',
+    gradient: 'from-blue-900/60 to-purple-900/40'
+  },
+  {
+    id: 'v3', title: 'REINA MELODY - BACHATA CYBERPUNK (LIVE COVER)', author: 'Reina Melody',
+    authorEmoji: '👑', views: 8900, daysAgo: 1, likes: 87, duration: '05:30',
+    thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=250&fit=crop',
+    gradient: 'from-purple-900/60 to-pink-900/40'
+  },
+  {
+    id: 'v4', title: 'BEATMASTER - DAW HACKS: CREANDO...', author: 'BeatMaster',
+    authorEmoji: '🎧', views: 3200, daysAgo: 1, likes: 11, duration: '18:20',
+    thumbnail: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&h=250&fit=crop',
+    gradient: 'from-cyan-900/60 to-blue-900/40'
+  },
+  {
+    id: 'v5', title: 'LEO VELA - BOLERO HOUSE SESSION VOL. 3', author: 'Leo Vela',
+    authorEmoji: '🧡', views: 5600, daysAgo: 2, likes: 45, duration: '03:15',
+    thumbnail: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=250&fit=crop',
+    gradient: 'from-orange-900/60 to-red-900/40'
+  },
+  {
+    id: 'v6', title: 'DJ RAYO - NEON NIGHTS DEEP MIX', author: 'DJ Rayo',
+    authorEmoji: '⚡', views: 7200, daysAgo: 3, likes: 63, duration: '20:00',
+    thumbnail: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400&h=250&fit=crop',
+    gradient: 'from-indigo-900/60 to-violet-900/40'
+  },
+  {
+    id: 'v7', title: 'REINA MELODY - TECHNO SALSA DUET', author: 'Reina Melody',
+    authorEmoji: '👑', views: 4100, daysAgo: 2, likes: 38, duration: '04:05',
+    thumbnail: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&h=250&fit=crop',
+    gradient: 'from-pink-900/60 to-rose-900/40'
+  },
+  {
+    id: 'v8', title: 'BEATMASTER - LIVE CODING BEATS SESSION', author: 'BeatMaster',
+    authorEmoji: '🎧', views: 2800, daysAgo: 4, likes: 19, duration: '14:50',
+    thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=250&fit=crop',
+    gradient: 'from-emerald-900/60 to-teal-900/40'
+  },
+]
+
+// ==================== COMPONENTS ====================
+
+function TopNav() {
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#0D0D0D] border-b border-gray-800">
+      <div className="flex items-center justify-between px-4 h-14">
+        {/* Logo */}
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center">
+            <span className="text-sm font-bold">C8L</span>
+          </div>
+          <div className="hidden md:block">
+            <h1 className="text-sm font-outfit font-bold text-white leading-tight">C8L Corazones Locos</h1>
+            <p className="text-[10px] text-gray-500 leading-tight">Agency</p>
+          </div>
+        </div>
+
+        {/* Nav Center */}
+        <nav className="hidden lg:flex items-center gap-1">
+          <NavItem icon="📺" label="C8L TV" active />
+          <NavItem icon="🎵" label="SALAS" />
+          <NavItem icon="🎧" label="STREAMING" />
+          <NavItem icon="💰" label="MONETIZACIÓN" />
+          <NavItem icon="👥" label="COMUNIDAD" />
+          <NavItem icon="👤" label="PERFIL" />
+          <NavItem icon="🤖" label="ESTUDIO IA" />
+        </nav>
+
+        {/* Right */}
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-1 bg-gray-800/60 rounded-full px-3 py-1">
+            <span className="text-c8l-gold text-xs">●</span>
+            <span className="text-xs font-bold text-white">9999</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-1 bg-gradient-to-r from-red-600 to-orange-500 rounded px-2 py-0.5">
+            <span className="text-[10px] font-bold text-white">Reset</span>
+            <span className="text-[8px] text-white/80">Gold</span>
+          </div>
+          <div className="flex items-center gap-0.5 text-[10px]">
+            <span className="px-1.5 py-0.5 rounded bg-gray-700 text-gray-300">EN</span>
+            <span className="px-1.5 py-0.5 rounded bg-c8l-cyan/20 text-c8l-cyan font-bold">ES</span>
+          </div>
+          <button className="text-[10px] border border-gray-600 rounded px-2 py-1 text-gray-300 hover:text-white hover:border-gray-400 transition">
+            CERRAR SESIÓN
+          </button>
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function NavItem({ icon, label, active }: { icon: string; label: string; active?: boolean }) {
+  return (
+    <button className={`flex flex-col items-center px-3 py-1 rounded-lg transition text-[10px] ${
+      active ? 'text-c8l-cyan' : 'text-gray-400 hover:text-white'
+    }`}>
+      <span className="text-base">{icon}</span>
+      <span className="font-medium mt-0.5">{label}</span>
+    </button>
+  )
+}
+
+function Sidebar() {
+  return (
+    <aside className="fixed left-0 top-14 bottom-0 w-48 bg-[#0D0D0D] border-r border-gray-800/50 overflow-y-auto z-40 hidden lg:block">
+      <div className="p-3 space-y-1">
+        <SidebarItem icon="🏠" label="INICIO" active />
+        <SidebarItem icon="🧭" label="EXPLORAR" />
+        <SidebarItem icon="📂" label="SUSCRIPCIONES" />
+        
+        <div className="border-t border-gray-800 my-3" />
+        
+        <div className="px-2 py-1">
+          <span className="text-[10px] text-gray-600 uppercase tracking-wider">Teca</span>
+        </div>
+        <SidebarItem icon="📚" label="BIBLIOTECA" />
+        <SidebarItem icon="🕐" label="HISTORIAL" />
+        <SidebarItem icon="🎬" label="MIS VIDEOS" />
+        <SidebarItem icon="⏰" label="VER MÁS TARDE" />
+        <SidebarItem icon="❤️" label="VIDEOS GUSTADOS" />
+
+        <div className="border-t border-gray-800 my-3" />
+        
+        <div className="px-2 py-1">
+          <span className="text-[10px] text-gray-600 uppercase tracking-wider">Suscripciones</span>
+        </div>
+        {CREATORS.map((c, i) => (
+          <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800/50 cursor-pointer transition">
+            <span className="text-sm">{c.emoji}</span>
+            <span className="text-xs text-gray-300">{c.name}</span>
+            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-green-500" />
+          </div>
+        ))}
+      </div>
+    </aside>
+  )
+}
+
+function SidebarItem({ icon, label, active }: { icon: string; label: string; active?: boolean }) {
+  return (
+    <button className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition text-left ${
+      active 
+        ? 'bg-gradient-to-r from-c8l-pink/20 to-transparent text-c8l-pink border-l-2 border-c8l-pink' 
+        : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+    }`}>
+      <span className="text-sm">{icon}</span>
+      <span className="text-xs font-medium">{label}</span>
+    </button>
+  )
+}
+
+function SearchBar() {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <button className="text-gray-400 hover:text-white text-xl">☰</button>
+      <div className="flex-1 flex items-center bg-gray-800/60 rounded-full border border-gray-700 overflow-hidden">
+        <input
+          type="text"
+          placeholder="Buscar creadores o videos en C8L TV..."
+          className="flex-1 bg-transparent px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none"
+        />
+        <button className="px-4 text-gray-400 hover:text-white transition">🔍</button>
+      </div>
+      <button className="text-gray-400 hover:text-white text-lg">🎙</button>
+      <button className="bg-c8l-cyan text-black font-bold text-xs px-4 py-2.5 rounded-full hover:bg-c8l-cyan/80 transition">
+        + SUBIR
+      </button>
+    </div>
+  )
+}
+
+function CategoryPills({ selected, onSelect }: { selected: string; onSelect: (c: string) => void }) {
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+      {CATEGORIES.map(cat => (
+        <button
+          key={cat}
+          onClick={() => onSelect(cat)}
+          className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition border ${
+            selected === cat
+              ? 'bg-white text-black border-white'
+              : 'bg-transparent text-gray-300 border-gray-600 hover:border-gray-400 hover:text-white'
+          }`}
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function VideoCardComponent({ video }: { video: VideoCard }) {
+  return (
+    <div className="group cursor-pointer">
+      {/* Thumbnail */}
+      <div className="relative aspect-video rounded-xl overflow-hidden mb-3 border border-gray-800 group-hover:border-c8l-purple/50 transition">
+        <img
+          src={video.thumbnail}
+          alt={video.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+        {/* Duration badge */}
+        <div className="absolute bottom-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-c8l-pink font-mono">
+          {video.duration}
+        </div>
+        {/* Clock icon top-right */}
+        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+          <span className="text-[10px]">🕐</span>
+        </div>
+        {/* Play overlay */}
+        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+            <span className="text-white text-xl ml-0.5">▶</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="px-1">
+        <h3 className="text-xs font-bold text-white leading-tight mb-1 line-clamp-2 group-hover:text-c8l-cyan transition">
+          {video.title}
+        </h3>
+        <div className="flex items-center gap-1 mb-2">
+          <span className="text-xs">{video.authorEmoji}</span>
+          <span className="text-[11px] text-gray-400">{video.author}</span>
+        </div>
+        <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-3">
+          <span>{video.views.toLocaleString()} VISTAS</span>
+          <span>•</span>
+          <span>HACE {video.daysAgo} DÍAS</span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 mb-2">
+          <button className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition bg-gray-800/50 rounded-full px-2.5 py-1">
+            <span>♡</span> <span>{video.likes}</span>
+          </button>
+          <button className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition bg-gray-800/50 rounded-full px-2.5 py-1">
+            <span>💬</span> <span>COMENTAR</span>
+          </button>
+        </div>
+
+        {/* Duet Challenge Button */}
+        <button className="w-full py-2 rounded-lg bg-gradient-to-r from-c8l-pink to-c8l-pink/80 text-[10px] font-bold text-white hover:from-c8l-pink/90 hover:to-c8l-pink/70 transition uppercase tracking-wider">
+          🎵 Duet Challenge
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Footer() {
+  return (
+    <>
+      {/* Main Footer */}
+      <footer className="border-t border-gray-800 mt-16 pt-12 pb-8 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+          {/* Brand */}
+          <div>
+            <h3 className="text-xl font-outfit font-bold text-c8l-gold mb-3">C.8.L. AGENCY</h3>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              El Salto Cuántico en la Creación de Contenido. Únete a la Familia Corazones Locos y alcanza la soberanía del mercado con calidad y lealtad inigualables.
+            </p>
+          </div>
+
+          {/* Navigation */}
+          <div>
+            <h4 className="text-sm font-bold text-white mb-3">NAVEGACIÓN</h4>
+            <div className="space-y-2">
+              <a href="#" className="block text-xs text-gray-400 hover:text-c8l-cyan transition">La Misión</a>
+              <a href="#" className="block text-xs text-gray-400 hover:text-c8l-cyan transition">Inteligencia de Negocios</a>
+              <a href="#" className="block text-xs text-gray-400 hover:text-c8l-cyan transition">Panel de Control</a>
+            </div>
+          </div>
+
+          {/* Social */}
+          <div>
+            <h4 className="text-sm font-bold text-white mb-3">CONECTAR</h4>
+            <div className="flex gap-3">
+              <SocialIcon icon="🎮" />
+              <SocialIcon icon="📺" />
+              <SocialIcon icon="🐦" />
+              <SocialIcon icon="📷" />
+            </div>
+          </div>
+        </div>
+
+        {/* Copyright line */}
+        <div className="max-w-6xl mx-auto mt-8 pt-6 border-t border-gray-800 flex flex-wrap justify-between items-center gap-4">
+          <span className="text-[10px] text-gray-600">
+            © 2026 C.8.L. Agency (Corazones Locos Family). Todos los derechos reservados.
+          </span>
+          <div className="flex gap-4 text-[10px] text-gray-500">
+            <a href="#" className="hover:text-c8l-cyan transition">Política de Privacidad (RGPD / LOPD)</a>
+            <a href="#" className="hover:text-c8l-cyan transition">Términos de Servicio</a>
+            <a href="#" className="hover:text-c8l-cyan transition">Configuración de Cookies</a>
+          </div>
+        </div>
+      </footer>
+
+      {/* Bottom Bar */}
+      <div className="bg-[#0A0A0A] border-t border-gray-800 py-4">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex justify-center gap-6 text-[10px] text-gray-500 mb-4">
+            <a href="#" className="hover:text-white transition">Términos de Uso</a>
+            <a href="#" className="hover:text-white transition">Privacidad</a>
+            <a href="#" className="hover:text-white transition">Cookies</a>
+            <a href="#" className="hover:text-white transition">Contacto</a>
+          </div>
+          <div className="mx-auto max-w-lg bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-red-800/50 rounded-xl p-4 text-center">
+            <p className="text-xs font-bold text-red-400 mb-1">
+              ⚠️ 🔞 PLATAFORMA EXCLUSIVA PARA MAYORES DE 18 AÑOS ⚠️
+            </p>
+            <p className="text-[10px] text-gray-400">
+              C8L Agency no permite el acceso a menores de edad. La verificación de edad es obligatoria.<br />
+              Reportaremos cualquier intento de acceso fraudulento a las autoridades competentes.
+            </p>
+          </div>
+          <p className="text-center text-[10px] text-gray-600 mt-4">© 2026 C8L Agency - Todos los derechos reservados</p>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function SocialIcon({ icon }: { icon: string }) {
+  return (
+    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-c8l-purple/30 transition cursor-pointer">
+      <span className="text-sm">{icon}</span>
+    </div>
+  )
+}
+
+// ==================== MAIN PAGE ====================
 
 export default function Home() {
-  const [showLegal, setShowLegal] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('Todas')
   const [ageVerified, setAgeVerified] = useState(false)
 
   if (!ageVerified) {
@@ -14,112 +385,51 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen">
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-c8l-black via-purple-950/20 to-c8l-black" />
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-c8l-purple/10 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-c8l-gold/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
-        </div>
+    <div className="min-h-screen bg-[#0A0A0A] text-white">
+      <TopNav />
+      <Sidebar />
 
-        <div className="relative z-10 text-center px-6 max-w-5xl">
-          <div className="mb-8 animate-glow inline-block p-6 rounded-full border border-c8l-gold/30">
-            <h1 className="text-7xl md:text-9xl font-outfit font-black neon-gold">C8L</h1>
-          </div>
-          <p className="text-2xl md:text-4xl font-outfit font-light text-c8l-gold mb-4">Corazones Locos Family</p>
-          <p className="text-lg text-gray-400 mb-12 max-w-2xl mx-auto">
-            Entretenimiento, musica y comunidad. Casino, Karaoke, Estudio Musical, Lives, Bandos y mucho mas.
-          </p>
+      {/* Main Content */}
+      <main className="lg:ml-48 pt-14">
+        <div className="p-6">
+          <SearchBar />
+          <CategoryPills selected={selectedCategory} onSelect={setSelectedCategory} />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            <NavCard href="/casino" icon="🎰" title="Casino" subtitle="Juegos" color="purple" />
-            <NavCard href="/studio" icon="🎵" title="Estudio" subtitle="Crea musica" color="gold" />
-            <NavCard href="/karaoke" icon="🎤" title="Karaoke" subtitle="Canta" color="pink" />
-            <NavCard href="/lives" icon="📺" title="Lives" subtitle="Directo" color="cyan" />
-            <NavCard href="/bandos" icon="⚔️" title="Bandos" subtitle="Familias" color="gold" />
-            <NavCard href="/tv" icon="📱" title="C8L TV" subtitle="Contenido" color="purple" />
-            <NavCard href="/monedero" icon="💰" title="Monedero" subtitle="Wallet" color="gold" />
-            <NavCard href="/registro" icon="👤" title="Mi Cuenta" subtitle="Login" color="purple" />
-            <NavCard href="/legal" icon="⚖️" title="Legal" subtitle="Normas" color="cyan" />
-            <NavCard href="/control" icon="🛡️" title="Control" subtitle="Admin" color="gold" />
+          {/* Section Title */}
+          <div className="flex items-center justify-between mb-6 mt-4">
+            <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2">
+              <span>🐱</span> C8L TV RECOMIENDA
+            </h2>
+            <span className="text-[10px] text-gray-500 uppercase">{VIDEOS.length * 4 + 4} VIDEOS ENCONTRADOS</span>
           </div>
 
-          <div className="mt-16 flex justify-center gap-8 md:gap-16">
-            <Stat value="11" label="Agentes IA" />
-            <Stat value="24/7" label="Online" />
-            <Stat value="∞" label="Posibilidades" />
+          {/* Video Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {VIDEOS.map(video => (
+              <VideoCardComponent key={video.id} video={video} />
+            ))}
           </div>
         </div>
-      </section>
 
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-outfit font-bold text-center mb-16 neon-purple">El Ecosistema C8L</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FeatureCard icon="🎵" title="Estudio Musical" description="Crea musica con IA. Elige genero, BPM, mood y efectos. Descarga o publica en C8L TV." />
-            <FeatureCard icon="🎰" title="Casino Quantum" description="Ruleta, Slots, Blackjack. RTP certificado, animaciones y jackpots progresivos." />
-            <FeatureCard icon="🤖" title="C8L Guardian" description="Bot de moderacion con IA. 4 niveles de sanciones y proteccion RGPD." />
-            <FeatureCard icon="🎤" title="Sala de Canto" description="Karaoke con medidores de tono y energia. Compite y gana Coins." />
-            <FeatureCard icon="⚔️" title="Bandos" description="Crea o unete a una familia. Misiones, batallas y jerarquia." />
-            <FeatureCard icon="⚖️" title="Base Legal" description="Cumplimiento RGPD/LOPD. Proteccion de datos y derechos del usuario." />
-          </div>
-        </div>
-      </section>
-
-      <LegalFooter onOpenModal={() => setShowLegal(true)} />
-      {showLegal && <LegalModal onClose={() => setShowLegal(false)} />}
-    </main>
+        <Footer />
+      </main>
+    </div>
   )
 }
 
 function AgeGate({ onVerify }: { onVerify: () => void }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-c8l-black p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] p-6">
       <div className="glass rounded-2xl p-8 max-w-md w-full text-center">
         <div className="text-6xl mb-6">🔞</div>
-        <h1 className="text-3xl font-outfit font-bold text-c8l-gold mb-4">Verificacion de Edad</h1>
-        <p className="text-gray-400 mb-8">Esta plataforma contiene juegos de azar y contenido para mayores de 18 anos.</p>
+        <h1 className="text-3xl font-outfit font-bold text-c8l-gold mb-4">Verificación de Edad</h1>
+        <p className="text-gray-400 mb-8">Esta plataforma contiene juegos de azar y contenido para mayores de 18 años.</p>
         <button onClick={onVerify}
           className="w-full py-4 bg-gradient-to-r from-c8l-purple to-c8l-gold rounded-xl font-bold text-lg hover:scale-105 transition-transform">
-          Soy mayor de 18 anos
+          Soy mayor de 18 años
         </button>
-        <p className="text-xs text-gray-600 mt-4">Al continuar aceptas los Terminos de Servicio. RGPD + LO 3/2018.</p>
+        <p className="text-xs text-gray-600 mt-4">Al continuar aceptas los Términos de Servicio. RGPD + LO 3/2018.</p>
       </div>
-    </div>
-  )
-}
-
-function NavCard({ href, icon, title, subtitle, color }: { href: string; icon: string; title: string; subtitle: string; color: string }) {
-  const borders: Record<string, string> = {
-    purple: 'border-c8l-purple/30 hover:border-c8l-purple',
-    pink: 'border-c8l-pink/30 hover:border-c8l-pink',
-    cyan: 'border-c8l-cyan/30 hover:border-c8l-cyan',
-    gold: 'border-c8l-gold/30 hover:border-c8l-gold',
-  }
-  return (
-    <Link href={href} className={`glass rounded-xl p-4 border ${borders[color]} transition-all hover:scale-105 hover:-translate-y-1`}>
-      <div className="text-3xl mb-2">{icon}</div>
-      <h3 className="font-outfit font-semibold">{title}</h3>
-      <p className="text-xs text-gray-500">{subtitle}</p>
-    </Link>
-  )
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <div className="text-3xl font-outfit font-bold text-c8l-gold">{value}</div>
-      <div className="text-sm text-gray-500">{label}</div>
-    </div>
-  )
-}
-
-function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
-  return (
-    <div className="glass rounded-xl p-6 hover:scale-105 transition-transform">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-xl font-outfit font-semibold mb-2 text-c8l-gold">{title}</h3>
-      <p className="text-gray-400 text-sm">{description}</p>
     </div>
   )
 }
