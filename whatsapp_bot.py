@@ -46,6 +46,16 @@ from group_scheduler import GroupScheduler
 # Import Evolution Engine
 from pantheon.evolution import evolution
 
+# Import Smart Memory + Tools
+from pantheon.smart_memory import smart_memory
+from pantheon.tools import (
+    generate_qr, translate_text, summarize_url,
+    levels, get_trivia_question, schedule_message,
+    generate_dj_prompt, generate_playlist,
+    generate_social_post, get_shop_text,
+    get_pending_scheduled
+)
+
 # ---------------------------------------------------------------------------
 # Inicializar agentes
 # ---------------------------------------------------------------------------
@@ -1329,6 +1339,194 @@ def main():
     def cmd_evolucion(msg):
         tg_send(msg.chat.id, evolution.get_stats_report(), parse_mode="Markdown")
 
+    # === NUEVOS COMANDOS: Tools, Niveles, DJ, Social, Tienda ===
+
+    @bot.message_handler(commands=["qr"])
+    def cmd_qr(msg):
+        """Genera QR code. Uso: /qr [url o texto]"""
+        data = msg.text.replace("/qr", "").strip()
+        if not data:
+            return bot.reply_to(msg, "Uso: /qr [url o texto]\nEjemplo: /qr https://c8lagency.com")
+        tg_typing(msg.chat.id)
+        qr_bytes = generate_qr(data)
+        if qr_bytes:
+            tg_send_photo(msg.chat.id, qr_bytes, caption=f"📱 QR: {data[:50]}")
+        else:
+            tg_send(msg.chat.id, "❌ No pude generar el QR.")
+        levels.add_xp(msg.from_user.id, msg.from_user.first_name, "message")
+
+    @bot.message_handler(commands=["traducir", "translate"])
+    def cmd_traducir(msg):
+        """Traduce texto. Uso: /traducir [texto]"""
+        text = msg.text.replace("/traducir", "").replace("/translate", "").strip()
+        if not text:
+            return bot.reply_to(msg, "Uso: /traducir [texto]\nEjemplo: /traducir hola mundo")
+        tg_typing(msg.chat.id)
+        result = translate_text(text)
+        if result:
+            tg_send(msg.chat.id, f"🌍 *Traducción:*\n\n{result}", parse_mode="Markdown")
+        else:
+            tg_send(msg.chat.id, "❌ No pude traducir.")
+        levels.add_xp(msg.from_user.id, msg.from_user.first_name, "message")
+
+    @bot.message_handler(commands=["resumir", "summary"])
+    def cmd_resumir(msg):
+        """Resume una URL. Uso: /resumir [url]"""
+        url = msg.text.replace("/resumir", "").replace("/summary", "").strip()
+        if not url or not url.startswith("http"):
+            return bot.reply_to(msg, "Uso: /resumir [url]\nEjemplo: /resumir https://articulo.com")
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "📖 Leyendo y resumiendo...")
+        result = summarize_url(url)
+        tg_send(msg.chat.id, f"📋 *Resumen:*\n\n{result}", parse_mode="Markdown")
+        levels.add_xp(msg.from_user.id, msg.from_user.first_name, "message")
+
+    @bot.message_handler(commands=["nivel", "level", "perfil", "profile"])
+    def cmd_nivel(msg):
+        """Muestra tu nivel y XP."""
+        tg_send(msg.chat.id, levels.get_profile(msg.from_user.id), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["ranking", "top"])
+    def cmd_ranking(msg):
+        """Muestra el ranking de usuarios."""
+        tg_send(msg.chat.id, levels.get_ranking(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["daily", "bonus"])
+    def cmd_daily(msg):
+        """Reclama bonus diario de XP y coins."""
+        result = levels.claim_daily(msg.from_user.id, msg.from_user.first_name)
+        bot.reply_to(msg, result, parse_mode="Markdown")
+
+    @bot.message_handler(commands=["tienda", "shop"])
+    def cmd_tienda(msg):
+        """Muestra la tienda de C8L Coins."""
+        tg_send(msg.chat.id, get_shop_text(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["trivia", "quiz"])
+    def cmd_trivia(msg):
+        """Mini-juego de trivia C8L."""
+        question, answer, options = get_trivia_question()
+        keyboard = {"inline_keyboard": [
+            [{"text": opt, "callback_data": f"trivia_{opt}_{answer}"} for opt in options[:2]],
+            [{"text": opt, "callback_data": f"trivia_{opt}_{answer}"} for opt in options[2:]],
+        ]}
+        payload = {
+            "chat_id": msg.chat.id,
+            "text": f"🎮 *TRIVIA C8L*\n\n{question}",
+            "reply_markup": json.dumps(keyboard),
+            "parse_mode": "Markdown"
+        }
+        requests.post(f"{TG_API}/sendMessage", json=payload, timeout=10)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("trivia_"))
+    def handle_trivia(call):
+        """Procesa respuesta de trivia."""
+        parts = call.data.split("_", 2)
+        if len(parts) >= 3:
+            selected = parts[1]
+            correct = parts[2]
+            if selected == correct:
+                bot.answer_callback_query(call.id, "✅ ¡Correcto! +10 XP")
+                levels.add_xp(call.from_user.id, call.from_user.first_name, "game")
+                try:
+                    bot.edit_message_text(
+                        f"✅ *¡Correcto!* La respuesta era: {correct}\n+10 XP 🎮",
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        parse_mode="Markdown")
+                except: pass
+            else:
+                bot.answer_callback_query(call.id, f"❌ Incorrecto. Era: {correct}")
+                try:
+                    bot.edit_message_text(
+                        f"❌ Incorrecto. La respuesta era: *{correct}*\n\nIntenta con /trivia",
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        parse_mode="Markdown")
+                except: pass
+
+    @bot.message_handler(commands=["dj", "playlist"])
+    def cmd_dj(msg):
+        """Modo DJ. Uso: /dj [tema] o /playlist [tema]"""
+        tema = msg.text.replace("/dj", "").replace("/playlist", "").strip()
+        if not tema:
+            tema = "fiesta nocturna bolero-house"
+        tg_typing(msg.chat.id)
+        if "playlist" in msg.text:
+            result = generate_playlist(tema)
+            if result:
+                tg_send(msg.chat.id, f"🎧 *Playlist: {tema}*\n\n{result}", parse_mode="Markdown")
+            else:
+                tg_send(msg.chat.id, "❌ No pude generar la playlist.")
+        else:
+            result = generate_dj_prompt(genre=tema)
+            if result:
+                tg_send(msg.chat.id, result)
+            else:
+                tg_send(msg.chat.id, "❌ No pude generar el prompt DJ.")
+        levels.add_xp(msg.from_user.id, msg.from_user.first_name, "music")
+
+    @bot.message_handler(commands=["post", "social"])
+    def cmd_social(msg):
+        """Genera post para redes. Uso: /post [tema] [plataforma]"""
+        text = msg.text.replace("/post", "").replace("/social", "").strip()
+        if not text:
+            return bot.reply_to(msg,
+                "📱 *Generador de Posts*\n\n"
+                "Uso: /post [tema]\n\n"
+                "Ejemplos:\n"
+                "• /post nuevo single de C8L\n"
+                "• /post tips de producción musical\n"
+                "• /post motivación lunes\n\n"
+                "Genera para Instagram por defecto.",
+                parse_mode="Markdown")
+        # Detectar plataforma
+        platform = "instagram"
+        for p in ["tiktok", "twitter", "linkedin"]:
+            if p in text.lower():
+                platform = p
+                text = text.lower().replace(p, "").strip()
+                break
+        tg_typing(msg.chat.id)
+        result = generate_social_post(text, platform)
+        if result:
+            tg_send(msg.chat.id, f"📱 *Post para {platform.title()}:*\n\n{result}", parse_mode="Markdown")
+        else:
+            tg_send(msg.chat.id, "❌ No pude generar el post.")
+        levels.add_xp(msg.from_user.id, msg.from_user.first_name, "message")
+
+    @bot.message_handler(commands=["programar", "schedule"])
+    def cmd_programar(msg):
+        """Programa mensaje. Uso: /programar HH:MM mensaje"""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "🚫 Solo el admin puede programar mensajes.")
+        text = msg.text.replace("/programar", "").replace("/schedule", "").strip()
+        if not text or ":" not in text.split()[0]:
+            return bot.reply_to(msg, "Uso: /programar 08:30 Buenos días Corazones Locos!")
+        parts = text.split(" ", 1)
+        time_str = parts[0]
+        message = parts[1] if len(parts) > 1 else "📢 Mensaje programado de C8L"
+        try:
+            h, m = map(int, time_str.split(":"))
+            schedule_message(msg.chat.id, h, m, message, msg.from_user.first_name)
+            bot.reply_to(msg, f"✅ Mensaje programado para las {h:02d}:{m:02d}\n📝 {message[:50]}...")
+        except:
+            bot.reply_to(msg, "❌ Formato inválido. Usa: /programar 14:30 tu mensaje aquí")
+
+    @bot.message_handler(commands=["memoria", "memory"])
+    def cmd_memoria(msg):
+        """Muestra tu perfil de memoria."""
+        tg_send(msg.chat.id, smart_memory.get_user_profile_text(msg.from_user.id), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["recordar", "remember"])
+    def cmd_recordar(msg):
+        """Guarda una nota en tu memoria. Uso: /recordar [nota]"""
+        note = msg.text.replace("/recordar", "").replace("/remember", "").strip()
+        if not note:
+            return bot.reply_to(msg, "Uso: /recordar [algo que quieras que recuerde]\nEjemplo: /recordar me gusta el estilo cyberpunk")
+        smart_memory.add_note(msg.from_user.id, note)
+        bot.reply_to(msg, f"🧠 Recordado: _{note[:80]}_", parse_mode="Markdown")
+
     # === HANDLER DE FOTOS — Edicion de imagenes con Gemini ===
 
     @bot.message_handler(content_types=["photo"])
@@ -1412,6 +1610,12 @@ def main():
         # En PRIVADO: flujo normal con Zeus
         logger.info(f"[{user_name}] ({chat_id}): {text[:80]}")
         tg_typing(chat_id)
+
+        # Actualizar memoria inteligente
+        smart_memory.update_from_interaction(msg.from_user.id, user_name, text)
+
+        # XP por mensaje
+        levels.add_xp(msg.from_user.id, user_name, "message")
 
         # Zeus analiza y decide
         intent_data = analyze_intent(text, user_name)
