@@ -30,15 +30,17 @@ import io
 import os
 import random
 import requests
+import threading
 from urllib.parse import quote
 
 logger = logging.getLogger("c8l.video_engine")
 
-# Import API key
+# Import API keys
 try:
-    from config import POLLINATIONS_API_KEY_P
+    from config import POLLINATIONS_API_KEY_P, HUGGINGFACE_TOKEN
 except ImportError:
     POLLINATIONS_API_KEY_P = ""
+    HUGGINGFACE_TOKEN = ""
 
 # ---------------------------------------------------------------------------
 # CONFIGURACION DE MODELOS
@@ -277,19 +279,35 @@ class VideoEngine:
             else:
                 logger.warning(f"  ❌ {model_info['name']} fallo, siguiente...")
 
-        # 4. Ultimo recurso: GIF animado
-        logger.info("  🔄 Todos los modelos fallaron, generando GIF animado...")
-        gif_bytes = self._generate_animated_gif(enhanced_prompt)
-        if gif_bytes:
+        # 4. Intentar HuggingFace (gratis, ilimitado)
+        logger.info("  🤗 Intentando HuggingFace Inference (gratis)...")
+        hf_bytes = self._try_huggingface_video(enhanced_prompt)
+        if hf_bytes:
             self.generations_count += 1
             return {
-                "video_bytes": gif_bytes,
-                "model_used": "gif_fallback",
-                "model_name": "GIF Animado",
-                "duration": 4,
-                "format": "gif",
+                "video_bytes": hf_bytes,
+                "model_used": "huggingface",
+                "model_name": "HuggingFace LTX/Wan",
+                "duration": 5,
+                "format": "mp4",
                 "has_audio": False,
                 "attempts": attempts + 1,
+            }
+
+        # 5. Slideshow MP4 con FFmpeg (SIEMPRE funciona, rápido)
+        logger.info("  📸 Generando slideshow MP4 (imágenes paralelas + FFmpeg)...")
+        slide_bytes = self._generate_slideshow_mp4(enhanced_prompt)
+        if slide_bytes:
+            self.generations_count += 1
+            fmt = "mp4" if slide_bytes[:4] != b"GIF8" else "gif"
+            return {
+                "video_bytes": slide_bytes,
+                "model_used": "slideshow_ffmpeg",
+                "model_name": "Slideshow Cinematico",
+                "duration": 8,
+                "format": fmt,
+                "has_audio": False,
+                "attempts": attempts + 2,
             }
 
         logger.error("  💀 VideoEngine: TODOS los metodos fallaron")
@@ -615,6 +633,108 @@ class VideoEngine:
         except Exception as e:
             logger.warning(f"  GIF fallback error: {e}")
         return None
+
+    # ---------------------------------------------------------------------------
+    # MOTOR 2: HUGGINGFACE (GRATIS, ILIMITADO)
+    # ---------------------------------------------------------------------------
+
+    def _try_huggingface_video(self, prompt):
+        """Genera video con HuggingFace Inference API (gratis con token)."""
+        if not HUGGINGFACE_TOKEN:
+            return None
+
+        models = ["Lightricks/LTX-Video", "Wan-AI/Wan2.1-T2V-1.3B"]
+        for model in models:
+            try:
+                logger.info(f"  HuggingFace: {model}...")
+                url = f"https://api-inference.huggingface.co/models/{model}"
+                headers = {"Authorization": f"Bearer {HUGGINGFACE_TOKEN}"}
+                r = requests.post(url, headers=headers, json={"inputs": prompt}, timeout=120)
+                if r.status_code == 200 and len(r.content) > 50000:
+                    logger.info(f"  ✅ HuggingFace OK: {len(r.content)} bytes")
+                    return r.content
+            except:
+                pass
+        return None
+
+    # ---------------------------------------------------------------------------
+    # MOTOR 3: SLIDESHOW MP4 (ILIMITADO, RÁPIDO, SIEMPRE FUNCIONA)
+    # ---------------------------------------------------------------------------
+
+    def _generate_slideshow_mp4(self, prompt):
+        """
+        Video MP4 real: 4 imágenes en PARALELO + FFmpeg con transiciones.
+        Imágenes de Pollinations = GRATIS ILIMITADO.
+        SIEMPRE funciona. Tarda ~20-40 seg.
+        """
+        import subprocess
+        import tempfile
+
+        # Generar 4 frames EN PARALELO
+        frame_prompts = [
+            f"{prompt}, wide establishing shot, cinematic lighting, 4k",
+            f"{prompt}, medium shot, action, dynamic angle, cinematic",
+            f"{prompt}, close up, dramatic moment, detailed, cinematic",
+            f"{prompt}, wide shot, resolution, golden hour, cinematic ending",
+        ]
+
+        frames = [None] * 4
+        threads = []
+
+        def _fetch(idx, fp):
+            try:
+                encoded = quote(fp, safe='')
+                url = f"https://gen.pollinations.ai/image/{encoded}?width=1280&height=720&model=flux&nologo=true"
+                r = requests.get(url, timeout=45)
+                if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
+                    frames[idx] = r.content
+                    logger.info(f"    Frame {idx+1}/4 OK")
+            except:
+                pass
+
+        for i, fp in enumerate(frame_prompts):
+            t = threading.Thread(target=_fetch, args=(i, fp))
+            threads.append(t)
+            t.start()
+
+        for t in threads:
+            t.join(timeout=50)
+
+        valid = [f for f in frames if f]
+        if len(valid) < 2:
+            return self._generate_animated_gif(prompt)
+
+        # FFmpeg: unir frames en video MP4
+        tmp_dir = tempfile.mkdtemp(prefix="c8l_")
+        try:
+            for i, fb in enumerate(valid):
+                with open(os.path.join(tmp_dir, f"f_{i:03d}.jpg"), "wb") as f:
+                    f.write(fb)
+
+            out = os.path.join(tmp_dir, "out.mp4")
+            cmd = ["ffmpeg", "-y", "-framerate", "0.5",
+                   "-i", os.path.join(tmp_dir, "f_%03d.jpg"),
+                   "-c:v", "libx264", "-preset", "fast", "-pix_fmt", "yuv420p",
+                   "-vf", "fps=24,scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2",
+                   "-movflags", "+faststart", out]
+
+            res = subprocess.run(cmd, capture_output=True, timeout=30)
+            if res.returncode == 0 and os.path.exists(out):
+                with open(out, "rb") as f:
+                    video_bytes = f.read()
+                if len(video_bytes) > 5000:
+                    import shutil; shutil.rmtree(tmp_dir, ignore_errors=True)
+                    logger.info(f"  ✅ Slideshow MP4: {len(video_bytes)} bytes")
+                    return video_bytes
+
+            import shutil; shutil.rmtree(tmp_dir, ignore_errors=True)
+        except Exception as e:
+            logger.warning(f"  Slideshow error: {e}")
+            try:
+                import shutil; shutil.rmtree(tmp_dir, ignore_errors=True)
+            except: pass
+
+        return self._generate_animated_gif(prompt)
 
     # ---------------------------------------------------------------------------
     # UTILIDADES
