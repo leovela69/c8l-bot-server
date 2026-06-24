@@ -469,7 +469,8 @@ class VideoEngine:
         Llama a la API de Pollinations para generar video.
 
         Endpoint: GET https://gen.pollinations.ai/video/{prompt}
-        Params: model, duration, aspectRatio, audio, image, width, height, seed
+        Params: model, duration, aspectRatio, audio, image, width, height
+        NOTA: NO enviar seed ni width/height custom → causa 401 sin API key
         """
         try:
             # Codificar prompt para URL
@@ -478,24 +479,11 @@ class VideoEngine:
             # Construir URL
             url = f"{POLLINATIONS_VIDEO_URL}/{encoded_prompt}"
 
-            # Parametros
+            # Parametros MINIMOS (sin seed, sin width/height custom)
             params = {
                 "model": model,
                 "duration": duration,
-                "aspectRatio": aspect_ratio,
-                "seed": random.randint(1, 2147483647),
             }
-
-            # Resolucion basada en aspect ratio
-            if aspect_ratio == "16:9":
-                params["width"] = 1280
-                params["height"] = 720
-            elif aspect_ratio == "9:16":
-                params["width"] = 720
-                params["height"] = 1280
-            else:
-                params["width"] = 1024
-                params["height"] = 1024
 
             # Audio (solo para modelos que lo soportan)
             if audio:
@@ -508,7 +496,6 @@ class VideoEngine:
             logger.info(f"  Pollinations API: model={model}, dur={duration}s, aspect={aspect_ratio}")
 
             # Timeout largo porque la generacion de video tarda
-            # veo/seedance pueden tardar 60-180s, wan-fast ~30-60s, ltx ~20-40s
             timeout = 300  # 5 minutos maximo
 
             r = requests.get(url, params=params, timeout=timeout, stream=True)
@@ -536,8 +523,11 @@ class VideoEngine:
                     except:
                         pass
                     return None
+            elif r.status_code == 401:
+                logger.warning(f"  Pollinations 401: modelo {model} requiere API key")
+                return None
             elif r.status_code == 402:
-                logger.warning(f"  Pollinations 402: modelo {model} requiere pago o balance agotado")
+                logger.warning(f"  Pollinations 402: balance agotado para {model}")
                 return None
             elif r.status_code == 422:
                 logger.warning(f"  Pollinations 422: prompt rechazado o parametros invalidos")
@@ -567,7 +557,7 @@ class VideoEngine:
     def _generate_animated_gif(self, prompt):
         """
         Ultimo recurso: genera GIF animado con 4-6 frames de Pollinations Images.
-        SIEMPRE funciona porque la API de imagenes es muy estable.
+        La API de IMAGENES sí funciona sin key (a diferencia de video).
         """
         try:
             from PIL import Image
@@ -586,8 +576,8 @@ class VideoEngine:
             for i, frame_prompt in enumerate(frame_prompts):
                 try:
                     encoded = quote(frame_prompt, safe='')
-                    seed = random.randint(1, 99999) + i * 1000
-                    url = f"https://gen.pollinations.ai/image/{encoded}?width=640&height=360&model=flux&seed={seed}"
+                    # URL de IMAGEN (funciona sin key, sin seed)
+                    url = f"https://gen.pollinations.ai/image/{encoded}?width=640&height=360&model=flux&nologo=true"
 
                     r = requests.get(url, timeout=60)
                     if r.status_code == 200:
@@ -596,6 +586,8 @@ class VideoEngine:
                             img = Image.open(io.BytesIO(r.content)).convert("RGB")
                             frames.append(img)
                             logger.info(f"    Frame {i+1}/4 OK")
+                    else:
+                        logger.debug(f"    Frame {i+1} status: {r.status_code}")
                 except Exception as e:
                     logger.debug(f"    Frame {i+1} fallo: {e}")
 
