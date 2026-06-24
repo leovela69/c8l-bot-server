@@ -1206,7 +1206,24 @@ def main():
         tg_typing(msg.chat.id)
         tg_send(msg.chat.id, "🖥️ Hefesto disenando...")
         result = hefesto.create_landing(desc)
-        _send_creation_result(msg.chat.id, result)
+        if result and result.get("type") == "file":
+            tg_doc_action(msg.chat.id)
+            caption = result.get("caption", "")
+            tg_send_document(msg.chat.id, result["content"], result.get("filename", "c8l_landing.html"), caption=caption)
+            url = result.get("url", "")
+            if url:
+                tg_send(msg.chat.id, f"🌐 *Abrir en navegador:*\n{url}", parse_mode="Markdown")
+            # Preview visual
+            try:
+                preview_prompt = f"screenshot of a modern dark website with neon purple accents, {desc[:50]}, web design mockup, browser window, highly detailed"
+                preview_img = vulcano._generate_image_pollinations(preview_prompt, "digital_art")
+                if preview_img:
+                    tg_send_photo(msg.chat.id, preview_img, caption="👁️ Preview visual")
+            except:
+                pass
+            _send_feedback_buttons(msg.chat.id)
+        else:
+            _send_creation_result(msg.chat.id, result)
         estia.record_interaction(msg.chat.id, msg.from_user.first_name, desc, "landing", "hefesto")
 
     @bot.message_handler(commands=["crear_api"])
