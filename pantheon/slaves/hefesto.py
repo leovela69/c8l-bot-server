@@ -312,27 +312,58 @@ REMEMBER: Only output the raw HTML code. Nothing else. Start now:
 </html>"""
 
     def create_game(self, description):
-        """Genera juego web HTML5 + link para jugar online."""
+        """Genera juego web HTML5 FUNCIONAL + link para jugar online."""
         if not description or description.strip() == "":
             description = "snake game retro con neon"
 
-        prompt = f"""Create a complete HTML5 game:
-Game: {description}
-
-Requirements: single HTML file, Canvas or DOM-based, keyboard/mouse controls,
-score system, game over + restart, dark neon theme.
-Start with <!DOCTYPE html>"""
+        prompt = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C8L Game - {description[:30]}</title>
+<style>*{{margin:0;padding:0}}body{{background:#0a0a1a;overflow:hidden;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:sans-serif;color:white}}</style>
+</head><body>
+<!-- COMPLETE THIS HTML5 GAME: {description}
+MUST HAVE: Canvas/DOM game, controls (keyboard/touch), score display, game over + restart button.
+Make it FUN and PLAYABLE. All JS inline in script tags. Neon colors (#ff00ff, #00ffff).
+CONTINUE THE CODE FROM HERE: -->"""
 
         result = self._generate_with_retry(prompt, max_tokens=8000)
         if result:
             html_code = self._clean_code(result)
-            url = self._upload_to_hosting(html_code, "c8l_game")
-            caption = f"🎮 Juego: {description[:60]}"
-            if url:
-                caption += f"\n\n🕹️ Jugar online: {url}"
-            return {"type": "file", "content": html_code.encode("utf-8"),
-                    "filename": f"c8l_game.html", "caption": caption, "url": url}
-        return {"type": "error", "content": "No pude generar el juego. Intenta de nuevo."}
+            if len(html_code) > 300 and "<script" in html_code.lower():
+                url = self._upload_to_hosting(html_code, "c8l_game")
+                caption = f"🎮 Juego: {description[:60]}"
+                if url:
+                    caption += f"\n\n🕹️ Jugar online: {url}"
+                return {"type": "file", "content": html_code.encode("utf-8"),
+                        "filename": "c8l_game.html", "caption": caption, "url": url}
+
+        # Fallback: Snake game 100% funcional
+        html_code = self._snake_game_fallback()
+        url = self._upload_to_hosting(html_code, "c8l_game")
+        caption = "🎮 Snake Game C8L"
+        if url:
+            caption += f"\n\n🕹️ Jugar: {url}"
+        return {"type": "file", "content": html_code.encode("utf-8"),
+                "filename": "c8l_game.html", "caption": caption, "url": url}
+
+    def _snake_game_fallback(self):
+        """Snake funcional como fallback cuando la IA falla."""
+        return """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>C8L Snake</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:white}
+canvas{border:2px solid #ff00ff;box-shadow:0 0 30px rgba(255,0,255,0.3);border-radius:8px;max-width:95vw;max-height:70vh}
+#ui{margin:15px 0;font-size:1.3rem;color:#00ffff}h1{color:#ff00ff;margin-bottom:5px}
+#msg{color:#ffd700;margin-top:10px;font-size:1rem}</style></head><body>
+<h1>C8L Snake</h1><div id="ui">Score: <span id="sc">0</span></div>
+<canvas id="c" width="400" height="400"></canvas><div id="msg">Flechas o WASD para mover | R reiniciar</div>
+<script>const c=document.getElementById('c'),x=c.getContext('2d');let s=[{x:200,y:200}],d={x:20,y:0},f={x:100,y:100},sc=0,run=true,spd=100;
+function draw(){if(!run)return;x.fillStyle='#0a0a1a';x.fillRect(0,0,400,400);x.fillStyle='#ff00ff';x.shadowBlur=8;x.shadowColor='#ff00ff';x.fillRect(f.x,f.y,18,18);x.shadowBlur=0;
+s.forEach((p,i)=>{x.fillStyle=i?'#00aa88':'#00ffff';x.fillRect(p.x+1,p.y+1,16,16)});
+let h={x:s[0].x+d.x,y:s[0].y+d.y};if(h.x<0||h.x>=400||h.y<0||h.y>=400||s.some(p=>p.x===h.x&&p.y===h.y)){run=false;document.getElementById('msg').textContent='GAME OVER! Pulsa R';return}
+s.unshift(h);if(h.x===f.x&&h.y===f.y){sc+=10;document.getElementById('sc').textContent=sc;f={x:Math.floor(Math.random()*20)*20,y:Math.floor(Math.random()*20)*20};if(spd>50)spd-=2}else s.pop();
+setTimeout(draw,spd)}document.onkeydown=e=>{let k=e.key.toLowerCase();if((k==='arrowup'||k==='w')&&d.y===0){d={x:0,y:-20}}
+if((k==='arrowdown'||k==='s')&&d.y===0){d={x:0,y:20}}if((k==='arrowleft'||k==='a')&&d.x===0){d={x:-20,y:0}}
+if((k==='arrowright'||k==='d')&&d.x===0){d={x:20,y:0}}if(k==='r'){s=[{x:200,y:200}];d={x:20,y:0};sc=0;spd=100;
+document.getElementById('sc').textContent='0';document.getElementById('msg').textContent='Flechas o WASD para mover | R reiniciar';run=true;draw()}};draw();</script></body></html>"""
 
     def create_component(self, description):
         """Genera componente UI + link."""
