@@ -37,34 +37,78 @@ class Hefesto:
         # Intento 1: modelo asignado
         result = call_openrouter(prompt, HEFESTO_SYSTEM_PROMPT, agent_name="hefesto",
                                  temperature=0.7, max_tokens=max_tokens)
-        if result and result.strip().startswith("<!") or (result and "<html" in result[:200].lower()):
-            logger.info("Hefesto: generacion OK")
-            return result
 
-        # Si el resultado no empieza con HTML, puede ser que el modelo hablo en vez de generar
-        if result and len(result) > 100:
-            # Intentar extraer HTML de la respuesta
-            if "<!DOCTYPE" in result or "<html" in result:
-                idx = result.find("<!DOCTYPE")
-                if idx == -1:
-                    idx = result.find("<html")
-                if idx > 0:
-                    logger.info("Hefesto: extrayendo HTML de respuesta mixta")
-                    return result[idx:]
-
-        # Intento 2: retry con prompt mas enfatico
-        logger.warning("Hefesto: primer intento fallo, reintentando...")
-        time.sleep(1)
-        retry_prompt = f"IMPORTANT: Output ONLY raw HTML code. No text, no explanations.\n\n{prompt}"
-        result = call_openrouter(retry_prompt, HEFESTO_SYSTEM_PROMPT, agent_name="hefesto",
-                                 temperature=0.5, max_tokens=max_tokens)
         if result:
             cleaned = self._clean_code(result)
             if cleaned and len(cleaned) > 50:
+                logger.info("Hefesto: generacion OK (intento 1)")
                 return cleaned
 
-        logger.error("Hefesto: todos los intentos fallaron")
-        return None
+        # Intento 2: prompt más directo, temperatura baja
+        logger.warning("Hefesto: intento 1 fallo, reintentando...")
+        time.sleep(1)
+        retry_prompt = f"""OUTPUT ONLY HTML CODE. START WITH <!DOCTYPE html>. NO EXPLANATIONS.
+
+{prompt}
+
+REMEMBER: Only output the raw HTML code. Nothing else. Start now:
+<!DOCTYPE html>"""
+
+        result = call_openrouter(retry_prompt, HEFESTO_SYSTEM_PROMPT, agent_name="hefesto",
+                                 temperature=0.4, max_tokens=max_tokens)
+        if result:
+            cleaned = self._clean_code(result)
+            if cleaned and len(cleaned) > 50:
+                logger.info("Hefesto: generacion OK (intento 2)")
+                return cleaned
+
+        # Intento 3: usar modelo fallback directamente
+        logger.warning("Hefesto: intento 2 fallo, usando fallback...")
+        time.sleep(1)
+        result = call_openrouter(retry_prompt,
+                                 "Generate ONLY HTML code. Start with <!DOCTYPE html>. No text.",
+                                 agent_name="fallback",
+                                 temperature=0.3, max_tokens=max_tokens)
+        if result:
+            cleaned = self._clean_code(result)
+            if cleaned and len(cleaned) > 50:
+                logger.info("Hefesto: generacion OK (fallback)")
+                return cleaned
+
+        # Si TODO falla, generar un HTML mínimo como respuesta
+        logger.error("Hefesto: todos los intentos fallaron, usando template mínimo")
+        return self._generate_minimal_html(prompt)
+
+    def _generate_minimal_html(self, description):
+        """Genera un HTML mínimo cuando todo falla."""
+        return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C8L Agency</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ background: #0a0a1a; color: white; font-family: 'Segoe UI', sans-serif;
+               min-height: 100vh; display: flex; align-items: center; justify-content: center;
+               flex-direction: column; text-align: center; padding: 20px; }}
+        h1 {{ font-size: 3rem; background: linear-gradient(135deg, #ff00ff, #00ffff);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+             margin-bottom: 20px; }}
+        p {{ color: #aaa; font-size: 1.2rem; max-width: 600px; margin-bottom: 30px; }}
+        .btn {{ padding: 15px 40px; background: linear-gradient(135deg, #ff00ff, #8b00ff);
+               color: white; border: none; border-radius: 30px; font-size: 1.1rem;
+               cursor: pointer; text-decoration: none; transition: transform 0.3s; }}
+        .btn:hover {{ transform: scale(1.05); }}
+        .glow {{ text-shadow: 0 0 20px rgba(255,0,255,0.5); }}
+    </style>
+</head>
+<body>
+    <h1 class="glow">C8L Agency</h1>
+    <p>{description[:200]}</p>
+    <a href="#" class="btn">Explorar</a>
+</body>
+</html>"""
 
     def create_landing(self, description, style="c8l"):
         """Genera landing page completa."""
