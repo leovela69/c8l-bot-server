@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="gold" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </radialGradient>
+    <radialGradient id="heart" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#FF4444"/>
+      <stop offset="100%" stop-color="#8B0000"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <circle cx="256" cy="256" r="240" fill="url(#gold)" stroke="#DAA520" stroke-width="8"/>
+  <circle cx="256" cy="256" r="200" fill="#111"/>
+  <!-- Heart -->
+  <path d="M256 340 C200 290 160 250 160 210 C160 180 185 160 215 160 C235 160 250 172 256 185 C262 172 277 160 297 160 C327 160 352 180 352 210 C352 250 312 290 256 340Z" fill="url(#heart)"/>
+  <!-- Text C8L -->
+  <text x="256" y="140" text-anchor="middle" font-family="Arial Black" font-size="72" font-weight="900" fill="#FFD700" stroke="#000" stroke-width="3">C8L</text>
+  <!-- Subtitle -->
+  <text x="256" y="420" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#FFD700">CORAZONES LOCOS</text>
+  <text x="256" y="450" text-anchor="middle" font-family="Arial" font-size="16" fill="#FFF">AGENCY</text>
+</svg>

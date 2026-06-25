@@ -115,9 +115,11 @@ export default function AgeGate() {
         >
           {/* Logo */}
           <div className="text-center mb-6">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center shadow-lg shadow-c8l-purple/30">
-              <span className="text-xl font-outfit font-black text-white">C8L</span>
-            </div>
+            <img
+              src="/images/logo-c8l.png"
+              alt="C8L Corazones Locos Agency"
+              className="w-20 h-20 mx-auto mb-4 rounded-full object-cover shadow-xl shadow-c8l-gold/30 border-2 border-c8l-gold/50"
+            />
             <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-full px-3 py-1 mb-3">
               <span className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-[10px] text-green-400 font-bold">EDAD VERIFICADA ✓</span>
@@ -232,9 +234,11 @@ export default function AgeGate() {
         className="glass rounded-2xl p-8 max-w-md w-full text-center relative z-10"
       >
         {/* Logo */}
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center shadow-lg shadow-c8l-purple/30">
-          <span className="text-2xl font-outfit font-black text-white">C8L</span>
-        </div>
+        <img
+          src="/images/logo-c8l.png"
+          alt="C8L Corazones Locos Agency"
+          className="w-24 h-24 mx-auto mb-6 rounded-full object-cover shadow-xl shadow-c8l-gold/30 border-2 border-c8l-gold/50"
+        />
 
         <h1 className="text-3xl font-outfit font-bold text-c8l-gold mb-2">Verificación de Edad</h1>
         <p className="text-sm text-gray-400 mb-2">

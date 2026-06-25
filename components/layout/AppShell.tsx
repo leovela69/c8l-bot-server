@@ -81,12 +81,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
               </svg>
             </button>
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center">
-                <span className="text-[10px] font-black">C8L</span>
-              </div>
+              <img src="/images/logo-c8l.png" alt="C8L" className="w-9 h-9 rounded-full object-cover border-2 border-c8l-gold/50 shadow-md shadow-c8l-gold/20" />
               <div className="hidden sm:block">
                 <h1 className="text-xs font-outfit font-bold text-white leading-none">C8L AGENCY</h1>
-                <p className="text-[9px] text-gray-500 leading-none mt-0.5">Corazones Locos</p>
+                <p className="text-[9px] text-c8l-gold leading-none mt-0.5">Corazones Locos</p>
               </div>
             </Link>
           </div>
@@ -209,12 +207,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
             >
               <div className="p-4">
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center">
-                    <span className="text-sm font-black">C8L</span>
-                  </div>
+                  <img src="/images/logo-c8l.png" alt="C8L" className="w-11 h-11 rounded-full object-cover border-2 border-c8l-gold/50 shadow-md shadow-c8l-gold/20" />
                   <div>
                     <h2 className="text-sm font-outfit font-bold">C8L Agency</h2>
-                    <p className="text-[10px] text-gray-500">Corazones Locos Family</p>
+                    <p className="text-[10px] text-c8l-gold">Corazones Locos Family</p>
                   </div>
                 </div>
                 {NAV_ITEMS.map(item => (

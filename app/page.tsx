@@ -61,10 +61,10 @@ export default function Home() {
         <div className="flex items-center justify-between px-4 h-14">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src="/images/logo-c8l.png" alt="C8L" className="w-10 h-10 rounded-full object-cover border-2 border-c8l-gold/50" />
+            <img src="/images/logo-c8l.png" alt="C8L Corazones Locos Agency" className="w-11 h-11 rounded-full object-cover border-2 border-c8l-gold/60 shadow-md shadow-c8l-gold/20" />
             <div className="hidden md:block">
               <h1 className="text-sm font-outfit font-bold text-white leading-none">C8L Corazones Locos</h1>
-              <p className="text-[9px] text-gray-500 leading-none mt-0.5">Agency</p>
+              <p className="text-[9px] text-c8l-gold leading-none mt-0.5">Agency</p>
             </div>
           </div>
 
@@ -105,12 +105,10 @@ export default function Home() {
         <aside className="hidden lg:flex flex-col w-48 fixed left-0 top-14 bottom-0 bg-[#0d0d0d] border-r border-red-900/20 p-4">
           {/* Sidebar Logo */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center">
-              <span className="text-xs font-black">🎵</span>
-            </div>
+            <img src="/images/logo-c8l.png" alt="C8L" className="w-10 h-10 rounded-full object-cover border-2 border-c8l-gold/50 shadow-md shadow-c8l-gold/20" />
             <div>
               <p className="text-xs font-bold text-white">C.8.L.</p>
-              <p className="text-[9px] text-red-400 font-medium">MUSIC AI</p>
+              <p className="text-[9px] text-c8l-gold font-medium">MUSIC AI</p>
             </div>
           </div>
 
@@ -333,9 +331,7 @@ export default function Home() {
 
                 {/* C8L Badge */}
                 <div className="flex justify-center mt-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-c8l-gold to-amber-800 flex items-center justify-center shadow-lg shadow-c8l-gold/20 border-2 border-c8l-gold/50">
-                    <span className="text-sm font-black text-black">C8L</span>
-                  </div>
+                  <img src="/images/logo-c8l.png" alt="C8L Agency" className="w-20 h-20 rounded-full object-cover shadow-xl shadow-c8l-gold/30 border-2 border-c8l-gold/50" />
                 </div>
               </div>
             </div>
@@ -345,7 +341,10 @@ export default function Home() {
           <footer className="mt-16 border-t border-gray-800/50 px-6 pt-12 pb-8 max-w-7xl mx-auto">
             <div className="grid md:grid-cols-3 gap-8 mb-10">
               <div>
-                <h3 className="text-lg font-outfit font-black text-red-500 mb-3">C.8.L. AGENCY</h3>
+                <div className="flex items-center gap-3 mb-3">
+                  <img src="/images/logo-c8l.png" alt="C8L" className="w-12 h-12 rounded-full object-cover border-2 border-c8l-gold/40 shadow-md shadow-c8l-gold/20" />
+                  <h3 className="text-lg font-outfit font-black text-red-500">C.8.L. AGENCY</h3>
+                </div>
                 <p className="text-xs text-gray-500 leading-relaxed">
                   El Salto Cuantico en la Creacion de Contenido. Unete a la Familia Corazones Locos y alcanza la soberania del mercado con calidad y lealtad inigualables.
                 </p>

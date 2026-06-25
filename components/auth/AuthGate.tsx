@@ -21,9 +21,11 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center animate-pulse">
-            <span className="text-xl font-black">C8L</span>
-          </div>
+          <img
+            src="/images/logo-c8l.png"
+            alt="C8L Corazones Locos Agency"
+            className="w-20 h-20 mx-auto mb-4 rounded-full object-cover shadow-xl shadow-c8l-gold/30 border-2 border-c8l-gold/50 animate-pulse"
+          />
           <p className="text-gray-400 text-sm">Cargando...</p>
         </div>
       </div>
