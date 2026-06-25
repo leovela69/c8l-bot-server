@@ -7,6 +7,7 @@ from modules.ai_chat import chat, chat_with_search, clear_history
 from modules.images import generate_image, get_styles_text, STYLES
 from modules.moderation import check_message, get_mod_stats
 from modules.scheduler import AutoPublisher, ReminderChecker, add_reminder, get_auto_message
+from modules.health_monitor import HealthMonitor
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", handlers=[logging.StreamHandler(sys.stdout)])
 logger = logging.getLogger("hermes")
@@ -140,6 +141,7 @@ def main():
         pass
     AutoPublisher(bot).start()
     ReminderChecker(bot).start()
+    HealthMonitor(bot).start()
     try:
         bot.send_message(ADMIN_CHAT_ID, "Hermes C8L online! Listo para trabajar.")
     except:

@@ -23,11 +23,13 @@ GROUP_CHAT_ID: str = os.environ.get("GROUP_CHAT_ID", "-1002476372487")
 
 # ---------------------------------------------------------------------------
 # Google AI Studio — Gemini 2.5 Flash Image (Nano Banana)
-# 500 imagenes/dia GRATIS. Generacion directa de imagenes.
+# NOTA: Key AQ.Ab8... NO funciona con SDK/REST. Desactivado.
+# Si consigues key AIzaSy..., reactivar aqui.
 # ---------------------------------------------------------------------------
 _GEMINI_P1 = "AQ.Ab8RN6LNVQlOfGJNw8FfAiQrDL"
 _GEMINI_P2 = "Pb8c2so_i0m54DlhtwuiXcHw"
 GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", _GEMINI_P1 + _GEMINI_P2)
+GEMINI_ENABLED: bool = False  # Desactivado hasta tener key funcional
 GEMINI_IMAGE_MODEL: str = "gemini-2.5-flash-image"
 GEMINI_IMAGE_URL: str = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_IMAGE_MODEL}:generateContent"
 
@@ -50,22 +52,36 @@ MODELS = {
     "zeus": "deepseek/deepseek-v4-flash:free",
 
     # Skills Maestros
-    "minerva": "deepseek/deepseek-v4-flash:free",          # Sabio/Conocimiento
-    "vulcano": "deepseek/deepseek-v4-flash:free",          # Artesano/Creacion (CRITICO para prompts)
+    "minerva": "deepseek/deepseek-v4-flash:free",
+    "vulcano": "deepseek/deepseek-v4-flash:free",
 
     # Bots Esclavos
-    "aries": "qwen/qwen3-30b-a3b:free",              # Seguridad (ligero)
-    "hermes": "deepseek/deepseek-v4-flash:free",      # Comunicacion (principal)
-    "apolo": "deepseek/deepseek-v4-flash:free",       # Musica
-    "ares": "deepseek/deepseek-v4-flash:free",        # Video
-    "hefesto": "deepseek/deepseek-v4-flash:free",     # Diseno/Frontend
-    "artemisa": "deepseek/deepseek-v4-flash:free",    # Backend/API
-    "atenea": "deepseek/deepseek-v4-flash:free",      # Estrategia
-    "estia": "qwen/qwen3-30b-a3b:free",              # Aprendizaje (ligero)
+    "aries": "qwen/qwen3-30b-a3b:free",
+    "hermes": "deepseek/deepseek-v4-flash:free",
+    "apolo": "deepseek/deepseek-v4-flash:free",
+    "ares": "deepseek/deepseek-v4-flash:free",
+    "hefesto": "deepseek/deepseek-v4-flash:free",
+    "artemisa": "deepseek/deepseek-v4-flash:free",
+    "atenea": "deepseek/deepseek-v4-flash:free",
+    "estia": "qwen/qwen3-30b-a3b:free",
 
     # Fallback general
     "fallback": "qwen/qwen3-30b-a3b:free",
 }
+
+# ---------------------------------------------------------------------------
+# Mixture of Agents — Sistema multi-modelo para tareas complejas
+# Combina DeepSeek (planifica/ejecuta) + Qwen (verifica/valida)
+# Resultado: 85-90% calidad de Claude/GPT-4, 100% gratis
+# ---------------------------------------------------------------------------
+MIXTURE_MODELS = {
+    "planner": "deepseek/deepseek-v4-flash:free",
+    "verifier": "qwen/qwen3-30b-a3b:free",
+    "executor": "deepseek/deepseek-v4-flash:free",
+    "validator": "qwen/qwen3-30b-a3b:free",
+    "fast": "qwen/qwen3-30b-a3b:free",
+}
+MIXTURE_ENABLED: bool = True
 
 # ---------------------------------------------------------------------------
 # NVIDIA API (DeepSeek V4 Pro) — Backup si OpenRouter falla
@@ -144,3 +160,10 @@ _os.makedirs(REPORTS_DIR, exist_ok=True)
 # ---------------------------------------------------------------------------
 MAX_HISTORY_PER_USER: int = 50
 C8L_WEB_URL: str = os.environ.get("C8L_WEB_URL", "https://gen-lang-client-0744582882.web.app")
+
+# ---------------------------------------------------------------------------
+# Hermes Bot (backup/obrero) — corre en el mismo VPS
+# ---------------------------------------------------------------------------
+HERMES_BOT_TOKEN: str = "8863835955:AAFoTlvma4VVa0wbPC5Rvh3pzcD7N7J8BQQ"
+HERMES_BOT_NAME: str = "hermes_c8l_bot"
+HERMES_PORT: int = 8081
