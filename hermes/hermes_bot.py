@@ -8,6 +8,9 @@ from modules.images import generate_image, get_styles_text, STYLES
 from modules.moderation import check_message, get_mod_stats
 from modules.scheduler import AutoPublisher, ReminderChecker, add_reminder, get_auto_message
 from modules.health_monitor import HealthMonitor
+from modules.premium import PremiumManager
+from modules.apolo import Apolo
+from modules.api_server import start_api_server, set_handlers
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", handlers=[logging.StreamHandler(sys.stdout)])
 logger = logging.getLogger("hermes")
@@ -133,8 +136,17 @@ class HealthHandler(BaseHTTPRequestHandler):
         pass
 
 def main():
-    logger.info("HERMES C8L Bot v1.0 iniciando...")
+    logger.info("HERMES C8L Bot v2.0 iniciando...")
     threading.Thread(target=lambda: HTTPServer(("0.0.0.0", PORT), HealthHandler).serve_forever(), daemon=True).start()
+
+    # Inicializar modulos
+    premium = PremiumManager()
+    apolo = Apolo()
+
+    # Iniciar API server (puerto 8081) para la web
+    set_handlers(bot, chat_with_search, generate_image, premium, apolo)
+    start_api_server()
+
     try:
         bot.delete_webhook(drop_pending_updates=True)
     except:
@@ -143,7 +155,7 @@ def main():
     ReminderChecker(bot).start()
     HealthMonitor(bot).start()
     try:
-        bot.send_message(ADMIN_CHAT_ID, "Hermes C8L online! Listo para trabajar.")
+        bot.send_message(ADMIN_CHAT_ID, "⚡ *Hermes C8L v2.0 online!*\n\n🌐 API: puerto 8081\n👑 Premium: activo\n🏦 Apolo: activo\n⚡ HealthMonitor: vigilando Zeus\n\n_Hermes entrega. Siempre._")
     except:
         pass
     logger.info("Hermes polling activo...")
