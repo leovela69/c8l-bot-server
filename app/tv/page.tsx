@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Logo from '@/components/ui/Logo'
 import CreditsDisplay from '@/components/ui/CreditsDisplay'
+import ChatWidget from '@/components/bot/ChatWidget'
 import { VIDEOS, CATEGORIES, VideoData, getRelatedVideos } from '@/lib/videos/data'
 
 // ============ SIDEBAR ITEMS ============
@@ -280,9 +281,7 @@ export default function TVPage() {
         </div>
 
         {/* Bot IA Widget */}
-        <button className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-teal-600 flex items-center justify-center shadow-lg shadow-cyan-500/40 hover:scale-110 hover:shadow-cyan-400/60 transition-all z-50 border border-cyan-300/30">
-          <span className="text-2xl">🤖</span>
-        </button>
+        <ChatWidget />
       </div>
     )
   }
@@ -475,9 +474,7 @@ export default function TVPage() {
       </main>
 
       {/* ============ BOT IA WIDGET ============ */}
-      <button className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-teal-600 flex items-center justify-center shadow-lg shadow-cyan-500/40 hover:scale-110 hover:shadow-cyan-400/60 transition-all z-50 border border-cyan-300/30">
-        <span className="text-2xl">🤖</span>
-      </button>
+      <ChatWidget />
     </div>
   )
 }

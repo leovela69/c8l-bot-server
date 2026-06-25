@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Logo from '@/components/ui/Logo'
 import CreditsDisplay from '@/components/ui/CreditsDisplay'
+import ChatWidget from '@/components/bot/ChatWidget'
 
 // ============ DATOS DE PISTAS ============
 const TRACKS = [
@@ -435,10 +436,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ============ WIDGET BOT IA (Neón Cian) ============ */}
-      <button className="fixed bottom-20 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-teal-600 flex items-center justify-center shadow-lg shadow-cyan-500/40 hover:scale-110 hover:shadow-cyan-400/60 transition-all z-50 border border-cyan-300/30 animate-pulse">
-        <span className="text-2xl">🤖</span>
-      </button>
+      {/* ============ WIDGET BOT IA ============ */}
+      <ChatWidget />
     </div>
   )
 }
