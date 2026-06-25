@@ -585,8 +585,54 @@ export default function TVPage() {
       {/* Upload Modal */}
       {uploadModalOpen && <UploadModal />}
 
-      {/* ============ HEADER ============ */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-md border-b border-gray-800/50 h-14">
+      {/* ============ TOP NAV BAR (Herramientas C8L) — ARRIBA DE TODO ============ */}
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#0D0D0D] via-[#111118] to-[#0D0D0D] border-b border-c8l-gold/20">
+        <div className="flex items-center justify-center gap-1 px-2 py-2 overflow-x-auto no-scrollbar">
+          <Link href="/" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-gray-700/60 border border-transparent hover:border-gray-600 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">🏠</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-white transition hidden sm:inline">INICIO</span>
+          </Link>
+          <Link href="/tv" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/15 border border-cyan-500/40 transition-all">
+            <span className="text-base">📺</span>
+            <span className="text-[10px] font-bold text-cyan-400 hidden sm:inline">C8L TV</span>
+          </Link>
+          <Link href="/salas" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-purple-500/15 border border-transparent hover:border-purple-500/40 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">🎵</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-purple-300 transition hidden sm:inline">SALAS</span>
+          </Link>
+          <Link href="/streaming" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-green-500/15 border border-transparent hover:border-green-500/40 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">🎧</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-green-300 transition hidden sm:inline">STREAMING</span>
+          </Link>
+          <Link href="/monetizacion" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-yellow-500/15 border border-transparent hover:border-yellow-500/40 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">💰</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-yellow-300 transition hidden sm:inline">TIENDA</span>
+          </Link>
+          <Link href="/comunidad" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-blue-500/15 border border-transparent hover:border-blue-500/40 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">👥</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-blue-300 transition hidden sm:inline">COMUNIDAD</span>
+          </Link>
+          <Link href="/perfil" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-pink-500/15 border border-transparent hover:border-pink-500/40 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">👤</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-pink-300 transition hidden sm:inline">PERFIL</span>
+          </Link>
+          <Link href="/studio" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-teal-500/15 border border-transparent hover:border-teal-500/40 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">🤖</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-teal-300 transition hidden sm:inline">ESTUDIO IA</span>
+          </Link>
+          <Link href="/casino" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-amber-500/15 border border-transparent hover:border-amber-500/40 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">🎰</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-amber-300 transition hidden sm:inline">CASINO</span>
+          </Link>
+          <Link href="/karaoke" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-rose-500/15 border border-transparent hover:border-rose-500/40 transition-all">
+            <span className="text-base group-hover:scale-110 transition-transform">🎤</span>
+            <span className="text-[10px] font-medium text-gray-400 group-hover:text-rose-300 transition hidden sm:inline">KARAOKE</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* ============ HEADER (Buscador + Upload + Credits) ============ */}
+      <header className="fixed top-[42px] left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-md border-b border-gray-800/50 h-14">
         <div className="flex items-center justify-between px-4 h-full gap-4">
           {/* Left: Logo + Hamburger */}
           <div className="flex items-center gap-3 flex-shrink-0">
@@ -616,7 +662,7 @@ export default function TVPage() {
               <button className="px-5 py-2 bg-gray-800 border border-gray-700 border-l-0 rounded-r-full hover:bg-gray-700 transition">
                 <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </button>
-              <button className="ml-2 w-9 h-9 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition" title="Búsqueda por voz">
+              <button className="ml-2 w-9 h-9 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition" title="Busqueda por voz">
                 <svg className="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15a.998.998 0 00-.98-.85c-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08a6.993 6.993 0 005.91-5.78c.1-.6-.39-1.14-1-1.14z"/></svg>
               </button>
             </div>
@@ -634,51 +680,14 @@ export default function TVPage() {
               <span className="text-[10px] bg-c8l-gold text-black px-1.5 py-0.5 rounded font-bold">ES</span>
             </div>
             <button className="text-[10px] border border-gray-600 rounded-lg px-3 py-1.5 text-gray-300 hover:text-white hover:border-gray-400 transition font-medium">
-              CERRAR SESIÓN
+              CERRAR SESION
             </button>
           </div>
         </div>
       </header>
 
-
-      {/* ============ NAVIGATION BAR (Herramientas C8L) ============ */}
-      <div className="fixed top-14 left-0 right-0 z-45 bg-[#0D0D0D]/95 backdrop-blur-sm border-b border-gray-800/20 px-4">
-        <nav className={`flex items-center gap-1 py-1.5 overflow-x-auto no-scrollbar transition-all ${sidebarOpen ? 'ml-52' : 'ml-0'}`}>
-          <Link href="/" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">🏠</span><span className="mt-0.5">INICIO</span>
-          </Link>
-          <Link href="/tv" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-cyan-400 bg-cyan-500/10 transition whitespace-nowrap">
-            <span className="text-sm">📺</span><span className="mt-0.5">C8L TV</span>
-          </Link>
-          <Link href="/salas" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">🎵</span><span className="mt-0.5">SALAS</span>
-          </Link>
-          <Link href="/streaming" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">🎧</span><span className="mt-0.5">STREAMING</span>
-          </Link>
-          <Link href="/monetizacion" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">💰</span><span className="mt-0.5">TIENDA</span>
-          </Link>
-          <Link href="/comunidad" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">👥</span><span className="mt-0.5">COMUNIDAD</span>
-          </Link>
-          <Link href="/perfil" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">👤</span><span className="mt-0.5">PERFIL</span>
-          </Link>
-          <Link href="/studio" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">🤖</span><span className="mt-0.5">ESTUDIO IA</span>
-          </Link>
-          <Link href="/casino" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">🎰</span><span className="mt-0.5">CASINO</span>
-          </Link>
-          <Link href="/karaoke" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
-            <span className="text-sm">🎤</span><span className="mt-0.5">KARAOKE</span>
-          </Link>
-        </nav>
-      </div>
-
       {/* ============ CATEGORY FILTERS ============ */}
-      <div className="fixed top-[88px] left-0 right-0 z-40 bg-[#0D0D0D]/95 backdrop-blur-sm border-b border-gray-800/30 px-4 py-2">
+      <div className="fixed top-[98px] left-0 right-0 z-40 bg-[#0D0D0D]/95 backdrop-blur-sm border-b border-gray-800/30 px-4 py-2">
         <div className={`flex gap-2 overflow-x-auto no-scrollbar transition-all ${sidebarOpen ? 'ml-52' : 'ml-0'}`}>
           {CATEGORIES.map(cat => (
             <button
@@ -697,7 +706,7 @@ export default function TVPage() {
       </div>
 
       {/* ============ SIDEBAR ============ */}
-      <aside className={`fixed left-0 top-[88px] bottom-0 w-52 bg-[#0D0D0D] border-r border-gray-800/30 overflow-y-auto z-30 transition-transform duration-300 ${
+      <aside className={`fixed left-0 top-[98px] bottom-0 w-52 bg-[#0D0D0D] border-r border-gray-800/30 overflow-y-auto z-30 transition-transform duration-300 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } hidden lg:block`}>
         <nav className="p-3 pt-12 space-y-0.5">
@@ -738,7 +747,7 @@ export default function TVPage() {
 
 
       {/* ============ MAIN CONTENT GRID ============ */}
-      <main className={`pt-[140px] pb-8 transition-all duration-300 ${sidebarOpen ? 'lg:ml-52' : ''}`}>
+      <main className={`pt-[145px] pb-8 transition-all duration-300 ${sidebarOpen ? 'lg:ml-52' : ''}`}>
         <div className="max-w-[1800px] mx-auto px-4 md:px-6">
           {/* Video Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
