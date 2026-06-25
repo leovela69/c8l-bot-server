@@ -133,7 +133,6 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 def main():
     logger.info("HERMES C8L Bot v1.0 iniciando...")
-    HTTPServer(("0.0.0.0", PORT), HealthHandler).serve_forever.__func__
     threading.Thread(target=lambda: HTTPServer(("0.0.0.0", PORT), HealthHandler).serve_forever(), daemon=True).start()
     try:
         bot.delete_webhook(drop_pending_updates=True)
