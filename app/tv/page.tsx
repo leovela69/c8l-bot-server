@@ -587,7 +587,14 @@ export default function TVPage() {
 
       {/* ============ TOP NAV BAR (Herramientas C8L) — ARRIBA DE TODO ============ */}
       <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#0D0D0D] via-[#111118] to-[#0D0D0D] border-b border-c8l-gold/20">
-        <div className="flex items-center justify-center gap-1 px-2 py-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1 px-4 py-2 overflow-x-auto no-scrollbar">
+          {/* Logo a la izquierda */}
+          <Link href="/" className="flex items-center gap-2 mr-3 flex-shrink-0">
+            <Logo size="sm" />
+            <span className="text-sm font-outfit font-bold text-white hidden sm:inline">C8L</span>
+          </Link>
+          <div className="w-px h-6 bg-gray-700 mr-2 flex-shrink-0" />
+          {/* Nav items */}
           <Link href="/" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-gray-700/60 border border-transparent hover:border-gray-600 transition-all">
             <span className="text-base group-hover:scale-110 transition-transform">🏠</span>
             <span className="text-[10px] font-medium text-gray-400 group-hover:text-white transition hidden sm:inline">INICIO</span>
@@ -634,17 +641,11 @@ export default function TVPage() {
       {/* ============ HEADER (Buscador + Upload + Credits) ============ */}
       <header className="fixed top-[42px] left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-md border-b border-gray-800/50 h-14">
         <div className="flex items-center justify-between px-4 h-full gap-4">
-          {/* Left: Logo + Hamburger */}
+          {/* Left: Hamburger */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-400 hover:text-white transition">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
-            <Link href="/tv" className="flex items-center gap-2">
-              <Logo size="sm" />
-              <div className="hidden sm:block">
-                <span className="text-sm font-outfit font-bold text-white">C8L TV</span>
-              </div>
-            </Link>
           </div>
 
           {/* Center: Search Bar */}
