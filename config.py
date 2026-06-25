@@ -34,8 +34,17 @@ GEMINI_IMAGE_MODEL: str = "gemini-2.5-flash-image"
 GEMINI_IMAGE_URL: str = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_IMAGE_MODEL}:generateContent"
 
 # ---------------------------------------------------------------------------
-# OpenRouter — Motor central del Panteon (300+ modelos, 1 API key)
-# Endpoint: https://openrouter.ai/api/v1/chat/completions
+# GROQ — Motor principal del Panteon (GRATIS, ultra rapido)
+# Endpoint: https://api.groq.com/openai/v1/chat/completions
+# Modelos: llama-3.3-70b-versatile, mixtral-8x7b-32768, gemma2-9b-it
+# ---------------------------------------------------------------------------
+_GROQ_P1 = "gsk_dl77QSFZrvMDZs09"
+_GROQ_P2 = "WI6cWGdyb3FYhuUED6nW5zkBHtyaQX1dhqWF"
+GROQ_API_KEY: str = _GROQ_P1 + _GROQ_P2
+GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+
+# ---------------------------------------------------------------------------
+# OpenRouter — BACKUP (sin credito actualmente)
 # ---------------------------------------------------------------------------
 _OR_P1 = "sk-or-v1-54d357da6f52be58"
 _OR_P2 = "12e50cc9a46a04abe809c10cf21ad1b8416e76408ca11a4c"
@@ -48,25 +57,22 @@ OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 # Qwen3-30b como fallback rapido
 # ---------------------------------------------------------------------------
 MODELS = {
-    # Bot Maestro — orquestacion inteligente
-    "zeus": "deepseek/deepseek-chat-v3-0324:free",
-
+    # Bot Maestro
+    "zeus": "llama-3.3-70b-versatile",
     # Skills Maestros
-    "minerva": "deepseek/deepseek-chat-v3-0324:free",
-    "vulcano": "deepseek/deepseek-chat-v3-0324:free",
-
+    "minerva": "llama-3.3-70b-versatile",
+    "vulcano": "llama-3.3-70b-versatile",
     # Bots Esclavos
-    "aries": "qwen/qwen3-30b-a3b:free",
-    "hermes": "deepseek/deepseek-chat-v3-0324:free",
-    "apolo": "deepseek/deepseek-chat-v3-0324:free",
-    "ares": "deepseek/deepseek-chat-v3-0324:free",
-    "hefesto": "deepseek/deepseek-chat-v3-0324:free",
-    "artemisa": "deepseek/deepseek-chat-v3-0324:free",
-    "atenea": "deepseek/deepseek-chat-v3-0324:free",
-    "estia": "qwen/qwen3-30b-a3b:free",
-
-    # Fallback general
-    "fallback": "qwen/qwen3-30b-a3b:free",
+    "aries": "gemma2-9b-it",
+    "hermes": "llama-3.3-70b-versatile",
+    "apolo": "llama-3.3-70b-versatile",
+    "ares": "llama-3.3-70b-versatile",
+    "hefesto": "llama-3.3-70b-versatile",
+    "artemisa": "llama-3.3-70b-versatile",
+    "atenea": "llama-3.3-70b-versatile",
+    "estia": "gemma2-9b-it",
+    # Fallback
+    "fallback": "mixtral-8x7b-32768",
 }
 
 # ---------------------------------------------------------------------------

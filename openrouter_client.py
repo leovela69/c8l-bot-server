@@ -9,6 +9,7 @@ import requests
 import logging
 import time
 from config import (
+    GROQ_API_KEY, GROQ_BASE_URL,
     OPENROUTER_API_KEY, OPENROUTER_BASE_URL,
     NVIDIA_API_KEY, NVIDIA_BASE_URL, NVIDIA_MODEL,
     MODELS
@@ -57,31 +58,33 @@ def call_openrouter(prompt, system_prompt="", agent_name="zeus", temperature=0.8
     models_to_try = [
         model,
         MODELS["fallback"],
-        "deepseek/deepseek-chat-v3-0324:free",
-        "qwen/qwen3-30b-a3b:free",
-        "qwen/qwen3.6-plus:free",
     ]
     # Eliminar duplicados manteniendo orden
     seen = set()
     models_to_try = [m for m in models_to_try if not (m in seen or seen.add(m))]
 
-    # Intentar cada modelo
+    # Intentar GROQ primero (principal)
     for i, try_model in enumerate(models_to_try):
         try:
-            response = _call_openrouter_api(messages, try_model, temperature, max_tokens)
+            response = _call_groq_api(messages, try_model, temperature, max_tokens)
             if response and len(response.strip()) > 5:
-                if i > 0:
-                    logger.info(f"[{agent_name.upper()}] OK via modelo alternativo #{i+1} ({try_model})")
-                else:
-                    logger.info(f"[{agent_name.upper()}] OK via OpenRouter ({try_model})")
+                logger.info(f"[{agent_name.upper()}] OK via Groq ({try_model})")
                 return response
             else:
-                logger.warning(f"[{agent_name.upper()}] {try_model} devolvio respuesta vacia")
+                logger.warning(f"[{agent_name.upper()}] Groq {try_model} respuesta vacia")
         except Exception as e:
-            logger.warning(f"[{agent_name.upper()}] {try_model} fallo: {str(e)[:80]}")
-        # Pausa entre intentos
+            logger.warning(f"[{agent_name.upper()}] Groq {try_model} fallo: {str(e)[:80]}")
         if i < len(models_to_try) - 1:
             time.sleep(1)
+
+    # Backup: OpenRouter (si tiene credito)
+    try:
+        response = _call_openrouter_api(messages, "qwen/qwen3-30b-a3b:free", temperature, max_tokens)
+        if response and len(response.strip()) > 5:
+            logger.info(f"[{agent_name.upper()}] OK via OpenRouter backup")
+            return response
+    except:
+        pass
 
     # Ultimo recurso: NVIDIA
     try:
@@ -92,7 +95,7 @@ def call_openrouter(prompt, system_prompt="", agent_name="zeus", temperature=0.8
     except Exception as e:
         logger.warning(f"[{agent_name.upper()}] NVIDIA backup fallo: {str(e)[:80]}")
 
-    logger.error(f"[{agent_name.upper()}] TODOS LOS MODELOS FALLARON ({len(models_to_try)} intentos + NVIDIA)")
+    logger.error(f"[{agent_name.upper()}] TODOS LOS MOTORES FALLARON")
     return None
 
 
@@ -141,6 +144,38 @@ def call_openrouter_with_history(messages, agent_name="zeus", temperature=0.85, 
             return response
     except:
         pass
+
+    return None
+
+
+def _call_groq_api(messages, model, temperature, max_tokens):
+    """Llamada directa a la API de Groq (motor principal)."""
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+
+    r = requests.post(
+        f"{GROQ_BASE_URL}/chat/completions",
+        headers=headers,
+        json=payload,
+        timeout=30
+    )
+
+    r.raise_for_status()
+    data = r.json()
+
+    if "choices" in data and len(data["choices"]) > 0:
+        content = data["choices"][0].get("message", {}).get("content", "")
+        if content:
+            return content.strip()
 
     return None
 
