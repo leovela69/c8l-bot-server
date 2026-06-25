@@ -641,8 +641,44 @@ export default function TVPage() {
       </header>
 
 
+      {/* ============ NAVIGATION BAR (Herramientas C8L) ============ */}
+      <div className="fixed top-14 left-0 right-0 z-45 bg-[#0D0D0D]/95 backdrop-blur-sm border-b border-gray-800/20 px-4">
+        <nav className={`flex items-center gap-1 py-1.5 overflow-x-auto no-scrollbar transition-all ${sidebarOpen ? 'ml-52' : 'ml-0'}`}>
+          <Link href="/" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">🏠</span><span className="mt-0.5">INICIO</span>
+          </Link>
+          <Link href="/tv" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-cyan-400 bg-cyan-500/10 transition whitespace-nowrap">
+            <span className="text-sm">📺</span><span className="mt-0.5">C8L TV</span>
+          </Link>
+          <Link href="/salas" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">🎵</span><span className="mt-0.5">SALAS</span>
+          </Link>
+          <Link href="/streaming" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">🎧</span><span className="mt-0.5">STREAMING</span>
+          </Link>
+          <Link href="/monetizacion" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">💰</span><span className="mt-0.5">TIENDA</span>
+          </Link>
+          <Link href="/comunidad" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">👥</span><span className="mt-0.5">COMUNIDAD</span>
+          </Link>
+          <Link href="/perfil" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">👤</span><span className="mt-0.5">PERFIL</span>
+          </Link>
+          <Link href="/studio" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">🤖</span><span className="mt-0.5">ESTUDIO IA</span>
+          </Link>
+          <Link href="/casino" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">🎰</span><span className="mt-0.5">CASINO</span>
+          </Link>
+          <Link href="/karaoke" className="flex flex-col items-center px-3 py-1 rounded-lg text-[10px] text-gray-400 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+            <span className="text-sm">🎤</span><span className="mt-0.5">KARAOKE</span>
+          </Link>
+        </nav>
+      </div>
+
       {/* ============ CATEGORY FILTERS ============ */}
-      <div className="fixed top-14 left-0 right-0 z-40 bg-[#0D0D0D]/95 backdrop-blur-sm border-b border-gray-800/30 px-4 py-2">
+      <div className="fixed top-[88px] left-0 right-0 z-40 bg-[#0D0D0D]/95 backdrop-blur-sm border-b border-gray-800/30 px-4 py-2">
         <div className={`flex gap-2 overflow-x-auto no-scrollbar transition-all ${sidebarOpen ? 'ml-52' : 'ml-0'}`}>
           {CATEGORIES.map(cat => (
             <button
@@ -661,10 +697,10 @@ export default function TVPage() {
       </div>
 
       {/* ============ SIDEBAR ============ */}
-      <aside className={`fixed left-0 top-14 bottom-0 w-52 bg-[#0D0D0D] border-r border-gray-800/30 overflow-y-auto z-30 transition-transform duration-300 ${
+      <aside className={`fixed left-0 top-[88px] bottom-0 w-52 bg-[#0D0D0D] border-r border-gray-800/30 overflow-y-auto z-30 transition-transform duration-300 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } hidden lg:block`}>
-        <nav className="p-3 pt-14 space-y-0.5">
+        <nav className="p-3 pt-12 space-y-0.5">
           {SIDEBAR_ITEMS.map((item, i) => (
             <Link
               key={item.label}
@@ -702,7 +738,7 @@ export default function TVPage() {
 
 
       {/* ============ MAIN CONTENT GRID ============ */}
-      <main className={`pt-[104px] pb-8 transition-all duration-300 ${sidebarOpen ? 'lg:ml-52' : ''}`}>
+      <main className={`pt-[140px] pb-8 transition-all duration-300 ${sidebarOpen ? 'lg:ml-52' : ''}`}>
         <div className="max-w-[1800px] mx-auto px-4 md:px-6">
           {/* Video Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
