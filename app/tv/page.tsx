@@ -27,10 +27,35 @@ export default function TVPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [commentTab, setCommentTab] = useState<'comments' | 'telemetry'>('comments')
   const [dragOver, setDragOver] = useState(false)
+  const [userVideos, setUserVideos] = useState<VideoData[]>([])
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadTitle, setUploadTitle] = useState('')
+  const [uploadDesc, setUploadDesc] = useState('')
+  const [uploadCategory, setUploadCategory] = useState('Música')
+  const [uploadTags, setUploadTags] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
+  // Load user-uploaded videos from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('c8l_user_videos')
+      if (stored) {
+        try {
+          setUserVideos(JSON.parse(stored))
+        } catch {}
+      }
+    }
+  }, [])
 
-  const filteredVideos = VIDEOS
+
+  // Combine default videos + user uploaded videos
+  const allVideos = [...userVideos, ...VIDEOS]
+
+  const filteredVideos = allVideos
     .filter(v => filter === 'Todas' || v.category === filter)
     .filter(v => searchQuery === '' || v.title.toLowerCase().includes(searchQuery.toLowerCase()))
 
@@ -46,65 +71,332 @@ export default function TVPage() {
     return n.toString()
   }
 
+  // ============ FILE HANDLING ============
+  const handleFileSelect = (file: File) => {
+    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm']
+    if (!validTypes.includes(file.type)) {
+      alert('❌ Formato no soportado. Usa .mp4, .mov, .avi o .webm')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024 * 1024) {
+      alert('❌ El archivo excede 2GB')
+      return
+    }
+    setUploadFile(file)
+    // Auto-fill title from filename
+    if (!uploadTitle) {
+      const name = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ')
+      setUploadTitle(name.charAt(0).toUpperCase() + name.slice(1))
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFileSelect(file)
+  }
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFileSelect(file)
+  }
+
+  const handlePublish = async () => {
+    if (!uploadFile) {
+      alert('❌ Selecciona un video primero')
+      return
+    }
+    if (!uploadTitle.trim()) {
+      alert('❌ Escribe un título para el video')
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress(0)
+
+    // Simulate upload progress (in production this would be real upload to Supabase/S3)
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(progressInterval)
+          return 95
+        }
+        return prev + Math.random() * 15
+      })
+    }, 200)
+
+    // Create object URL for the video (works locally in the browser)
+    const videoUrl = URL.createObjectURL(uploadFile)
+
+    // Generate thumbnail from video
+    let thumbnailUrl = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=450&fit=crop'
+    try {
+      thumbnailUrl = await generateThumbnail(uploadFile)
+    } catch {}
+
+    // Get video duration
+    let duration = '0:00'
+    try {
+      duration = await getVideoDuration(uploadFile)
+    } catch {}
+
+    // Create the video entry
+    const newVideo: VideoData = {
+      id: `user_${Date.now()}`,
+      title: uploadTitle.trim().toUpperCase(),
+      author: 'Leo Vela',
+      authorEmoji: '🧡',
+      authorSubscribers: '12.4K',
+      description: uploadDesc.trim() || 'Video subido a C8L TV',
+      views: 0,
+      daysAgo: 0,
+      likes: 0,
+      dislikes: 0,
+      duration: duration,
+      thumbnail: thumbnailUrl,
+      videoUrl: videoUrl,
+      category: uploadCategory,
+      tags: uploadTags.split(',').map(t => t.trim()).filter(Boolean),
+      comments: [],
+    }
+
+    // Finish progress
+    clearInterval(progressInterval)
+    setUploadProgress(100)
+
+    // Save to state and localStorage
+    const updatedVideos = [newVideo, ...userVideos]
+    setUserVideos(updatedVideos)
+
+    // Save metadata to localStorage (video blob stays in memory via objectURL)
+    const storable = updatedVideos.map(v => ({
+      ...v,
+      // Don't save blob URLs to localStorage, use a placeholder
+      videoUrl: v.videoUrl.startsWith('blob:') ? '' : v.videoUrl,
+      thumbnail: v.thumbnail.startsWith('blob:') ? 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=450&fit=crop' : v.thumbnail,
+    }))
+    localStorage.setItem('c8l_user_videos', JSON.stringify(storable))
+
+    setTimeout(() => {
+      setUploading(false)
+      setUploadSuccess(true)
+      setTimeout(() => {
+        setUploadSuccess(false)
+        setUploadModalOpen(false)
+        // Reset form
+        setUploadFile(null)
+        setUploadTitle('')
+        setUploadDesc('')
+        setUploadTags('')
+        setUploadProgress(0)
+      }, 2000)
+    }, 500)
+  }
+
+  // Generate thumbnail from video file
+  const generateThumbnail = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.muted = true
+      video.playsInline = true
+
+      video.onloadeddata = () => {
+        video.currentTime = Math.min(1, video.duration * 0.1)
+      }
+
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = 640
+        canvas.height = 360
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+          resolve(canvas.toDataURL('image/jpeg', 0.7))
+        } else {
+          reject('No canvas context')
+        }
+        URL.revokeObjectURL(video.src)
+      }
+
+      video.onerror = () => reject('Error loading video')
+      video.src = URL.createObjectURL(file)
+    })
+  }
+
+  // Get video duration
+  const getVideoDuration = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.onloadedmetadata = () => {
+        const mins = Math.floor(video.duration / 60)
+        const secs = Math.floor(video.duration % 60)
+        resolve(`${mins}:${secs.toString().padStart(2, '0')}`)
+        URL.revokeObjectURL(video.src)
+      }
+      video.onerror = () => reject('Error')
+      video.src = URL.createObjectURL(file)
+    })
+  }
+
   // ============ UPLOAD MODAL ============
   const UploadModal = () => (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setUploadModalOpen(false)}>
-      <div className="bg-[#1a1a1a] border border-gray-700 rounded-2xl w-full max-w-2xl mx-4 p-0 overflow-hidden" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => !uploading && setUploadModalOpen(false)}>
+      <div className="bg-[#1a1a1a] border border-gray-700 rounded-2xl w-full max-w-2xl mx-4 p-0 overflow-hidden max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 sticky top-0 bg-[#1a1a1a] z-10">
           <h2 className="text-lg font-bold text-white">Subir video a C8L TV</h2>
-          <button onClick={() => setUploadModalOpen(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
+          <button onClick={() => !uploading && setUploadModalOpen(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
         </div>
 
-
-        {/* Drag and Drop Area */}
-        <div className="p-8">
-          <div
-            onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={e => { e.preventDefault(); setDragOver(false) }}
-            className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
-              dragOver ? 'border-cyan-400 bg-cyan-400/10' : 'border-gray-600 hover:border-gray-500'
-            }`}
-          >
-            <div className="text-5xl mb-4">📁</div>
-            <p className="text-white font-medium mb-2">Arrastra y suelta tu video aquí</p>
-            <p className="text-gray-500 text-sm mb-6">Soporta .mp4, .mov, .avi — Máx 2GB</p>
-            <button className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded-xl transition hover:scale-105">
-              SELECCIONAR ARCHIVO
-            </button>
+        {/* Success State */}
+        {uploadSuccess ? (
+          <div className="p-12 text-center">
+            <div className="text-6xl mb-4 animate-bounce">🎉</div>
+            <h3 className="text-2xl font-bold text-white mb-2">¡Video publicado!</h3>
+            <p className="text-gray-400">Tu video ya está visible en C8L TV</p>
           </div>
+        ) : (
+          <>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,.mp4,.mov,.avi,.webm"
+              className="hidden"
+              onChange={handleFileInputChange}
+            />
 
-          {/* Metadata fields */}
-          <div className="mt-6 space-y-4">
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Título</label>
-              <input type="text" placeholder="Nombre del video..." className="w-full bg-[#0d0d0d] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Descripción</label>
-              <textarea placeholder="Describe tu video..." className="w-full bg-[#0d0d0d] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition resize-none h-20" />
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Categoría</label>
-                <select className="w-full bg-[#0d0d0d] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none">
-                  {CATEGORIES.filter(c => c !== 'Todas').map(c => <option key={c}>{c}</option>)}
-                </select>
+            {/* Drag and Drop Area */}
+            <div className="p-8">
+              <div
+                onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                onClick={() => !uploading && fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer ${
+                  uploadFile
+                    ? 'border-green-500 bg-green-500/10'
+                    : dragOver
+                      ? 'border-cyan-400 bg-cyan-400/10'
+                      : 'border-gray-600 hover:border-gray-400'
+                }`}
+              >
+                {uploadFile ? (
+                  <>
+                    <div className="text-5xl mb-3">✅</div>
+                    <p className="text-white font-medium mb-1">{uploadFile.name}</p>
+                    <p className="text-gray-400 text-sm">{(uploadFile.size / 1024 / 1024).toFixed(1)} MB</p>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setUploadFile(null) }}
+                      className="mt-3 text-xs text-red-400 hover:text-red-300 underline"
+                    >
+                      Cambiar archivo
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-5xl mb-4">📁</div>
+                    <p className="text-white font-medium mb-2">Arrastra y suelta tu video aquí</p>
+                    <p className="text-gray-500 text-sm mb-6">Soporta .mp4, .mov, .avi, .webm — Máx 2GB</p>
+                    <span className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded-xl transition inline-block">
+                      SELECCIONAR ARCHIVO
+                    </span>
+                  </>
+                )}
               </div>
-              <div className="flex-1">
-                <label className="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Tags</label>
-                <input type="text" placeholder="house, bolero, remix..." className="w-full bg-[#0d0d0d] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition" />
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Modal Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-800">
-          <button onClick={() => setUploadModalOpen(false)} className="px-5 py-2.5 text-gray-400 hover:text-white text-sm transition">Cancelar</button>
-          <button className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-black font-bold text-sm rounded-xl transition">PUBLICAR</button>
-        </div>
+              {/* Upload Progress */}
+              {uploading && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-cyan-400 font-medium">Subiendo...</span>
+                    <span className="text-sm text-gray-400">{Math.round(uploadProgress)}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-cyan-500 to-teal-400 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata fields */}
+              <div className="mt-6 space-y-4">
+                <div>
+                  <label className="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Título *</label>
+                  <input
+                    type="text"
+                    value={uploadTitle}
+                    onChange={e => setUploadTitle(e.target.value)}
+                    placeholder="Nombre del video..."
+                    className="w-full bg-[#0d0d0d] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition"
+                    disabled={uploading}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Descripción</label>
+                  <textarea
+                    value={uploadDesc}
+                    onChange={e => setUploadDesc(e.target.value)}
+                    placeholder="Describe tu video..."
+                    className="w-full bg-[#0d0d0d] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition resize-none h-20"
+                    disabled={uploading}
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Categoría</label>
+                    <select
+                      value={uploadCategory}
+                      onChange={e => setUploadCategory(e.target.value)}
+                      className="w-full bg-[#0d0d0d] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none"
+                      disabled={uploading}
+                    >
+                      {CATEGORIES.filter(c => c !== 'Todas').map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 uppercase tracking-wider mb-1 block">Tags</label>
+                    <input
+                      type="text"
+                      value={uploadTags}
+                      onChange={e => setUploadTags(e.target.value)}
+                      placeholder="house, bolero, remix..."
+                      className="w-full bg-[#0d0d0d] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-cyan-500 outline-none transition"
+                      disabled={uploading}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-800 sticky bottom-0 bg-[#1a1a1a]">
+              <button
+                onClick={() => setUploadModalOpen(false)}
+                className="px-5 py-2.5 text-gray-400 hover:text-white text-sm transition"
+                disabled={uploading}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={!uploadFile || !uploadTitle.trim() || uploading}
+                className={`px-6 py-2.5 font-bold text-sm rounded-xl transition ${
+                  !uploadFile || !uploadTitle.trim() || uploading
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-cyan-500 hover:bg-cyan-600 text-black hover:scale-105'
+                }`}
+              >
+                {uploading ? '⏳ SUBIENDO...' : '🚀 PUBLICAR'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
