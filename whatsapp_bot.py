@@ -316,7 +316,7 @@ def _strip_emojis(text):
 
 
 def generate_pdf(content, title="Documento C8L"):
-    """Genera PDF real con fpdf2. Limpia emojis automaticamente."""
+    """Genera PDF real con fpdf2. Limpia emojis y corta lineas largas."""
     try:
         from fpdf import FPDF
         from fpdf.enums import XPos, YPos
@@ -325,12 +325,17 @@ def generate_pdf(content, title="Documento C8L"):
         content = _strip_emojis(content)
         title = _strip_emojis(title)
 
+        # Cortar palabras muy largas (>50 chars) que rompen el PDF
+        import re
+        content = re.sub(r'(\S{50,})', lambda m: ' '.join([m.group(0)[i:i+50] for i in range(0, len(m.group(0)), 50)]), content)
+
         pdf = FPDF()
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=15)
 
         pdf.set_font("Helvetica", "B", 18)
-        pdf.cell(0, 12, title, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+        safe_title = title[:80] if len(title) > 80 else title
+        pdf.cell(0, 12, safe_title, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
         pdf.ln(5)
         pdf.set_font("Helvetica", "I", 10)
         pdf.cell(0, 8, f"C8L Agency - {datetime.now().strftime('%d/%m/%Y %H:%M')}",
@@ -344,11 +349,13 @@ def generate_pdf(content, title="Documento C8L"):
                 pdf.ln(4)
             elif line.startswith("#") or (len(line) > 3 and line.isupper()):
                 pdf.set_font("Helvetica", "B", 13)
-                pdf.multi_cell(0, 7, line.lstrip("# "))
+                safe_line = line.lstrip("# ")[:200]
+                pdf.multi_cell(0, 7, safe_line)
                 pdf.set_font("Helvetica", "", 11)
                 pdf.ln(2)
             else:
-                pdf.multi_cell(0, 6, line)
+                safe_line = line[:500] if len(line) > 500 else line
+                pdf.multi_cell(0, 6, safe_line)
 
         pdf.ln(10)
         pdf.set_font("Helvetica", "I", 9)
@@ -356,10 +363,19 @@ def generate_pdf(content, title="Documento C8L"):
                  new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
         return pdf.output()
     except Exception as e:
-        # Fallback: enviar como texto plano si PDF falla
+        # Fallback: generar PDF minimo con solo el texto
         logger.warning(f"PDF generation failed: {e}")
-        header = f"{'='*50}\n  {title}\n  C8L Agency\n{'='*50}\n\n"
-        return (header + content).encode("utf-8")
+        try:
+            from fpdf import FPDF
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Helvetica", "", 10)
+            safe_content = re.sub(r'[^\x20-\x7E\n]', '', content)[:3000]
+            for line in safe_content.split("\n"):
+                pdf.multi_cell(0, 5, line[:150])
+            return pdf.output()
+        except:
+            return b"%PDF-1.4 empty"
 
 
 # ---------------------------------------------------------------------------
