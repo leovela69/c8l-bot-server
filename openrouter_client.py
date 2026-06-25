@@ -24,6 +24,7 @@ MIN_CALL_INTERVAL = 0.5  # 500ms entre llamadas
 def call_openrouter(prompt, system_prompt="", agent_name="zeus", temperature=0.85, max_tokens=4096):
     """
     Llama a OpenRouter con el modelo asignado al agente.
+    MEJORADO: Intenta hasta 4 modelos diferentes antes de fallar.
 
     Args:
         prompt: El mensaje del usuario
@@ -52,35 +53,46 @@ def call_openrouter(prompt, system_prompt="", agent_name="zeus", temperature=0.8
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
 
-    # Intentar OpenRouter
-    try:
-        response = _call_openrouter_api(messages, model, temperature, max_tokens)
-        if response:
-            logger.info(f"[{agent_name.upper()}] OK via OpenRouter ({model})")
-            return response
-    except Exception as e:
-        logger.warning(f"[{agent_name.upper()}] OpenRouter ({model}) fallo: {str(e)[:80]}")
+    # Lista de modelos a intentar (en orden de preferencia)
+    models_to_try = [
+        model,
+        MODELS["fallback"],
+        "deepseek/deepseek-v4-flash:free",
+        "qwen/qwen3-30b-a3b:free",
+        "meta-llama/llama-4-maverick:free",
+    ]
+    # Eliminar duplicados manteniendo orden
+    seen = set()
+    models_to_try = [m for m in models_to_try if not (m in seen or seen.add(m))]
 
-    # Retry con modelo fallback
-    if model != MODELS["fallback"]:
+    # Intentar cada modelo
+    for i, try_model in enumerate(models_to_try):
         try:
-            response = _call_openrouter_api(messages, MODELS["fallback"], temperature, max_tokens)
-            if response:
-                logger.info(f"[{agent_name.upper()}] OK via OpenRouter fallback")
+            response = _call_openrouter_api(messages, try_model, temperature, max_tokens)
+            if response and len(response.strip()) > 5:
+                if i > 0:
+                    logger.info(f"[{agent_name.upper()}] OK via modelo alternativo #{i+1} ({try_model})")
+                else:
+                    logger.info(f"[{agent_name.upper()}] OK via OpenRouter ({try_model})")
                 return response
+            else:
+                logger.warning(f"[{agent_name.upper()}] {try_model} devolvio respuesta vacia")
         except Exception as e:
-            logger.warning(f"[{agent_name.upper()}] OpenRouter fallback fallo: {str(e)[:80]}")
+            logger.warning(f"[{agent_name.upper()}] {try_model} fallo: {str(e)[:80]}")
+        # Pausa entre intentos
+        if i < len(models_to_try) - 1:
+            time.sleep(1)
 
     # Ultimo recurso: NVIDIA
     try:
         response = _call_nvidia_api(messages, temperature, max_tokens)
-        if response:
+        if response and len(response.strip()) > 5:
             logger.info(f"[{agent_name.upper()}] OK via NVIDIA backup")
             return response
     except Exception as e:
         logger.warning(f"[{agent_name.upper()}] NVIDIA backup fallo: {str(e)[:80]}")
 
-    logger.error(f"[{agent_name.upper()}] TODOS LOS MODELOS FALLARON")
+    logger.error(f"[{agent_name.upper()}] TODOS LOS MODELOS FALLARON ({len(models_to_try)} intentos + NVIDIA)")
     return None
 
 
