@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Logo from '@/components/ui/Logo'
+import CreditsDisplay from '@/components/ui/CreditsDisplay'
 
 // ============ DATOS DE PISTAS ============
 const TRACKS = [
@@ -85,10 +86,7 @@ export default function Home() {
 
           {/* Right */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-gray-800/60 rounded-full px-3 py-1.5">
-              <span className="text-c8l-gold text-xs">🪙</span>
-              <span className="text-xs font-bold text-white">9999</span>
-            </div>
+            <CreditsDisplay showLabel />
             <div className="hidden sm:flex items-center gap-1 bg-gray-800/40 rounded-full px-2 py-1">
               <span className="text-[10px] text-red-400 font-bold">Reset</span>
               <span className="text-[10px] bg-c8l-gold text-black px-1.5 py-0.5 rounded font-bold">ES</span>
@@ -145,13 +143,13 @@ export default function Home() {
           {/* Credits VIP */}
           <div className="mt-4 bg-[#1a1a1a] border border-red-900/30 rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] text-gray-400 font-medium">CREDITOS VIP</span>
-              <span className="text-sm font-bold text-white">9999</span>
+              <span className="text-[10px] text-gray-400 font-medium">MIS CRÉDITOS</span>
+              <CreditsDisplay />
             </div>
             <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-              <div className="h-full bg-red-500 rounded-full" style={{ width: '75%' }}></div>
+              <div className="h-full bg-c8l-gold rounded-full transition-all" style={{ width: '75%' }}></div>
             </div>
-            <p className="text-[8px] text-gray-600 mt-1.5">RECARGA AUTOMATICA EN PANEL</p>
+            <p className="text-[8px] text-gray-600 mt-1.5">COMPLETA TAREAS PARA GANAR MÁS</p>
           </div>
         </aside>
 
@@ -260,11 +258,12 @@ export default function Home() {
 
                   {/* Generate Button */}
                   <button className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider transition hover:scale-[1.01] active:scale-[0.99]">
-                    GENERAR 2 CANCIONES (10 CREDITOS)
+                    GENERAR 2 CANCIONES (10 CRÉDITOS)
                   </button>
 
                   <p className="text-[10px] text-gray-600 text-center mt-3 uppercase tracking-wider">
-                    Generacion Procedural Electronica Instantanea en tu PC
+                    {/* Credits info */}
+                    Completa tareas diarias para ganar créditos gratis
                   </p>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/lib/auth/context'
 import Logo from '@/components/ui/Logo'
+import CreditsDisplay from '@/components/ui/CreditsDisplay'
 
 const NAV_ITEMS = [
   { href: '/', icon: '📺', label: 'C8L TV', emoji: '📺' },
@@ -107,10 +108,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
           {/* Right: User area */}
           <div className="flex items-center gap-2">
             {/* Coins */}
-            <div className="hidden sm:flex items-center gap-1.5 bg-gray-800/60 rounded-full px-3 py-1.5">
-              <span className="text-c8l-gold text-xs">⚡</span>
-              <span className="text-xs font-bold text-white">1,250</span>
-              <span className="text-[9px] text-gray-500">C8L</span>
+            <div className="hidden sm:flex">
+              <CreditsDisplay showLabel />
             </div>
 
             {/* Notifications */}

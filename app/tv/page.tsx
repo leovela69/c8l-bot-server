@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Logo from '@/components/ui/Logo'
+import CreditsDisplay from '@/components/ui/CreditsDisplay'
 import { VIDEOS, CATEGORIES, VideoData, getRelatedVideos } from '@/lib/videos/data'
 
 // ============ SIDEBAR ITEMS ============
@@ -130,10 +131,7 @@ export default function TVPage() {
             </div>
             <div className="flex items-center gap-3">
               <button onClick={() => setUploadModalOpen(true)} className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-black font-bold text-xs rounded-lg transition">+ SUBIR</button>
-              <div className="flex items-center gap-1.5 bg-gray-800/60 rounded-full px-3 py-1.5">
-                <span className="text-c8l-gold text-xs">🪙</span>
-                <span className="text-xs font-bold">9999</span>
-              </div>
+              <CreditsDisplay />
             </div>
           </div>
         </header>
@@ -338,9 +336,8 @@ export default function TVPage() {
             <button onClick={() => setUploadModalOpen(true)} className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs rounded-lg transition hover:scale-105 shadow-md shadow-cyan-500/30">
               <span className="text-sm">+</span> SUBIR
             </button>
-            <div className="hidden sm:flex items-center gap-1.5 bg-gray-800/60 rounded-full px-3 py-1.5">
-              <span className="text-c8l-gold text-xs">🪙</span>
-              <span className="text-xs font-bold">9999</span>
+            <div className="hidden sm:flex">
+              <CreditsDisplay showLabel />
             </div>
             <div className="hidden md:flex items-center gap-1 bg-gray-800/40 rounded-full px-2 py-1">
               <span className="text-[10px] bg-c8l-gold text-black px-1.5 py-0.5 rounded font-bold">ES</span>
