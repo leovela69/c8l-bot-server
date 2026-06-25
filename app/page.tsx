@@ -61,9 +61,7 @@ export default function Home() {
         <div className="flex items-center justify-between px-4 h-14">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-c8l-gold to-amber-700 flex items-center justify-center border-2 border-c8l-gold/50">
-              <span className="text-xs font-black text-black">C8L</span>
-            </div>
+            <img src="/images/logo-c8l.png" alt="C8L" className="w-10 h-10 rounded-full object-cover border-2 border-c8l-gold/50" />
             <div className="hidden md:block">
               <h1 className="text-sm font-outfit font-bold text-white leading-none">C8L Corazones Locos</h1>
               <p className="text-[9px] text-gray-500 leading-none mt-0.5">Agency</p>
