@@ -2,298 +2,457 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Providers } from '../providers'
-import { useAuth } from '@/lib/auth/context'
-import AgeGate from '@/components/auth/AgeGate'
-import AppShell from '@/components/layout/AppShell'
+import Link from 'next/link'
+import Logo from '@/components/ui/Logo'
+import CreditsDisplay from '@/components/ui/CreditsDisplay'
 
-const TOOLS = [
-  { id: 'generator', icon: '🎵', name: 'Generador de Beats', desc: 'Crea beats originales con IA', status: 'ready' },
-  { id: 'lyrics', icon: '✍️', name: 'Escritor de Letras', desc: 'Genera letras con IA en tu estilo', status: 'ready' },
-  { id: 'mixer', icon: '🎛️', name: 'Auto-Mix', desc: 'Mezcla automática profesional', status: 'ready' },
-  { id: 'mastering', icon: '💎', name: 'Mastering IA', desc: 'Masteriza tu track al instante', status: 'ready' },
-  { id: 'vocals', icon: '🎤', name: 'Vocal Synth', desc: 'Genera voces con IA', status: 'beta' },
-  { id: 'samples', icon: '🥁', name: 'Sample Finder', desc: 'Encuentra samples perfectos', status: 'ready' },
-  { id: 'chords', icon: '🎹', name: 'Progresión de Acordes', desc: 'Sugiere progresiones', status: 'ready' },
-  { id: 'stems', icon: '🔀', name: 'Separador de Stems', desc: 'Separa vocals, drums, bass', status: 'beta' },
+// ============ SIDEBAR ITEMS ============
+const SIDEBAR_ITEMS = [
+  { icon: '🏠', label: 'Inicio', href: '/' },
+  { icon: '🔍', label: 'Explorar', href: '/tv' },
+  { icon: '✨', label: 'Crear', href: '/studio', active: true },
+  { icon: '🎹', label: 'Estudio', href: '/studio' },
+  { icon: '📚', label: 'Biblioteca', href: '/tv' },
+  { icon: '🎣', label: 'Ganchos', href: '/studio' },
+  { icon: '🔔', label: 'Notificaciones', href: '/perfil' },
 ]
 
-const GENRES = ['Bolero-House', 'Deep House', 'Acid House', 'Lo-Fi', 'Trap', 'Reggaeton', 'Techno', 'Ambient', 'Bachata Fusion', 'Hip-Hop']
-const MOODS = ['Energético', 'Melancólico', 'Romántico', 'Agresivo', 'Chill', 'Épico', 'Misterioso', 'Feliz']
+// ============ GENERATED TRACKS (ejemplo) ============
+const SAMPLE_TRACKS = [
+  { id: 1, title: 'Basura Completa', version: 'v5.5', style: 'reggaeton de alta energia, reggae, fusion flam...', thumbnail: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&h=400&fit=crop', playing: true },
+  { id: 2, title: 'Basura Completa', version: 'v5.5', style: 'reggaeton de alta energia, reggae, fusion flam...', thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=400&fit=crop', playing: false },
+  { id: 3, title: 'MENTIROSA - Leo Vela', version: 'v5.5', style: 'reggaeton flamenco, bolero house, 140 BPM, g...', thumbnail: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400&h=400&fit=crop', playing: false },
+  { id: 4, title: 'Neon Bolero Mix', version: 'v5.5', style: 'bolero house, deep bass, neon vibes, 122 BPM...', thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop', playing: false },
+]
 
-function StudioContent() {
-  const { isAgeVerified, isLoading } = useAuth()
-  const [activeTool, setActiveTool] = useState<string | null>(null)
+export default function StudioPage() {
+  const [mode, setMode] = useState<'sencillo' | 'avanzado'>('avanzado')
+  const [tab, setTab] = useState<'musica' | 'videoclip'>('musica')
+  const [lyrics, setLyrics] = useState('[Final Chorus]\n[Maximum Tribal-Gospel Groove, full explosion of electronic bass, scratching, and heavy beat]\n¡Mentirosa! ¡No eres víctima, eres mentirosa!\nTu boca me juraba, pero tus dedos te delataban,')
+  const [styles, setStyles] = useState('high energy reggaeton reggae flamenco fusion, tribal rhythm, romantic acoustic ukulele strumming, elegant emotional piano chords, crisp flamenco DJ palmas, powerful gospel vocal harmonies in background, hip hop dj scratch effects')
+  const [videoPrompt, setVideoPrompt] = useState('')
+  const [videoStyle, setVideoStyle] = useState('cinematic')
   const [generating, setGenerating] = useState(false)
-  const [selectedGenre, setSelectedGenre] = useState('Bolero-House')
-  const [selectedMood, setSelectedMood] = useState('Energético')
-  const [bpm, setBpm] = useState(118)
-  const [prompt, setPrompt] = useState('')
-  const [generatedTrack, setGeneratedTrack] = useState<null | { name: string; duration: string; bpm: number }>(null)
+  const [tracks, setTracks] = useState(SAMPLE_TRACKS)
+  const [currentTrack, setCurrentTrack] = useState(SAMPLE_TRACKS[0])
+  const [progress, setProgress] = useState(57) // 2:32 of 4:41 ≈ 57%
 
-  if (isLoading) return <div className="min-h-screen bg-[#0A0A0A]" />
-  if (!isAgeVerified) return <AgeGate />
 
-  const handleGenerate = () => {
+  const handleCreate = () => {
     setGenerating(true)
     setTimeout(() => {
+      const newTrack = {
+        id: Date.now(),
+        title: lyrics.split('\n').find(l => l.trim() && !l.startsWith('['))?.slice(0, 30) || 'Nueva Creación',
+        version: 'v5.5',
+        style: styles.slice(0, 50) + '...',
+        thumbnail: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=400&h=400&fit=crop`,
+        playing: false,
+      }
+      setTracks([newTrack, ...tracks])
       setGenerating(false)
-      setGeneratedTrack({
-        name: `${selectedGenre} - ${selectedMood} (${bpm} BPM)`,
-        duration: '3:45',
-        bpm: bpm
-      })
     }, 3000)
   }
 
+  const VIDEO_STYLES = [
+    { id: 'cinematic', label: '🎬 Cinemático', desc: 'Estilo película, dramático' },
+    { id: 'neon', label: '🌃 Neon City', desc: 'Cyberpunk, luces neón' },
+    { id: 'nature', label: '🌿 Naturaleza', desc: 'Paisajes, orgánico' },
+    { id: 'abstract', label: '🎨 Abstracto', desc: 'Formas, colores, arte' },
+    { id: 'concert', label: '🎤 Concierto', desc: 'Live, escenario, público' },
+    { id: 'anime', label: '🎌 Anime', desc: 'Estilo japonés animado' },
+  ]
+
   return (
-    <AppShell>
-      <div className="p-4 md:p-6 pb-20 lg:pb-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-outfit font-bold text-white flex items-center gap-2">
-              <span>🤖</span> Estudio IA
-            </h1>
-            <p className="text-sm text-gray-400 mt-1">Crea música profesional con inteligencia artificial</p>
-          </div>
-          <div className="hidden sm:flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-full px-3 py-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] text-green-400 font-bold">IA ACTIVA</span>
-          </div>
+    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col">
+      {/* ============ TOP NAV ============ */}
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#0D0D0D] via-[#111118] to-[#0D0D0D] border-b border-c8l-gold/20">
+        <div className="flex items-center gap-1 px-4 py-2 overflow-x-auto no-scrollbar">
+          <Link href="/" className="flex items-center gap-2 mr-3 flex-shrink-0">
+            <Logo size="sm" />
+            <span className="text-sm font-outfit font-bold text-white hidden sm:inline">C8L</span>
+          </Link>
+          <div className="w-px h-6 bg-gray-700 mr-2 flex-shrink-0" />
+          <Link href="/" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-gray-700/60 border border-transparent hover:border-gray-600 transition-all">
+            <span className="text-sm">🏠</span><span className="text-[10px] font-medium text-gray-400 group-hover:text-white hidden sm:inline">INICIO</span>
+          </Link>
+          <Link href="/tv" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-cyan-500/15 border border-transparent hover:border-cyan-500/40 transition-all">
+            <span className="text-sm">📺</span><span className="text-[10px] font-medium text-gray-400 group-hover:text-cyan-400 hidden sm:inline">C8L TV</span>
+          </Link>
+          <Link href="/studio" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/15 border border-teal-500/40 transition-all">
+            <span className="text-sm">🤖</span><span className="text-[10px] font-bold text-teal-400 hidden sm:inline">ESTUDIO IA</span>
+          </Link>
+          <Link href="/streaming" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-green-500/15 border border-transparent hover:border-green-500/40 transition-all">
+            <span className="text-sm">🎧</span><span className="text-[10px] font-medium text-gray-400 group-hover:text-green-300 hidden sm:inline">STREAMING</span>
+          </Link>
+          <Link href="/monetizacion" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-yellow-500/15 border border-transparent hover:border-yellow-500/40 transition-all">
+            <span className="text-sm">💰</span><span className="text-[10px] font-medium text-gray-400 group-hover:text-yellow-300 hidden sm:inline">TIENDA</span>
+          </Link>
+          <Link href="/comunidad" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-blue-500/15 border border-transparent hover:border-blue-500/40 transition-all">
+            <span className="text-sm">👥</span><span className="text-[10px] font-medium text-gray-400 group-hover:text-blue-300 hidden sm:inline">COMUNIDAD</span>
+          </Link>
+          <Link href="/casino" className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/40 hover:bg-amber-500/15 border border-transparent hover:border-amber-500/40 transition-all">
+            <span className="text-sm">🎰</span><span className="text-[10px] font-medium text-gray-400 group-hover:text-amber-300 hidden sm:inline">CASINO</span>
+          </Link>
         </div>
+      </div>
 
-        {/* Tools Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
-          {TOOLS.map((tool, i) => (
-            <motion.button
-              key={tool.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              onClick={() => setActiveTool(activeTool === tool.id ? null : tool.id)}
-              className={`relative glass rounded-xl p-4 text-left transition hover:border-c8l-cyan/30 ${
-                activeTool === tool.id ? 'border-c8l-cyan ring-1 ring-c8l-cyan/30' : ''
-              }`}
-            >
-              {tool.status === 'beta' && (
-                <span className="absolute top-2 right-2 text-[8px] bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full font-bold">
-                  BETA
-                </span>
-              )}
-              <span className="text-2xl">{tool.icon}</span>
-              <h3 className="text-xs font-bold text-white mt-2">{tool.name}</h3>
-              <p className="text-[10px] text-gray-500 mt-0.5">{tool.desc}</p>
-            </motion.button>
-          ))}
-        </div>
 
-        {/* Main Generator Panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-2xl p-6 mb-8"
-        >
-          <h2 className="text-lg font-outfit font-bold text-white mb-4 flex items-center gap-2">
-            <span>🎵</span> Generador de Música IA
-          </h2>
-
-          {/* Genre Selection */}
-          <div className="mb-4">
-            <label className="text-xs text-gray-400 mb-2 block">Género</label>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {GENRES.map(genre => (
-                <button
-                  key={genre}
-                  onClick={() => setSelectedGenre(genre)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition border ${
-                    selectedGenre === genre
-                      ? 'bg-c8l-purple text-white border-c8l-purple'
-                      : 'text-gray-400 border-gray-700 hover:border-gray-500'
-                  }`}
-                >
-                  {genre}
-                </button>
-              ))}
+      {/* ============ MAIN LAYOUT ============ */}
+      <div className="flex pt-[42px] flex-1">
+        {/* ============ LEFT SIDEBAR ============ */}
+        <aside className="hidden lg:flex flex-col w-44 fixed left-0 top-[42px] bottom-0 bg-[#0A0A0A] border-r border-gray-800/30 py-4 px-2">
+          {/* User info */}
+          <div className="flex items-center gap-2 px-2 mb-4">
+            <Logo size="xs" />
+            <div>
+              <p className="text-xs font-bold text-white">leovela888</p>
+              <p className="text-[9px] text-c8l-gold">365</p>
             </div>
           </div>
 
-          {/* Mood Selection */}
-          <div className="mb-4">
-            <label className="text-xs text-gray-400 mb-2 block">Mood / Ambiente</label>
-            <div className="flex gap-2 flex-wrap">
-              {MOODS.map(mood => (
-                <button
-                  key={mood}
-                  onClick={() => setSelectedMood(mood)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition border ${
-                    selectedMood === mood
-                      ? 'bg-c8l-pink text-white border-c8l-pink'
-                      : 'text-gray-400 border-gray-700 hover:border-gray-500'
-                  }`}
-                >
-                  {mood}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Nav */}
+          <nav className="space-y-0.5 flex-1">
+            {SIDEBAR_ITEMS.map(item => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition text-sm ${
+                  item.active
+                    ? 'bg-white/10 text-white font-bold'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span className="text-xs">{item.label}</span>
+              </Link>
+            ))}
+          </nav>
 
-          {/* BPM Slider */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs text-gray-400">BPM (Tempo)</label>
-              <span className="text-xs text-c8l-cyan font-bold">{bpm} BPM</span>
-            </div>
-            <input
-              type="range"
-              min="60"
-              max="180"
-              value={bpm}
-              onChange={(e) => setBpm(Number(e.target.value))}
-              className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-c8l-cyan"
-            />
-            <div className="flex justify-between text-[9px] text-gray-600 mt-1">
-              <span>60</span>
-              <span>90</span>
-              <span>120</span>
-              <span>150</span>
-              <span>180</span>
-            </div>
+          {/* Bottom links */}
+          <div className="mt-auto space-y-1 px-2 pt-4 border-t border-gray-800/50">
+            <a className="block text-[10px] text-gray-600 hover:text-gray-400 cursor-pointer">Laboratorios</a>
+            <a className="block text-[10px] text-gray-600 hover:text-gray-400 cursor-pointer">Términos y políticas</a>
+            <a className="block text-[10px] text-gray-600 hover:text-gray-400 cursor-pointer">Más</a>
           </div>
+        </aside>
 
-          {/* Custom Prompt */}
-          <div className="mb-6">
-            <label className="text-xs text-gray-400 mb-2 block">Descripción (opcional)</label>
-            <textarea
-              placeholder="Ej: Un beat con guitarra acústica de bolero, bajo profundo de house, y pad atmospheric..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="w-full bg-gray-900/80 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-c8l-cyan transition resize-none h-20"
-            />
-          </div>
+        {/* ============ CENTER: CREATION PANEL ============ */}
+        <div className="lg:ml-44 flex-1 flex flex-col lg:flex-row">
+          {/* Left Creation Panel */}
+          <div className="w-full lg:w-[420px] xl:w-[480px] border-r border-gray-800/30 p-4 lg:p-6 flex flex-col overflow-y-auto max-h-[calc(100vh-42px)]">
+            {/* Mode toggle + Credits */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex bg-[#1a1a1a] rounded-lg p-0.5">
+                  <button onClick={() => setTab('musica')} className={`px-4 py-1.5 rounded-md text-xs font-medium transition ${tab === 'musica' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}>
+                    🎵 Música
+                  </button>
+                  <button onClick={() => setTab('videoclip')} className={`px-4 py-1.5 rounded-md text-xs font-medium transition ${tab === 'videoclip' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}>
+                    🎬 Videoclip
+                  </button>
+                </div>
+              </div>
+              <CreditsDisplay />
+            </div>
 
-          {/* Generate Button */}
-          <button
-            onClick={handleGenerate}
-            disabled={generating}
-            className="w-full py-4 bg-gradient-to-r from-c8l-purple via-c8l-pink to-c8l-gold rounded-xl font-bold text-lg hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {generating ? (
+            {tab === 'musica' ? (
               <>
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  className="inline-block"
-                >
-                  ⚙️
-                </motion.span>
-                Generando... (esto toma unos segundos)
+                {/* Sencillo / Avanzado toggle */}
+                <div className="flex items-center gap-0 mb-5 bg-[#1a1a1a] rounded-lg p-0.5 w-fit">
+                  <button onClick={() => setMode('sencillo')} className={`px-4 py-1.5 rounded-md text-xs font-medium transition ${mode === 'sencillo' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-white'}`}>
+                    Sencillo
+                  </button>
+                  <button onClick={() => setMode('avanzado')} className={`px-4 py-1.5 rounded-md text-xs font-medium transition ${mode === 'avanzado' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-white'}`}>
+                    Avanzado
+                  </button>
+                </div>
+
+
+                {mode === 'avanzado' && (
+                  <>
+                    {/* Audio + Voz + Inspiración tabs */}
+                    <div className="flex gap-3 mb-5">
+                      <button className="px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-xs text-gray-300 hover:border-gray-500 transition">+ Audio</button>
+                      <button className="px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-xs text-gray-300 hover:border-gray-500 transition">
+                        + Voz <span className="ml-1 text-[8px] bg-pink-500 text-white px-1.5 py-0.5 rounded-full">Nuevo</span>
+                      </button>
+                      <button className="px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-xs text-gray-300 hover:border-gray-500 transition">+ Inspiración</button>
+                    </div>
+
+                    {/* LETRA Section */}
+                    <div className="mb-5">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                          <span className="text-gray-400">▼</span> Letra
+                        </h3>
+                        <div className="flex gap-1.5">
+                          <button className="w-7 h-7 rounded-lg bg-[#1a1a1a] border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white text-xs transition">↩</button>
+                          <button className="w-7 h-7 rounded-lg bg-[#1a1a1a] border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white text-xs transition">🔖</button>
+                          <button className="w-7 h-7 rounded-lg bg-[#1a1a1a] border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white text-xs transition">📋</button>
+                        </div>
+                      </div>
+                      <textarea
+                        value={lyrics}
+                        onChange={e => setLyrics(e.target.value)}
+                        className="w-full bg-[#111] border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 placeholder-gray-600 outline-none focus:border-orange-500/50 transition resize-none h-40 font-mono leading-relaxed"
+                        placeholder="Escribe tus letras aquí..."
+                      />
+                      {/* Waveform / controls below lyrics */}
+                      <div className="flex items-center gap-3 mt-2">
+                        <div className="flex gap-1">
+                          {[...Array(8)].map((_, i) => (
+                            <div key={i} className="w-1 bg-gray-700 rounded-full" style={{ height: `${8 + Math.random() * 12}px` }} />
+                          ))}
+                        </div>
+                        <button className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white text-xs shadow-lg shadow-orange-500/30">
+                          ✕
+                        </button>
+                        <div className="flex-1" />
+                        <button className="text-gray-500 hover:text-white text-sm transition">↻</button>
+                      </div>
+                    </div>
+
+                    {/* ESTILOS Section */}
+                    <div className="mb-5">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                          <span className="text-gray-400">▼</span> Estilos
+                        </h3>
+                        <div className="flex gap-1.5">
+                          <button className="w-7 h-7 rounded-lg bg-[#1a1a1a] border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white text-xs transition">↩</button>
+                          <button className="w-7 h-7 rounded-lg bg-[#1a1a1a] border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white text-xs transition">🔖</button>
+                          <button className="w-7 h-7 rounded-lg bg-[#1a1a1a] border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white text-xs transition">📋</button>
+                        </div>
+                      </div>
+                      <textarea
+                        value={styles}
+                        onChange={e => setStyles(e.target.value)}
+                        className="w-full bg-[#111] border border-gray-800 rounded-xl px-4 py-3 text-sm text-purple-300 placeholder-gray-600 outline-none focus:border-purple-500/50 transition resize-none h-32 font-mono leading-relaxed"
+                        placeholder="high energy reggaeton, bolero house, flamenco fusion..."
+                      />
+                    </div>
+                  </>
+                )}
+
+                {mode === 'sencillo' && (
+                  <div className="mb-5">
+                    <label className="text-xs text-gray-400 mb-2 block">Describe tu canción</label>
+                    <textarea
+                      value={styles}
+                      onChange={e => setStyles(e.target.value)}
+                      placeholder="Ej: Una canción de reggaeton con fusión flamenco, energética, para fiesta..."
+                      className="w-full bg-[#111] border border-gray-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-c8l-gold/50 transition resize-none h-32"
+                    />
+                  </div>
+                )}
+
+
+                {/* CREATE BUTTON */}
+                <div className="flex items-center gap-3 mt-auto pt-4">
+                  <button className="w-12 h-12 rounded-xl bg-[#1a1a1a] border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition text-lg">
+                    🗑️
+                  </button>
+                  <button
+                    onClick={handleCreate}
+                    disabled={generating}
+                    className="flex-1 py-4 bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 rounded-xl font-bold text-base hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60 shadow-lg shadow-orange-500/20"
+                  >
+                    {generating ? '⏳ Generando...' : '✨ Crear'}
+                  </button>
+                </div>
               </>
             ) : (
-              <>🚀 Generar Track con IA</>
+              /* ============ VIDEOCLIP TAB ============ */
+              <>
+                <div className="mb-5">
+                  <label className="text-xs text-gray-400 mb-2 block uppercase tracking-wider">Canción base</label>
+                  <select className="w-full bg-[#111] border border-gray-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/50 transition">
+                    <option>Basura Completa - v5.5</option>
+                    <option>MENTIROSA - Leo Vela - v5.5</option>
+                    <option>Neon Bolero Mix - v5.5</option>
+                    <option>Subir audio externo...</option>
+                  </select>
+                </div>
+
+                <div className="mb-5">
+                  <label className="text-xs text-gray-400 mb-2 block uppercase tracking-wider">Estilo visual</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {VIDEO_STYLES.map(vs => (
+                      <button
+                        key={vs.id}
+                        onClick={() => setVideoStyle(vs.id)}
+                        className={`p-3 rounded-xl border text-left transition ${
+                          videoStyle === vs.id
+                            ? 'border-purple-500 bg-purple-500/10'
+                            : 'border-gray-800 bg-[#111] hover:border-gray-600'
+                        }`}
+                      >
+                        <span className="text-lg">{vs.label.split(' ')[0]}</span>
+                        <p className="text-[10px] text-gray-400 mt-1">{vs.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <label className="text-xs text-gray-400 mb-2 block uppercase tracking-wider">Descripción del videoclip</label>
+                  <textarea
+                    value={videoPrompt}
+                    onChange={e => setVideoPrompt(e.target.value)}
+                    placeholder="Ej: Un hombre caminando por calles de neón de noche, lluvia, estilo cyberpunk con destellos de colores..."
+                    className="w-full bg-[#111] border border-gray-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500/50 transition resize-none h-28"
+                  />
+                </div>
+
+                <div className="mb-5">
+                  <label className="text-xs text-gray-400 mb-2 block uppercase tracking-wider">Duración</label>
+                  <div className="flex gap-2">
+                    <button className="px-4 py-2 bg-purple-500/15 border border-purple-500/40 rounded-lg text-xs text-purple-300 font-bold">30s</button>
+                    <button className="px-4 py-2 bg-[#111] border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-gray-600">60s</button>
+                    <button className="px-4 py-2 bg-[#111] border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-gray-600">Full</button>
+                  </div>
+                </div>
+
+                {/* CREATE VIDEOCLIP BUTTON */}
+                <button
+                  onClick={() => { setGenerating(true); setTimeout(() => setGenerating(false), 4000) }}
+                  disabled={generating}
+                  className="w-full py-4 bg-gradient-to-r from-purple-600 via-violet-600 to-fuchsia-600 rounded-xl font-bold text-base hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60 shadow-lg shadow-purple-500/20 mt-auto"
+                >
+                  {generating ? '⏳ Generando videoclip...' : '🎬 Crear Videoclip'}
+                </button>
+              </>
             )}
-          </button>
-        </motion.div>
+          </div>
 
-        {/* Generated Track Result */}
-        <AnimatePresence>
-          {generatedTrack && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="glass rounded-2xl p-6 mb-8 border border-green-500/30"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <span className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-xs text-green-400 font-bold">TRACK GENERADO</span>
-              </div>
 
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-c8l-purple to-c8l-gold flex items-center justify-center">
-                  <span className="text-2xl">🎵</span>
+          {/* ============ RIGHT: WORKSPACE (Generated Tracks) ============ */}
+          <div className="flex-1 p-4 lg:p-6 overflow-y-auto max-h-[calc(100vh-42px-72px)]">
+            {/* Workspace Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-outfit font-bold text-white">
+                Mi espacio de trabajo
+              </h2>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center bg-[#1a1a1a] border border-gray-800 rounded-lg px-3 py-1.5">
+                  <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  <input type="text" placeholder="Busqueda" className="bg-transparent text-xs text-white outline-none w-24" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-bold text-white">{generatedTrack.name}</h3>
-                  <p className="text-[11px] text-gray-400">Duración: {generatedTrack.duration} • {generatedTrack.bpm} BPM</p>
-                </div>
-                <div className="flex gap-2">
-                  <button className="bg-c8l-cyan text-black text-xs font-bold px-4 py-2 rounded-full">
-                    ▶ Play
-                  </button>
-                  <button className="bg-gray-700 text-white text-xs px-3 py-2 rounded-full">
-                    💾
-                  </button>
-                </div>
-              </div>
-
-              {/* Waveform placeholder */}
-              <div className="mt-4 h-12 bg-gray-900/50 rounded-lg flex items-center justify-center overflow-hidden">
-                <div className="flex items-end gap-0.5 h-8">
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ height: 4 }}
-                      animate={{ height: Math.random() * 28 + 4 }}
-                      transition={{ duration: 0.5, delay: i * 0.02 }}
-                      className="w-1 bg-gradient-to-t from-c8l-purple to-c8l-cyan rounded-full"
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <button className="flex-1 py-2 bg-gray-700 rounded-lg text-xs font-bold hover:bg-gray-600 transition">
-                  📥 Descargar WAV
+                <button className="px-3 py-1.5 bg-[#1a1a1a] border border-gray-800 rounded-lg text-xs text-gray-400 hover:text-white transition">
+                  🔽 Mas recientes
                 </button>
-                <button className="flex-1 py-2 bg-gray-700 rounded-lg text-xs font-bold hover:bg-gray-600 transition">
-                  📤 Compartir
-                </button>
-                <button className="flex-1 py-2 bg-c8l-purple rounded-lg text-xs font-bold hover:bg-c8l-purple/80 transition">
-                  🔄 Regenerar
+                <button className="px-3 py-1.5 bg-[#1a1a1a] border border-gray-800 rounded-lg text-xs text-gray-400 hover:text-white transition">
+                  ▦ Cuadricula
                 </button>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
 
-        {/* Recent Creations */}
-        <div>
-          <h2 className="text-lg font-outfit font-bold text-white flex items-center gap-2 mb-4">
-            <span>📂</span> Tus Creaciones Recientes
-          </h2>
-          <div className="space-y-2">
-            {[
-              { name: 'Neon Bolero Mix', genre: 'Bolero-House', bpm: 115, date: 'Hoy 12:30' },
-              { name: 'Acid Dreams', genre: 'Acid House', bpm: 130, date: 'Ayer 22:00' },
-              { name: 'Sunset Vibes', genre: 'Deep House', bpm: 122, date: 'Hace 2 días' },
-              { name: 'Urban Bachata', genre: 'Bachata Fusion', bpm: 100, date: 'Hace 3 días' },
-            ].map((track, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="glass rounded-xl p-3 flex items-center gap-3 hover:border-c8l-purple/30 transition cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-c8l-purple/30 to-c8l-pink/30 flex items-center justify-center">
-                  <span>🎵</span>
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-xs font-bold text-white">{track.name}</h4>
-                  <p className="text-[10px] text-gray-500">{track.genre} • {track.bpm} BPM</p>
-                </div>
-                <span className="text-[10px] text-gray-600">{track.date}</span>
-                <button className="text-gray-400 hover:text-white transition">▶</button>
-              </motion.div>
-            ))}
+            {/* Tracks Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {tracks.map((track, i) => (
+                <motion.div
+                  key={track.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="group rounded-xl overflow-hidden bg-[#111] border border-gray-800/50 hover:border-gray-600 transition cursor-pointer"
+                  onClick={() => setCurrentTrack(track)}
+                >
+                  {/* Thumbnail */}
+                  <div className="relative aspect-square overflow-hidden">
+                    <img src={track.thumbnail} alt={track.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    {/* Play overlay */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-xl">
+                        <span className="text-black text-lg ml-0.5">▶</span>
+                      </div>
+                    </div>
+                    {/* Playing indicator */}
+                    {track.playing && (
+                      <div className="absolute top-3 right-3 w-3 h-3 rounded-full bg-pink-500 animate-pulse ring-2 ring-pink-500/50" />
+                    )}
+                  </div>
+                  {/* Info */}
+                  <div className="p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-sm font-bold text-white truncate flex-1">{track.title}</h3>
+                      <span className="text-[9px] bg-teal-500/20 text-teal-400 px-1.5 py-0.5 rounded font-bold flex-shrink-0">{track.version}</span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 truncate">{track.style}</p>
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2 mt-3">
+                      <button className="px-3 py-1.5 bg-[#1a1a1a] border border-gray-700 rounded-lg text-[10px] text-gray-400 hover:text-white transition flex items-center gap-1">
+                        ↻ Remix
+                      </button>
+                      <button className="text-gray-600 hover:text-white text-sm transition">👍</button>
+                      <button className="text-gray-600 hover:text-white text-sm transition">👎</button>
+                      <button className="text-gray-600 hover:text-white text-sm transition">↗️</button>
+                      <button className="text-gray-600 hover:text-white text-sm transition ml-auto">⋯</button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </AppShell>
-  )
-}
 
-export default function StudioPage() {
-  return <Providers><StudioContent /></Providers>
+      {/* ============ BOTTOM PLAYER BAR ============ */}
+      {currentTrack && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/98 backdrop-blur-md border-t border-gray-800/50 h-[72px]">
+          <div className="flex items-center h-full px-4 gap-4">
+            {/* Track info */}
+            <div className="flex items-center gap-3 min-w-[200px]">
+              <img src={currentTrack.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover" />
+              <div>
+                <p className="text-xs font-bold text-white truncate">{currentTrack.title}</p>
+                <p className="text-[10px] text-gray-500">leovela888</p>
+              </div>
+            </div>
+
+            {/* Center controls */}
+            <div className="flex-1 flex flex-col items-center gap-1">
+              <div className="flex items-center gap-5">
+                <button className="text-gray-400 hover:text-white transition">🔀</button>
+                <button className="text-gray-400 hover:text-white transition text-lg">⏮</button>
+                <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition shadow-lg">
+                  <span className="text-black text-sm">⏸</span>
+                </button>
+                <button className="text-gray-400 hover:text-white transition text-lg">⏭</button>
+                <button className="text-gray-400 hover:text-white transition">🔁</button>
+              </div>
+              {/* Progress bar */}
+              <div className="w-full max-w-lg flex items-center gap-2">
+                <span className="text-[9px] text-gray-500 font-mono">2:32</span>
+                <div className="flex-1 h-1 bg-gray-800 rounded-full relative cursor-pointer group">
+                  <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }}></div>
+                  <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition" style={{ left: `${progress}%` }}></div>
+                </div>
+                <span className="text-[9px] text-gray-500 font-mono">4:41</span>
+              </div>
+            </div>
+
+            {/* Right controls */}
+            <div className="hidden sm:flex items-center gap-3 min-w-[180px] justify-end">
+              <button className="text-gray-400 hover:text-white text-sm transition">📋</button>
+              <button className="text-gray-400 hover:text-white text-sm transition">👍</button>
+              <button className="text-gray-400 hover:text-white text-sm transition">👎</button>
+              <button className="text-gray-400 hover:text-white text-sm transition">💬</button>
+              <button className="text-gray-400 hover:text-white text-sm transition">↗️</button>
+              <button className="text-gray-400 hover:text-white text-sm transition">⋮</button>
+              {/* Volume */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-gray-400 text-sm">🔊</span>
+                <div className="w-16 h-1 bg-gray-800 rounded-full relative">
+                  <div className="h-full bg-white rounded-full" style={{ width: '70%' }}></div>
+                </div>
+              </div>
+              <button className="text-gray-400 hover:text-white text-sm transition">ℹ️</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
