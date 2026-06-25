@@ -49,20 +49,20 @@ OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 # ---------------------------------------------------------------------------
 MODELS = {
     # Bot Maestro — orquestacion inteligente
-    "zeus": "deepseek/deepseek-v4-flash:free",
+    "zeus": "deepseek/deepseek-chat-v3-0324:free",
 
     # Skills Maestros
-    "minerva": "deepseek/deepseek-v4-flash:free",
-    "vulcano": "deepseek/deepseek-v4-flash:free",
+    "minerva": "deepseek/deepseek-chat-v3-0324:free",
+    "vulcano": "deepseek/deepseek-chat-v3-0324:free",
 
     # Bots Esclavos
     "aries": "qwen/qwen3-30b-a3b:free",
-    "hermes": "deepseek/deepseek-v4-flash:free",
-    "apolo": "deepseek/deepseek-v4-flash:free",
-    "ares": "deepseek/deepseek-v4-flash:free",
-    "hefesto": "deepseek/deepseek-v4-flash:free",
-    "artemisa": "deepseek/deepseek-v4-flash:free",
-    "atenea": "deepseek/deepseek-v4-flash:free",
+    "hermes": "deepseek/deepseek-chat-v3-0324:free",
+    "apolo": "deepseek/deepseek-chat-v3-0324:free",
+    "ares": "deepseek/deepseek-chat-v3-0324:free",
+    "hefesto": "deepseek/deepseek-chat-v3-0324:free",
+    "artemisa": "deepseek/deepseek-chat-v3-0324:free",
+    "atenea": "deepseek/deepseek-chat-v3-0324:free",
     "estia": "qwen/qwen3-30b-a3b:free",
 
     # Fallback general

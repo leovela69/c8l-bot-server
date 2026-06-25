@@ -57,9 +57,9 @@ def call_openrouter(prompt, system_prompt="", agent_name="zeus", temperature=0.8
     models_to_try = [
         model,
         MODELS["fallback"],
-        "deepseek/deepseek-v4-flash:free",
+        "deepseek/deepseek-chat-v3-0324:free",
         "qwen/qwen3-30b-a3b:free",
-        "meta-llama/llama-4-maverick:free",
+        "qwen/qwen3.6-plus:free",
     ]
     # Eliminar duplicados manteniendo orden
     seen = set()
