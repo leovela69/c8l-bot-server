@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/lib/auth/context'
+import Logo from '@/components/ui/Logo'
 
 const NAV_ITEMS = [
   { href: '/', icon: '📺', label: 'C8L TV', emoji: '📺' },
@@ -81,13 +82,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               </svg>
             </button>
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center">
-                <span className="text-[10px] font-black">C8L</span>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xs font-outfit font-bold text-white leading-none">C8L AGENCY</h1>
-                <p className="text-[9px] text-gray-500 leading-none mt-0.5">Corazones Locos</p>
-              </div>
+              <Logo size="sm" showText />
             </Link>
           </div>
 
@@ -209,12 +204,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
             >
               <div className="p-4">
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-c8l-gold to-c8l-purple flex items-center justify-center">
-                    <span className="text-sm font-black">C8L</span>
-                  </div>
+                  <Logo size="sm" />
                   <div>
                     <h2 className="text-sm font-outfit font-bold">C8L Agency</h2>
-                    <p className="text-[10px] text-gray-500">Corazones Locos Family</p>
+                    <p className="text-[10px] text-c8l-gold">Corazones Locos Family</p>
                   </div>
                 </div>
                 {NAV_ITEMS.map(item => (
