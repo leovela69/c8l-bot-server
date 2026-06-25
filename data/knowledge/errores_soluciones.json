@@ -1,0 +1,128 @@
+{
+  "version": "1.0",
+  "descripcion": "Base de conocimiento de errores y soluciones del sistema C8L. Los bots consultan esto para auto-repararse.",
+  "actualizado": "2026-06-25",
+  "errores": [
+    {
+      "id": "ERR-001",
+      "problema": "Error 409 Conflict: terminated by other getUpdates request",
+      "causa": "Hay DOS instancias del bot corriendo con el mismo token de Telegram",
+      "sintomas": ["Bot no responde", "Mensajes duplicados", "Error 409 en logs"],
+      "solucion": [
+        "1. Buscar procesos: ps aux | grep whatsapp_bot",
+        "2. Matar TODOS: pkill -9 -f whatsapp_bot.py",
+        "3. Verificar supervisor: supervisorctl stop all",
+        "4. Verificar /opt/c8l-bot/: kill proceso si existe",
+        "5. Lanzar UNA sola instancia: nohup python3 whatsapp_bot.py > bot1.log 2>&1 &"
+      ],
+      "prevencion": "Siempre matar procesos viejos antes de lanzar nuevo. Supervisor desactivado.",
+      "fecha_descubierto": "2026-06-25",
+      "severidad": "critica"
+    },
+    {
+      "id": "ERR-002",
+      "problema": "OpenRouter devuelve 404 en todos los modelos free",
+      "causa": "API key sin credito. OpenRouter requiere saldo minimo para modelos gratuitos.",
+      "sintomas": ["Todos los comandos de IA fallan", "404 Not Found en logs", "TODOS LOS MODELOS FALLARON"],
+      "solucion": [
+        "1. Verificar key: curl con /api/v1/auth/key",
+        "2. Si limit=0 o limit_remaining=0 -> key sin credito",
+        "3. SOLUCION RAPIDA: Migrar a Groq (gratis, sin limite)",
+        "4. Cambiar GROQ_API_KEY en config.py",
+        "5. Cambiar MODELS en config.py a modelos de Groq",
+        "6. Cambiar openrouter_client.py para usar _call_groq_api primero"
+      ],
+      "prevencion": "Usar Groq como motor principal. OpenRouter solo como backup.",
+      "fecha_descubierto": "2026-06-25",
+      "severidad": "critica"
+    },
+    {
+      "id": "ERR-003",
+      "problema": "Modelo deepseek/deepseek-v4-flash:free no existe",
+      "causa": "Nombre de modelo incorrecto o fue eliminado de OpenRouter",
+      "sintomas": ["404 en logs para ese modelo especifico"],
+      "solucion": [
+        "1. Verificar modelos disponibles en https://openrouter.ai/models?q=free",
+        "2. Modelos correctos Groq: llama-3.3-70b-versatile, mixtral-8x7b-32768, gemma2-9b-it",
+        "3. Actualizar config.py MODELS con nombres correctos"
+      ],
+      "prevencion": "Siempre verificar nombres de modelos antes de actualizar config.",
+      "fecha_descubierto": "2026-06-25",
+      "severidad": "alta"
+    },
+    {
+      "id": "ERR-004",
+      "problema": "PDF corrupto - No podemos abrir este archivo",
+      "causa": "fpdf2 falla con 'Not enough horizontal space to render a single character' cuando hay palabras muy largas sin espacios",
+      "sintomas": ["PDF se descarga pero no se abre", "Error en logs: Not enough horizontal space"],
+      "solucion": [
+        "1. En generate_pdf(): agregar regex para cortar palabras >50 chars",
+        "2. re.sub(r'(\\S{50,})', lambda: split cada 50 chars)",
+        "3. Truncar lineas a max 500 chars",
+        "4. Fallback: si PDF falla, generar PDF minimo solo con texto ASCII",
+        "5. NUNCA enviar texto plano con extension .pdf"
+      ],
+      "prevencion": "Siempre sanitizar contenido antes de generar PDF. Cortar palabras largas.",
+      "fecha_descubierto": "2026-06-25",
+      "severidad": "media"
+    },
+    {
+      "id": "ERR-005",
+      "problema": "Pollinations video devuelve 401/402",
+      "causa": "API key de Pollinations expirada o sin saldo para video",
+      "sintomas": ["Video no se genera", "402 Payment Required", "401 Unauthorized"],
+      "solucion": [
+        "1. Verificar: curl a gen.pollinations.ai/video/test",
+        "2. Si 401/402 -> key no valida para video",
+        "3. ALTERNATIVA: generar guion cinematografico con IA (Groq) en vez de video real",
+        "4. Imagenes SI funcionan gratis en image.pollinations.ai (sin key)",
+        "5. Para video real: comprar key Pollinations o esperar"
+      ],
+      "prevencion": "Tener siempre fallback a guion cuando video falla.",
+      "fecha_descubierto": "2026-06-25",
+      "severidad": "media"
+    },
+    {
+      "id": "ERR-006",
+      "problema": "Puerto 8080 Address already in use",
+      "causa": "Otro servicio ya usa el puerto 8080 (bot principal o servicio anterior)",
+      "sintomas": ["OSError: [Errno 98] Address already in use al arrancar"],
+      "solucion": [
+        "1. Usar puerto diferente: PORT=8082 python3 hermes_bot.py",
+        "2. O matar el proceso que usa 8080: lsof -i :8080 | kill",
+        "3. Hermes usa 8081 para API, 8082 para health"
+      ],
+      "prevencion": "Cada servicio tiene su propio puerto asignado. No compartir.",
+      "fecha_descubierto": "2026-06-25",
+      "severidad": "baja"
+    },
+    {
+      "id": "ERR-007",
+      "problema": "HuggingFace DNS no resuelve desde VPS",
+      "causa": "El VPS de Hostinger no puede resolver api-inference.huggingface.co",
+      "sintomas": ["NameResolutionError", "Failed to resolve hostname"],
+      "solucion": [
+        "1. HuggingFace NO funciona desde este VPS para texto",
+        "2. ALTERNATIVA: usar Groq para texto",
+        "3. Para imagenes: usar Pollinations (image.pollinations.ai SI funciona)"
+      ],
+      "prevencion": "No depender de HuggingFace para texto en este VPS.",
+      "fecha_descubierto": "2026-06-25",
+      "severidad": "baja"
+    },
+    {
+      "id": "ERR-008",
+      "problema": "Gemini API devuelve 429 quota exceeded",
+      "causa": "Key de Gemini (tipo AQ.Ab8...) sin creditos prepaid",
+      "sintomas": ["429 RESOURCE_EXHAUSTED", "prepayment credits depleted"],
+      "solucion": [
+        "1. Las keys tipo AQ.Ab8... necesitan credito prepago",
+        "2. Necesitas key tipo AIzaSy... para tier gratis (1500 req/dia)",
+        "3. ALTERNATIVA: usar Groq que es 100% gratis sin limites practicos"
+      ],
+      "prevencion": "No depender de Gemini. Groq es el motor principal.",
+      "fecha_descubierto": "2026-06-25",
+      "severidad": "media"
+    }
+  ]
+}
