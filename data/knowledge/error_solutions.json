@@ -1,0 +1,114 @@
+{
+  "suno_401": {
+    "error_pattern": "401|TOKEN_EXPIRED|Unauthorized",
+    "category": "auth",
+    "solution_type": "refresh_token",
+    "solution_params": {
+      "method": "clerk_refresh",
+      "max_retries": 3
+    },
+    "success_count": 10,
+    "fail_count": 1,
+    "last_used": "2026-06-26T05:09:01.806423",
+    "learned_from": "base_knowledge",
+    "description": "Token JWT expirado → Refrescar via Clerk"
+  },
+  "suno_429": {
+    "error_pattern": "429|Too Many Requests|rate.limit",
+    "category": "rate_limit",
+    "solution_type": "exponential_backoff",
+    "solution_params": {
+      "base_wait": 30,
+      "max_wait": 300,
+      "multiplier": 2
+    },
+    "success_count": 8,
+    "fail_count": 1,
+    "last_used": "",
+    "learned_from": "base_knowledge",
+    "description": "Rate limit → Esperar con backoff exponencial"
+  },
+  "suno_no_credits": {
+    "error_pattern": "creditos|credits|insufficient.*credit|no.*credits",
+    "category": "credits",
+    "solution_type": "notify_admin",
+    "solution_params": {
+      "message": "Sin creditos Suno. Necesita recarga.",
+      "can_retry": false
+    },
+    "success_count": 5,
+    "fail_count": 0,
+    "last_used": "",
+    "learned_from": "base_knowledge",
+    "description": "Sin créditos → Notificar a Leo, no reintentar"
+  },
+  "network_timeout": {
+    "error_pattern": "timeout|Timeout|timed.out|ConnectTimeout",
+    "category": "network",
+    "solution_type": "retry_with_delay",
+    "solution_params": {
+      "wait_seconds": 10,
+      "max_retries": 3
+    },
+    "success_count": 12,
+    "fail_count": 2,
+    "last_used": "",
+    "learned_from": "base_knowledge",
+    "description": "Timeout → Reintentar con delay de 10s"
+  },
+  "network_dns": {
+    "error_pattern": "DNS|NameResolution|getaddrinfo|resolve",
+    "category": "network",
+    "solution_type": "retry_with_delay",
+    "solution_params": {
+      "wait_seconds": 30,
+      "max_retries": 2
+    },
+    "success_count": 3,
+    "fail_count": 1,
+    "last_used": "",
+    "learned_from": "base_knowledge",
+    "description": "DNS no resuelve → Esperar 30s y reintentar (puede ser problema del VPS)"
+  },
+  "suno_500": {
+    "error_pattern": "500|Internal.Server.Error|server.*error",
+    "category": "api_error",
+    "solution_type": "retry_with_delay",
+    "solution_params": {
+      "wait_seconds": 15,
+      "max_retries": 2
+    },
+    "success_count": 4,
+    "fail_count": 1,
+    "last_used": "",
+    "learned_from": "base_knowledge",
+    "description": "Error interno de Suno → Reintentar en 15s"
+  },
+  "connection_refused": {
+    "error_pattern": "Connection.refused|ConnectionRefused|ECONNREFUSED",
+    "category": "network",
+    "solution_type": "retry_with_delay",
+    "solution_params": {
+      "wait_seconds": 60,
+      "max_retries": 2
+    },
+    "success_count": 2,
+    "fail_count": 1,
+    "last_used": "",
+    "learned_from": "base_knowledge",
+    "description": "Conexión rechazada → Servicio caído, esperar 60s"
+  },
+  "invalid_params": {
+    "error_pattern": "400|Bad.Request|invalid.*param|missing.*field",
+    "category": "invalid",
+    "solution_type": "fix_params",
+    "solution_params": {
+      "action": "sanitize_input"
+    },
+    "success_count": 6,
+    "fail_count": 0,
+    "last_used": "",
+    "learned_from": "base_knowledge",
+    "description": "Parámetros inválidos → Sanitizar y reintentar"
+  }
+}
