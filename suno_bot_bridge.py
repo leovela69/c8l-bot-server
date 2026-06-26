@@ -133,17 +133,22 @@ class SunoBotBridge:
         bot_name = bot_name or self.bot_name
         logger.info(f"🎵 [{bot_name}] Creando canción: '{title or prompt[:30]}...' para user={user_id}")
 
-        # 1. Verificar créditos
-        credit_check = self.credits_manager.can_generate(user_id, "generate")
-        if not credit_check["allowed"]:
-            logger.warning(f"🎵 [{bot_name}] Créditos insuficientes: {credit_check['reason']}")
-            return {
-                "success": False,
-                "tracks": [],
-                "count": 0,
-                "error": credit_check["reason"],
-                "credits_remaining": credit_check["remaining"],
-            }
+        # 1. Verificar créditos (admin siempre pasa)
+        from config import ADMIN_CHAT_ID
+        is_admin = str(user_id) == str(ADMIN_CHAT_ID) or str(user_id) in ["1970956749", "admin", "leo"]
+        if not is_admin:
+            credit_check = self.credits_manager.can_generate(user_id, "generate")
+            if not credit_check["allowed"]:
+                logger.warning(f"🎵 [{bot_name}] Créditos insuficientes: {credit_check['reason']}")
+                return {
+                    "success": False,
+                    "tracks": [],
+                    "count": 0,
+                    "error": credit_check["reason"],
+                    "credits_remaining": credit_check["remaining"],
+                }
+        else:
+            credit_check = {"allowed": True, "remaining": 999}
 
         # 2. Sanitizar inputs
         prompt = self._sanitize_text(prompt)
