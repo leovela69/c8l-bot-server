@@ -191,9 +191,29 @@ class SunoBotBridge:
                     "engine": "lyria3",
                 }
             else:
-                logger.warning(f"🎵 [{bot_name}] Lyria falló: {lyria_result.get('error')}, intentando Suno...")
+                logger.warning(f"🎵 [{bot_name}] Lyria/Pollinations falló: {lyria_result.get('error')}")
+                # NO intentar Suno — tiene CAPTCHA y no funciona
+                return {
+                    "success": False,
+                    "tracks": [],
+                    "count": 0,
+                    "error": f"Pollinations Music: {lyria_result.get('error', 'Error desconocido')}",
+                    "credits_remaining": credit_check["remaining"],
+                    "engine": "pollinations_failed",
+                }
+        else:
+            # Si no hay lyria_client, reportar
+            logger.error(f"🎵 [{bot_name}] No hay motor de música disponible (Pollinations no inicializado)")
+            return {
+                "success": False,
+                "tracks": [],
+                "count": 0,
+                "error": "Motor de música no disponible. Verificar POLLINATIONS_API_KEY.",
+                "credits_remaining": credit_check["remaining"],
+            }
 
-        # 4. Fallback a Suno (puede fallar por CAPTCHA)
+        # 4. Fallback a Suno (DESACTIVADO — tiene CAPTCHA)
+        # Si llegamos aquí es porque lyria_client no existe
         def _do_generate():
             if mode == "custom":
                 return self.client.generate(
