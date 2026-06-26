@@ -7,10 +7,13 @@ import Logo from '@/components/ui/Logo'
 import CreditsDisplay from '@/components/ui/CreditsDisplay'
 
 // ============ SUNO API CONFIG ============
-// URL del bot (VPS) — se auto-descubre via /api/tunnel-url
-// Si NEXT_PUBLIC_SUNO_API_URL está definida en Vercel, la usa directamente.
-// Si no, consulta /api/tunnel-url en la última URL conocida para obtener la actual.
+// URL del bot (VPS) — se auto-descubre via /api/bot-url (proxy server-side)
+// Prioridad:
+//   1. NEXT_PUBLIC_SUNO_API_URL (env var en Vercel) — si está configurada, la usa
+//   2. Auto-discovery via /api/bot-url → contacta VPS → devuelve tunnel URL actual
+//   3. Fallback hardcoded (última URL conocida) — se actualiza con cada start.sh
 const SUNO_API_STATIC = process.env.NEXT_PUBLIC_SUNO_API_URL || ''
+const SUNO_API_FALLBACK = 'https://remedy-impacts-rescue-harry.trycloudflare.com'
 
 // Cache de la URL activa (se resuelve una vez al montar el componente)
 let _resolvedApiUrl: string | null = SUNO_API_STATIC || null
@@ -19,16 +22,13 @@ let _resolvedApiUrl: string | null = SUNO_API_STATIC || null
  * Resuelve la URL base de la API Suno:
  * 1. Si NEXT_PUBLIC_SUNO_API_URL está configurada → la usa directamente
  * 2. Si hay una URL cacheada de sesión → la usa
- * 3. Llama a /api/tunnel-url en el último tunnel conocido para auto-descubrir
+ * 3. Llama a /api/bot-url (Vercel server-side proxy) para auto-descubrir
+ * 4. Fallback a la última URL de tunnel conocida
  */
 async function resolveSunoApiUrl(): Promise<string> {
   if (_resolvedApiUrl) return _resolvedApiUrl
 
-  // Intentar auto-descubrir desde el bot (el bot sabe su propia URL de tunnel)
-  // Necesitamos una URL "semilla" para hacer el primer request.
-  // El bot expone /api/tunnel-url que devuelve la URL actual del tunnel.
-  // Como el bot siempre corre en el mismo VPS, usamos el endpoint de Vercel
-  // como proxy para no tener Mixed Content (ver /api/bot-url/route.ts).
+  // Intentar auto-descubrir via proxy server-side (resuelve Mixed Content)
   try {
     const res = await fetch('/api/bot-url', { cache: 'no-store' })
     if (res.ok) {
@@ -40,11 +40,13 @@ async function resolveSunoApiUrl(): Promise<string> {
       }
     }
   } catch (e) {
-    console.warn('[C8L Studio] No se pudo auto-descubrir la URL del bot:', e)
+    console.warn('[C8L Studio] Auto-discovery falló, usando fallback:', e)
   }
 
-  // Fallback: vacío (mostrará error al usuario)
-  return ''
+  // Fallback: última URL conocida del tunnel
+  _resolvedApiUrl = SUNO_API_FALLBACK
+  console.log('[C8L Studio] Usando fallback URL:', _resolvedApiUrl)
+  return _resolvedApiUrl
 }
 
 // ============ SIDEBAR ITEMS ============
