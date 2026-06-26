@@ -4,7 +4,8 @@
 Conecta con Suno AI Premium via cookie/session token.
 Genera canciones completas con voz usando la cuenta de Leo.
 
-Basado en la API no oficial de Suno (studio-api.prod.suno.com)
+AUTO-REFRESH: El token JWT expira cada 60 min. Este cliente
+lo renueva automáticamente via Clerk sin intervención manual.
 """
 
 import requests
@@ -13,6 +14,7 @@ import os
 import json
 import logging
 import re
+import threading
 from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger("c8l.suno")
@@ -24,6 +26,10 @@ class SunoConfig:
     FEED_ENDPOINT = "/api/feed/v2"
     CREDITS_ENDPOINT = "/api/billing/info/"
     CLERK_BASE = "https://clerk.suno.com"
+    # Clerk token refresh endpoint (sesiones activas)
+    CLERK_TOKEN_ENDPOINT = "/v1/client/sessions/{sid}/tokens?_clerk_js_version=5"
+    # Intervalo de refresh (50 min — el token dura 60)
+    TOKEN_REFRESH_INTERVAL = 50 * 60
 
 
 class SunoTrack:
@@ -63,13 +69,14 @@ class SunoTrack:
 
 class SunoClient:
     """
-    Cliente para generar musica via Suno AI.
-    Usa el token JWT de la session cookie para autenticarse.
+    Cliente para generar musica via Suno AI Premium.
+    AUTO-REFRESH: Renueva el token JWT automáticamente cada 50 min
+    usando Clerk (el auth de Suno). Nunca más expira.
     """
 
     def __init__(self, cookie: str = None):
         """
-        Inicializa el cliente Suno.
+        Inicializa el cliente Suno con auto-refresh de token.
 
         Args:
             cookie: Cookie completa de suno.com (document.cookie)
@@ -81,6 +88,11 @@ class SunoClient:
 
         self.cookie = cookie
         self.bearer_token = self._extract_bearer_token(cookie)
+        self._client_token = self._extract_client_token(cookie)
+        self._session_id = self._extract_session_id(cookie)
+        self._last_refresh = time.time()
+        self._refresh_lock = threading.Lock()
+
         self.session = requests.Session()
         self.session.headers.update({
             "Accept": "*/*",
@@ -97,6 +109,104 @@ class SunoClient:
             # Fallback: usar cookie directamente
             self.session.headers["Cookie"] = cookie
             logger.info("🎵 Suno Client inicializado con cookie directa")
+
+        # Auto-refresh: intentar renovar ahora si el token ya expiró
+        if self._client_token and self._session_id:
+            self._try_refresh_token()
+            # Iniciar thread de auto-refresh cada 50 min
+            self._start_auto_refresh()
+            logger.info(f"🔄 Auto-refresh activado (cada 50 min, session={self._session_id[:20]}...)")
+        else:
+            logger.warning("⚠️ No se pudo activar auto-refresh (falta __client o session_id)")
+
+    def _extract_client_token(self, cookie: str) -> Optional[str]:
+        """Extrae el __client token de Clerk (necesario para refresh)."""
+        # __client es el token largo que Clerk usa para renovar sesiones
+        match = re.search(r'__client=([^;]+)', cookie)
+        if match:
+            token = match.group(1)
+            if len(token) > 50:
+                return token
+        return None
+
+    def _extract_session_id(self, cookie: str) -> Optional[str]:
+        """Extrae el session ID de Clerk."""
+        # clerk_active_context=session_XXXXX o del JWT payload
+        match = re.search(r'clerk_active_context=session_([^;:&\s]+)', cookie)
+        if match:
+            return "session_" + match.group(1)
+
+        # Fallback: extraer del JWT si existe
+        if self.bearer_token:
+            try:
+                import base64
+                parts = self.bearer_token.split('.')
+                payload = parts[1] + '=' * (4 - len(parts[1]) % 4)
+                data = json.loads(base64.urlsafe_b64decode(payload))
+                sid = data.get("sid", "")
+                if sid:
+                    return sid
+            except:
+                pass
+        return None
+
+    def _try_refresh_token(self):
+        """Intenta renovar el JWT via Clerk. No lanza excepción si falla."""
+        if not self._client_token or not self._session_id:
+            return False
+
+        with self._refresh_lock:
+            try:
+                # Clerk endpoint para renovar el token de una sesión activa
+                url = f"{SunoConfig.CLERK_BASE}/v1/client/sessions/{self._session_id}/tokens"
+                headers = {
+                    "Accept": "*/*",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Origin": "https://suno.com",
+                    "Referer": "https://suno.com/",
+                    "Cookie": f"__client={self._client_token}",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                }
+
+                response = requests.post(url, headers=headers, timeout=15)
+
+                if response.status_code == 200:
+                    data = response.json()
+                    new_jwt = data.get("jwt", "")
+                    if not new_jwt:
+                        # Algunos responses tienen estructura diferente
+                        new_jwt = data.get("object") and data.get("jwt", "")
+
+                    if new_jwt and new_jwt.count('.') >= 2:
+                        self.bearer_token = new_jwt
+                        self.session.headers["Authorization"] = f"Bearer {new_jwt}"
+                        self._last_refresh = time.time()
+                        logger.info("🔄 Token Suno renovado exitosamente!")
+                        return True
+                    else:
+                        logger.warning(f"🔄 Refresh response sin JWT válido: {str(data)[:100]}")
+                elif response.status_code == 401:
+                    logger.error("🔄 __client token expirado. Necesita re-login manual en suno.com")
+                else:
+                    logger.warning(f"🔄 Refresh falló: HTTP {response.status_code} — {response.text[:100]}")
+
+            except Exception as e:
+                logger.warning(f"🔄 Error en auto-refresh: {e}")
+
+        return False
+
+    def _start_auto_refresh(self):
+        """Inicia un thread daemon que renueva el token cada 50 minutos."""
+        def _refresh_loop():
+            while True:
+                time.sleep(SunoConfig.TOKEN_REFRESH_INTERVAL)
+                logger.info("🔄 Auto-refresh: renovando token Suno...")
+                success = self._try_refresh_token()
+                if not success:
+                    logger.warning("🔄 Auto-refresh falló. El próximo request intentará de nuevo.")
+
+        thread = threading.Thread(target=_refresh_loop, daemon=True, name="suno-token-refresh")
+        thread.start()
 
     def _extract_bearer_token(self, cookie: str) -> Optional[str]:
         """Extrae el JWT token de __session o __session_Jnxw-muT de la cookie."""
@@ -120,7 +230,7 @@ class SunoClient:
         return None
 
     def _request(self, method: str, endpoint: str, **kwargs) -> Any:
-        """Hace una peticion a la API de Suno."""
+        """Hace una peticion a la API de Suno. Auto-renueva token si expira."""
         url = SunoConfig.BASE_URL + endpoint
         try:
             response = self.session.request(method, url, timeout=30, **kwargs)
@@ -128,10 +238,22 @@ class SunoClient:
             return response.json() if response.content else None
         except requests.exceptions.HTTPError as e:
             logger.error(f"HTTP Error {e.response.status_code}: {e.response.text[:200]}")
-            # Si es 401, el token expiro
+            # Si es 401, intentar renovar token y reintentar UNA vez
             if e.response.status_code == 401:
-                logger.error("Token expirado. Necesita nueva cookie de Suno.")
-                raise Exception("SUNO_TOKEN_EXPIRED: Necesita renovar cookie")
+                logger.info("🔄 Token expirado. Intentando auto-refresh...")
+                if self._try_refresh_token():
+                    # Reintentar con el token nuevo
+                    try:
+                        response = self.session.request(method, url, timeout=30, **kwargs)
+                        response.raise_for_status()
+                        return response.json() if response.content else None
+                    except requests.exceptions.HTTPError as e2:
+                        if e2.response.status_code == 401:
+                            logger.error("🔄 Token renovado pero sigue fallando. __client expirado.")
+                            raise Exception("SUNO_TOKEN_EXPIRED: El __client cookie expiró. Necesita re-login en suno.com y copiar cookie nueva.")
+                        raise
+                else:
+                    raise Exception("SUNO_TOKEN_EXPIRED: No se pudo renovar. Re-login en suno.com y copiar cookie nueva.")
             raise
         except requests.exceptions.RequestException as e:
             logger.error(f"Request Error: {str(e)[:100]}")
