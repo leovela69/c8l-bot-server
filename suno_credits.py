@@ -33,7 +33,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 class UserTier:
     ADMIN = "admin"          # Ilimitado (Leo)
     PREMIUM = "premium"      # 20/dia
-    FREE = "free"            # 3/dia
+    FREE = "free"            # 1/dia
 
 
 # Configuracion de limites
@@ -49,7 +49,7 @@ TIER_LIMITS = {
         "features": ["generate", "extend", "remix", "lyrics", "stems", "feed"],
     },
     UserTier.FREE: {
-        "daily_limit": 3,
+        "daily_limit": 1,
         "cooldown_seconds": 120,  # 2 min entre generaciones
         "features": ["generate", "lyrics"],  # Solo generar y letras
     },
