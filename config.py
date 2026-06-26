@@ -127,6 +127,13 @@ _SUNO_SESSION_U9 = "eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6
 SUNO_COOKIE: str = _SUNO_COOKIE_P1 + _SUNO_COOKIE_P2 + "; __session=" + _SUNO_SESSION + "; __session_Jnxw-muT=" + _SUNO_SESSION + "; __session_U9tcbTPE=" + _SUNO_SESSION_U9
 
 # ---------------------------------------------------------------------------
+# MusicAPI.ai — Generación de música con vocales (API key)
+# Modelo Sonic v4.5/v5 — misma calidad que Suno, sin CAPTCHA
+# 75 créditos = 5 canciones. Recarga en musicapi.ai
+# ---------------------------------------------------------------------------
+MUSICAPI_KEY: str = os.environ.get("MUSICAPI_KEY", "a42d1b7ec0aa27808b910f52412bde8a")
+
+# ---------------------------------------------------------------------------
 # Server
 # ---------------------------------------------------------------------------
 PORT: int = int(os.environ.get("PORT", "8080"))

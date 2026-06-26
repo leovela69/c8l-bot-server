@@ -198,10 +198,9 @@ class SunoBotBridge:
 
     def _get_engine_priority(self) -> list:
         """Devuelve el orden de motores a intentar, priorizando el último que funcionó."""
-        default_order = ["musicgen_local", "pollinations", "suno"]
+        default_order = ["musicapi", "musicgen_local"]
         last_working = self.error_learner.load_memory_global("last_working_engine", "")
         if last_working and last_working in default_order:
-            # Poner el último que funcionó primero
             order = [last_working] + [e for e in default_order if e != last_working]
             return order
         return default_order
@@ -209,8 +208,25 @@ class SunoBotBridge:
     def _try_engine(self, engine_name: str, prompt: str, title: str, tags: str, instrumental: bool, bot_name: str) -> Optional[Dict]:
         """Intenta generar con un motor específico."""
 
-        if engine_name == "musicgen_local":
-            # MusicGen Local — SIEMPRE disponible, 100% gratis
+        if engine_name == "musicapi":
+            # MusicAPI.ai — Canciones completas con vocales, alta calidad
+            try:
+                from musicapi_client import MusicAPIClient
+                client = MusicAPIClient()
+                result = client.generate(
+                    prompt=prompt,
+                    title=title,
+                    tags=tags,
+                    instrumental=instrumental,
+                )
+                if result.get("success"):
+                    return result
+                return {"success": False, "error": result.get("error", "MusicAPI falló")}
+            except Exception as e:
+                return {"success": False, "error": f"MusicAPI error: {e}"}
+
+        elif engine_name == "musicgen_local":
+            # MusicGen Local — Beats instrumentales, siempre disponible
             if self.lyria_client:
                 lyria_prompt = f"{prompt}. Style: {tags}" if tags else prompt
                 result = self.lyria_client.generate(
@@ -233,16 +249,6 @@ class SunoBotBridge:
                     return {"success": True, "tracks": [track_dict], "count": 1}
                 return {"success": False, "error": result.get("error", "MusicGen falló")}
             return {"success": False, "error": "MusicGen no inicializado"}
-
-        elif engine_name == "pollinations":
-            # Pollinations — requiere créditos (puede dar 402)
-            # Skip si sabemos que no tiene saldo
-            return {"success": False, "error": "Pollinations sin créditos (402)"}
-
-        elif engine_name == "suno":
-            # Suno — requiere CAPTCHA (puede dar 422)
-            # Skip si sabemos que tiene CAPTCHA
-            return {"success": False, "error": "Suno requiere CAPTCHA (422)"}
 
         return {"success": False, "error": f"Motor desconocido: {engine_name}"}
 
