@@ -677,9 +677,24 @@ def _send_feedback_buttons(chat_id):
 # Almacén en memoria de páginas generadas (no se pierde mientras el bot viva)
 _generated_pages = {}  # {page_id: html_content}
 
+# URL actual del tunnel Cloudflare (se actualiza via POST /api/set-tunnel-url)
+_tunnel_url = os.environ.get("TUNNEL_URL", "")
+
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        # --- Tunnel URL discovery endpoint ---
+        if self.path == "/api/tunnel-url":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "tunnel_url": _tunnel_url,
+                "available": bool(_tunnel_url)
+            }).encode())
+            return
+
         # Servir páginas HTML generadas por Hefesto (desde memoria)
         if self.path.startswith("/pages/"):
             page_id = self.path.replace("/pages/", "").split("?")[0].split("/")[0]
@@ -752,6 +767,22 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(info).encode())
 
     def do_POST(self):
+        # --- Actualizar tunnel URL (llamado por start.sh al arrancar cloudflared) ---
+        if self.path == "/api/set-tunnel-url":
+            global _tunnel_url
+            try:
+                body = self._read_body()
+                new_url = body.get("url", "").strip().rstrip("/")
+                if new_url.startswith("https://"):
+                    _tunnel_url = new_url
+                    logger.info(f"🌐 Tunnel URL actualizada: {_tunnel_url}")
+                    self._send_json(200, {"success": True, "tunnel_url": _tunnel_url})
+                else:
+                    self._send_json(400, {"success": False, "error": "URL debe ser https://"})
+            except Exception as e:
+                self._send_json(500, {"success": False, "error": str(e)})
+            return
+
         # --- SUNO API ENDPOINTS (para C8L Studio Web) ---
         if self.path == "/api/suno/generate":
             self._handle_suno_generate()

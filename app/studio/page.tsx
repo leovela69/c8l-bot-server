@@ -7,8 +7,45 @@ import Logo from '@/components/ui/Logo'
 import CreditsDisplay from '@/components/ui/CreditsDisplay'
 
 // ============ SUNO API CONFIG ============
-// URL del bot (VPS) — cambiar si se mueve
-const SUNO_API_BASE = process.env.NEXT_PUBLIC_SUNO_API_URL || 'https://enquiries-picked-bailey-vital.trycloudflare.com'
+// URL del bot (VPS) — se auto-descubre via /api/tunnel-url
+// Si NEXT_PUBLIC_SUNO_API_URL está definida en Vercel, la usa directamente.
+// Si no, consulta /api/tunnel-url en la última URL conocida para obtener la actual.
+const SUNO_API_STATIC = process.env.NEXT_PUBLIC_SUNO_API_URL || ''
+
+// Cache de la URL activa (se resuelve una vez al montar el componente)
+let _resolvedApiUrl: string | null = SUNO_API_STATIC || null
+
+/**
+ * Resuelve la URL base de la API Suno:
+ * 1. Si NEXT_PUBLIC_SUNO_API_URL está configurada → la usa directamente
+ * 2. Si hay una URL cacheada de sesión → la usa
+ * 3. Llama a /api/tunnel-url en el último tunnel conocido para auto-descubrir
+ */
+async function resolveSunoApiUrl(): Promise<string> {
+  if (_resolvedApiUrl) return _resolvedApiUrl
+
+  // Intentar auto-descubrir desde el bot (el bot sabe su propia URL de tunnel)
+  // Necesitamos una URL "semilla" para hacer el primer request.
+  // El bot expone /api/tunnel-url que devuelve la URL actual del tunnel.
+  // Como el bot siempre corre en el mismo VPS, usamos el endpoint de Vercel
+  // como proxy para no tener Mixed Content (ver /api/bot-url/route.ts).
+  try {
+    const res = await fetch('/api/bot-url', { cache: 'no-store' })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.tunnel_url) {
+        _resolvedApiUrl = data.tunnel_url
+        console.log('[C8L Studio] API URL auto-descubierta:', _resolvedApiUrl)
+        return _resolvedApiUrl
+      }
+    }
+  } catch (e) {
+    console.warn('[C8L Studio] No se pudo auto-descubrir la URL del bot:', e)
+  }
+
+  // Fallback: vacío (mostrará error al usuario)
+  return ''
+}
 
 // ============ SIDEBAR ITEMS ============
 const SIDEBAR_ITEMS = [
@@ -113,16 +150,23 @@ export default function StudioPage() {
   // --- SUNO: Generate Music (REAL) ---
   const handleCreate = async () => {
     setGenerating(true)
-    setGenStatus('Enviando a Suno AI...')
+    setGenStatus('Conectando con el servidor...')
     setGenError('')
 
     try {
+      const apiBase = await resolveSunoApiUrl()
+      if (!apiBase) {
+        throw new Error('No se encontró el servidor. Configura NEXT_PUBLIC_SUNO_API_URL en Vercel o reinicia el VPS con start.sh')
+      }
+
+      setGenStatus('Enviando a Suno AI...')
+
       const isCustom = mode === 'avanzado'
       const body = isCustom
         ? { mode: 'custom', prompt: lyrics, title, tags: styles, instrumental: false }
         : { mode: 'simple', prompt: styles, instrumental: false }
 
-      const response = await fetch(`${SUNO_API_BASE}/api/suno/generate`, {
+      const response = await fetch(`${apiBase}/api/suno/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
