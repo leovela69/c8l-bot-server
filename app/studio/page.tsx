@@ -140,7 +140,7 @@ export default function StudioPage() {
         {/* ============ CENTER: CREATION PANEL ============ */}
         <div className="lg:ml-44 flex-1 flex flex-col lg:flex-row">
           {/* Left Creation Panel */}
-          <div className="w-full lg:w-[420px] xl:w-[480px] border-r border-gray-800/30 p-4 lg:p-6 flex flex-col overflow-y-auto max-h-[calc(100vh-42px)]">
+          <div className="w-full lg:w-[420px] xl:w-[480px] border-r border-gray-800/30 p-4 lg:p-6 pb-[100px] flex flex-col overflow-y-auto max-h-[calc(100vh-42px)]">
             {/* Mode toggle + Credits */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -328,7 +328,7 @@ export default function StudioPage() {
 
 
           {/* ============ RIGHT: WORKSPACE (Generated Tracks) ============ */}
-          <div className="flex-1 p-4 lg:p-6 overflow-y-auto max-h-[calc(100vh-42px-72px)]">
+          <div className="flex-1 p-4 lg:p-6 pb-[100px] overflow-y-auto max-h-[calc(100vh-42px)]">
             {/* Workspace Header */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-outfit font-bold text-white">
