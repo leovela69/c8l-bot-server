@@ -546,9 +546,16 @@ class SunoBotBridge:
 
         # Enviar estado si se pide
         if send_status_updates and bot_token:
+            import random
+            loading_msgs = [
+                "🎵 *Silencio, mortales...*\n😈 El villano del beat está trabajando\n⏳ 60-90 seg... si no te gusta, la puerta está ahí →",
+                "🖤 *Ah, otro que quiere un temazo gratis...*\n🎹 Está bien, soy generoso hoy. Cocinando...\n⏳ 60-90 seg, no me presiones",
+                "💀 *¿Quieres música? Pues prepárate*\n🔥 Voy a crear algo tan bueno que vas a odiarme por no cobrarte\n⏳ 60-90 seg de pura maldad sónica",
+                "😏 *Mira quién vino arrastrándose por un beat...*\n🎧 Tranqui, te lo hago. Pero me debes una\n⏳ 60-90 seg, intenta no babear",
+                "🦹 *El antihéroe de la música ha entrado al chat*\n⚡ No es que me importe... pero voy a hacer un TEMAZO\n⏳ 60-90 seg. De nada, por cierto",
+            ]
             self._send_telegram_text(
-                chat_id, f"🎵 Generando: *{title or 'canción'}*...\n⏳ Esto toma ~60-90 segundos",
-                bot_token
+                chat_id, random.choice(loading_msgs), bot_token
             )
 
         # Crear canción
@@ -564,8 +571,14 @@ class SunoBotBridge:
 
         if not result["success"]:
             if send_status_updates and bot_token:
+                import random
+                error_msgs = [
+                    f"💀 Bueno, hasta los villanos fallan a veces...\n❌ {result['error'][:100]}\n😏 Inténtalo de nuevo, yo no me rindo fácil",
+                    f"🖤 Vaya... esto es incómodo\n❌ {result['error'][:100]}\n🦹 Dame otra oportunidad, prometo no decepcionar (mucho)",
+                    f"😈 Error técnico. Culpa del universo, no mía\n❌ {result['error'][:100]}\n💀 Venga, otro intento. Soy persistente como una maldición",
+                ]
                 self._send_telegram_text(
-                    chat_id, f"❌ Error: {result['error']}", bot_token
+                    chat_id, random.choice(error_msgs), bot_token
                 )
             return {**result, "telegram_sent": False}
 

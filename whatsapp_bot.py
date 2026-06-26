@@ -1664,11 +1664,15 @@ def main():
                 if result["success"]:
                     count = result.get("count", 0)
                     remaining = result.get("credits_remaining", "?")
-                    tg_send(msg.chat.id,
-                        f"✅ {count} canción(es) generada(s)!\n"
-                        f"💰 Generaciones restantes hoy: {remaining}\n"
-                        f"🏛️ C8L Agency × Suno AI")
-                    broadcast_content_created(user_name, "musica_suno", tema[:60])
+                    import random
+                    success_msgs = [
+                        f"😈 *Listo, desagradecido*\n🎵 {count} track(s) de puro veneno musical\n💰 Te quedan {remaining} antes de que te corte el grifo\n🖤 No digas que nunca hice nada por ti",
+                        f"🦹 *Otra obra maestra que no merecías*\n🔊 {count} pieza(s) del villano más talentoso del game\n💰 {remaining} oportunidades más de molestarme\n😏 De nada. Ahora largo",
+                        f"💀 *¿Ves? Soy malo pero cumplo*\n🎧 {count} track(s) — mejor que lo que harías en tu vida\n💰 Restantes: {remaining}\n🖤 C8L Agency — Hacemos hits, no amigos",
+                        f"😏 *Toma, anda. Gratis porque soy así de crack*\n🔥 {count} temazo(s) servido(s) en bandeja\n💰 {remaining} generaciones y ya no te conozco\n🦹 El antihéroe del beat ha hablado",
+                    ]
+                    tg_send(msg.chat.id, random.choice(success_msgs))
+                    broadcast_content_created(user_name, "musica_ai", tema[:60])
                     _send_feedback_buttons(msg.chat.id)
                 # Si falla, el bridge ya envió el error por Telegram
 
