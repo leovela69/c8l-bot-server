@@ -69,13 +69,13 @@ class SunoBotBridge:
 
     @property
     def lyria_client(self):
-        """LyriaClient lazy-loaded (Google Lyria 3 — GRATIS, sin CAPTCHA)."""
+        """MusicGen Client lazy-loaded (LOCAL, no necesita API key)."""
         if not hasattr(self, '_lyria_client') or self._lyria_client is None:
             try:
                 from lyria_client import LyriaClient
                 self._lyria_client = LyriaClient()
             except Exception as e:
-                logger.warning(f"⚠️ Lyria Client no disponible: {e}")
+                logger.warning(f"⚠️ MusicGen Client no disponible: {e}")
                 self._lyria_client = None
         return self._lyria_client
 
@@ -150,118 +150,101 @@ class SunoBotBridge:
         title = self._sanitize_text(title) or "C8L Creation"
         tags = self._sanitize_text(tags)
 
-        # 3. Intentar con Lyria 3 primero (gratis, sin CAPTCHA)
-        if self.lyria_client:
-            logger.info(f"🎵 [{bot_name}] Intentando con Google Lyria 3...")
-            lyria_prompt = prompt
-            if tags:
-                lyria_prompt = f"{prompt}. Style: {tags}"
+        # 3. CADENA DE FALLBACK INTELIGENTE
+        # Orden: MusicGen Local → Pollinations → Suno
+        # El Error Learner recuerda qué motor funciona y lo prioriza
+        engines_to_try = self._get_engine_priority()
+        last_error = ""
 
-            lyria_result = self.lyria_client.generate(
-                prompt=lyria_prompt,
-                instrumental=instrumental,
-                model="elevenmusic",
-            )
+        for engine_name in engines_to_try:
+            try:
+                engine_result = self._try_engine(engine_name, prompt, title, tags, instrumental, bot_name)
 
-            if lyria_result["success"]:
-                # Registrar generación en créditos
-                self.credits_manager.record_generation(user_id, "generate", 1)
+                if engine_result and engine_result.get("success"):
+                    # ✅ ÉXITO — registrar en créditos y error_learner
+                    self.credits_manager.record_generation(user_id, "generate", 1)
+                    self.error_learner.save_memory_global("last_working_engine", engine_name)
+                    logger.info(f"🎵 [{bot_name}] ✅ Motor '{engine_name}' funcionó!")
 
-                # Convertir a formato compatible con el resto del sistema
-                track_dict = {
-                    "id": f"lyria_{int(time.time())}",
-                    "title": lyria_result.get("title", title),
-                    "audio_url": "",  # No hay URL, tenemos bytes directos
-                    "audio_bytes": lyria_result["audio_bytes"],
-                    "lyrics": lyria_result.get("lyrics", ""),
-                    "tags": tags,
-                    "model_name": "lyria-3-pro",
-                    "status": "complete",
-                    "duration": None,
-                    "image_url": "",
-                }
+                    return {
+                        "success": True,
+                        "tracks": engine_result.get("tracks", []),
+                        "count": engine_result.get("count", 1),
+                        "error": "",
+                        "credits_remaining": credit_check["remaining"] - 1,
+                        "engine": engine_name,
+                    }
+                else:
+                    last_error = engine_result.get("error", "Error desconocido") if engine_result else "No response"
+                    logger.warning(f"🎵 [{bot_name}] Motor '{engine_name}' falló: {last_error[:80]}")
+                    # Registrar fallo para aprendizaje
+                    self.error_learner.record_outcome(
+                        Exception(last_error), f"engine_{engine_name}", False, bot_name
+                    )
 
-                logger.info(f"🎵 [{bot_name}] ✅ Lyria 3 generó: '{track_dict['title']}'")
-                return {
-                    "success": True,
-                    "tracks": [track_dict],
-                    "count": 1,
-                    "error": "",
-                    "credits_remaining": credit_check["remaining"] - 1,
-                    "engine": "lyria3",
-                }
-            else:
-                logger.warning(f"🎵 [{bot_name}] Lyria/Pollinations falló: {lyria_result.get('error')}")
-                # NO intentar Suno — tiene CAPTCHA y no funciona
-                return {
-                    "success": False,
-                    "tracks": [],
-                    "count": 0,
-                    "error": f"Pollinations Music: {lyria_result.get('error', 'Error desconocido')}",
-                    "credits_remaining": credit_check["remaining"],
-                    "engine": "pollinations_failed",
-                }
-        else:
-            # Si no hay lyria_client, reportar
-            logger.error(f"🎵 [{bot_name}] No hay motor de música disponible (Pollinations no inicializado)")
-            return {
-                "success": False,
-                "tracks": [],
-                "count": 0,
-                "error": "Motor de música no disponible. Verificar POLLINATIONS_API_KEY.",
-                "credits_remaining": credit_check["remaining"],
-            }
+            except Exception as e:
+                last_error = str(e)
+                logger.error(f"🎵 [{bot_name}] Motor '{engine_name}' excepción: {last_error[:80]}")
 
-        # 4. Fallback a Suno (DESACTIVADO — tiene CAPTCHA)
-        # Si llegamos aquí es porque lyria_client no existe
-        def _do_generate():
-            if mode == "custom":
-                return self.client.generate(
-                    prompt=prompt,
-                    title=title,
-                    tags=tags,
-                    is_custom=True,
-                    make_instrumental=instrumental,
-                    model=model,
-                    wait_audio=True,
-                    timeout=180,
+        # Si TODOS los motores fallaron
+        logger.error(f"🎵 [{bot_name}] ❌ TODOS los motores fallaron. Último error: {last_error}")
+        return {
+            "success": False,
+            "tracks": [],
+            "count": 0,
+            "error": f"Todos los motores fallaron. Último: {last_error[:100]}",
+            "credits_remaining": credit_check["remaining"],
+        }
+
+    def _get_engine_priority(self) -> list:
+        """Devuelve el orden de motores a intentar, priorizando el último que funcionó."""
+        default_order = ["musicgen_local", "pollinations", "suno"]
+        last_working = self.error_learner.load_memory_global("last_working_engine", "")
+        if last_working and last_working in default_order:
+            # Poner el último que funcionó primero
+            order = [last_working] + [e for e in default_order if e != last_working]
+            return order
+        return default_order
+
+    def _try_engine(self, engine_name: str, prompt: str, title: str, tags: str, instrumental: bool, bot_name: str) -> Optional[Dict]:
+        """Intenta generar con un motor específico."""
+
+        if engine_name == "musicgen_local":
+            # MusicGen Local — SIEMPRE disponible, 100% gratis
+            if self.lyria_client:
+                lyria_prompt = f"{prompt}. Style: {tags}" if tags else prompt
+                result = self.lyria_client.generate(
+                    prompt=lyria_prompt,
+                    instrumental=instrumental,
                 )
-            else:
-                return self.client.generate(
-                    prompt=prompt,
-                    is_custom=False,
-                    make_instrumental=instrumental,
-                    model=model,
-                    wait_audio=True,
-                    timeout=180,
-                )
+                if result.get("success"):
+                    track_dict = {
+                        "id": f"musicgen_{int(time.time())}",
+                        "title": result.get("title", title),
+                        "audio_url": "",
+                        "audio_bytes": result["audio_bytes"],
+                        "lyrics": "",
+                        "tags": tags,
+                        "model_name": "musicgen-small",
+                        "status": "complete",
+                        "duration": result.get("duration"),
+                        "image_url": "",
+                    }
+                    return {"success": True, "tracks": [track_dict], "count": 1}
+                return {"success": False, "error": result.get("error", "MusicGen falló")}
+            return {"success": False, "error": "MusicGen no inicializado"}
 
-        result = self._execute_with_healing(_do_generate, bot_name)
+        elif engine_name == "pollinations":
+            # Pollinations — requiere créditos (puede dar 402)
+            # Skip si sabemos que no tiene saldo
+            return {"success": False, "error": "Pollinations sin créditos (402)"}
 
-        if result["success"]:
-            tracks = result["result"]
-            track_dicts = [t.to_dict() for t in tracks]
+        elif engine_name == "suno":
+            # Suno — requiere CAPTCHA (puede dar 422)
+            # Skip si sabemos que tiene CAPTCHA
+            return {"success": False, "error": "Suno requiere CAPTCHA (422)"}
 
-            # Registrar generación en créditos
-            self.credits_manager.record_generation(user_id, "generate", len(tracks))
-
-            logger.info(f"🎵 [{bot_name}] ✅ {len(tracks)} tracks generados para user={user_id}")
-            return {
-                "success": True,
-                "tracks": track_dicts,
-                "count": len(tracks),
-                "error": "",
-                "credits_remaining": credit_check["remaining"] - 1,
-            }
-        else:
-            logger.error(f"🎵 [{bot_name}] ❌ Fallo: {result.get('error', 'unknown')}")
-            return {
-                "success": False,
-                "tracks": [],
-                "count": 0,
-                "error": result.get("error", "Error desconocido al generar"),
-                "credits_remaining": credit_check["remaining"],
-            }
+        return {"success": False, "error": f"Motor desconocido: {engine_name}"}
 
     # ===== EXTEND: Extender track =====
 

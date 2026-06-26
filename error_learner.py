@@ -491,6 +491,37 @@ class ErrorLearner:
             "notification_queue": len(self._notification_queue),
         }
 
+    # ===== GLOBAL MEMORY (para compartir estado entre módulos) =====
+
+    def save_memory_global(self, key: str, value):
+        """Guarda un valor en memoria global persistente (compartida entre bots)."""
+        filepath = os.path.join(KNOWLEDGE_DIR, "global_memory.json")
+        data = {}
+        try:
+            if os.path.exists(filepath):
+                with open(filepath, 'r') as f:
+                    data = json.load(f)
+        except Exception:
+            pass
+        data[key] = value
+        try:
+            with open(filepath, 'w') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.warning(f"Error guardando global memory: {e}")
+
+    def load_memory_global(self, key: str, default=None):
+        """Carga un valor de memoria global persistente."""
+        filepath = os.path.join(KNOWLEDGE_DIR, "global_memory.json")
+        try:
+            if os.path.exists(filepath):
+                with open(filepath, 'r') as f:
+                    data = json.load(f)
+                return data.get(key, default)
+        except Exception:
+            pass
+        return default
+
 
 # Singleton global
 _learner_instance: Optional[ErrorLearner] = None
