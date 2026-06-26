@@ -1,0 +1,133 @@
+{
+  "session": "26 Junio 2026",
+  "author": "Kiro + Leo Vela",
+  "total_errors_resolved": 12,
+  "learnings": [
+    {
+      "id": 1,
+      "error": "Suno 401 Unauthorized",
+      "cause": "Token JWT expirado (dura 60 min)",
+      "solution": "Renovar cookie desde suno.com (DevTools → Console → document.cookie). Actualizar en config.py las variables _SUNO_COOKIE_P1, _SUNO_COOKIE_P2, _SUNO_SESSION",
+      "prevention": "Auto-healer refresca cada 45 min via Clerk. Keep-alive cada 30 min mantiene sesión viva",
+      "files": ["config.py", "suno_auto_healer.py"]
+    },
+    {
+      "id": 2,
+      "error": "Suno 422 Unprocessable Entity (payload inválido)",
+      "cause": "Campos null/None en el payload (continue_clip_id: null, task: null) que Suno no acepta",
+      "solution": "Solo enviar esos campos cuando se usan realmente (extend/remix). Content-Type: application/json. Usar json= en vez de data=",
+      "prevention": "Nunca enviar campos con valor None/null a Suno. Solo incluir campos opcionales cuando tienen valor real",
+      "files": ["suno_client.py"]
+    },
+    {
+      "id": 3,
+      "error": "Suno 422 token_validation_failed (CAPTCHA requerido)",
+      "cause": "Suno ahora requiere hCaptcha token para generar desde la API. El campo token:null ya no funciona",
+      "solution": "NO usar Suno API directamente. Usar MusicAPI.ai como proxy (misma calidad, sin CAPTCHA). O instalar gcui-art/suno-api con Playwright + 2Captcha",
+      "prevention": "MusicAPI.ai como motor principal. Suno solo si se instala el proxy headless",
+      "files": ["musicapi_client.py", "suno_bot_bridge.py"]
+    },
+    {
+      "id": 4,
+      "error": "Suno endpoint /api/generate/v2-web/ devuelve 422",
+      "cause": "Endpoint incorrecto. v2-web requiere CAPTCHA obligatorio",
+      "solution": "Usar /api/generate/v2/ (sin -web). Aunque también requiere token ahora",
+      "prevention": "Referencia: gcui-art/suno-api usa /api/generate/v2/",
+      "files": ["suno_client.py"]
+    },
+    {
+      "id": 5,
+      "error": "Google Lyria 3 devuelve 429 (créditos agotados)",
+      "cause": "API key de Gemini tipo AQ.Ab8... es de prepago agotado",
+      "solution": "Necesita key tipo AIzaSy... del tier gratuito. O usar otro servicio",
+      "prevention": "Verificar que la key empiece con AIzaSy antes de intentar. Si no, skip",
+      "files": ["lyria_client.py"]
+    },
+    {
+      "id": 6,
+      "error": "Pollinations Audio devuelve 402 (Payment Required)",
+      "cause": "La key sk_NCU6... no tiene saldo para generación de audio (solo imágenes/video son gratis)",
+      "solution": "No usar Pollinations para audio. Usar para imágenes y video solamente",
+      "prevention": "Pollinations audio siempre requiere pollen credits. Solo imagen/video son gratis con key",
+      "files": ["lyria_client.py"]
+    },
+    {
+      "id": 7,
+      "error": "HuggingFace Inference API devuelve HTTP 000 (DNS no resuelve)",
+      "cause": "El VPS Hostinger bloquea DNS a huggingface.co (api-inference.huggingface.co)",
+      "solution": "NO usar HuggingFace Inference API desde este VPS. Usar servicios que SÍ resuelven: musicapi.ai, gen.pollinations.ai, api.groq.com, api.replicate.com",
+      "prevention": "Antes de integrar un servicio nuevo, verificar con: curl -s -o /dev/null -w '%{http_code}' URL",
+      "files": []
+    },
+    {
+      "id": 8,
+      "error": "MusicGen local: IndexError al guardar WAV (scipy)",
+      "cause": "El array de audio de MusicGen es 1D (shape: (161920,)) pero scipy esperaba 2D",
+      "solution": "Usar audio.flatten().astype(np.float32) antes de scipy.io.wavfile.write()",
+      "prevention": "Siempre flatten() el resultado de MusicGen antes de guardar como WAV",
+      "files": ["lyria_client.py"]
+    },
+    {
+      "id": 9,
+      "error": "Bridge usa motor equivocado (MusicGen local en vez de MusicAPI)",
+      "cause": "Error Learner guardó 'musicgen_local' como último motor que funcionó en global_memory.json, priorizándolo sobre MusicAPI",
+      "solution": "Borrar data/knowledge/global_memory.json para resetear prioridad. O cambiar default_order en _get_engine_priority()",
+      "prevention": "Verificar bridge._get_engine_priority() si el bot usa el motor incorrecto. El orden correcto es ['musicapi', 'musicgen_local']",
+      "files": ["suno_bot_bridge.py", "data/knowledge/global_memory.json"]
+    },
+    {
+      "id": 10,
+      "error": "Modelo 'lyria-3-pro-preview' no existe en Pollinations",
+      "cause": "El bridge pasaba model='lyria-3-pro-preview' a Pollinations, pero ese modelo no existe ahí",
+      "solution": "Usar model='elevenmusic' o 'stable-audio-3-large' para Pollinations audio",
+      "prevention": "Cada servicio tiene sus propios nombres de modelo. No mezclar nombres entre servicios",
+      "files": ["suno_bot_bridge.py"]
+    },
+    {
+      "id": 11,
+      "error": "Admin bloqueado por sistema de créditos (3/3 límite diario)",
+      "cause": "El bridge verificaba créditos para TODOS incluyendo admin. Admin ID 1970956749 no se reconocía correctamente",
+      "solution": "Check explícito: if user_id == ADMIN_CHAT_ID → skip credit check. También: rm data/suno_user_credits.json para resetear",
+      "prevention": "Admin NUNCA pasa por verificación de créditos. El check debe ser lo primero en create_song()",
+      "files": ["suno_bot_bridge.py", "suno_credits.py"]
+    },
+    {
+      "id": 12,
+      "error": "pip install falla con 'externally-managed-environment'",
+      "cause": "Ubuntu 24.04 protege los paquetes del sistema (PEP 668)",
+      "solution": "Usar --break-system-packages: pip3 install X --break-system-packages",
+      "prevention": "Siempre agregar --break-system-packages en Ubuntu 24.04+",
+      "files": []
+    }
+  ],
+  "services_status": {
+    "musicapi_ai": {"status": "FUNCIONA", "key": "a42d1b7ec0aa27808b910f52412bde8a", "credits": 60, "quality": "PRO con vocales"},
+    "musicgen_local": {"status": "FUNCIONA", "quality": "básica instrumental", "speed": "3 min CPU", "model": "facebook/musicgen-small"},
+    "suno_premium": {"status": "BLOQUEADO por CAPTCHA", "solution": "instalar gcui-art/suno-api como proxy"},
+    "pollinations_audio": {"status": "SIN CREDITOS (402)", "note": "funciona para imagen y video"},
+    "google_lyria": {"status": "SIN CREDITOS (429)", "note": "necesita key AIzaSy..."},
+    "huggingface": {"status": "DNS NO RESUELVE desde VPS Hostinger"},
+    "groq": {"status": "FUNCIONA", "use": "LLM text, letras de canciones"},
+    "replicate": {"status": "DNS resuelve pero SIN CREDITOS (402)"}
+  },
+  "dns_from_vps": {
+    "api.musicapi.ai": true,
+    "gen.pollinations.ai": true,
+    "api.groq.com": true,
+    "api.replicate.com": true,
+    "generativelanguage.googleapis.com": true,
+    "api-inference.huggingface.co": false,
+    "studio-api.prod.suno.com": true
+  },
+  "commands_vps": {
+    "reset_admin_credits": "cd ~/c8l-bot-server && rm -f data/suno_user_credits.json",
+    "reset_engine_priority": "cd ~/c8l-bot-server && rm -f data/knowledge/global_memory.json",
+    "restart_bot": "cd ~/c8l-bot-server && pkill -f whatsapp_bot.py && bash start.sh",
+    "quick_restart": "pkill -f whatsapp_bot.py && nohup python3 whatsapp_bot.py > bot.log 2>&1 &",
+    "check_musicapi": "python3 -c \"from musicapi_client import MusicAPIClient; c=MusicAPIClient(); print(c.get_credits())\"",
+    "test_generate": "python3 -c \"from musicapi_client import MusicAPIClient; c=MusicAPIClient(); print(c.generate('reggaeton beat'))\"",
+    "check_git": "git log --oneline -3",
+    "backup": "cp -r ~/c8l-bot-server ~/c8l-bot-server-BACKUP",
+    "install_pip": "pip3 install PACKAGE --break-system-packages"
+  }
+}
