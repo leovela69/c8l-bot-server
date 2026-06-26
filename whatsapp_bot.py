@@ -440,16 +440,64 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
                     save_last_image(chat_id, result["content"], text)
 
         elif agent == "apolo":
-            # Musica
+            # Musica — Genera MUSICA REAL con Suno AI Premium
             tg_typing(chat_id)
-            tg_send(chat_id, "🎵 Componiendo...")
-            reply = apolo.compose(text)
-            if reply:
-                add_history(chat_id, "user", text)
-                add_history(chat_id, "assistant", reply)
-                tg_send(chat_id, reply)
-            else:
-                tg_send(chat_id, "❌ No pude generar la musica.")
+            tg_send(chat_id, "🎵 Generando musica con Suno AI Premium... (1-2 min)")
+
+            # Registrar para auto-evolución
+            evolution.record_generation(chat_id, text, "apolo", "musica")
+
+            try:
+                from suno_client import SunoClient
+                client = SunoClient()
+
+                # Detectar si es custom (tiene letras) o simple (descripcion)
+                t_lower = text.lower()
+                has_structure = any(tag in text for tag in ["[Verse", "[Chorus", "[Bridge", "[Intro", "[Outro"])
+                is_extend = any(kw in t_lower for kw in ["extiende", "extend", "continua", "alarga"])
+                is_remix = any(kw in t_lower for kw in ["remix", "remezcla", "version"])
+                is_instrumental = any(kw in t_lower for kw in ["instrumental", "sin voz", "beat", "pista"])
+
+                if is_instrumental:
+                    tg_send(chat_id, "🎹 Generando instrumental...")
+                    tracks = client.generate_instrumental(text)
+                elif has_structure:
+                    # Custom mode — lyrics with structure tags
+                    tg_send(chat_id, "📝 Detecte letras con estructura. Generando cancion custom...")
+                    tracks = client.generate_custom(lyrics=text, style="", title="C8L Bot Creation")
+                else:
+                    # Simple mode — description
+                    tracks = client.generate_simple(description=text)
+
+                if tracks:
+                    for track in tracks:
+                        if track.audio_url:
+                            # Descargar y enviar audio
+                            audio_data = requests.get(track.audio_url, timeout=60).content
+                            if audio_data:
+                                caption = f"🎵 *{track.title}*\n🎨 {track.tags[:80]}\n⏱ {track.duration}s" if track.duration else f"🎵 *{track.title}*"
+                                # Enviar como audio/documento
+                                files = {"audio": (f"{track.title}.mp3", io.BytesIO(audio_data), "audio/mpeg")}
+                                data_tg = {"chat_id": chat_id, "caption": caption[:1024], "parse_mode": "Markdown"}
+                                requests.post(f"{TG_API}/sendAudio", data=data_tg, files=files, timeout=120)
+                            else:
+                                tg_send(chat_id, f"🎵 {track.title}: {track.audio_url}")
+                        else:
+                            tg_send(chat_id, f"⏳ Track '{track.title}' aun procesandose...")
+
+                    # Broadcast al grupo
+                    broadcast_content_created(user_name, "musica", text[:60])
+                    _send_feedback_buttons(chat_id)
+                else:
+                    tg_send(chat_id, "❌ Suno no genero canciones. Intenta con otra descripcion.")
+
+            except Exception as e:
+                error_msg = str(e)
+                if "TOKEN_EXPIRED" in error_msg:
+                    tg_send(chat_id, "⚠️ Token de Suno expirado. Auto-renovando... intenta de nuevo en 1 minuto.")
+                else:
+                    logger.error(f"Apolo/Suno error: {error_msg}")
+                    tg_send(chat_id, f"❌ Error generando musica: {error_msg[:100]}")
 
         elif agent == "ares":
             # Video — Genera VIDEO REAL con VideoEngine multi-motor
@@ -796,6 +844,30 @@ class HealthHandler(BaseHTTPRequestHandler):
             self._handle_suno_status()
             return
 
+        if self.path == "/api/suno/extend":
+            self._handle_suno_extend()
+            return
+
+        if self.path == "/api/suno/remix":
+            self._handle_suno_remix()
+            return
+
+        if self.path == "/api/suno/concat":
+            self._handle_suno_concat()
+            return
+
+        if self.path == "/api/suno/lyrics":
+            self._handle_suno_lyrics()
+            return
+
+        if self.path == "/api/suno/stems":
+            self._handle_suno_stems()
+            return
+
+        if self.path == "/api/suno/feed":
+            self._handle_suno_feed()
+            return
+
         # WhatsApp incoming messages
         if "/webhook" in self.path:
             content_length = int(self.headers.get("Content-Length", 0))
@@ -937,6 +1009,151 @@ class HealthHandler(BaseHTTPRequestHandler):
             self._send_json(200, {
                 "success": True,
                 "tracks": [t.to_dict() for t in tracks],
+            })
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
+
+    def _handle_suno_extend(self):
+        """
+        POST /api/suno/extend
+        Body: { "audio_id": "...", "prompt": "...", "continue_at": 30, "tags": "...", "title": "..." }
+        """
+        try:
+            body = self._read_body()
+            audio_id = body.get("audio_id", "")
+            if not audio_id:
+                self._send_json(400, {"success": False, "error": "audio_id es obligatorio"})
+                return
+
+            from suno_client import SunoClient
+            client = SunoClient()
+            tracks = client.extend(
+                audio_id=audio_id,
+                prompt=body.get("prompt", ""),
+                continue_at=body.get("continue_at", None),
+                tags=body.get("tags", ""),
+                title=body.get("title", ""),
+            )
+            self._send_json(200, {
+                "success": True,
+                "tracks": [t.to_dict() for t in tracks],
+                "count": len(tracks),
+            })
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
+
+    def _handle_suno_remix(self):
+        """
+        POST /api/suno/remix
+        Body: { "audio_id": "...", "prompt": "...", "tags": "new style", "title": "..." }
+        """
+        try:
+            body = self._read_body()
+            audio_id = body.get("audio_id", "")
+            if not audio_id:
+                self._send_json(400, {"success": False, "error": "audio_id es obligatorio"})
+                return
+
+            from suno_client import SunoClient
+            client = SunoClient()
+            tracks = client.remix(
+                audio_id=audio_id,
+                prompt=body.get("prompt", ""),
+                tags=body.get("tags", ""),
+                title=body.get("title", ""),
+            )
+            self._send_json(200, {
+                "success": True,
+                "tracks": [t.to_dict() for t in tracks],
+                "count": len(tracks),
+            })
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
+
+    def _handle_suno_concat(self):
+        """
+        POST /api/suno/concat
+        Body: { "clip_id": "..." }
+        """
+        try:
+            body = self._read_body()
+            clip_id = body.get("clip_id", "")
+            if not clip_id:
+                self._send_json(400, {"success": False, "error": "clip_id es obligatorio"})
+                return
+
+            from suno_client import SunoClient
+            client = SunoClient()
+            track = client.concat(clip_id=clip_id)
+            self._send_json(200, {
+                "success": True,
+                "track": track.to_dict(),
+            })
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
+
+    def _handle_suno_lyrics(self):
+        """
+        POST /api/suno/lyrics
+        Body: { "prompt": "description for lyrics" }
+        """
+        try:
+            body = self._read_body()
+            prompt = body.get("prompt", "")
+            if not prompt:
+                self._send_json(400, {"success": False, "error": "prompt es obligatorio"})
+                return
+
+            from suno_client import SunoClient
+            client = SunoClient()
+            lyrics = client.generate_lyrics(prompt=prompt)
+            self._send_json(200, {
+                "success": True,
+                **lyrics.to_dict(),
+            })
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
+
+    def _handle_suno_stems(self):
+        """
+        POST /api/suno/stems
+        Body: { "audio_id": "..." }
+        """
+        try:
+            body = self._read_body()
+            audio_id = body.get("audio_id", "")
+            if not audio_id:
+                self._send_json(400, {"success": False, "error": "audio_id es obligatorio"})
+                return
+
+            from suno_client import SunoClient
+            client = SunoClient()
+            stems = client.get_stems(audio_id=audio_id)
+            self._send_json(200, {
+                "success": True,
+                "stems": [s.to_dict() for s in stems],
+                "count": len(stems),
+            })
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
+
+    def _handle_suno_feed(self):
+        """
+        POST /api/suno/feed
+        Body: { "page": 0, "limit": 20 }
+        """
+        try:
+            body = self._read_body()
+            page = body.get("page", 0)
+            limit = body.get("limit", 20)
+
+            from suno_client import SunoClient
+            client = SunoClient()
+            tracks = client.get_feed(page=page, limit=limit)
+            self._send_json(200, {
+                "success": True,
+                "tracks": [t.to_dict() for t in tracks],
+                "count": len(tracks),
             })
         except Exception as e:
             self._send_json(500, {"success": False, "error": str(e)})

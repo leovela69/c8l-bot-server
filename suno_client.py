@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-🎵 SUNO CLIENT — Generador de Musica Real para C8L Studio
-Conecta con Suno AI Premium via cookie/session token.
-Genera canciones completas con voz usando la cuenta de Leo.
+🎵 SUNO CLIENT v2.0 — Full Suno Premium Integration for C8L
+Account: rufinoleon30@gmail.com (Premium)
 
-AUTO-REFRESH: El token JWT expira cada 60 min. Este cliente
-lo renueva automáticamente via Clerk sin intervención manual.
+Features:
+  - Generate (custom lyrics + simple description)
+  - Extend / Continue from timestamp
+  - Concat (merge extensions into one track)
+  - Remix (restyle existing track)
+  - Generate Lyrics (AI lyrics without audio)
+  - Stem Separation (vocals + instrumental)
+  - Get Feed / Library
+  - Credits info
+  - AUTO-REFRESH: Token JWT renewed every 50 min via Clerk
 """
 
 import requests
@@ -15,25 +22,47 @@ import json
 import logging
 import re
 import threading
+import base64
 from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger("c8l.suno")
 
 
+
 class SunoConfig:
+    """Suno API configuration — production endpoints."""
     BASE_URL = "https://studio-api.prod.suno.com"
+    # Generation
     GENERATE_ENDPOINT = "/api/generate/v2-web/"
+    # Feed / Track info
     FEED_ENDPOINT = "/api/feed/v2"
+    FEED_ALL_ENDPOINT = "/api/feed/"
+    # Billing
     CREDITS_ENDPOINT = "/api/billing/info/"
+    # Lyrics generation (no audio)
+    LYRICS_ENDPOINT = "/api/generate/lyrics/"
+    LYRICS_STATUS_ENDPOINT = "/api/generate/lyrics/{gen_id}"
+    # Stems (vocal/instrumental separation)
+    STEMS_ENDPOINT = "/api/generate/stems/"
+    # Concat (merge extended clips)
+    CONCAT_ENDPOINT = "/api/generate/concat/"
+    # Clerk auth
     CLERK_BASE = "https://clerk.suno.com"
-    # Clerk token refresh endpoint (sesiones activas)
-    CLERK_TOKEN_ENDPOINT = "/v1/client/sessions/{sid}/tokens?_clerk_js_version=5"
-    # Intervalo de refresh (50 min — el token dura 60)
-    TOKEN_REFRESH_INTERVAL = 50 * 60
+    CLERK_TOKEN_ENDPOINT = "/v1/client/sessions/{sid}/tokens"
+    TOKEN_REFRESH_INTERVAL = 50 * 60  # 50 min (token lasts 60)
+    # Models
+    MODELS = {
+        "v3.5": "chirp-v3-5",
+        "v4": "chirp-v4",
+        "v4.5": "chirp-v4-5",
+        "v5": "chirp-v5",
+    }
+    DEFAULT_MODEL = "chirp-v4"
+
 
 
 class SunoTrack:
-    """Representa una cancion generada por Suno."""
+    """Represents a Suno-generated song/clip."""
 
     def __init__(self, data: Dict[str, Any]):
         self.id = data.get("id", "")
@@ -46,8 +75,16 @@ class SunoTrack:
         self.created_at = data.get("created_at", "")
         self.metadata = data.get("metadata", {})
         self.duration = data.get("metadata", {}).get("duration", None)
-        self.tags = data.get("metadata", {}).get("tags", "")
-        self.prompt = data.get("metadata", {}).get("prompt", "")
+        self.tags = data.get("metadata", {}).get("tags", "") or data.get("tags", "")
+        self.prompt = data.get("metadata", {}).get("prompt", "") or data.get("prompt", "")
+        self.lyrics = data.get("metadata", {}).get("prompt", "") or data.get("lyric", "")
+        self.model_name = data.get("model_name", "")
+        self.type = data.get("type", "gen")
+        # Extension-specific
+        self.continue_at = data.get("metadata", {}).get("continue_at", None)
+        self.concat_url = data.get("metadata", {}).get("concat_url", "")
+        # Stems
+        self.stem_from_id = data.get("stem_from_id", "")
 
     def to_dict(self) -> dict:
         return {
@@ -61,27 +98,51 @@ class SunoTrack:
             "created_at": self.created_at,
             "duration": self.duration,
             "tags": self.tags,
+            "lyrics": self.lyrics,
+            "model_name": self.model_name,
+            "type": self.type,
         }
 
     def __repr__(self) -> str:
         return f"SunoTrack(id='{self.id[:8]}...', title='{self.title}', status='{self.status}')"
 
 
+
+class SunoLyrics:
+    """Represents AI-generated lyrics (no audio)."""
+
+    def __init__(self, data: Dict[str, Any]):
+        self.id = data.get("id", "")
+        self.title = data.get("title", "")
+        self.text = data.get("text", "")
+        self.status = data.get("status", "")
+
+    def to_dict(self) -> dict:
+        return {"id": self.id, "title": self.title, "text": self.text, "status": self.status}
+
+    def __repr__(self) -> str:
+        return f"SunoLyrics(title='{self.title}', len={len(self.text)})"
+
+
+
 class SunoClient:
     """
-    Cliente para generar musica via Suno AI Premium.
-    AUTO-REFRESH: Renueva el token JWT automáticamente cada 50 min
-    usando Clerk (el auth de Suno). Nunca más expira.
+    Full Suno Premium Client — All features.
+    Account: rufinoleon30@gmail.com
+    AUTO-REFRESH: Renews JWT every 50 min via Clerk.
+
+    Capabilities:
+      - generate() / generate_simple() / generate_custom()
+      - extend() — continue a track from a timestamp
+      - concat() — merge extended clips into one
+      - remix() — restyle an existing track
+      - generate_lyrics() — AI lyrics without audio
+      - get_stems() — vocal/instrumental separation
+      - get_tracks() / get_feed() — library access
+      - get_credits() — billing info
     """
 
     def __init__(self, cookie: str = None):
-        """
-        Inicializa el cliente Suno con auto-refresh de token.
-
-        Args:
-            cookie: Cookie completa de suno.com (document.cookie)
-                    Si no se provee, usa SUNO_COOKIE de config.py
-        """
         if cookie is None:
             from config import SUNO_COOKIE
             cookie = SUNO_COOKIE
@@ -99,65 +160,75 @@ class SunoClient:
             "Accept-Language": "es-ES,es;q=0.9",
             "Origin": "https://suno.com",
             "Referer": "https://suno.com/",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/130.0.0.0 Safari/537.36"
+            ),
         })
 
         if self.bearer_token:
             self.session.headers["Authorization"] = f"Bearer {self.bearer_token}"
-            logger.info("🎵 Suno Client inicializado con Bearer token")
+            logger.info("🎵 Suno Client v2.0 inicializado con Bearer token")
         else:
-            # Fallback: usar cookie directamente
             self.session.headers["Cookie"] = cookie
-            logger.info("🎵 Suno Client inicializado con cookie directa")
+            logger.info("🎵 Suno Client v2.0 inicializado con cookie directa")
 
-        # Auto-refresh: intentar renovar ahora si el token ya expiró
+        # Auto-refresh setup
         if self._client_token and self._session_id:
             self._try_refresh_token()
-            # Iniciar thread de auto-refresh cada 50 min
             self._start_auto_refresh()
-            logger.info(f"🔄 Auto-refresh activado (cada 50 min, session={self._session_id[:20]}...)")
+            logger.info(f"🔄 Auto-refresh activado (cada 50 min)")
         else:
             logger.warning("⚠️ No se pudo activar auto-refresh (falta __client o session_id)")
 
+
+    # ===== AUTH / TOKEN MANAGEMENT =====
+
     def _extract_client_token(self, cookie: str) -> Optional[str]:
-        """Extrae el __client token de Clerk (necesario para refresh)."""
-        # __client es el token largo que Clerk usa para renovar sesiones
+        """Extract __client token from Clerk cookie (needed for refresh)."""
         match = re.search(r'__client=([^;]+)', cookie)
-        if match:
-            token = match.group(1)
-            if len(token) > 50:
-                return token
+        if match and len(match.group(1)) > 50:
+            return match.group(1)
         return None
 
     def _extract_session_id(self, cookie: str) -> Optional[str]:
-        """Extrae el session ID de Clerk."""
-        # clerk_active_context=session_XXXXX o del JWT payload
-        match = re.search(r'clerk_active_context=session_([^;:&\s]+)', cookie)
+        """Extract Clerk session ID."""
+        match = re.search(r'clerk_active_context=(session_[^;:&\s]+)', cookie)
         if match:
-            return "session_" + match.group(1)
-
-        # Fallback: extraer del JWT si existe
+            return match.group(1)
+        # Fallback: from JWT payload
         if self.bearer_token:
             try:
-                import base64
                 parts = self.bearer_token.split('.')
                 payload = parts[1] + '=' * (4 - len(parts[1]) % 4)
                 data = json.loads(base64.urlsafe_b64decode(payload))
-                sid = data.get("sid", "")
-                if sid:
-                    return sid
-            except:
+                return data.get("sid", "")
+            except Exception:
                 pass
         return None
 
-    def _try_refresh_token(self):
-        """Intenta renovar el JWT via Clerk. No lanza excepción si falla."""
+    def _extract_bearer_token(self, cookie: str) -> Optional[str]:
+        """Extract JWT from __session cookie."""
+        patterns = [
+            r'__session=([^;]+)',
+            r'__session_Jnxw-muT=([^;]+)',
+            r'__session_U9tcbTPE=([^;]+)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, cookie)
+            if match:
+                token = match.group(1)
+                if token.count('.') >= 2 and len(token) > 100:
+                    return token
+        return None
+
+    def _try_refresh_token(self) -> bool:
+        """Refresh JWT via Clerk. Returns True on success."""
         if not self._client_token or not self._session_id:
             return False
-
         with self._refresh_lock:
             try:
-                # Clerk endpoint para renovar el token de una sesión activa
                 url = f"{SunoConfig.CLERK_BASE}/v1/client/sessions/{self._session_id}/tokens"
                 headers = {
                     "Accept": "*/*",
@@ -167,111 +238,61 @@ class SunoClient:
                     "Cookie": f"__client={self._client_token}",
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                 }
-
                 response = requests.post(url, headers=headers, timeout=15)
-
                 if response.status_code == 200:
                     data = response.json()
                     new_jwt = data.get("jwt", "")
-                    if not new_jwt:
-                        # Algunos responses tienen estructura diferente
-                        new_jwt = data.get("object") and data.get("jwt", "")
-
                     if new_jwt and new_jwt.count('.') >= 2:
                         self.bearer_token = new_jwt
                         self.session.headers["Authorization"] = f"Bearer {new_jwt}"
                         self._last_refresh = time.time()
                         logger.info("🔄 Token Suno renovado exitosamente!")
                         return True
-                    else:
-                        logger.warning(f"🔄 Refresh response sin JWT válido: {str(data)[:100]}")
                 elif response.status_code == 401:
-                    logger.error("🔄 __client token expirado. Necesita re-login manual en suno.com")
+                    logger.error("🔄 __client token expirado. Re-login necesario en suno.com")
                 else:
-                    logger.warning(f"🔄 Refresh falló: HTTP {response.status_code} — {response.text[:100]}")
-
+                    logger.warning(f"🔄 Refresh falló: HTTP {response.status_code}")
             except Exception as e:
                 logger.warning(f"🔄 Error en auto-refresh: {e}")
-
         return False
 
     def _start_auto_refresh(self):
-        """Inicia un thread daemon que renueva el token cada 50 minutos."""
-        def _refresh_loop():
+        """Start daemon thread that refreshes token every 50 min."""
+        def _loop():
             while True:
                 time.sleep(SunoConfig.TOKEN_REFRESH_INTERVAL)
-                logger.info("🔄 Auto-refresh: renovando token Suno...")
-                success = self._try_refresh_token()
-                if not success:
-                    logger.warning("🔄 Auto-refresh falló. El próximo request intentará de nuevo.")
+                self._try_refresh_token()
+        t = threading.Thread(target=_loop, daemon=True, name="suno-token-refresh")
+        t.start()
 
-        thread = threading.Thread(target=_refresh_loop, daemon=True, name="suno-token-refresh")
-        thread.start()
 
-    def _extract_bearer_token(self, cookie: str) -> Optional[str]:
-        """Extrae el JWT token de __session o __session_Jnxw-muT de la cookie."""
-        # Buscar __session= (sin sufijo, el principal)
-        patterns = [
-            r'__session=([^;]+)',
-            r'__session_Jnxw-muT=([^;]+)',
-            r'__session_U9tcbTPE=([^;]+)',
-        ]
-
-        for pattern in patterns:
-            match = re.search(pattern, cookie)
-            if match:
-                token = match.group(1)
-                # Verificar que es un JWT valido (tiene 3 partes separadas por .)
-                if token.count('.') >= 2 and len(token) > 100:
-                    logger.info(f"Token extraido de pattern: {pattern[:20]}...")
-                    return token
-
-        logger.warning("No se pudo extraer Bearer token de la cookie")
-        return None
+    # ===== HTTP REQUEST LAYER =====
 
     def _request(self, method: str, endpoint: str, **kwargs) -> Any:
-        """Hace una peticion a la API de Suno. Auto-renueva token si expira."""
+        """Make request to Suno API. Auto-retries on 401."""
         url = SunoConfig.BASE_URL + endpoint
         try:
             response = self.session.request(method, url, timeout=30, **kwargs)
             response.raise_for_status()
             return response.json() if response.content else None
         except requests.exceptions.HTTPError as e:
-            logger.error(f"HTTP Error {e.response.status_code}: {e.response.text[:200]}")
-            # Si es 401, intentar renovar token y reintentar UNA vez
             if e.response.status_code == 401:
-                logger.info("🔄 Token expirado. Intentando auto-refresh...")
+                logger.info("🔄 Token expirado — intentando refresh...")
                 if self._try_refresh_token():
-                    # Reintentar con el token nuevo
-                    try:
-                        response = self.session.request(method, url, timeout=30, **kwargs)
-                        response.raise_for_status()
-                        return response.json() if response.content else None
-                    except requests.exceptions.HTTPError as e2:
-                        if e2.response.status_code == 401:
-                            logger.error("🔄 Token renovado pero sigue fallando. __client expirado.")
-                            raise Exception("SUNO_TOKEN_EXPIRED: El __client cookie expiró. Necesita re-login en suno.com y copiar cookie nueva.")
-                        raise
-                else:
-                    raise Exception("SUNO_TOKEN_EXPIRED: No se pudo renovar. Re-login en suno.com y copiar cookie nueva.")
+                    response = self.session.request(method, url, timeout=30, **kwargs)
+                    response.raise_for_status()
+                    return response.json() if response.content else None
+                raise Exception(
+                    "SUNO_TOKEN_EXPIRED: No se pudo renovar. "
+                    "Re-login en suno.com con rufinoleon30@gmail.com y copiar cookie."
+                )
             raise
         except requests.exceptions.RequestException as e:
             logger.error(f"Request Error: {str(e)[:100]}")
             raise
 
-    def get_credits(self) -> dict:
-        """Obtiene info de creditos de la cuenta."""
-        try:
-            data = self._request("GET", SunoConfig.CREDITS_ENDPOINT)
-            return {
-                "credits_left": data.get("total_credits_left", 0),
-                "monthly_limit": data.get("monthly_limit", 0),
-                "monthly_usage": data.get("monthly_usage", 0),
-                "period": data.get("period", ""),
-            }
-        except Exception as e:
-            logger.error(f"Error obteniendo creditos: {e}")
-            return {"credits_left": -1, "error": str(e)}
+
+    # ===== GENERATE (main creation) =====
 
     def generate(
         self,
@@ -281,29 +302,32 @@ class SunoClient:
         is_custom: bool = True,
         make_instrumental: bool = False,
         wait_audio: bool = True,
-        model: str = "chirp-v4",
+        model: str = None,
         timeout: int = 120,
+        continue_clip_id: str = None,
+        continue_at: float = 0,
     ) -> List[SunoTrack]:
         """
-        Genera una cancion en Suno.
+        Generate a song on Suno.
 
         Args:
-            prompt: Si is_custom=True -> letras de la cancion
-                    Si is_custom=False -> descripcion de la cancion
-            title: Titulo de la cancion (solo si is_custom=True)
-            tags: Estilo musical (ej: "reggaeton, bolero house, 120 BPM")
-            is_custom: True=modo custom (letras), False=modo descripcion
-            make_instrumental: True para generar solo instrumental
-            wait_audio: Esperar a que el audio este listo
-            model: Modelo de Suno a usar
-            timeout: Tiempo maximo de espera en segundos
+            prompt: Lyrics (if is_custom) or description (if not is_custom)
+            title: Song title (custom mode only)
+            tags: Style tags (e.g. "reggaeton, bolero house, 120 BPM")
+            is_custom: True=custom lyrics mode, False=description mode
+            make_instrumental: True for instrumental only
+            wait_audio: Wait until audio is ready
+            model: Suno model (chirp-v4, chirp-v4-5, chirp-v5)
+            timeout: Max wait time in seconds
+            continue_clip_id: Clip ID to extend from (for extend feature)
+            continue_at: Timestamp to continue from (seconds)
 
         Returns:
-            Lista de SunoTrack con las canciones generadas (normalmente 2)
+            List of SunoTrack (normally 2 variations)
         """
-        logger.info(f"🎵 Generando cancion: '{title or prompt[:30]}...'")
+        model = model or SunoConfig.DEFAULT_MODEL
+        logger.info(f"🎵 Generando: '{title or prompt[:30]}...' model={model}")
 
-        # Construir payload
         if is_custom:
             payload = {
                 "prompt": prompt,
@@ -312,8 +336,8 @@ class SunoClient:
                 "mv": model,
                 "generation_type": "TEXT",
                 "make_instrumental": make_instrumental,
-                "continue_clip_id": None,
-                "continue_at": 0,
+                "continue_clip_id": continue_clip_id,
+                "continue_at": continue_at,
                 "task": None,
             }
         else:
@@ -322,33 +346,26 @@ class SunoClient:
                 "mv": model,
                 "make_instrumental": make_instrumental,
                 "generation_type": "TEXT",
-                "continue_clip_id": None,
-                "continue_at": 0,
+                "continue_clip_id": continue_clip_id,
+                "continue_at": continue_at,
                 "task": None,
             }
 
-        # Enviar peticion de generacion
         headers = dict(self.session.headers)
         headers["Content-Type"] = "text/plain;charset=UTF-8"
 
-        try:
-            response = self.session.post(
-                SunoConfig.BASE_URL + SunoConfig.GENERATE_ENDPOINT,
-                data=json.dumps(payload),
-                headers=headers,
-                timeout=30,
-            )
-            response.raise_for_status()
-            data = response.json()
-        except Exception as e:
-            logger.error(f"Error al generar: {e}")
-            raise
+        response = self.session.post(
+            SunoConfig.BASE_URL + SunoConfig.GENERATE_ENDPOINT,
+            data=json.dumps(payload),
+            headers=headers,
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
 
-        # Extraer clip IDs
         clips = data.get("clips", [])
         if not clips:
-            logger.error(f"No se generaron clips. Response: {json.dumps(data)[:200]}")
-            raise Exception("Suno no devolvio clips. Posible error de creditos o token.")
+            raise Exception("Suno no devolvio clips. Verifica creditos o token.")
 
         clip_ids = [clip["id"] for clip in clips]
         logger.info(f"🎵 Clips creados: {clip_ids}")
@@ -356,13 +373,298 @@ class SunoClient:
         if not wait_audio:
             return [SunoTrack(clip) for clip in clips]
 
-        # Polling hasta que esten listos
         return self._poll_completion(clip_ids, timeout=timeout)
 
-    def _poll_completion(self, ids: List[str], timeout: int = 120, interval: int = 5) -> List[SunoTrack]:
-        """Espera a que las canciones esten listas."""
-        start_time = time.time()
 
+    # ===== EXTEND (continue a track from timestamp) =====
+
+    def extend(
+        self,
+        audio_id: str,
+        prompt: str = "",
+        continue_at: float = None,
+        tags: str = "",
+        title: str = "",
+        model: str = None,
+        wait_audio: bool = True,
+        timeout: int = 120,
+    ) -> List[SunoTrack]:
+        """
+        Extend an existing track from a specific timestamp.
+
+        Args:
+            audio_id: ID of the existing clip to extend
+            prompt: New lyrics for the extension (optional)
+            continue_at: Timestamp in seconds to branch from (None = end)
+            tags: Style tags (inherits from original if empty)
+            title: Title for the extension
+            model: Suno model to use
+
+        Returns:
+            List of SunoTrack with the extension clips
+        """
+        model = model or SunoConfig.DEFAULT_MODEL
+        logger.info(f"🎵 Extendiendo clip {audio_id[:8]}... desde {continue_at}s")
+
+        payload = {
+            "prompt": prompt,
+            "tags": tags,
+            "title": title or "",
+            "mv": model,
+            "generation_type": "TEXT",
+            "make_instrumental": False,
+            "continue_clip_id": audio_id,
+            "continue_at": continue_at if continue_at is not None else 0,
+            "task": None,
+        }
+
+        headers = dict(self.session.headers)
+        headers["Content-Type"] = "text/plain;charset=UTF-8"
+
+        response = self.session.post(
+            SunoConfig.BASE_URL + SunoConfig.GENERATE_ENDPOINT,
+            data=json.dumps(payload),
+            headers=headers,
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        clips = data.get("clips", [])
+        if not clips:
+            raise Exception("No se generaron clips de extension.")
+
+        clip_ids = [clip["id"] for clip in clips]
+        logger.info(f"🎵 Extension clips: {clip_ids}")
+
+        if not wait_audio:
+            return [SunoTrack(clip) for clip in clips]
+        return self._poll_completion(clip_ids, timeout=timeout)
+
+
+    # ===== CONCAT (merge extended clips into one) =====
+
+    def concat(self, clip_id: str, timeout: int = 60) -> SunoTrack:
+        """
+        Concatenate an extended clip with its parent into a single complete song.
+
+        Args:
+            clip_id: ID of the final extension clip (Suno traces lineage automatically)
+            timeout: Max wait time
+
+        Returns:
+            Single SunoTrack with the full merged song
+        """
+        logger.info(f"🎵 Concatenando clip {clip_id[:8]}...")
+
+        payload = {"clip_id": clip_id}
+
+        data = self._request("POST", SunoConfig.CONCAT_ENDPOINT, json=payload)
+        if not data:
+            raise Exception("Concat no devolvio resultado.")
+
+        # Poll until complete
+        concat_id = data.get("id", clip_id)
+        start = time.time()
+        while time.time() - start < timeout:
+            tracks = self.get_tracks([concat_id])
+            if tracks and tracks[0].status == "complete":
+                logger.info(f"🎵 Concat completo! {tracks[0].audio_url}")
+                return tracks[0]
+            time.sleep(5)
+
+        raise TimeoutError(f"Timeout ({timeout}s) esperando concat")
+
+    # ===== REMIX (restyle existing track) =====
+
+    def remix(
+        self,
+        audio_id: str,
+        prompt: str = "",
+        tags: str = "",
+        title: str = "",
+        model: str = None,
+        wait_audio: bool = True,
+        timeout: int = 120,
+    ) -> List[SunoTrack]:
+        """
+        Remix an existing track — keep the melody/structure but change style.
+
+        Args:
+            audio_id: ID of the track to remix
+            prompt: New lyrics or description
+            tags: New style tags (e.g. "jazz, lo-fi, chill")
+            title: New title
+            model: Model to use
+
+        Returns:
+            List of SunoTrack with remixed versions
+        """
+        model = model or SunoConfig.DEFAULT_MODEL
+        logger.info(f"🎵 Remixando clip {audio_id[:8]}... estilo: {tags[:30]}")
+
+        payload = {
+            "prompt": prompt,
+            "tags": tags,
+            "title": title or "Remix",
+            "mv": model,
+            "generation_type": "TEXT",
+            "make_instrumental": False,
+            "continue_clip_id": audio_id,
+            "continue_at": 0,
+            "task": "remix",
+        }
+
+        headers = dict(self.session.headers)
+        headers["Content-Type"] = "text/plain;charset=UTF-8"
+
+        response = self.session.post(
+            SunoConfig.BASE_URL + SunoConfig.GENERATE_ENDPOINT,
+            data=json.dumps(payload),
+            headers=headers,
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        clips = data.get("clips", [])
+        if not clips:
+            raise Exception("No se generaron clips de remix.")
+
+        clip_ids = [clip["id"] for clip in clips]
+        if not wait_audio:
+            return [SunoTrack(clip) for clip in clips]
+        return self._poll_completion(clip_ids, timeout=timeout)
+
+
+    # ===== GENERATE LYRICS (AI lyrics, no audio) =====
+
+    def generate_lyrics(self, prompt: str, timeout: int = 30) -> SunoLyrics:
+        """
+        Generate AI lyrics from a description (no audio created).
+        Use result with generate_custom() to turn lyrics into a song.
+
+        Args:
+            prompt: Description/theme for lyrics
+                    e.g. "A reggaeton song about a liar ex-girlfriend"
+
+        Returns:
+            SunoLyrics with title and structured text
+        """
+        logger.info(f"🎵 Generando lyrics: '{prompt[:40]}...'")
+
+        payload = {"prompt": prompt}
+        data = self._request("POST", SunoConfig.LYRICS_ENDPOINT, json=payload)
+
+        if not data:
+            raise Exception("Lyrics generation failed — no response")
+
+        gen_id = data.get("id", "")
+        if not gen_id:
+            # Direct response with lyrics
+            return SunoLyrics(data)
+
+        # Poll for completion
+        start = time.time()
+        while time.time() - start < timeout:
+            status_url = SunoConfig.LYRICS_STATUS_ENDPOINT.format(gen_id=gen_id)
+            result = self._request("GET", status_url)
+            if result and result.get("status") == "complete":
+                return SunoLyrics(result)
+            time.sleep(2)
+
+        raise TimeoutError(f"Timeout ({timeout}s) esperando lyrics")
+
+    # ===== STEMS (vocal/instrumental separation) =====
+
+    def get_stems(self, audio_id: str, timeout: int = 120) -> List[SunoTrack]:
+        """
+        Separate a track into vocal and instrumental stems.
+        Useful for karaoke, remixing, or production.
+
+        Args:
+            audio_id: ID of the song to separate
+
+        Returns:
+            List of SunoTrack: [vocals_track, instrumental_track]
+        """
+        logger.info(f"🎵 Separando stems de clip {audio_id[:8]}...")
+
+        payload = {"clip_id": audio_id}
+        data = self._request("POST", SunoConfig.STEMS_ENDPOINT, json=payload)
+
+        if not data:
+            raise Exception("Stems generation failed — no response")
+
+        # Data could be a list of stem clips or a dict with id
+        if isinstance(data, list):
+            stems = data
+        else:
+            # Need to poll
+            stem_ids = [data.get("id", audio_id)]
+            start = time.time()
+            while time.time() - start < timeout:
+                tracks = self.get_tracks(stem_ids)
+                if all(t.status == "complete" for t in tracks):
+                    return tracks
+                time.sleep(5)
+            raise TimeoutError(f"Timeout ({timeout}s) esperando stems")
+
+        return [SunoTrack(s) for s in stems]
+
+
+    # ===== FEED / LIBRARY =====
+
+    def get_feed(self, page: int = 0, limit: int = 20) -> List[SunoTrack]:
+        """
+        Get your Suno library/feed (all your generated songs).
+
+        Args:
+            page: Page number (0-indexed)
+            limit: Tracks per page
+
+        Returns:
+            List of SunoTrack from your library
+        """
+        params = {"page": page, "page_size": limit}
+        data = self._request("GET", SunoConfig.FEED_ALL_ENDPOINT, params=params)
+
+        if isinstance(data, list):
+            return [SunoTrack(item) for item in data]
+        clips = data.get("clips", data.get("songs", []))
+        return [SunoTrack(item) for item in clips if isinstance(item, dict)]
+
+    def get_tracks(self, ids: List[str]) -> List[SunoTrack]:
+        """Get status/info of specific tracks by ID."""
+        if not ids:
+            return []
+        id_string = ",".join(ids)
+        data = self._request("GET", SunoConfig.FEED_ENDPOINT, params={"ids": id_string})
+        clips = data.get("clips", data) if isinstance(data, dict) else data
+        if isinstance(clips, list):
+            return [SunoTrack(item) for item in clips if isinstance(item, dict)]
+        return []
+
+    def get_credits(self) -> dict:
+        """Get billing/credits info for the account."""
+        try:
+            data = self._request("GET", SunoConfig.CREDITS_ENDPOINT)
+            return {
+                "credits_left": data.get("total_credits_left", 0),
+                "monthly_limit": data.get("monthly_limit", 0),
+                "monthly_usage": data.get("monthly_usage", 0),
+                "period": data.get("period", ""),
+                "plan": data.get("subscription_type", "premium"),
+            }
+        except Exception as e:
+            return {"credits_left": -1, "error": str(e)}
+
+
+    # ===== POLLING HELPER =====
+
+    def _poll_completion(self, ids: List[str], timeout: int = 120, interval: int = 5) -> List[SunoTrack]:
+        """Wait for tracks to complete generation."""
+        start_time = time.time()
         while time.time() - start_time < timeout:
             tracks = self.get_tracks(ids)
             completed = [t for t in tracks if t.status == "complete"]
@@ -370,74 +672,38 @@ class SunoClient:
             failed = [t for t in tracks if t.status in ("error", "failed")]
 
             if failed:
-                logger.error(f"Generacion fallida: {[t.id for t in failed]}")
-                raise Exception(f"Suno error en generacion: {failed[0].metadata}")
+                raise Exception(f"Suno error: {failed[0].metadata}")
 
             if len(completed) == len(ids):
-                logger.info(f"🎵 Todas las canciones listas! ({len(completed)} tracks)")
+                logger.info(f"🎵 Listo! {len(completed)} tracks completos")
                 return completed
 
-            # Si estan en streaming, ya tienen audio_url
             if streaming:
                 ready = [t for t in streaming if t.audio_url]
                 if len(ready) == len(ids):
-                    logger.info(f"🎵 Canciones en streaming con audio disponible")
                     return ready
 
-            status_str = f"complete={len(completed)}, streaming={len(streaming)}, pending={len(ids)-len(completed)-len(streaming)}"
-            logger.info(f"⏳ Esperando... {status_str}")
             time.sleep(interval)
 
-        raise TimeoutError(f"Timeout ({timeout}s) esperando generacion de Suno")
+        raise TimeoutError(f"Timeout ({timeout}s) esperando generacion")
 
-    def get_tracks(self, ids: List[str]) -> List[SunoTrack]:
-        """Obtiene el estado actual de las canciones por ID."""
-        if not ids:
-            return []
+    # ===== CONVENIENCE METHODS =====
 
-        id_string = ",".join(ids)
-        data = self._request("GET", SunoConfig.FEED_ENDPOINT, params={"ids": id_string})
-
-        clips = data.get("clips", data) if isinstance(data, dict) else data
-        if isinstance(clips, list):
-            return [SunoTrack(item) for item in clips if isinstance(item, dict)]
-
-        return []
-
-    def generate_simple(self, description: str, instrumental: bool = False) -> List[SunoTrack]:
-        """
-        Genera musica con una descripcion simple (modo facil).
-        Suno elige letra, estilo y titulo.
-
-        Args:
-            description: Ej: "Una cancion de reggaeton romantico para fiesta"
-            instrumental: Si es solo instrumental
-
-        Returns:
-            Lista de SunoTrack
-        """
+    def generate_simple(self, description: str, instrumental: bool = False, model: str = None) -> List[SunoTrack]:
+        """Generate music from a simple description. Suno picks lyrics/style/title."""
         return self.generate(
             prompt=description,
             is_custom=False,
             make_instrumental=instrumental,
             wait_audio=True,
+            model=model,
         )
 
     def generate_custom(
-        self, lyrics: str, style: str, title: str = "C8L Creation", instrumental: bool = False
+        self, lyrics: str, style: str, title: str = "C8L Creation",
+        instrumental: bool = False, model: str = None
     ) -> List[SunoTrack]:
-        """
-        Genera musica con letra y estilo personalizados (modo avanzado).
-
-        Args:
-            lyrics: Letra completa con estructura [Verse], [Chorus], etc.
-            style: Tags de estilo (ej: "reggaeton, bolero house, energetic, 120 BPM")
-            title: Titulo de la cancion
-            instrumental: Solo instrumental
-
-        Returns:
-            Lista de SunoTrack
-        """
+        """Generate music with custom lyrics and style tags."""
         return self.generate(
             prompt=lyrics,
             title=title,
@@ -445,14 +711,27 @@ class SunoClient:
             is_custom=True,
             make_instrumental=instrumental,
             wait_audio=True,
+            model=model,
+        )
+
+    def generate_instrumental(self, description: str, model: str = None) -> List[SunoTrack]:
+        """Generate instrumental-only track from description."""
+        return self.generate(
+            prompt=description,
+            is_custom=False,
+            make_instrumental=True,
+            wait_audio=True,
+            model=model,
         )
 
 
 # ---------------------------------------------------------------------------
-# Test rapido
+# Quick test
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     client = SunoClient()
     credits = client.get_credits()
-    print(f"Creditos: {credits}")
+    print(f"🎵 Suno Client v2.0 — Credits: {credits}")
+    print(f"   Account: rufinoleon30@gmail.com")
+    print(f"   Features: generate, extend, remix, concat, lyrics, stems, feed")
