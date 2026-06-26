@@ -7,7 +7,7 @@ import Logo from '@/components/ui/Logo'
 import CreditsDisplay from '@/components/ui/CreditsDisplay'
 
 // ============ SUNO API CONFIG ============
-const SUNO_API_BASE = process.env.NEXT_PUBLIC_SUNO_API_URL || 'https://economies-tube-angel-gentle.trycloudflare.com'
+const SUNO_API_BASE = process.env.NEXT_PUBLIC_SUNO_API_URL || 'https://api.c8lagency.com'
 
 // ============ SIDEBAR ITEMS ============
 const SIDEBAR_ITEMS = [

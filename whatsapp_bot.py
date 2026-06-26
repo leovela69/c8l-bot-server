@@ -442,9 +442,20 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
         elif agent == "apolo":
             # Musica — Genera MUSICA REAL con Suno AI Premium
             tg_typing(chat_id)
-            tg_send(chat_id, "🎵 Generando musica con Suno AI Premium... (1-2 min)")
 
-            # Registrar para auto-evolución
+            # CHECK CREDITOS — control de uso por usuario
+            from suno_credits import suno_credits
+            suno_credits.set_name(str(chat_id), user_name)
+            check = suno_credits.can_generate(str(chat_id), "generate")
+            if not check["allowed"]:
+                tg_send(chat_id, f"⚠️ {check['reason']}")
+                stats = suno_credits.get_stats(str(chat_id))
+                tg_send(chat_id, f"📊 Tu plan: {stats['tier'].upper()} | Hoy: {stats['daily_used']}/{stats['daily_limit']}")
+                return
+
+            tg_send(chat_id, f"🎵 Generando musica con Suno AI Premium... (1-2 min)\n💰 Te quedan {check['remaining']} generaciones hoy")
+
+            # Registrar para auto-evolucion
             evolution.record_generation(chat_id, text, "apolo", "musica")
 
             try:
@@ -488,6 +499,8 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
                     # Broadcast al grupo
                     broadcast_content_created(user_name, "musica", text[:60])
                     _send_feedback_buttons(chat_id)
+                    # Registrar uso de creditos
+                    suno_credits.record_generation(str(chat_id), "generate", len(tracks))
                 else:
                     tg_send(chat_id, "❌ Suno no genero canciones. Intenta con otra descripcion.")
 
@@ -868,6 +881,10 @@ class HealthHandler(BaseHTTPRequestHandler):
             self._handle_suno_feed()
             return
 
+        if self.path == "/api/suno/user-stats":
+            self._handle_suno_user_stats()
+            return
+
         # WhatsApp incoming messages
         if "/webhook" in self.path:
             content_length = int(self.headers.get("Content-Length", 0))
@@ -1154,6 +1171,27 @@ class HealthHandler(BaseHTTPRequestHandler):
                 "success": True,
                 "tracks": [t.to_dict() for t in tracks],
                 "count": len(tracks),
+            })
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
+
+    def _handle_suno_user_stats(self):
+        """
+        POST /api/suno/user-stats
+        Body: { "user_id": "web_user" }
+        Response: { tier, daily_used, daily_limit, features, ... }
+        """
+        try:
+            body = self._read_body()
+            user_id = body.get("user_id", "web_user")
+
+            from suno_credits import suno_credits
+            stats = suno_credits.get_stats(user_id)
+            global_stats = suno_credits.get_global_stats()
+            self._send_json(200, {
+                "success": True,
+                **stats,
+                "global": global_stats,
             })
         except Exception as e:
             self._send_json(500, {"success": False, "error": str(e)})

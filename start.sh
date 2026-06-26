@@ -1,23 +1,30 @@
 #!/bin/bash
 # ============================================================
-#  C8L BOT SERVER — Script de arranque con tunnel auto-config
+#  C8L BOT SERVER — Script de arranque PRODUCCION
 #  Uso: bash start.sh
+#
+#  Prioridad de tunnel:
+#    1. Named tunnel (api.c8lagency.com) — si está configurado
+#    2. Quick tunnel (random URL) — fallback
+#
 #  Hace:
 #    1. Mata procesos anteriores
 #    2. Arranca el bot Python
-#    3. Arranca cloudflared y captura la URL nueva
-#    4. Registra la URL en el bot via API interna
-#    5. Muestra la URL final para copiarla si se necesita
+#    3. Arranca cloudflared (named o quick)
+#    4. Registra la URL en el bot
+#    5. Muestra resumen
 # ============================================================
 
 BOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BOT_PORT=8080
 LOG_BOT="$BOT_DIR/bot.log"
 LOG_TUNNEL="$BOT_DIR/tunnel.log"
+NAMED_DOMAIN="api.c8lagency.com"
+TUNNEL_NAME="c8l-bot"
 
 echo ""
 echo "============================================================"
-echo "  🏛️  C8L BOT SERVER — Iniciando..."
+echo "  🏛️  C8L BOT SERVER — Iniciando (Produccion)"
 echo "============================================================"
 
 # 1. Matar procesos anteriores
@@ -33,41 +40,52 @@ nohup python3 whatsapp_bot.py > "$LOG_BOT" 2>&1 &
 BOT_PID=$!
 echo "   PID del bot: $BOT_PID"
 
-# Esperar a que el bot esté listo
 echo "⏳ Esperando que el bot arranque (10s)..."
 sleep 10
 
-# Verificar que el bot está vivo
 if curl -sf "http://localhost:$BOT_PORT/" > /dev/null 2>&1; then
-    echo "✅ Bot en línea en puerto $BOT_PORT"
+    echo "✅ Bot en linea en puerto $BOT_PORT"
 else
-    echo "⚠️  Bot tardando en arrancar, continuando igualmente..."
+    echo "⚠️  Bot tardando en arrancar, continuando..."
 fi
 
-# 3. Arrancar cloudflared y capturar URL
+# 3. Arrancar tunnel
 echo ""
 echo "🌐 Iniciando tunnel Cloudflare..."
-nohup cloudflared tunnel --url "http://localhost:$BOT_PORT" > "$LOG_TUNNEL" 2>&1 &
-TUNNEL_PID=$!
-echo "   PID del tunnel: $TUNNEL_PID"
 
-# Esperar a que el tunnel genere la URL (hasta 30s)
-echo "⏳ Esperando URL del tunnel (30s)..."
+# Verificar si hay un named tunnel configurado
 TUNNEL_URL=""
-for i in $(seq 1 30); do
-    sleep 1
-    TUNNEL_URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG_TUNNEL" 2>/dev/null | head -1)
-    if [ -n "$TUNNEL_URL" ]; then
-        break
-    fi
-done
+USE_NAMED=false
+
+if cloudflared tunnel list 2>/dev/null | grep -q "$TUNNEL_NAME"; then
+    echo "   📌 Named tunnel '$TUNNEL_NAME' encontrado → usando $NAMED_DOMAIN"
+    USE_NAMED=true
+    nohup cloudflared tunnel run "$TUNNEL_NAME" > "$LOG_TUNNEL" 2>&1 &
+    TUNNEL_PID=$!
+    TUNNEL_URL="https://$NAMED_DOMAIN"
+    echo "   PID del tunnel: $TUNNEL_PID"
+    sleep 5
+else
+    echo "   ⚡ Usando Quick tunnel (URL aleatoria)..."
+    echo "   💡 Para URL fija, ejecuta: bash setup_tunnel.sh"
+    nohup cloudflared tunnel --url "http://localhost:$BOT_PORT" > "$LOG_TUNNEL" 2>&1 &
+    TUNNEL_PID=$!
+    echo "   PID del tunnel: $TUNNEL_PID"
+
+    echo "⏳ Esperando URL del tunnel (30s)..."
+    for i in $(seq 1 30); do
+        sleep 1
+        TUNNEL_URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG_TUNNEL" 2>/dev/null | head -1)
+        if [ -n "$TUNNEL_URL" ]; then
+            break
+        fi
+    done
+fi
 
 if [ -z "$TUNNEL_URL" ]; then
-    echo "❌ No se pudo capturar la URL del tunnel."
-    echo "   Revisa $LOG_TUNNEL para más info."
-    echo ""
-    echo "   El bot sigue activo en http://localhost:$BOT_PORT"
-    echo "   Puedes lanzar cloudflared manualmente y copiar la URL."
+    echo "❌ No se pudo establecer tunnel."
+    echo "   Revisa: tail -f $LOG_TUNNEL"
+    echo "   Bot sigue activo en http://localhost:$BOT_PORT"
     exit 1
 fi
 
@@ -83,26 +101,30 @@ RESPONSE=$(curl -sf -X POST "http://localhost:$BOT_PORT/api/set-tunnel-url" \
 if echo "$RESPONSE" | grep -q '"success": true'; then
     echo "✅ URL registrada correctamente en el bot."
 else
-    echo "⚠️  No se pudo registrar via API (el bot la sabrá igualmente al reiniciar)."
-    echo "   Respuesta: $RESPONSE"
+    echo "⚠️  No se pudo registrar via API."
 fi
 
-# 5. Mostrar resumen
+# 5. Resumen
 echo ""
 echo "============================================================"
-echo "  ✅ TODO EN LÍNEA"
+echo "  ✅ TODO EN LINEA — C8L Bot Server"
 echo "============================================================"
 echo ""
 echo "  🤖 Bot:    http://localhost:$BOT_PORT"
 echo "  🌐 Tunnel: $TUNNEL_URL"
-echo ""
-echo "  📋 Para el frontend (Vercel), usa esta variable:"
-echo "     NEXT_PUBLIC_SUNO_API_URL=$TUNNEL_URL"
-echo ""
-echo "  🔍 El frontend también la descubre automáticamente"
-echo "     llamando a: $TUNNEL_URL/api/tunnel-url"
+if [ "$USE_NAMED" = true ]; then
+echo "  📌 Tipo:   PERMANENTE (named tunnel)"
+echo "             La URL NUNCA cambia. Frontend configurado."
+else
+echo "  ⚡ Tipo:   Quick (temporal — cambia cada reinicio)"
+echo "             Para URL fija: bash setup_tunnel.sh"
+fi
 echo ""
 echo "  📄 Logs:"
 echo "     tail -f $LOG_BOT"
 echo "     tail -f $LOG_TUNNEL"
+echo ""
+echo "  🎵 Suno API: $TUNNEL_URL/api/suno/generate"
+echo "  📚 Suno Library: $TUNNEL_URL/api/suno/feed"
+echo "  💰 Suno Credits: $TUNNEL_URL/api/suno/credits"
 echo "============================================================"
