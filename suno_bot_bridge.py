@@ -160,7 +160,7 @@ class SunoBotBridge:
             lyria_result = self.lyria_client.generate(
                 prompt=lyria_prompt,
                 instrumental=instrumental,
-                model="lyria-3-pro-preview",
+                model="elevenmusic",
             )
 
             if lyria_result["success"]:
