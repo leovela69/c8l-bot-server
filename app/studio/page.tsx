@@ -7,47 +7,11 @@ import Logo from '@/components/ui/Logo'
 import CreditsDisplay from '@/components/ui/CreditsDisplay'
 
 // ============ SUNO API CONFIG ============
-// URL del bot (VPS) — se auto-descubre via /api/bot-url (proxy server-side)
+// URL del bot (VPS via Cloudflare Tunnel)
 // Prioridad:
-//   1. NEXT_PUBLIC_SUNO_API_URL (env var en Vercel) — si está configurada, la usa
-//   2. Auto-discovery via /api/bot-url → contacta VPS → devuelve tunnel URL actual
-//   3. Fallback hardcoded (última URL conocida) — se actualiza con cada start.sh
-const SUNO_API_STATIC = process.env.NEXT_PUBLIC_SUNO_API_URL || ''
-const SUNO_API_FALLBACK = 'https://remedy-impacts-rescue-harry.trycloudflare.com'
-
-// Cache de la URL activa (se resuelve una vez al montar el componente)
-let _resolvedApiUrl: string | null = SUNO_API_STATIC || null
-
-/**
- * Resuelve la URL base de la API Suno:
- * 1. Si NEXT_PUBLIC_SUNO_API_URL está configurada → la usa directamente
- * 2. Si hay una URL cacheada de sesión → la usa
- * 3. Llama a /api/bot-url (Vercel server-side proxy) para auto-descubrir
- * 4. Fallback a la última URL de tunnel conocida
- */
-async function resolveSunoApiUrl(): Promise<string> {
-  if (_resolvedApiUrl) return _resolvedApiUrl
-
-  // Intentar auto-descubrir via proxy server-side (resuelve Mixed Content)
-  try {
-    const res = await fetch('/api/bot-url', { cache: 'no-store' })
-    if (res.ok) {
-      const data = await res.json()
-      if (data.tunnel_url) {
-        _resolvedApiUrl = data.tunnel_url
-        console.log('[C8L Studio] API URL auto-descubierta:', _resolvedApiUrl)
-        return _resolvedApiUrl
-      }
-    }
-  } catch (e) {
-    console.warn('[C8L Studio] Auto-discovery falló, usando fallback:', e)
-  }
-
-  // Fallback: última URL conocida del tunnel
-  _resolvedApiUrl = SUNO_API_FALLBACK
-  console.log('[C8L Studio] Usando fallback URL:', _resolvedApiUrl)
-  return _resolvedApiUrl
-}
+//   1. NEXT_PUBLIC_SUNO_API_URL (env var en Vercel) — si está configurada
+//   2. Fallback hardcoded — última URL del tunnel (se actualiza con start.sh)
+const SUNO_API_BASE = process.env.NEXT_PUBLIC_SUNO_API_URL || 'https://remedy-impacts-rescue-harry.trycloudflare.com'
 
 // ============ SIDEBAR ITEMS ============
 const SIDEBAR_ITEMS = [
@@ -152,23 +116,16 @@ export default function StudioPage() {
   // --- SUNO: Generate Music (REAL) ---
   const handleCreate = async () => {
     setGenerating(true)
-    setGenStatus('Conectando con el servidor...')
+    setGenStatus('Enviando a Suno AI...')
     setGenError('')
 
     try {
-      const apiBase = await resolveSunoApiUrl()
-      if (!apiBase) {
-        throw new Error('No se encontró el servidor. Configura NEXT_PUBLIC_SUNO_API_URL en Vercel o reinicia el VPS con start.sh')
-      }
-
-      setGenStatus('Enviando a Suno AI...')
-
       const isCustom = mode === 'avanzado'
       const body = isCustom
         ? { mode: 'custom', prompt: lyrics, title, tags: styles, instrumental: false }
         : { mode: 'simple', prompt: styles, instrumental: false }
 
-      const response = await fetch(`${apiBase}/api/suno/generate`, {
+      const response = await fetch(`${SUNO_API_BASE}/api/suno/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
