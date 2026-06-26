@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-🎵 LYRIA 3 CLIENT — Google AI Music Generation (GRATIS, sin CAPTCHA)
+🎵 MUSIC CLIENT — Generador de música con Pollinations AI (GRATIS con tu key)
 Reemplazo de Suno cuando el CAPTCHA bloquea la generación.
 
-Lyria 3 (Google):
-  - Genera canciones completas con vocales, letras, instrumentos
-  - 44.1 kHz stereo, alta calidad
-  - API REST simple: solo necesita GEMINI_API_KEY
+Pollinations Audio/Music:
+  - Modelos: elevenmusic, stable-audio-3-medium, stable-audio-3-large, acestep
+  - Endpoint: GET /audio/{prompt}?model=elevenmusic
+  - Usa tu POLLINATIONS_API_KEY que ya funciona para imágenes/video
   - SIN cookies, SIN CAPTCHA, SIN expiración
-  - Modelos: lyria-3-clip-preview (30s), lyria-3-pro-preview (2+ min)
 
 Uso:
     from lyria_client import LyriaClient
@@ -26,100 +25,125 @@ import logging
 import requests
 from typing import Dict, Any, Optional, List
 
-logger = logging.getLogger("c8l.lyria")
+logger = logging.getLogger("c8l.music")
 
-# API Config
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
+# Pollinations Audio API
+POLLINATIONS_AUDIO_URL = "https://gen.pollinations.ai/audio"
 
 
 class LyriaClient:
     """
-    Google Lyria 3 — Generador de música con IA.
-    100% gratis con API key de Gemini. Sin CAPTCHA.
+    Generador de música via Pollinations AI.
+    Usa la misma API key que ya funciona para imágenes/video.
+    Modelos: elevenmusic, stable-audio-3-medium, stable-audio-3-large
     """
 
     def __init__(self, api_key: str = None):
         """
         Args:
-            api_key: Google AI API key. Si no se pasa, intenta obtenerla de config.py o env.
+            api_key: Pollinations API key. Si no se pasa, intenta obtenerla de config.py.
         """
         self.api_key = api_key or self._get_api_key()
         if not self.api_key:
-            raise ValueError("Se necesita GEMINI_API_KEY para usar Lyria 3")
-        logger.info("🎵 Lyria 3 Client inicializado (Google AI)")
+            raise ValueError("Se necesita POLLINATIONS_API_KEY para generar música")
+        logger.info("🎵 Music Client inicializado (Pollinations AI)")
 
     def _get_api_key(self) -> Optional[str]:
         """Obtiene API key de múltiples fuentes."""
         # 1. Environment variable
-        key = os.environ.get("GEMINI_API_KEY", "")
-        if key and key.startswith("AI"):
+        key = os.environ.get("POLLINATIONS_API_KEY", "")
+        if key:
             return key
 
         # 2. config.py
         try:
             sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-            from config import GEMINI_API_KEY
-            if GEMINI_API_KEY and len(GEMINI_API_KEY) > 20:
-                return GEMINI_API_KEY
+            from config import POLLINATIONS_API_KEY_P
+            if POLLINATIONS_API_KEY_P:
+                return POLLINATIONS_API_KEY_P
         except ImportError:
             pass
 
         return None
 
-    # ===== GENERATE: Canción completa =====
+    # ===== GENERATE: Música con Pollinations =====
 
     def generate(
         self,
         prompt: str,
-        model: str = "lyria-3-pro-preview",
+        model: str = "elevenmusic",
         instrumental: bool = False,
         timeout: int = 180,
     ) -> Dict[str, Any]:
         """
-        Genera una canción completa con Lyria 3.
+        Genera música con Pollinations AI.
 
         Args:
-            prompt: Descripción de la canción (estilo, letra, mood, BPM, etc.)
-            model: "lyria-3-pro-preview" (canción completa) o "lyria-3-clip-preview" (30s)
-            instrumental: Si True, agrega "Instrumental only, no vocals" al prompt
-            timeout: Tiempo máximo de espera en segundos
+            prompt: Descripción de la canción
+            model: "elevenmusic", "stable-audio-3-medium", "stable-audio-3-large", "acestep"
+            instrumental: Si True, agrega "Instrumental only" al prompt
+            timeout: Tiempo máximo
 
         Returns:
-            {
-                "success": True/False,
-                "audio_bytes": bytes (MP3),
-                "lyrics": str,
-                "title": str (extraído de las lyrics),
-                "model": str,
-                "error": str (si falla),
-            }
+            {"success": True/False, "audio_bytes": bytes, "lyrics": str, "title": str, ...}
         """
         if instrumental and "instrumental" not in prompt.lower():
             prompt += ". Instrumental only, no vocals."
 
-        logger.info(f"🎵 Lyria 3: Generando con '{prompt[:60]}...' model={model}")
+        logger.info(f"🎵 Pollinations Music: '{prompt[:60]}...' model={model}")
 
-        payload = {
-            "model": model,
-            "input": prompt,
-        }
+        # Pollinations audio endpoint: GET /audio/{text}?model=X
+        import urllib.parse
+        encoded_prompt = urllib.parse.quote(prompt)
+        url = f"{POLLINATIONS_AUDIO_URL}/{encoded_prompt}"
 
-        headers = {
-            "Content-Type": "application/json",
-            "x-goog-api-key": self.api_key,
-        }
+        params = {"model": model}
+        headers = {"Authorization": f"Bearer {self.api_key}"}
 
         try:
-            response = requests.post(
-                GEMINI_API_URL,
-                json=payload,
+            response = requests.get(
+                url,
+                params=params,
                 headers=headers,
                 timeout=timeout,
             )
 
-            if response.status_code != 200:
+            if response.status_code == 200:
+                content_type = response.headers.get("content-type", "")
+                if "audio" in content_type or len(response.content) > 10000:
+                    audio_bytes = response.content
+                    title = self._generate_title(prompt)
+                    logger.info(f"🎵 ✅ Música generada: {len(audio_bytes)} bytes, title='{title}'")
+                    return {
+                        "success": True,
+                        "audio_bytes": audio_bytes,
+                        "lyrics": "",
+                        "title": title,
+                        "model": model,
+                        "error": "",
+                    }
+                else:
+                    # La respuesta no es audio
+                    return {
+                        "success": False,
+                        "audio_bytes": None,
+                        "lyrics": "",
+                        "title": "",
+                        "model": model,
+                        "error": f"Respuesta no es audio: {response.text[:200]}",
+                    }
+            else:
                 error_msg = response.text[:200]
-                logger.error(f"🎵 Lyria error {response.status_code}: {error_msg}")
+                logger.error(f"🎵 Pollinations error {response.status_code}: {error_msg}")
+
+                # Si elevenmusic falla, probar stable-audio como fallback
+                if model == "elevenmusic":
+                    logger.info("🎵 Intentando con stable-audio-3-large...")
+                    return self.generate(prompt, model="stable-audio-3-large", instrumental=instrumental, timeout=timeout)
+                elif model == "stable-audio-3-large":
+                    logger.info("🎵 Intentando con stable-audio-3-medium...")
+                    return self.generate(prompt, model="stable-audio-3-medium", instrumental=instrumental, timeout=timeout)
+
                 return {
                     "success": False,
                     "audio_bytes": None,
@@ -129,100 +153,34 @@ class LyriaClient:
                     "error": f"HTTP {response.status_code}: {error_msg}",
                 }
 
-            data = response.json()
-            return self._parse_response(data, model)
-
         except requests.exceptions.Timeout:
             return {"success": False, "audio_bytes": None, "lyrics": "", "title": "",
-                    "model": model, "error": f"Timeout ({timeout}s) — la canción tardó demasiado"}
+                    "model": model, "error": f"Timeout ({timeout}s)"}
         except Exception as e:
-            logger.error(f"🎵 Lyria error: {e}")
+            logger.error(f"🎵 Error: {e}")
             return {"success": False, "audio_bytes": None, "lyrics": "", "title": "",
                     "model": model, "error": str(e)}
 
-    def _parse_response(self, data: dict, model: str) -> Dict[str, Any]:
-        """Parsea la respuesta de Lyria 3 (steps con audio + text)."""
-        audio_bytes = None
-        lyrics_parts = []
+    def _generate_title(self, prompt: str) -> str:
+        """Genera un título a partir del prompt."""
+        # Extraer las primeras palabras significativas
+        words = prompt.split()
+        if len(words) <= 4:
+            return prompt.title()
+        # Tomar primeras 4-5 palabras que no sean artículos
+        skip = {"a", "an", "the", "un", "una", "el", "la", "los", "las", "de", "del", "en", "con", "sobre", "para"}
+        title_words = [w for w in words[:8] if w.lower() not in skip][:4]
+        return " ".join(title_words).title() if title_words else "C8L Track"
 
-        steps = data.get("steps", [])
-        for step in steps:
-            if step.get("type") == "model_output":
-                for block in step.get("content", []):
-                    if block.get("type") == "audio":
-                        # Audio en base64
-                        audio_data = block.get("data", "")
-                        if audio_data:
-                            audio_bytes = base64.b64decode(audio_data)
-                    elif block.get("type") == "text":
-                        text = block.get("text", "")
-                        if text:
-                            lyrics_parts.append(text)
-
-        # También comprobar output_audio y output_text directos
-        if not audio_bytes:
-            out_audio = data.get("output_audio", {})
-            if out_audio and out_audio.get("data"):
-                audio_bytes = base64.b64decode(out_audio["data"])
-
-        if not lyrics_parts:
-            out_text = data.get("output_text", "")
-            if out_text:
-                lyrics_parts.append(out_text)
-
-        lyrics = "\n".join(lyrics_parts)
-        title = self._extract_title(lyrics)
-
-        if audio_bytes:
-            logger.info(f"🎵 Lyria 3: ✅ Generado! {len(audio_bytes)} bytes, title='{title}'")
-            return {
-                "success": True,
-                "audio_bytes": audio_bytes,
-                "lyrics": lyrics,
-                "title": title or "C8L Track",
-                "model": model,
-                "error": "",
-            }
-        else:
-            logger.error("🎵 Lyria 3: No se recibió audio en la respuesta")
-            return {
-                "success": False,
-                "audio_bytes": None,
-                "lyrics": lyrics,
-                "title": "",
-                "model": model,
-                "error": "No audio in response",
-            }
-
-    def _extract_title(self, lyrics: str) -> str:
-        """Intenta extraer un título de las lyrics."""
-        if not lyrics:
-            return ""
-        # Buscar línea con "Title:" o primera línea no vacía
-        for line in lyrics.split("\n"):
-            line = line.strip()
-            if line.lower().startswith("title:"):
-                return line.split(":", 1)[1].strip().strip('"')
-            if line.startswith("#"):
-                return line.lstrip("#").strip()
-        # Fallback: primera línea que no sea un tag
-        for line in lyrics.split("\n"):
-            line = line.strip()
-            if line and not line.startswith("[") and not line.startswith("{"):
-                return line[:50]
-        return ""
-
-    # ===== GENERATE CLIP: 30 segundos =====
+    # ===== SHORTCUTS =====
 
     def generate_clip(self, prompt: str, instrumental: bool = False) -> Dict[str, Any]:
-        """Genera un clip de 30 segundos (más rápido)."""
-        return self.generate(prompt, model="lyria-3-clip-preview", instrumental=instrumental, timeout=60)
-
-    # ===== GENERATE FULL SONG: Canción completa =====
+        """Genera un clip corto con stable-audio."""
+        return self.generate(prompt, model="stable-audio-3-medium", instrumental=instrumental, timeout=60)
 
     def generate_full_song(self, prompt: str, instrumental: bool = False) -> Dict[str, Any]:
-        """Genera una canción completa de ~2 minutos."""
-        return self.generate(prompt, model="lyria-3-pro-preview", instrumental=instrumental, timeout=180)
+        """Genera una canción completa con elevenmusic."""
+        return self.generate(prompt, model="elevenmusic", instrumental=instrumental, timeout=180)
 
     # ===== SEND TO TELEGRAM =====
 
@@ -243,7 +201,7 @@ class LyriaClient:
                 return {"success": False, "error": "No Telegram bot token"}
 
         if not caption:
-            caption = f"🎵 *{title}*\n🤖 Generado con Google Lyria 3 × C8L Agency"
+            caption = f"🎵 *{title}*\n🤖 Generado con C8L Agency AI Music"
 
         try:
             url = f"https://api.telegram.org/bot{bot_token}/sendAudio"
@@ -273,7 +231,7 @@ class LyriaClient:
         prompt: str,
         instrumental: bool = False,
         bot_token: str = None,
-        model: str = "lyria-3-pro-preview",
+        model: str = "elevenmusic",
     ) -> Dict[str, Any]:
         """Genera una canción y la envía directamente a Telegram."""
         result = self.generate(prompt, model=model, instrumental=instrumental)
