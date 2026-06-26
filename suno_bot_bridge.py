@@ -582,6 +582,20 @@ class SunoBotBridge:
             )
             telegram_sent = tg_result.get("success", False)
 
+            # Enviar letras y prompt si los hay
+            lyrics = best_track.get("lyrics", "")
+            tags_info = best_track.get("tags", "") or tags
+            if lyrics or tags_info:
+                info_msg = ""
+                if lyrics:
+                    # Recortar letras si son muy largas (Telegram max 4096)
+                    lyrics_display = lyrics[:3000] if len(lyrics) > 3000 else lyrics
+                    info_msg += f"📝 *LETRA:*\n```\n{lyrics_display}\n```\n\n"
+                if tags_info:
+                    info_msg += f"🎛️ *ESTILO/TAGS:*\n`{tags_info[:500]}`\n\n"
+                info_msg += f"🎤 *PROMPT USADO:*\n`{prompt[:500]}`"
+                self._send_telegram_text(chat_id, info_msg, bot_token)
+
             # Si hay segundo track (variación), enviarla también
             if len(result["tracks"]) > 1:
                 second_track = result["tracks"][1]
@@ -589,7 +603,7 @@ class SunoBotBridge:
                 self.send_to_telegram(
                     chat_id=chat_id,
                     track_data=second_track,
-                    caption=f"🎵 *Variación alternativa*\n🏛️ C8L Agency × Suno AI",
+                    caption=f"🎵 *Variación alternativa*\n🏛️ C8L Agency",
                     bot_token=bot_token,
                 )
 
