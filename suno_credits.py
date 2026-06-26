@@ -44,7 +44,7 @@ TIER_LIMITS = {
         "features": ["generate", "extend", "remix", "lyrics", "stems", "feed", "concat"],
     },
     UserTier.PREMIUM: {
-        "daily_limit": 20,
+        "daily_limit": 5,
         "cooldown_seconds": 60,  # 1 min entre generaciones
         "features": ["generate", "extend", "remix", "lyrics", "stems", "feed"],
     },
