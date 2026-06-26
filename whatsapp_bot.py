@@ -59,6 +59,15 @@ from pantheon.tools import (
 # Import Auto-Repair Engine
 from pantheon.auto_repair import auto_repair, auto_capture
 
+# Import Suno Auto-Healer (arranca monitoreo de token en background)
+try:
+    from suno_auto_healer import start_healer
+    _suno_healer = start_healer()
+    logger.info("🔄 Suno Auto-Healer iniciado en background")
+except Exception as _healer_err:
+    logger.warning(f"⚠️ Suno Auto-Healer no pudo arrancar: {_healer_err}")
+    _suno_healer = None
+
 # ---------------------------------------------------------------------------
 # Inicializar agentes
 # ---------------------------------------------------------------------------
@@ -440,77 +449,50 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
                     save_last_image(chat_id, result["content"], text)
 
         elif agent == "apolo":
-            # Musica — Genera MUSICA REAL con Suno AI Premium
+            # Musica — Genera MUSICA REAL con Suno AI Premium via Bridge
             tg_typing(chat_id)
 
-            # CHECK CREDITOS — control de uso por usuario
-            from suno_credits import suno_credits
-            suno_credits.set_name(str(chat_id), user_name)
-            check = suno_credits.can_generate(str(chat_id), "generate")
-            if not check["allowed"]:
-                tg_send(chat_id, f"⚠️ {check['reason']}")
-                stats = suno_credits.get_stats(str(chat_id))
-                tg_send(chat_id, f"📊 Tu plan: {stats['tier'].upper()} | Hoy: {stats['daily_used']}/{stats['daily_limit']}")
-                return
+            # Detectar modo
+            t_lower = text.lower()
+            has_structure = any(tag in text for tag in ["[Verse", "[Chorus", "[Bridge", "[Intro", "[Outro"])
+            is_instrumental = any(kw in t_lower for kw in ["instrumental", "sin voz", "beat", "pista"])
 
-            tg_send(chat_id, f"🎵 Generando musica con Suno AI Premium... (1-2 min)\n💰 Te quedan {check['remaining']} generaciones hoy")
+            mode = "custom" if has_structure else "simple"
 
-            # Registrar para auto-evolucion
-            evolution.record_generation(chat_id, text, "apolo", "musica")
+            def _gen_apolo():
+                try:
+                    from suno_bot_bridge import get_suno_bridge
+                    bridge = get_suno_bridge("APOLO")
 
-            try:
-                from suno_client import SunoClient
-                client = SunoClient()
+                    result = bridge.create_and_send(
+                        chat_id=str(chat_id),
+                        prompt=text,
+                        title="C8L Creation" if has_structure else "",
+                        tags="",
+                        user_id=str(chat_id),
+                        mode=mode,
+                        instrumental=is_instrumental,
+                        bot_name="APOLO",
+                        bot_token=TELEGRAM_BOT_TOKEN,
+                        send_status_updates=True,
+                    )
 
-                # Detectar si es custom (tiene letras) o simple (descripcion)
-                t_lower = text.lower()
-                has_structure = any(tag in text for tag in ["[Verse", "[Chorus", "[Bridge", "[Intro", "[Outro"])
-                is_extend = any(kw in t_lower for kw in ["extiende", "extend", "continua", "alarga"])
-                is_remix = any(kw in t_lower for kw in ["remix", "remezcla", "version"])
-                is_instrumental = any(kw in t_lower for kw in ["instrumental", "sin voz", "beat", "pista"])
+                    if result["success"]:
+                        remaining = result.get("credits_remaining", "?")
+                        tg_send(chat_id,
+                            f"✅ {result['count']} canción(es) generada(s)!\n"
+                            f"💰 Restantes hoy: {remaining}")
+                        broadcast_content_created(user_name, "musica_suno", text[:60])
+                        _send_feedback_buttons(chat_id)
 
-                if is_instrumental:
-                    tg_send(chat_id, "🎹 Generando instrumental...")
-                    tracks = client.generate_instrumental(text)
-                elif has_structure:
-                    # Custom mode — lyrics with structure tags
-                    tg_send(chat_id, "📝 Detecte letras con estructura. Generando cancion custom...")
-                    tracks = client.generate_custom(lyrics=text, style="", title="C8L Bot Creation")
-                else:
-                    # Simple mode — description
-                    tracks = client.generate_simple(description=text)
+                    # Registrar para auto-evolución
+                    evolution.record_generation(chat_id, text, "apolo", "musica")
 
-                if tracks:
-                    for track in tracks:
-                        if track.audio_url:
-                            # Descargar y enviar audio
-                            audio_data = requests.get(track.audio_url, timeout=60).content
-                            if audio_data:
-                                caption = f"🎵 *{track.title}*\n🎨 {track.tags[:80]}\n⏱ {track.duration}s" if track.duration else f"🎵 *{track.title}*"
-                                # Enviar como audio/documento
-                                files = {"audio": (f"{track.title}.mp3", io.BytesIO(audio_data), "audio/mpeg")}
-                                data_tg = {"chat_id": chat_id, "caption": caption[:1024], "parse_mode": "Markdown"}
-                                requests.post(f"{TG_API}/sendAudio", data=data_tg, files=files, timeout=120)
-                            else:
-                                tg_send(chat_id, f"🎵 {track.title}: {track.audio_url}")
-                        else:
-                            tg_send(chat_id, f"⏳ Track '{track.title}' aun procesandose...")
+                except Exception as e:
+                    logger.error(f"Apolo/Suno bridge error: {e}")
+                    tg_send(chat_id, f"❌ Error: {str(e)[:150]}")
 
-                    # Broadcast al grupo
-                    broadcast_content_created(user_name, "musica", text[:60])
-                    _send_feedback_buttons(chat_id)
-                    # Registrar uso de creditos
-                    suno_credits.record_generation(str(chat_id), "generate", len(tracks))
-                else:
-                    tg_send(chat_id, "❌ Suno no genero canciones. Intenta con otra descripcion.")
-
-            except Exception as e:
-                error_msg = str(e)
-                if "TOKEN_EXPIRED" in error_msg:
-                    tg_send(chat_id, "⚠️ Token de Suno expirado. Auto-renovando... intenta de nuevo en 1 minuto.")
-                else:
-                    logger.error(f"Apolo/Suno error: {error_msg}")
-                    tg_send(chat_id, f"❌ Error generando musica: {error_msg[:100]}")
+            threading.Thread(target=_gen_apolo, daemon=True).start()
 
         elif agent == "ares":
             # Video — Genera VIDEO REAL con VideoEngine multi-motor
@@ -1622,19 +1604,81 @@ def main():
 
     @bot.message_handler(commands=["crear_musica"])
     def cmd_musica(msg):
+        """
+        /crear_musica [descripción o letras]
+        Genera MUSICA REAL con Suno AI Premium via SunoBotBridge.
+        Auto-healing + error learning + envío directo de audio.
+        """
         tema = msg.text.replace("/crear_musica", "").strip()
         if not tema:
-            tema = "Bolero-House sobre el amor en la era digital"
+            bot.reply_to(msg,
+                "🎵 *Crear Música con Suno AI*\n\n"
+                "Uso: /crear_musica [descripción o letra]\n\n"
+                "Ejemplos:\n"
+                "• /crear_musica reggaeton sobre el verano en Ibiza\n"
+                "• /crear_musica bolero house romántico nocturno 120 BPM\n"
+                "• /crear_musica [Verse]\\nEn la noche te busco...\\n[Chorus]\\nBaila conmigo\n\n"
+                "🎹 Para instrumental: /crear_musica instrumental trap beat oscuro\n"
+                "⏱ Tarda ~60-90 segundos. Te envío el audio directo.",
+                parse_mode="Markdown")
+            return
+
         tg_typing(msg.chat.id)
-        tg_send(msg.chat.id, "🎵 Apolo componiendo...")
-        reply = apolo.compose(tema)
-        if reply:
-            tg_send(msg.chat.id, reply)
+        user_id = str(msg.chat.id)
+        user_name = msg.from_user.first_name if msg.from_user else "User"
+
+        # Detectar modo
+        t_lower = tema.lower()
+        has_structure = any(tag in tema for tag in ["[Verse", "[Chorus", "[Bridge", "[Intro", "[Outro"])
+        is_instrumental = any(kw in t_lower for kw in ["instrumental", "sin voz", "beat", "pista"])
+
+        # Determinar modo y tags
+        if has_structure:
+            mode = "custom"
+            title = "C8L Creation"
+            tags = ""
         else:
-            tg_send(msg.chat.id, "❌ No pude componer la cancion.")
-        estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "musica", "apolo")
-        if reply:
-            broadcast_content_created(msg.from_user.first_name, "musica", tema)
+            mode = "simple"
+            title = ""
+            tags = ""
+
+        # Ejecutar en thread para no bloquear
+        def _generate():
+            try:
+                from suno_bot_bridge import get_suno_bridge
+                bridge = get_suno_bridge("APOLO")
+
+                result = bridge.create_and_send(
+                    chat_id=user_id,
+                    prompt=tema,
+                    title=title,
+                    tags=tags,
+                    user_id=user_id,
+                    mode=mode,
+                    instrumental=is_instrumental,
+                    bot_name="APOLO",
+                    bot_token=TELEGRAM_BOT_TOKEN,
+                    send_status_updates=True,
+                )
+
+                if result["success"]:
+                    count = result.get("count", 0)
+                    remaining = result.get("credits_remaining", "?")
+                    tg_send(msg.chat.id,
+                        f"✅ {count} canción(es) generada(s)!\n"
+                        f"💰 Generaciones restantes hoy: {remaining}\n"
+                        f"🏛️ C8L Agency × Suno AI")
+                    broadcast_content_created(user_name, "musica_suno", tema[:60])
+                    _send_feedback_buttons(msg.chat.id)
+                # Si falla, el bridge ya envió el error por Telegram
+
+                estia.record_interaction(msg.chat.id, user_name, tema, "musica_suno", "apolo")
+
+            except Exception as e:
+                logger.error(f"cmd_musica error: {e}")
+                tg_send(msg.chat.id, f"❌ Error inesperado: {str(e)[:150]}")
+
+        threading.Thread(target=_generate, daemon=True).start()
 
     @bot.message_handler(commands=["crear_video"])
     def cmd_video(msg):
