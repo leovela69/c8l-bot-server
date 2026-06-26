@@ -33,7 +33,7 @@ class SunoConfig:
     """Suno API configuration — production endpoints."""
     BASE_URL = "https://studio-api.prod.suno.com"
     # Generation
-    GENERATE_ENDPOINT = "/api/generate/v2-web/"
+    GENERATE_ENDPOINT = "/api/generate/v2/"
     # Feed / Track info
     FEED_ENDPOINT = "/api/feed/v2"
     FEED_ALL_ENDPOINT = "/api/feed/"
@@ -151,6 +151,7 @@ class SunoClient:
         self.bearer_token = self._extract_bearer_token(cookie)
         self._client_token = self._extract_client_token(cookie)
         self._session_id = self._extract_session_id(cookie)
+        self._device_id = self._extract_device_id(cookie)
         self._last_refresh = time.time()
         self._refresh_lock = threading.Lock()
 
@@ -160,12 +161,17 @@ class SunoClient:
             "Accept-Language": "es-ES,es;q=0.9",
             "Origin": "https://suno.com",
             "Referer": "https://suno.com/",
+            "Affiliate-Id": "undefined",
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/130.0.0.0 Safari/537.36"
             ),
         })
+
+        # Add Device-Id header
+        if self._device_id:
+            self.session.headers["Device-Id"] = f'"{self._device_id}"'
 
         if self.bearer_token:
             self.session.headers["Authorization"] = f"Bearer {self.bearer_token}"
@@ -189,6 +195,17 @@ class SunoClient:
         """Extract __client token from Clerk cookie (needed for refresh)."""
         match = re.search(r'__client=([^;]+)', cookie)
         if match and len(match.group(1)) > 50:
+            return match.group(1)
+        return None
+
+    def _extract_device_id(self, cookie: str) -> Optional[str]:
+        """Extract device ID from ajs_anonymous_id cookie."""
+        match = re.search(r'ajs_anonymous_id=([^;]+)', cookie)
+        if match:
+            return match.group(1)
+        # Fallback: suno_device_id
+        match = re.search(r'suno_device_id=([^;]+)', cookie)
+        if match:
             return match.group(1)
         return None
 
@@ -336,6 +353,7 @@ class SunoClient:
                 "mv": model,
                 "generation_type": "TEXT",
                 "make_instrumental": make_instrumental,
+                "token": None,
             }
             # Solo agregar continue fields si estamos extendiendo
             if continue_clip_id:
@@ -346,6 +364,7 @@ class SunoClient:
                 "gpt_description_prompt": prompt,
                 "mv": model,
                 "make_instrumental": make_instrumental,
+                "token": None,
             }
             # Solo agregar continue fields si estamos extendiendo
             if continue_clip_id:
