@@ -8,7 +8,7 @@ import CreditsDisplay from '@/components/ui/CreditsDisplay'
 
 // ============ SUNO API CONFIG ============
 // URL del bot (VPS) — cambiar si se mueve
-const SUNO_API_BASE = process.env.NEXT_PUBLIC_SUNO_API_URL || 'http://168.231.101.139:8080'
+const SUNO_API_BASE = process.env.NEXT_PUBLIC_SUNO_API_URL || 'https://enquiries-picked-bailey-vital.trycloudflare.com'
 
 // ============ SIDEBAR ITEMS ============
 const SIDEBAR_ITEMS = [
