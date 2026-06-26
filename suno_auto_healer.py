@@ -71,6 +71,7 @@ class SunoAutoHealer:
         self.PROACTIVE_REFRESH = 2700   # Refrescar proactivamente a los 45 min (token dura 60)
         self.MAX_REFRESH_FAILURES = 5   # Tras 5 fallos de refresh, marcar como dead
         self.RECOVERY_BACKOFF = [30, 60, 120, 300, 600]  # Backoff para recovery
+        self.KEEPALIVE_INTERVAL = 1800  # Keep-alive cada 30 min para que Clerk no mate la sesión
 
     @property
     def client(self):
@@ -395,10 +396,25 @@ class SunoAutoHealer:
         # Esperar 30s al inicio para que el bot se estabilice
         time.sleep(30)
 
+        # Keep-alive: Refrescar token cada 30 min para mantener sesión Clerk viva
+        # Esto previene que el __client token expire por inactividad (~7 días)
+        last_keepalive = time.time()
+
         while self._running:
             try:
                 health = self.check_health()
                 status = health["status"]
+                now = time.time()
+
+                # KEEP-ALIVE: Refrescar cada 30 min SIN IMPORTAR el estado
+                # Esto es lo que mantiene la sesión de Clerk viva indefinidamente
+                if now - last_keepalive >= self.KEEPALIVE_INTERVAL:
+                    logger.info("🔄 Keep-alive: refrescando token para mantener sesión viva...")
+                    if self.proactive_refresh():
+                        last_keepalive = now
+                        logger.info("🔄 Keep-alive exitoso — sesión Clerk renovada")
+                    else:
+                        logger.warning("🔄 Keep-alive falló — la sesión podría expirar")
 
                 if status == HealthStatus.HEALTHY:
                     # Verificar si necesita refresh proactivo
@@ -419,7 +435,8 @@ class SunoAutoHealer:
                     self._notify_admin_if_needed()
                     # Intentar recovery cada 10 min por si Leo renovó
                     time.sleep(600)
-                    self.proactive_refresh()
+                    if self.proactive_refresh():
+                        last_keepalive = time.time()
 
             except Exception as e:
                 logger.error(f"🔄 Error en monitor loop: {e}")

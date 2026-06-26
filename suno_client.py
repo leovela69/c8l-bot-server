@@ -57,7 +57,7 @@ class SunoConfig:
         "v4.5": "chirp-v4-5",
         "v5": "chirp-v5",
     }
-    DEFAULT_MODEL = "chirp-v4"
+    DEFAULT_MODEL = "chirp-v4-0"
 
 
 
@@ -336,27 +336,28 @@ class SunoClient:
                 "mv": model,
                 "generation_type": "TEXT",
                 "make_instrumental": make_instrumental,
-                "continue_clip_id": continue_clip_id,
-                "continue_at": continue_at,
-                "task": None,
             }
+            # Solo agregar continue fields si estamos extendiendo
+            if continue_clip_id:
+                payload["continue_clip_id"] = continue_clip_id
+                payload["continue_at"] = continue_at or 0
         else:
             payload = {
                 "gpt_description_prompt": prompt,
                 "mv": model,
                 "make_instrumental": make_instrumental,
-                "generation_type": "TEXT",
-                "continue_clip_id": continue_clip_id,
-                "continue_at": continue_at,
-                "task": None,
             }
+            # Solo agregar continue fields si estamos extendiendo
+            if continue_clip_id:
+                payload["continue_clip_id"] = continue_clip_id
+                payload["continue_at"] = continue_at or 0
 
         headers = dict(self.session.headers)
-        headers["Content-Type"] = "text/plain;charset=UTF-8"
+        headers["Content-Type"] = "application/json"
 
         response = self.session.post(
             SunoConfig.BASE_URL + SunoConfig.GENERATE_ENDPOINT,
-            data=json.dumps(payload),
+            json=payload,
             headers=headers,
             timeout=30,
         )
@@ -415,15 +416,14 @@ class SunoClient:
             "make_instrumental": False,
             "continue_clip_id": audio_id,
             "continue_at": continue_at if continue_at is not None else 0,
-            "task": None,
         }
 
         headers = dict(self.session.headers)
-        headers["Content-Type"] = "text/plain;charset=UTF-8"
+        headers["Content-Type"] = "application/json"
 
         response = self.session.post(
             SunoConfig.BASE_URL + SunoConfig.GENERATE_ENDPOINT,
-            data=json.dumps(payload),
+            json=payload,
             headers=headers,
             timeout=30,
         )
@@ -516,11 +516,11 @@ class SunoClient:
         }
 
         headers = dict(self.session.headers)
-        headers["Content-Type"] = "text/plain;charset=UTF-8"
+        headers["Content-Type"] = "application/json"
 
         response = self.session.post(
             SunoConfig.BASE_URL + SunoConfig.GENERATE_ENDPOINT,
-            data=json.dumps(payload),
+            json=payload,
             headers=headers,
             timeout=30,
         )
