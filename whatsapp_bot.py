@@ -752,6 +752,19 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(info).encode())
 
     def do_POST(self):
+        # --- SUNO API ENDPOINTS (para C8L Studio Web) ---
+        if self.path == "/api/suno/generate":
+            self._handle_suno_generate()
+            return
+
+        if self.path == "/api/suno/credits":
+            self._handle_suno_credits()
+            return
+
+        if self.path == "/api/suno/status":
+            self._handle_suno_status()
+            return
+
         # WhatsApp incoming messages
         if "/webhook" in self.path:
             content_length = int(self.headers.get("Content-Length", 0))
@@ -779,6 +792,123 @@ class HealthHandler(BaseHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
         return
+
+    # --- CORS preflight ---
+    def do_OPTIONS(self):
+        """Handle CORS preflight requests from C8L Studio."""
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Max-Age", "86400")
+        self.end_headers()
+
+    # --- SUNO API HANDLERS ---
+    def _send_json(self, status_code, data):
+        """Helper: envia JSON con CORS headers."""
+        self.send_response(status_code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+
+    def _read_body(self):
+        """Lee el body del POST request."""
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length)
+        return json.loads(body) if body else {}
+
+    def _handle_suno_generate(self):
+        """
+        POST /api/suno/generate
+        Body: {
+            "mode": "simple" | "custom",
+            "prompt": "descripcion o letra",
+            "title": "titulo (solo custom)",
+            "tags": "estilo (solo custom)",
+            "instrumental": false
+        }
+        Response: { "success": true, "tracks": [...] }
+        """
+        try:
+            body = self._read_body()
+            mode = body.get("mode", "simple")
+            prompt = body.get("prompt", "")
+            title = body.get("title", "C8L Creation")
+            tags = body.get("tags", "")
+            instrumental = body.get("instrumental", False)
+
+            if not prompt:
+                self._send_json(400, {"success": False, "error": "prompt es obligatorio"})
+                return
+
+            logger.info(f"🎵 [SUNO API] Generando: mode={mode}, title={title}")
+
+            from suno_client import SunoClient
+            client = SunoClient()
+
+            if mode == "custom":
+                tracks = client.generate_custom(
+                    lyrics=prompt,
+                    style=tags,
+                    title=title,
+                    instrumental=instrumental
+                )
+            else:
+                tracks = client.generate_simple(
+                    description=prompt,
+                    instrumental=instrumental
+                )
+
+            result = {
+                "success": True,
+                "tracks": [t.to_dict() for t in tracks],
+                "count": len(tracks),
+            }
+            logger.info(f"🎵 [SUNO API] Exito! {len(tracks)} tracks generados")
+            self._send_json(200, result)
+
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"🎵 [SUNO API] Error: {error_msg}")
+            status = 401 if "TOKEN_EXPIRED" in error_msg else 500
+            self._send_json(status, {"success": False, "error": error_msg})
+
+    def _handle_suno_credits(self):
+        """
+        POST /api/suno/credits
+        Response: { "credits_left": N, "monthly_limit": N, ... }
+        """
+        try:
+            from suno_client import SunoClient
+            client = SunoClient()
+            credits = client.get_credits()
+            self._send_json(200, {"success": True, **credits})
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
+
+    def _handle_suno_status(self):
+        """
+        POST /api/suno/status
+        Body: { "ids": ["clip-id-1", "clip-id-2"] }
+        Response: { "tracks": [...] }
+        """
+        try:
+            body = self._read_body()
+            ids = body.get("ids", [])
+            if not ids:
+                self._send_json(400, {"success": False, "error": "ids es obligatorio"})
+                return
+
+            from suno_client import SunoClient
+            client = SunoClient()
+            tracks = client.get_tracks(ids)
+            self._send_json(200, {
+                "success": True,
+                "tracks": [t.to_dict() for t in tracks],
+            })
+        except Exception as e:
+            self._send_json(500, {"success": False, "error": str(e)})
 
 
 def _handle_whatsapp_message(data):

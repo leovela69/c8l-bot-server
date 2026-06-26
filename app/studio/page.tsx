@@ -1,10 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Logo from '@/components/ui/Logo'
 import CreditsDisplay from '@/components/ui/CreditsDisplay'
+
+// ============ SUNO API CONFIG ============
+// URL del bot (VPS) — cambiar si se mueve
+const SUNO_API_BASE = process.env.NEXT_PUBLIC_SUNO_API_URL || 'https://c8l-bot-server.onrender.com'
 
 // ============ SIDEBAR ITEMS ============
 const SIDEBAR_ITEMS = [
@@ -17,41 +21,153 @@ const SIDEBAR_ITEMS = [
   { icon: '🔔', label: 'Notificaciones', href: '/perfil' },
 ]
 
-// ============ GENERATED TRACKS (ejemplo) ============
-const SAMPLE_TRACKS = [
-  { id: 1, title: 'Basura Completa', version: 'v5.5', style: 'reggaeton de alta energia, reggae, fusion flam...', thumbnail: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&h=400&fit=crop', playing: true },
-  { id: 2, title: 'Basura Completa', version: 'v5.5', style: 'reggaeton de alta energia, reggae, fusion flam...', thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=400&fit=crop', playing: false },
-  { id: 3, title: 'MENTIROSA - Leo Vela', version: 'v5.5', style: 'reggaeton flamenco, bolero house, 140 BPM, g...', thumbnail: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400&h=400&fit=crop', playing: false },
-  { id: 4, title: 'Neon Bolero Mix', version: 'v5.5', style: 'bolero house, deep bass, neon vibes, 122 BPM...', thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop', playing: false },
+// ============ TRACK TYPE ============
+interface Track {
+  id: string | number
+  title: string
+  version: string
+  style: string
+  thumbnail: string
+  playing: boolean
+  audio_url?: string
+  duration?: number
+}
+
+// ============ INITIAL SAMPLE TRACKS ============
+const SAMPLE_TRACKS: Track[] = [
+  { id: 1, title: 'Basura Completa', version: 'v5.5', style: 'reggaeton de alta energia, reggae, fusion flam...', thumbnail: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=400&h=400&fit=crop', playing: false },
+  { id: 2, title: 'MENTIROSA - Leo Vela', version: 'v5.5', style: 'reggaeton flamenco, bolero house, 140 BPM, g...', thumbnail: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=400&h=400&fit=crop', playing: false },
+  { id: 3, title: 'Neon Bolero Mix', version: 'v5.5', style: 'bolero house, deep bass, neon vibes, 122 BPM...', thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop', playing: false },
 ]
 
 export default function StudioPage() {
   const [mode, setMode] = useState<'sencillo' | 'avanzado'>('avanzado')
   const [tab, setTab] = useState<'musica' | 'videoclip'>('musica')
+  const [title, setTitle] = useState('MENTIROSA')
   const [lyrics, setLyrics] = useState('[Final Chorus]\n[Maximum Tribal-Gospel Groove, full explosion of electronic bass, scratching, and heavy beat]\n¡Mentirosa! ¡No eres víctima, eres mentirosa!\nTu boca me juraba, pero tus dedos te delataban,')
   const [styles, setStyles] = useState('high energy reggaeton reggae flamenco fusion, tribal rhythm, romantic acoustic ukulele strumming, elegant emotional piano chords, crisp flamenco DJ palmas, powerful gospel vocal harmonies in background, hip hop dj scratch effects')
   const [videoPrompt, setVideoPrompt] = useState('')
   const [videoStyle, setVideoStyle] = useState('cinematic')
   const [generating, setGenerating] = useState(false)
-  const [tracks, setTracks] = useState(SAMPLE_TRACKS)
-  const [currentTrack, setCurrentTrack] = useState(SAMPLE_TRACKS[0])
-  const [progress, setProgress] = useState(57) // 2:32 of 4:41 ≈ 57%
+  const [genStatus, setGenStatus] = useState('')
+  const [genError, setGenError] = useState('')
+  const [tracks, setTracks] = useState<Track[]>(SAMPLE_TRACKS)
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  // --- Audio Player Logic ---
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
 
-  const handleCreate = () => {
-    setGenerating(true)
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime)
+      if (audio.duration) setProgress((audio.currentTime / audio.duration) * 100)
+    }
+    const onLoadedMetadata = () => setDuration(audio.duration)
+    const onEnded = () => { setIsPlaying(false); setProgress(0) }
+
+    audio.addEventListener('timeupdate', onTimeUpdate)
+    audio.addEventListener('loadedmetadata', onLoadedMetadata)
+    audio.addEventListener('ended', onEnded)
+
+    return () => {
+      audio.removeEventListener('timeupdate', onTimeUpdate)
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata)
+      audio.removeEventListener('ended', onEnded)
+    }
+  }, [currentTrack])
+
+  const playTrack = (track: Track) => {
+    if (!track.audio_url) return
+    setCurrentTrack(track)
+    setIsPlaying(true)
     setTimeout(() => {
-      const newTrack = {
-        id: Date.now(),
-        title: lyrics.split('\n').find(l => l.trim() && !l.startsWith('['))?.slice(0, 30) || 'Nueva Creación',
-        version: 'v5.5',
-        style: styles.slice(0, 50) + '...',
-        thumbnail: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?w=400&h=400&fit=crop`,
-        playing: false,
+      if (audioRef.current) {
+        audioRef.current.src = track.audio_url!
+        audioRef.current.play().catch(() => {})
       }
-      setTracks([newTrack, ...tracks])
+    }, 100)
+  }
+
+  const togglePlay = () => {
+    if (!audioRef.current) return
+    if (isPlaying) {
+      audioRef.current.pause()
+    } else {
+      audioRef.current.play().catch(() => {})
+    }
+    setIsPlaying(!isPlaying)
+  }
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60)
+    const s = Math.floor(secs % 60)
+    return `${m}:${s.toString().padStart(2, '0')}`
+  }
+
+  // --- SUNO: Generate Music (REAL) ---
+  const handleCreate = async () => {
+    setGenerating(true)
+    setGenStatus('Enviando a Suno AI...')
+    setGenError('')
+
+    try {
+      const isCustom = mode === 'avanzado'
+      const body = isCustom
+        ? { mode: 'custom', prompt: lyrics, title, tags: styles, instrumental: false }
+        : { mode: 'simple', prompt: styles, instrumental: false }
+
+      const response = await fetch(`${SUNO_API_BASE}/api/suno/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error desconocido de Suno')
+      }
+
+      setGenStatus(`¡${data.count} canciones generadas!`)
+
+      // Añadir tracks reales al workspace
+      const newTracks: Track[] = data.tracks.map((t: any) => ({
+        id: t.id,
+        title: t.title || title || 'C8L Creation',
+        version: 'Suno',
+        style: t.tags || styles.slice(0, 50) + '...',
+        thumbnail: t.image_url || t.image_large_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
+        playing: false,
+        audio_url: t.audio_url,
+        duration: t.duration,
+      }))
+
+      setTracks([...newTracks, ...tracks])
+
+      // Auto-play el primer track
+      if (newTracks[0]?.audio_url) {
+        playTrack(newTracks[0])
+      }
+
+    } catch (err: any) {
+      const msg = err.message || 'Error de conexión'
+      setGenError(msg)
+      setGenStatus('')
+
+      // Si es error de token, avisar
+      if (msg.includes('TOKEN_EXPIRED') || msg.includes('401')) {
+        setGenError('⚠️ Cookie de Suno expirada. Necesitas renovarla.')
+      }
+    } finally {
       setGenerating(false)
-    }, 3000)
+      setTimeout(() => setGenStatus(''), 5000)
+    }
   }
 
   const VIDEO_STYLES = [
@@ -180,6 +296,19 @@ export default function StudioPage() {
                       <button className="px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-xs text-gray-300 hover:border-gray-500 transition">+ Inspiración</button>
                     </div>
 
+                    {/* TITULO Section */}
+                    <div className="mb-5">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-1.5 mb-2">
+                        <span className="text-gray-400">▼</span> Título
+                      </h3>
+                      <input
+                        value={title}
+                        onChange={e => setTitle(e.target.value)}
+                        className="w-full bg-[#111] border border-gray-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-c8l-gold/50 transition"
+                        placeholder="Nombre de tu canción..."
+                      />
+                    </div>
+
                     {/* LETRA Section */}
                     <div className="mb-5">
                       <div className="flex items-center justify-between mb-2">
@@ -248,6 +377,18 @@ export default function StudioPage() {
                 )}
 
 
+                {/* STATUS / ERROR */}
+                {genStatus && (
+                  <div className="mb-3 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-xl text-xs text-green-400 text-center animate-pulse">
+                    {genStatus}
+                  </div>
+                )}
+                {genError && (
+                  <div className="mb-3 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 text-center">
+                    {genError}
+                  </div>
+                )}
+
                 {/* CREATE BUTTON */}
                 <div className="flex items-center gap-3 mt-auto pt-4">
                   <button className="w-12 h-12 rounded-xl bg-[#1a1a1a] border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition text-lg">
@@ -258,7 +399,7 @@ export default function StudioPage() {
                     disabled={generating}
                     className="flex-1 py-4 bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 rounded-xl font-bold text-base hover:scale-[1.01] active:scale-[0.99] transition-transform disabled:opacity-60 shadow-lg shadow-orange-500/20"
                   >
-                    {generating ? '⏳ Generando...' : '✨ Crear'}
+                    {generating ? '⏳ Generando en Suno...' : '✨ Crear con Suno AI'}
                   </button>
                 </div>
               </>
@@ -357,7 +498,7 @@ export default function StudioPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                   className="group rounded-xl overflow-hidden bg-[#111] border border-gray-800/50 hover:border-gray-600 transition cursor-pointer"
-                  onClick={() => setCurrentTrack(track)}
+                  onClick={() => track.audio_url ? playTrack(track) : setCurrentTrack(track)}
                 >
                   {/* Thumbnail */}
                   <div className="relative aspect-square overflow-hidden">
@@ -398,6 +539,9 @@ export default function StudioPage() {
         </div>
       </div>
 
+      {/* ============ HIDDEN AUDIO ELEMENT ============ */}
+      <audio ref={audioRef} preload="auto" />
+
       {/* ============ BOTTOM PLAYER BAR ============ */}
       {currentTrack && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/98 backdrop-blur-md border-t border-gray-800/50 h-[72px]">
@@ -416,20 +560,31 @@ export default function StudioPage() {
               <div className="flex items-center gap-5">
                 <button className="text-gray-400 hover:text-white transition">🔀</button>
                 <button className="text-gray-400 hover:text-white transition text-lg">⏮</button>
-                <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition shadow-lg">
-                  <span className="text-black text-sm">⏸</span>
+                <button
+                  onClick={togglePlay}
+                  className="w-10 h-10 rounded-full bg-white flex items-center justify-center hover:scale-105 transition shadow-lg"
+                >
+                  <span className="text-black text-sm">{isPlaying ? '⏸' : '▶'}</span>
                 </button>
                 <button className="text-gray-400 hover:text-white transition text-lg">⏭</button>
                 <button className="text-gray-400 hover:text-white transition">🔁</button>
               </div>
               {/* Progress bar */}
               <div className="w-full max-w-lg flex items-center gap-2">
-                <span className="text-[9px] text-gray-500 font-mono">2:32</span>
-                <div className="flex-1 h-1 bg-gray-800 rounded-full relative cursor-pointer group">
+                <span className="text-[9px] text-gray-500 font-mono">{formatTime(currentTime)}</span>
+                <div
+                  className="flex-1 h-1 bg-gray-800 rounded-full relative cursor-pointer group"
+                  onClick={(e) => {
+                    if (!audioRef.current || !duration) return
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const pct = (e.clientX - rect.left) / rect.width
+                    audioRef.current.currentTime = pct * duration
+                  }}
+                >
                   <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }}></div>
                   <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition" style={{ left: `${progress}%` }}></div>
                 </div>
-                <span className="text-[9px] text-gray-500 font-mono">4:41</span>
+                <span className="text-[9px] text-gray-500 font-mono">{formatTime(duration)}</span>
               </div>
             </div>
 
@@ -438,7 +593,9 @@ export default function StudioPage() {
               <button className="text-gray-400 hover:text-white text-sm transition">📋</button>
               <button className="text-gray-400 hover:text-white text-sm transition">👍</button>
               <button className="text-gray-400 hover:text-white text-sm transition">👎</button>
-              <button className="text-gray-400 hover:text-white text-sm transition">💬</button>
+              {currentTrack.audio_url && (
+                <a href={currentTrack.audio_url} download className="text-gray-400 hover:text-white text-sm transition">⬇️</a>
+              )}
               <button className="text-gray-400 hover:text-white text-sm transition">↗️</button>
               <button className="text-gray-400 hover:text-white text-sm transition">⋮</button>
               {/* Volume */}
@@ -448,7 +605,6 @@ export default function StudioPage() {
                   <div className="h-full bg-white rounded-full" style={{ width: '70%' }}></div>
                 </div>
               </div>
-              <button className="text-gray-400 hover:text-white text-sm transition">ℹ️</button>
             </div>
           </div>
         </div>

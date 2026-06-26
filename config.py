@@ -115,6 +115,16 @@ WHATSAPP_VERIFY_TOKEN: str = "c8l_verify_2024"  # Para verificar webhook
 WHATSAPP_API_URL: str = f"https://graph.facebook.com/v21.0/{WHATSAPP_PHONE_ID}/messages"
 
 # ---------------------------------------------------------------------------
+# Suno AI — Generacion de Musica (Premium Account)
+# Cookie obtenida de suno.com (document.cookie)
+# Se renueva cada ~7 dias. Si da 401, sacar nueva cookie.
+# ---------------------------------------------------------------------------
+_SUNO_COOKIE_P1 = "singular_device_id=440aab2a-c466-4e66-96cc-43a231db2708; _ga=GA1.1.629720308.1750832335; ajs_anonymous_id=6a9b5eaa-726b-4a94-b9cf-7ab230c66dcb; has_logged_in_before=true"
+_SUNO_COOKIE_P2 = "; __client_uat=1782145856; __client_uat_Jnxw-muT=1782145856; clerk_active_context=session_8e8dd5320b21b30f9d9acb:"
+_SUNO_SESSION = "eyJhbGciOiJSUzI1NiIsImtpZCI6InN1bm8tYXBpLXJzMjU2LWtleS0xIiwidHlwIjoiSldUIiwieC1hYmx5LXRva2VuIjoibnYzNlZ3LkkxaDZkMklfNEdMZGp5MF9XTlBkRjVSaFN2Z2hYenBnaklDU28xbmdOVnNOY1hvNjdmLTV5WTV3NFczTFFPSmVuSDNXMHlPMTNBYWNYQ0k2ZEx5bHMzNTAtWTJtVjdvS0x2Y2IwcmFzQWZiWVdkXzdMbnVzRUNVaW5MSW02OGtkS1RWVnVUMkc4ZVZtMXNRSi1UZVJtM2ljYmFEOXRlajR0NDFXaDJGNEQ3U0ttcXdxc2NoUDRMY2xRVzRMaUhNMGRNWGMzVVZHMjRoLU9pYnJRdkNCdGtpYXBjZTJXMXljSUdDWS1zS3BNRzVJIn0.eyJzdW5vLmNvbS9jbGFpbXMvdXNlcl9pZCI6IjJjZjQ4OTAxLTc5OGYtNDFkOS04M2UyLTdkNjNlNDY3Y2FmNiIsImh0dHBzOi8vc3Vuby5haS9jbGFpbXMvY2xlcmtfaWQiOiJ1c2VyXzJtNEhsRVNZSTZLYUJjOEYzWHBPSHdNVlBpZiIsInN1bm8uY29tL2NsYWltcy90b2tlbl90eXBlIjoiYWNjZXNzIiwic3Vuby9kaWQiOjI1ODcwNzI4LCJleHAiOjE3ODI0NDUxMTgsImF1ZCI6InN1bm8tYXBpIiwic3ViIjoidXNlcl8ybTRIbEVTWUk2S2FCYzhGM1hwT0h3TVZQaWYiLCJhenAiOiJodHRwczovL3N1bm8uY29tIiwiZnZhIjpbMCwtMV0sImlhdCI6MTc4MjQ0MTUxOCwiaXNzIjoiaHR0cHM6Ly9hdXRoLnN1bm8uY29tIiwiaml0IjoiNWY2M2Q5YTYtMDMzNy00MTRhLThlMGUtMzdmNzRhZjcxNDUyIiwicGxhbiI6ImUxMjM1ZGQ3LTlmNGQtNDczOC1hZWIyLTE0NzA0NjZjYmEyNzptb250aDoiLCJzdW5vL2pvaW5lZCI6MTcyNjMyOTA3OCwic2lkIjoic2Vzc2lvbl84ZThkZDUzMjBiMjFiMzBmOWQ5YWNiIiwic3Vuby5jb20vY2xhaW1zL2VtYWlsIjoicnVmaW5vbGVvbjMwQGdtYWlsLmNvbSIsImh0dHBzOi8vc3Vuby5haS9jbGFpbXMvZW1haWwiOiJydWZpbm9sZW9uMzBAZ21haWwuY29tIiwic3Vuby9oYW5kbGUiOiJsZW92ZWxhODg4Iiwic3Vuby91c2VyX2lkIjoiNDYzNTM1NzYiLCJzdW5vL3VzZXJuYW1lIjoicnVmaW5vbGVvbjMwQGdtYWlsLmNvbSJ9.K-UfRbOL9CeoQwZePVfnsVpEIl7LbuunX6N0V7u_9QVtqffD5tGbzdEX6TWTWjC_az80n462UJTRsIfXu0CW3Q-yugWhAkcxPOM5nNsmYoKeGer0L3v8qW5QAtiN3HbbQ8HmwXWYxuvgsRh6FyQKTG7xZioeApOGuTx1BWJvgzKQHDTFgl1-iuAV9h_Am6J6gcHrA3U7LHfODuP09Gspuw_9QT-yTBVps9H0UP9IaK7RFlCruUrMbY7PDxQau0T_kGGl8IxXR8n1rf1ouZZWbOu2uaqugIaOr1ivC9fBheZIMF9s6Y0bK4r9mNqpRG_nGNT20_aLVwSG1Dc6j67N7A"
+SUNO_COOKIE: str = _SUNO_COOKIE_P1 + _SUNO_COOKIE_P2 + "; __session=" + _SUNO_SESSION + "; __session_Jnxw-muT=" + _SUNO_SESSION
+
+# ---------------------------------------------------------------------------
 # Server
 # ---------------------------------------------------------------------------
 PORT: int = int(os.environ.get("PORT", "8080"))
