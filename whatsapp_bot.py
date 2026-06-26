@@ -930,7 +930,10 @@ class HealthHandler(BaseHTTPRequestHandler):
             "tags": "estilo (solo custom)",
             "instrumental": false
         }
-        Response: { "success": true, "tracks": [...] }
+        Response: { "success": true, "tracks": [...], "count": N }
+        
+        Motor: MusicAPI.ai (Sonic v4.5) — canciones completas con vocales
+        Fallback: MusicGen local (beats instrumentales)
         """
         try:
             body = self._read_body()
@@ -944,37 +947,57 @@ class HealthHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"success": False, "error": "prompt es obligatorio"})
                 return
 
-            logger.info(f"🎵 [SUNO API] Generando: mode={mode}, title={title}")
+            logger.info(f"🎵 [WEB API] Generando: mode={mode}, title={title}")
 
-            from suno_client import SunoClient
-            client = SunoClient()
+            # Usar MusicAPI.ai como motor principal
+            from musicapi_client import MusicAPIClient
+            client = MusicAPIClient()
 
-            if mode == "custom":
-                tracks = client.generate_custom(
-                    lyrics=prompt,
-                    style=tags,
-                    title=title,
-                    instrumental=instrumental
-                )
+            result = client.generate(
+                prompt=prompt,
+                title=title,
+                tags=tags,
+                custom_mode=(mode == "custom"),
+                instrumental=instrumental,
+                model="sonic-v4-5",
+            )
+
+            if result.get("success"):
+                logger.info(f"🎵 [WEB API] Éxito! {result['count']} tracks generados")
+                self._send_json(200, result)
             else:
-                tracks = client.generate_simple(
-                    description=prompt,
-                    instrumental=instrumental
-                )
-
-            result = {
-                "success": True,
-                "tracks": [t.to_dict() for t in tracks],
-                "count": len(tracks),
-            }
-            logger.info(f"🎵 [SUNO API] Exito! {len(tracks)} tracks generados")
-            self._send_json(200, result)
+                # Fallback a MusicGen local
+                logger.warning(f"🎵 [WEB API] MusicAPI falló: {result.get('error')}, probando MusicGen local...")
+                try:
+                    from lyria_client import LyriaClient
+                    local_client = LyriaClient()
+                    local_result = local_client.generate(
+                        prompt=f"{prompt}. Style: {tags}" if tags else prompt,
+                        instrumental=instrumental,
+                    )
+                    if local_result.get("success"):
+                        # Convertir a formato compatible con la web
+                        import time as _time
+                        track = {
+                            "id": f"musicgen_{int(_time.time())}",
+                            "title": local_result.get("title", title),
+                            "audio_url": "",
+                            "tags": tags,
+                            "lyrics": "",
+                            "duration": local_result.get("duration"),
+                            "model_name": "musicgen-small",
+                            "status": "complete",
+                        }
+                        self._send_json(200, {"success": True, "tracks": [track], "count": 1})
+                    else:
+                        self._send_json(500, {"success": False, "error": local_result.get("error", "Error en generación")})
+                except Exception as fallback_err:
+                    self._send_json(500, {"success": False, "error": result.get("error", str(fallback_err))})
 
         except Exception as e:
             error_msg = str(e)
-            logger.error(f"🎵 [SUNO API] Error: {error_msg}")
-            status = 401 if "TOKEN_EXPIRED" in error_msg else 500
-            self._send_json(status, {"success": False, "error": error_msg})
+            logger.error(f"🎵 [WEB API] Error: {error_msg}")
+            self._send_json(500, {"success": False, "error": error_msg})
 
     def _handle_suno_credits(self):
         """
@@ -982,10 +1005,17 @@ class HealthHandler(BaseHTTPRequestHandler):
         Response: { "credits_left": N, "monthly_limit": N, ... }
         """
         try:
-            from suno_client import SunoClient
-            client = SunoClient()
+            from musicapi_client import MusicAPIClient
+            client = MusicAPIClient()
             credits = client.get_credits()
-            self._send_json(200, {"success": True, **credits})
+            credits_left = credits.get("credits", 0)
+            self._send_json(200, {
+                "success": True,
+                "credits_left": credits_left,
+                "monthly_limit": 500,
+                "monthly_usage": 500 - credits_left,
+                "engine": "musicapi",
+            })
         except Exception as e:
             self._send_json(500, {"success": False, "error": str(e)})
 
@@ -1095,6 +1125,7 @@ class HealthHandler(BaseHTTPRequestHandler):
         """
         POST /api/suno/lyrics
         Body: { "prompt": "description for lyrics" }
+        Genera letras con IA usando Groq (gratis, rápido)
         """
         try:
             body = self._read_body()
@@ -1103,13 +1134,42 @@ class HealthHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"success": False, "error": "prompt es obligatorio"})
                 return
 
-            from suno_client import SunoClient
-            client = SunoClient()
-            lyrics = client.generate_lyrics(prompt=prompt)
-            self._send_json(200, {
-                "success": True,
-                **lyrics.to_dict(),
-            })
+            logger.info(f"🎵 [WEB API] Generando letras: {prompt[:50]}...")
+
+            # Usar Groq para generar letras (gratis y rápido)
+            from openrouter_client import call_groq
+            system_prompt = """Eres un letrista profesional de música. Genera letras de canción con estructura clara.
+Usa tags como [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro].
+Las letras deben ser creativas, emotivas y en el estilo que el usuario pida.
+Responde SOLO con las letras, sin explicaciones."""
+
+            lyrics_text = call_groq(
+                f"Escribe las letras para una canción: {prompt}",
+                system_prompt=system_prompt,
+                model="llama-3.3-70b-versatile"
+            )
+
+            if lyrics_text:
+                # Extraer título (primera línea o generar uno)
+                lines = lyrics_text.strip().split("\n")
+                title = ""
+                for line in lines:
+                    clean = line.strip().strip("#").strip()
+                    if clean and not clean.startswith("["):
+                        title = clean[:50]
+                        break
+                if not title:
+                    title = f"Canción: {prompt[:30]}"
+
+                self._send_json(200, {
+                    "success": True,
+                    "title": title,
+                    "text": lyrics_text,
+                    "status": "complete",
+                })
+            else:
+                self._send_json(500, {"success": False, "error": "No se pudieron generar letras"})
+
         except Exception as e:
             self._send_json(500, {"success": False, "error": str(e)})
 
