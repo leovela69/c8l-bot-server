@@ -68,6 +68,18 @@ class SunoBotBridge:
         return self._client
 
     @property
+    def lyria_client(self):
+        """LyriaClient lazy-loaded (Google Lyria 3 — GRATIS, sin CAPTCHA)."""
+        if not hasattr(self, '_lyria_client') or self._lyria_client is None:
+            try:
+                from lyria_client import LyriaClient
+                self._lyria_client = LyriaClient()
+            except Exception as e:
+                logger.warning(f"⚠️ Lyria Client no disponible: {e}")
+                self._lyria_client = None
+        return self._lyria_client
+
+    @property
     def credits_manager(self):
         """Credits manager lazy-loaded."""
         if self._credits_manager is None:
@@ -138,7 +150,50 @@ class SunoBotBridge:
         title = self._sanitize_text(title) or "C8L Creation"
         tags = self._sanitize_text(tags)
 
-        # 3. Generar con auto-healing
+        # 3. Intentar con Lyria 3 primero (gratis, sin CAPTCHA)
+        if self.lyria_client:
+            logger.info(f"🎵 [{bot_name}] Intentando con Google Lyria 3...")
+            lyria_prompt = prompt
+            if tags:
+                lyria_prompt = f"{prompt}. Style: {tags}"
+
+            lyria_result = self.lyria_client.generate(
+                prompt=lyria_prompt,
+                instrumental=instrumental,
+                model="lyria-3-pro-preview",
+            )
+
+            if lyria_result["success"]:
+                # Registrar generación en créditos
+                self.credits_manager.record_generation(user_id, "generate", 1)
+
+                # Convertir a formato compatible con el resto del sistema
+                track_dict = {
+                    "id": f"lyria_{int(time.time())}",
+                    "title": lyria_result.get("title", title),
+                    "audio_url": "",  # No hay URL, tenemos bytes directos
+                    "audio_bytes": lyria_result["audio_bytes"],
+                    "lyrics": lyria_result.get("lyrics", ""),
+                    "tags": tags,
+                    "model_name": "lyria-3-pro",
+                    "status": "complete",
+                    "duration": None,
+                    "image_url": "",
+                }
+
+                logger.info(f"🎵 [{bot_name}] ✅ Lyria 3 generó: '{track_dict['title']}'")
+                return {
+                    "success": True,
+                    "tracks": [track_dict],
+                    "count": 1,
+                    "error": "",
+                    "credits_remaining": credit_check["remaining"] - 1,
+                    "engine": "lyria3",
+                }
+            else:
+                logger.warning(f"🎵 [{bot_name}] Lyria falló: {lyria_result.get('error')}, intentando Suno...")
+
+        # 4. Fallback a Suno (puede fallar por CAPTCHA)
         def _do_generate():
             if mode == "custom":
                 return self.client.generate(
@@ -373,11 +428,12 @@ class SunoBotBridge:
                     return {"success": False, "error": "No se encontró token de Telegram"}
 
         audio_url = track_data.get("audio_url", "")
+        audio_bytes_direct = track_data.get("audio_bytes", None)
         title = track_data.get("title", "C8L Track")
         duration = track_data.get("duration", None)
 
-        if not audio_url:
-            return {"success": False, "error": "No hay audio_url en el track"}
+        if not audio_url and not audio_bytes_direct:
+            return {"success": False, "error": "No hay audio_url ni audio_bytes en el track"}
 
         if not caption:
             tags = track_data.get("tags", "")
@@ -391,11 +447,16 @@ class SunoBotBridge:
             caption += f"\n🏛️ Creado con C8L Agency × Suno AI"
 
         try:
-            # Descargar audio
-            logger.info(f"📥 Descargando audio: {audio_url[:60]}...")
-            audio_response = requests.get(audio_url, timeout=60)
-            audio_response.raise_for_status()
-            audio_bytes = audio_response.content
+            # Obtener audio (bytes directos o descargar de URL)
+            if audio_bytes_direct:
+                audio_bytes = audio_bytes_direct
+                logger.info(f"📤 Usando audio bytes directos ({len(audio_bytes)} bytes)")
+            else:
+                # Descargar audio de URL
+                logger.info(f"📥 Descargando audio: {audio_url[:60]}...")
+                audio_response = requests.get(audio_url, timeout=60)
+                audio_response.raise_for_status()
+                audio_bytes = audio_response.content
 
             # Enviar a Telegram
             logger.info(f"📤 Enviando a Telegram chat={chat_id}...")
