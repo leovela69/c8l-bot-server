@@ -1681,6 +1681,31 @@ def main():
                     "💡 Solución: escribe /groupid en el grupo para registrarlo, "
                     "o escribe /lanzamiento directamente en el grupo.")
 
+    @bot.message_handler(commands=["casino_anuncio", "anuncio_casino"])
+    def cmd_casino_anuncio(msg):
+        """Admin: anuncia C8L Casino + KUKIS al grupo."""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "🚫 Solo el admin.")
+        from periodista.news_formatter import format_casino_announcement
+        announcement = format_casino_announcement()
+
+        chat_type = msg.chat.type
+        if 'group' in chat_type:
+            try:
+                bot.send_message(msg.chat.id, announcement, parse_mode="HTML")
+                bot.reply_to(msg, "🎰✅ ¡Anuncio de C8L Casino + KUKIS publicado!")
+            except Exception as e:
+                bot.reply_to(msg, f"❌ Error: {e}")
+        else:
+            ok = broadcast_to_group(announcement, "HTML")
+            if ok:
+                bot.reply_to(msg, "🎰✅ ¡Anuncio de C8L Casino enviado al grupo!")
+            else:
+                bot.reply_to(msg,
+                    "❌ No pude enviar al grupo.\n\n"
+                    "💡 Escribe /casino_anuncio directamente en el grupo, "
+                    "o registra el grupo con /groupid primero.")
+
     @bot.message_handler(commands=["diagnosticar"])
     def cmd_diagnosticar(msg):
         tg_typing(msg.chat.id)

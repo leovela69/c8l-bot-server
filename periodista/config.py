@@ -22,6 +22,11 @@ PROMO_LINKS = [
         "url": "https://gen-lang-client-0744582882.web.app/feed/",
         "emoji": "🌐",
     },
+    {
+        "text": "🎰 C8L CASINO — 6 juegos + KUKIS (Crash, Ruleta, Slots, Plinko, Mines)",
+        "url": "https://raw.githack.com/leovela69/c8l-bot-server/main/kukis/c8l_casino_kukis.html",
+        "emoji": "🎰",
+    },
 ]
 
 # ---------------------------------------------------------------------------

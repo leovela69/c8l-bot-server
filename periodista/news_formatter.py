@@ -147,9 +147,53 @@ def format_launch_announcement() -> str:
         "🔥 <b>Probadlo AHORA:</b>\n"
         "→ https://c8l-web8.vercel.app/generate\n\n"
         "🎨 <b>Editor de diseño:</b>\n"
-        "→ https://c8l-web8.vercel.app/\n"
+        "→ https://c8l-web8.vercel.app/\n\n"
+        "🎰 <b>C8L CASINO — 6 juegos GRATIS:</b>\n"
+        "→ https://raw.githack.com/leovela69/c8l-bot-server/main/kukis/c8l_casino_kukis.html\n"
         "━━━━━━━━━━━━━━━━━━━\n\n"
         "El futuro de la creación es NUESTRO. 🏛️\n"
+        "<i>— C8L Agency | Panteón de Dioses</i>"
+    )
+
+    return msg
+
+
+def format_casino_announcement() -> str:
+    """
+    Anuncio especial del lanzamiento de C8L CASINO + KUKIS.
+    """
+    now = datetime.utcnow()
+    fecha = now.strftime("%d/%m/%Y")
+
+    msg = (
+        "🎰🎰🎰 <b>¡NUEVO! C8L CASINO</b> 🎰🎰🎰\n"
+        "━━━━━━━━━━━━━━━━━━━\n\n"
+        "🦁 <b>C8L CASINO ya está ONLINE!</b>\n"
+        f"<i>{fecha}</i>\n\n"
+        "🍪 Presentamos <b>KUKIS</b> — Un juego de cartas de investigación dulce "
+        "donde eres un Unicornio Detective que resuelve misterios. 🦄🔍\n\n"
+        "🎮 <b>6 JUEGOS DISPONIBLES:</b>\n"
+        "• 🚀 <b>Crash C8L</b> — Retira antes de que explote\n"
+        "• 💣 <b>Mines C8L</b> — Encuentra diamantes, evita bombas\n"
+        "• 🟡 <b>Plinko C8L</b> — Física y multiplicadores\n"
+        "• 🎡 <b>Ruleta C8L</b> — Ruleta europea premium\n"
+        "• ❤️ <b>Corazones Locos</b> — Slot de 5 rodillos\n"
+        "• 🍪 <b>KUKIS</b> — ¡NUEVO! Cartas + Misterios + Combate\n\n"
+        "🍪 <b>¿Cómo funciona KUKIS?</b>\n"
+        "• 24 cartas (Personajes, Objetos, Eventos)\n"
+        "• 8 casos de investigación con villanos\n"
+        "• Sistema de sinergia: combina tipos = bonus\n"
+        "• Poder Unicornio: roba cartas extra 🦄\n"
+        "• ¡Gana hasta 1500 chips por caso!\n\n"
+        "━━━━━━━━━━━━━━━━━━━\n"
+        "🔥 <b>JUEGA AHORA GRATIS:</b>\n"
+        "→ https://raw.githack.com/leovela69/c8l-bot-server/main/kukis/c8l_casino_kukis.html\n\n"
+        "🤖 <b>También desde Telegram:</b>\n"
+        "• /kukis — Inicia partida de cartas\n"
+        "• /investigar — Resuelve el caso\n"
+        "• /kukis_unicornio — Poder especial\n"
+        "━━━━━━━━━━━━━━━━━━━\n\n"
+        "¡Que empiece la diversión! 🎲🦁\n"
         "<i>— C8L Agency | Panteón de Dioses</i>"
     )
 
