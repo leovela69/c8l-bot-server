@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C8L Mines Pro</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #06060f;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #d4a017;
+  overflow: hidden;
+}
+#gameContainer { display: flex; gap: 24px; align-items: flex-start; padding: 20px; }
+#canvasWrap { position: relative; }
+canvas { display: block; border-radius: 8px; }
+#sidebar {
+  width: 230px;
+  background: linear-gradient(180deg, #0d0d1a 0%, #06060f 100%);
+  border: 2px solid #8b6914;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #8b6914; margin-bottom: 4px; }
+.value { font-size: 22px; font-weight: bold; color: #d4a017; }
+.mines-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.mine-btn {
+  width: 42px; height: 32px; background: #0d0d1a; border: 1px solid #8b6914;
+  border-radius: 6px; color: #d4a017; font-size: 13px; font-weight: bold;
+  cursor: pointer; transition: all 0.2s;
+}
+.mine-btn:hover { background: #1a1a2e; border-color: #d4a017; }
+.mine-btn.active { background: #d4a017; color: #06060f; border-color: #d4a017; }
+.mine-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#betInput {
+  width: 100%; padding: 8px 12px; background: #0d0d1a; border: 1px solid #8b6914;
+  border-radius: 6px; color: #d4a017; font-size: 16px; font-weight: bold; outline: none;
+}
+#betInput:focus { border-color: #d4a017; }
+.action-btn {
+  width: 100%; padding: 12px; border: none; border-radius: 8px;
+  font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+#startBtn { background: linear-gradient(135deg, #d4a017, #8b6914); color: #06060f; }
+#startBtn:hover { transform: scale(1.03); box-shadow: 0 0 20px rgba(212,160,23,0.4); }
+#startBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+#cashoutBtn { background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; }
+#cashoutBtn:hover { transform: scale(1.03); box-shadow: 0 0 20px rgba(39,174,96,0.4); }
+#cashoutBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+#multiplierDisplay {
+  text-align: center; padding: 10px; background: rgba(212,160,23,0.1);
+  border: 1px solid #8b6914; border-radius: 8px;
+}
+#multiplierDisplay .value { font-size: 28px; color: #27ae60; }
+#profitDisplay { text-align: center; font-size: 14px; color: #aaa; margin-top: -6px; }
+#statusMsg {
+  text-align: center; font-size: 12px; color: #888; min-height: 18px;
+  padding: 4px; border-radius: 4px;
+}
+#statusMsg.win { color: #27ae60; font-weight: bold; }
+#statusMsg.lose { color: #e74c3c; font-weight: bold; }
+</style>
+</head>
+<body>
+<div id="gameContainer">
+<div id="canvasWrap"><canvas id="gameCanvas" width="540" height="540"></canvas></div>
+<div id="sidebar">
+  <div><div class="label">Balance</div><div class="value" id="balanceDisplay">$5,000.00</div></div>
+  <div><div class="label">Bet Amount</div><input type="number" id="betInput" value="100" min="10" max="1000" step="10"></div>
+  <div><div class="label">Mines</div><div class="mines-grid" id="minesGrid"></div></div>
+  <div id="multiplierDisplay"><div class="label">Multiplier</div><div class="value" id="multValue">1.00x</div></div>
+  <div id="profitDisplay">Profit: $0.00</div>
+  <button class="action-btn" id="startBtn">START GAME</button>
+  <button class="action-btn" id="cashoutBtn" disabled>CASH OUT</button>
+  <div id="statusMsg">Select mines and place your bet</div>
+</div>
+</div>
+<script>
+// =============================================
+// C8L MINES PRO - Full Casino Game Engine
+// Canvas 2D + Web Audio + Particle Effects
+// =============================================
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// Grid constants
+const COLS = 5, ROWS = 5, TOTAL_TILES = 25;
+const FRAME_W = 22;
+const TILE_GAP = 8;
+const GRID_AREA = W - FRAME_W * 2;
+const TILE_SIZE = (GRID_AREA - TILE_GAP * (COLS - 1)) / COLS;
+
+// Colors
+const C = {
+  bg: '#06060f', frameDark: '#8b6914', frameGold: '#d4a017',
+  frameBright: '#f0c040', tileBase: '#0f0f1e', tileBorder: '#8b6914',
+  tileHover: '#1a1a30', diamond: '#4fc3f7', mine: '#e74c3c',
+  safe: '#27ae60', text: '#d4a017'
+};
+
+// Game state
+let state = {
+  phase: 'idle', // idle, playing, ended
+  balance: 5000,
+  bet: 100,
+  mineCount: 3,
+  grid: [],       // 0=hidden, 1=revealed safe, 2=revealed mine
+  mines: [],      // mine positions
+  revealed: 0,
+  multiplier: 1.0,
+  hoverTile: -1,
+  animations: [],
+  particles: []
+};
+
+// === WEB AUDIO API ===
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playTone(freq, duration, type, vol) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+function soundReveal() { playTone(800 + state.revealed * 80, 0.15, 'sine', 0.12); }
+function soundMine() {
+  playTone(150, 0.4, 'sawtooth', 0.2);
+  setTimeout(() => playTone(80, 0.5, 'square', 0.15), 100);
+}
+function soundCashout() {
+  playTone(600, 0.1, 'sine', 0.15);
+  setTimeout(() => playTone(800, 0.1, 'sine', 0.12), 80);
+  setTimeout(() => playTone(1100, 0.2, 'sine', 0.1), 160);
+}
+function soundStart() { playTone(440, 0.1, 'triangle', 0.1); playTone(660, 0.15, 'triangle', 0.1); }
+
+// === MINES SELECTOR ===
+const mineOptions = [1, 3, 5, 10, 15, 24];
+const minesGrid = document.getElementById('minesGrid');
+mineOptions.forEach(n => {
+  const btn = document.createElement('button');
+  btn.className = 'mine-btn' + (n === state.mineCount ? ' active' : '');
+  btn.textContent = n;
+  btn.onclick = () => {
+    if (state.phase !== 'idle') return;
+    state.mineCount = n;
+    document.querySelectorAll('.mine-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+  minesGrid.appendChild(btn);
+});
+
+// === UI ELEMENTS ===
+const balanceEl = document.getElementById('balanceDisplay');
+const betInput = document.getElementById('betInput');
+const multValue = document.getElementById('multValue');
+const profitEl = document.getElementById('profitDisplay');
+const startBtn = document.getElementById('startBtn');
+const cashoutBtn = document.getElementById('cashoutBtn');
+const statusMsg = document.getElementById('statusMsg');
+
+function updateUI() {
+  balanceEl.textContent = '$' + state.balance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const profit = (state.multiplier * state.bet) - state.bet;
+  multValue.textContent = state.multiplier.toFixed(2) + 'x';
+  profitEl.textContent = 'Profit: $' + profit.toFixed(2);
+  startBtn.disabled = state.phase === 'playing';
+  cashoutBtn.disabled = state.phase !== 'playing' || state.revealed === 0;
+  document.querySelectorAll('.mine-btn').forEach(b => b.disabled = state.phase === 'playing');
+  betInput.disabled = state.phase === 'playing';
+}
+
+// === MULTIPLIER CALCULATION (provably fair style) ===
+function calcMultiplier(revealed, mineCount) {
+  if (revealed === 0) return 1.0;
+  let mult = 1.0;
+  const safeTotal = TOTAL_TILES - mineCount;
+  for (let i = 0; i < revealed; i++) {
+    mult *= (TOTAL_TILES - i) / (safeTotal - i);
+  }
+  // House edge 3%
+  return mult * 0.97;
+}
+
+// === GAME LOGIC ===
+function startGame() {
+  initAudio();
+  const bet = parseInt(betInput.value);
+  if (isNaN(bet) || bet < 10 || bet > 1000) {
+    statusMsg.textContent = 'Bet must be between $10 and $1000';
+    statusMsg.className = 'lose';
+    return;
+  }
+  if (bet > state.balance) {
+    statusMsg.textContent = 'Insufficient balance!';
+    statusMsg.className = 'lose';
+    return;
+  }
+  state.bet = bet;
+  state.balance -= bet;
+  state.phase = 'playing';
+  state.revealed = 0;
+  state.multiplier = 1.0;
+  state.grid = new Array(TOTAL_TILES).fill(0);
+  state.particles = [];
+  state.animations = [];
+
+  // Place mines randomly
+  state.mines = [];
+  const positions = Array.from({length: TOTAL_TILES}, (_, i) => i);
+  for (let i = positions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [positions[i], positions[j]] = [positions[j], positions[i]];
+  }
+  state.mines = positions.slice(0, state.mineCount);
+
+  soundStart();
+  statusMsg.textContent = 'Click tiles to reveal...';
+  statusMsg.className = '';
+  updateUI();
+}
+
+function revealTile(index) {
+  if (state.phase !== 'playing' || state.grid[index] !== 0) return;
+
+  if (state.mines.includes(index)) {
+    // HIT A MINE
+    state.grid[index] = 2;
+    state.phase = 'ended';
+    soundMine();
+    spawnExplosion(index);
+    // Reveal all mines
+    state.mines.forEach(m => { state.grid[m] = 2; });
+    statusMsg.textContent = 'BOOM! You lost $' + state.bet.toFixed(2);
+    statusMsg.className = 'lose';
+    cashoutBtn.disabled = true;
+    startBtn.disabled = false;
+    // Add flip animation for mine
+    addFlipAnimation(index, 'mine');
+  } else {
+    // SAFE TILE
+    state.grid[index] = 1;
+    state.revealed++;
+    state.multiplier = calcMultiplier(state.revealed, state.mineCount);
+    soundReveal();
+    addFlipAnimation(index, 'safe');
+
+    const safeTotal = TOTAL_TILES - state.mineCount;
+    if (state.revealed >= safeTotal) {
+      // All safe tiles revealed - auto cashout
+      cashOut();
+      return;
+    }
+    statusMsg.textContent = state.revealed + ' revealed - ' + state.multiplier.toFixed(2) + 'x';
+    statusMsg.className = '';
+  }
+  updateUI();
+}
+
+function cashOut() {
+  if (state.phase !== 'playing' || state.revealed === 0) return;
+  const winnings = state.bet * state.multiplier;
+  state.balance += winnings;
+  state.phase = 'ended';
+  soundCashout();
+  spawnGoldParticles();
+  statusMsg.textContent = 'Cashed out! Won $' + winnings.toFixed(2);
+  statusMsg.className = 'win';
+  // Reveal remaining mines
+  state.mines.forEach(m => { if (state.grid[m] === 0) state.grid[m] = 2; });
+  updateUI();
+}
+
+// === FLIP ANIMATION ===
+function addFlipAnimation(index, type) {
+  state.animations.push({
+    index, type,
+    progress: 0, duration: 300,
+    startTime: performance.now()
+  });
+}
+
+// === PARTICLE SYSTEMS ===
+function spawnExplosion(index) {
+  const pos = getTileCenter(index);
+  for (let i = 0; i < 40; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 6;
+    state.particles.push({
+      x: pos.x, y: pos.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 1.0, decay: 0.015 + Math.random() * 0.02,
+      size: 3 + Math.random() * 5,
+      color: Math.random() > 0.5 ? '#e74c3c' : '#ff6b35',
+      type: 'explosion'
+    });
+  }
+}
+
+function spawnGoldParticles() {
+  for (let i = 0; i < 60; i++) {
+    state.particles.push({
+      x: W / 2 + (Math.random() - 0.5) * 300,
+      y: H / 2 + (Math.random() - 0.5) * 300,
+      vx: (Math.random() - 0.5) * 4,
+      vy: -2 - Math.random() * 4,
+      life: 1.0, decay: 0.01 + Math.random() * 0.015,
+      size: 3 + Math.random() * 6,
+      color: Math.random() > 0.3 ? '#d4a017' : '#f0c040',
+      type: 'gold'
+    });
+  }
+}
+
+function updateParticles() {
+  for (let i = state.particles.length - 1; i >= 0; i--) {
+    const p = state.particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15; // gravity
+    p.life -= p.decay;
+    if (p.life <= 0) state.particles.splice(i, 1);
+  }
+}
+
+// === RENDERING ===
+function getTilePos(index) {
+  const col = index % COLS;
+  const row = Math.floor(index / COLS);
+  const x = FRAME_W + col * (TILE_SIZE + TILE_GAP);
+  const y = FRAME_W + row * (TILE_SIZE + TILE_GAP);
+  return { x, y };
+}
+
+function getTileCenter(index) {
+  const pos = getTilePos(index);
+  return { x: pos.x + TILE_SIZE / 2, y: pos.y + TILE_SIZE / 2 };
+}
+
+function drawFrame() {
+  // Outer ornate gold frame
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#8b6914');
+  grad.addColorStop(0.3, '#d4a017');
+  grad.addColorStop(0.5, '#f0c040');
+  grad.addColorStop(0.7, '#d4a017');
+  grad.addColorStop(1, '#8b6914');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Inner dark area
+  ctx.fillStyle = '#06060f';
+  ctx.fillRect(FRAME_W - 4, FRAME_W - 4, W - (FRAME_W - 4) * 2, H - (FRAME_W - 4) * 2);
+
+  // Frame ornament corners
+  drawCornerOrnament(6, 6);
+  drawCornerOrnament(W - 6, 6);
+  drawCornerOrnament(6, H - 6);
+  drawCornerOrnament(W - 6, H - 6);
+
+  // Inner border line
+  ctx.strokeStyle = '#8b6914';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(FRAME_W - 2, FRAME_W - 2, W - (FRAME_W - 2) * 2, H - (FRAME_W - 2) * 2);
+}
+
+function drawCornerOrnament(x, y) {
+  ctx.save();
+  ctx.fillStyle = '#f0c040';
+  ctx.beginPath();
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#8b6914';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(x, y, 6, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTile(index, now) {
+  const pos = getTilePos(index);
+  const tileState = state.grid[index];
+  const isHover = state.hoverTile === index && tileState === 0 && state.phase === 'playing';
+
+  // Check for flip animation
+  let flipProgress = 1;
+  const anim = state.animations.find(a => a.index === index);
+  if (anim) {
+    const elapsed = now - anim.startTime;
+    flipProgress = Math.min(elapsed / anim.duration, 1);
+    if (flipProgress >= 1) {
+      state.animations = state.animations.filter(a => a !== anim);
+    }
+  }
+
+  ctx.save();
+  const cx = pos.x + TILE_SIZE / 2;
+  const cy = pos.y + TILE_SIZE / 2;
+
+  if (flipProgress < 1) {
+    // Flip animation - scale X
+    const scaleX = Math.abs(Math.cos(flipProgress * Math.PI));
+    ctx.translate(cx, cy);
+    ctx.scale(scaleX, 1);
+    ctx.translate(-cx, -cy);
+  }
+
+  // Tile background
+  if (tileState === 0) {
+    // Hidden tile
+    const tileGrad = ctx.createLinearGradient(pos.x, pos.y, pos.x + TILE_SIZE, pos.y + TILE_SIZE);
+    tileGrad.addColorStop(0, isHover ? '#1c1c35' : '#0f0f22');
+    tileGrad.addColorStop(1, isHover ? '#141430' : '#0a0a1a');
+    ctx.fillStyle = tileGrad;
+    roundRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE, 8);
+    ctx.fill();
+    // Gold border
+    ctx.strokeStyle = isHover ? '#d4a017' : '#8b6914';
+    ctx.lineWidth = isHover ? 2 : 1.5;
+    roundRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE, 8);
+    ctx.stroke();
+    // Question mark or gem icon
+    ctx.fillStyle = isHover ? '#d4a017' : '#555';
+    ctx.font = 'bold 22px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', cx, cy);
+  } else if (tileState === 1) {
+    // Revealed safe - diamond
+    const safeGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, TILE_SIZE / 2);
+    safeGrad.addColorStop(0, '#0a2e1a');
+    safeGrad.addColorStop(1, '#061a0f');
+    ctx.fillStyle = safeGrad;
+    roundRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#27ae60';
+    ctx.lineWidth = 2;
+    roundRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE, 8);
+    ctx.stroke();
+    // Diamond emoji
+    ctx.font = '32px Segoe UI Emoji';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\u{1F48E}', cx, cy);
+  } else if (tileState === 2) {
+    // Revealed mine - bomb
+    const mineGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, TILE_SIZE / 2);
+    mineGrad.addColorStop(0, '#2e0a0a');
+    mineGrad.addColorStop(1, '#1a0606');
+    ctx.fillStyle = mineGrad;
+    roundRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#e74c3c';
+    ctx.lineWidth = 2;
+    roundRect(pos.x, pos.y, TILE_SIZE, TILE_SIZE, 8);
+    ctx.stroke();
+    // Bomb emoji
+    ctx.font = '32px Segoe UI Emoji';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\u{1F4A3}', cx, cy);
+  }
+  ctx.restore();
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawParticles() {
+  state.particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    if (p.type === 'gold') {
+      // Star shape for gold
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.life * Math.PI * 2);
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const angle = (i * Math.PI * 2) / 5 - Math.PI / 2;
+        const r = i % 2 === 0 ? p.size : p.size * 0.4;
+        ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+      }
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+}
+
+function drawBackground() {
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(0, 0, W, H);
+  // Subtle grid pattern
+  ctx.strokeStyle = 'rgba(139,105,20,0.05)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < W; i += 30) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
+  }
+  for (let i = 0; i < H; i += 30) {
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+  }
+}
+
+// === MAIN RENDER LOOP ===
+function render() {
+  const now = performance.now();
+  drawBackground();
+  drawFrame();
+  for (let i = 0; i < TOTAL_TILES; i++) {
+    drawTile(i, now);
+  }
+  updateParticles();
+  drawParticles();
+  requestAnimationFrame(render);
+}
+
+// === INPUT HANDLING ===
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (W / rect.width);
+  const my = (e.clientY - rect.top) * (H / rect.height);
+  state.hoverTile = getTileAtPos(mx, my);
+  canvas.style.cursor = (state.hoverTile >= 0 && state.grid[state.hoverTile] === 0 && state.phase === 'playing') ? 'pointer' : 'default';
+});
+
+canvas.addEventListener('mouseleave', () => {
+  state.hoverTile = -1;
+  canvas.style.cursor = 'default';
+});
+
+canvas.addEventListener('click', (e) => {
+  initAudio();
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (W / rect.width);
+  const my = (e.clientY - rect.top) * (H / rect.height);
+  const index = getTileAtPos(mx, my);
+  if (index >= 0) revealTile(index);
+});
+
+function getTileAtPos(mx, my) {
+  for (let i = 0; i < TOTAL_TILES; i++) {
+    const pos = getTilePos(i);
+    if (mx >= pos.x && mx <= pos.x + TILE_SIZE && my >= pos.y && my <= pos.y + TILE_SIZE) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// === BUTTON HANDLERS ===
+startBtn.addEventListener('click', () => { initAudio(); startGame(); });
+cashoutBtn.addEventListener('click', () => { cashOut(); });
+
+// === KEYBOARD SHORTCUTS ===
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && state.phase === 'idle') startGame();
+  if (e.key === ' ' && state.phase === 'playing' && state.revealed > 0) { e.preventDefault(); cashOut(); }
+});
+
+// === INIT ===
+updateUI();
+render();
+</script>
+</body>
+</html>
