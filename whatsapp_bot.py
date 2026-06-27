@@ -1921,6 +1921,195 @@ def main():
             tg_send(msg.chat.id, "❌ No pude crear el articulo.")
         estia.record_interaction(msg.chat.id, msg.from_user.first_name, tema, "articulo", "atenea")
 
+    # === CREATIVE STUDIO CLOUD (Canva + Adobe + Kling + SD + FFmpeg) ===
+
+    @bot.message_handler(commands=["studio"])
+    def cmd_studio(msg):
+        """
+        /studio [orden] [params]
+        Ejecuta comandos del Creative Studio Cloud.
+        Ordenes: imagen, video, diseno, editar, status
+        """
+        texto = msg.text.replace("/studio", "").strip()
+        if not texto:
+            bot.reply_to(msg,
+                "🎨 *C8L CREATIVE STUDIO*\n\n"
+                "Motor creativo con IA (Canva + Adobe + Kling + SD + FFmpeg)\n\n"
+                "📸 *Imagen IA:*\n"
+                "/studio imagen [descripción]\n"
+                "/studio imagen ciudad cyberpunk neon\n"
+                "/studio imagen logo para restaurante minimalista\n\n"
+                "🎬 *Video IA:*\n"
+                "/studio video [descripción]\n"
+                "/studio video galaxia expandiéndose\n\n"
+                "🖼️ *Diseño (tipo Canva):*\n"
+                "/studio diseno poster C8L Festival 2026\n"
+                "/studio diseno instagram Promocion Viernes\n"
+                "/studio diseno youtube Thumbnail Epic\n\n"
+                "✏️ *Editar imagen:*\n"
+                "Envía una foto y escribe: /studio editar [instrucción]\n\n"
+                "📊 *Estado:*\n"
+                "/studio status\n\n"
+                "💡 _Usa Hugging Face (gratis), Kling AI, Stability AI_",
+                parse_mode="Markdown")
+            return
+
+        tg_typing(msg.chat.id)
+
+        # Parsear orden
+        parts = texto.split(None, 1)
+        orden = parts[0].lower()
+        params_text = parts[1] if len(parts) > 1 else ""
+
+        def _run_studio():
+            try:
+                from studio.bot_interface import BotCreativeInterface
+                studio_url = os.environ.get("STUDIO_URL", "http://localhost:8084")
+                studio = BotCreativeInterface(studio_url)
+
+                if orden == "imagen":
+                    # Detectar estilo
+                    style = "realistic"
+                    style_keywords = {
+                        "anime": "anime", "3d": "3d", "neon": "neon",
+                        "cyberpunk": "neon", "pixel": "pixel_art",
+                        "pintura": "painting", "cine": "cinematic",
+                        "logo": "logo", "minimalista": "logo",
+                    }
+                    for kw, st in style_keywords.items():
+                        if kw in params_text.lower():
+                            style = st
+                            break
+
+                    result = studio.procesar_orden("imagen", {
+                        "prompt": params_text or "Paisaje futurista C8L",
+                        "style": style,
+                    })
+
+                    if result.get("success"):
+                        url = result.get("url", "")
+                        if url and url.startswith("http"):
+                            # Descargar y enviar como foto
+                            try:
+                                img_data = requests.get(url, timeout=30).content
+                                tg_send_photo(msg.chat.id, img_data,
+                                    caption=f"🎨 {result.get('message', 'Imagen generada')}\n📝 {params_text[:80]}")
+                            except:
+                                tg_send(msg.chat.id, f"✅ Imagen generada: {url}")
+                        else:
+                            tg_send(msg.chat.id, f"✅ {result.get('message', 'Imagen generada')}")
+                    else:
+                        tg_send(msg.chat.id, f"❌ {result.get('error', 'Error generando imagen')}")
+
+                elif orden == "video":
+                    tg_send(msg.chat.id, "🎬 Generando video con IA... (puede tardar 1-3 min)")
+                    result = studio.procesar_orden("video", {
+                        "prompt": params_text or "Escena épica futurista",
+                        "duration": 5,
+                        "style": "cinematic",
+                    })
+                    if result.get("success"):
+                        url = result.get("url", "")
+                        if result.get("task_id"):
+                            tg_send(msg.chat.id,
+                                f"⏳ Video en proceso (Kling AI)\n"
+                                f"Task ID: `{result['task_id']}`\n\n"
+                                f"Consulta estado con:\n/studio status_video {result['task_id']}",
+                                parse_mode="Markdown")
+                        elif url and url.startswith("http"):
+                            try:
+                                vid_data = requests.get(url, timeout=60).content
+                                tg_send_video(msg.chat.id, vid_data,
+                                    filename="c8l_studio.mp4",
+                                    caption=f"🎬 {params_text[:80]}")
+                            except:
+                                tg_send(msg.chat.id, f"✅ Video generado: {url}")
+                        else:
+                            tg_send(msg.chat.id, f"✅ {result.get('message', 'Video generado')}")
+                    else:
+                        tg_send(msg.chat.id, f"❌ {result.get('error', 'Error generando video')}")
+
+                elif orden in ("diseno", "diseño", "design"):
+                    # Detectar tipo de diseño
+                    tipos = ["poster", "instagram", "story", "youtube", "logo", "banner"]
+                    tipo = "poster"
+                    for t in tipos:
+                        if t in params_text.lower():
+                            tipo = t
+                            params_text = params_text.lower().replace(t, "").strip()
+                            break
+
+                    result = studio.procesar_orden("diseno", {
+                        "tipo": tipo,
+                        "texto": params_text or "C8L Studio",
+                    })
+                    if result.get("success"):
+                        url = result.get("url", "")
+                        if url and url.startswith("http"):
+                            try:
+                                img_data = requests.get(url, timeout=30).content
+                                tg_send_photo(msg.chat.id, img_data,
+                                    caption=f"🖼️ Diseño {tipo}: {params_text[:60]}")
+                            except:
+                                tg_send(msg.chat.id, f"✅ Diseño creado: {url}")
+                        else:
+                            tg_send(msg.chat.id, f"✅ {result.get('message', 'Diseño creado')}")
+                    else:
+                        tg_send(msg.chat.id, f"❌ {result.get('error', 'Error creando diseño')}")
+
+                elif orden == "status":
+                    result = studio.procesar_orden("status", {})
+                    if result.get("status") == "online":
+                        tools = result.get("tools", {})
+                        active = [k for k, v in tools.items() if v]
+                        tg_send(msg.chat.id,
+                            f"🎨 *C8L Creative Studio — ONLINE*\n\n"
+                            f"🔧 APIs activas: {', '.join(active) or 'FFmpeg (local)'}\n"
+                            f"📁 Archivos generados: {result.get('outputs_count', 0)}\n"
+                            f"⏰ {result.get('timestamp', '')}",
+                            parse_mode="Markdown")
+                    else:
+                        tg_send(msg.chat.id, "⚠️ Studio Cloud offline. Configura STUDIO_URL en .env")
+
+                elif orden == "status_video":
+                    if not params_text:
+                        tg_send(msg.chat.id, "Uso: /studio status_video [task_id]")
+                        return
+                    from studio.bot_interface import BotCreativeInterface
+                    studio2 = BotCreativeInterface(os.environ.get("STUDIO_URL", "http://localhost:8084"))
+                    # Llamar endpoint de status
+                    try:
+                        resp = requests.post(f"{studio2.base}/api/ai/video/status",
+                            json={"task_id": params_text.strip()}, timeout=30)
+                        data = resp.json()
+                        if data.get("url"):
+                            tg_send(msg.chat.id, f"✅ Video listo!\n🔗 {data['url']}")
+                        else:
+                            tg_send(msg.chat.id, f"⏳ Estado: {data.get('status', '?')} | Progreso: {data.get('progress', 0)}%")
+                    except Exception as e:
+                        tg_send(msg.chat.id, f"❌ Error consultando: {e}")
+
+                else:
+                    tg_send(msg.chat.id,
+                        f"❌ Orden '{orden}' no reconocida.\n\n"
+                        "Ordenes: imagen, video, diseno, status, status_video\n"
+                        "Usa /studio sin parámetros para ver ayuda.")
+
+            except ImportError as e:
+                logger.error(f"Studio import error: {e}")
+                tg_send(msg.chat.id,
+                    "⚠️ Creative Studio no está desplegado aún.\n"
+                    "Ejecuta `bash studio/deploy.sh` en el servidor.")
+            except requests.exceptions.ConnectionError:
+                tg_send(msg.chat.id,
+                    "⚠️ No puedo conectar con el Creative Studio.\n"
+                    "Verifica que esté corriendo en el servidor (puerto 8084).")
+            except Exception as e:
+                logger.error(f"Studio error: {e}")
+                tg_send(msg.chat.id, f"❌ Error: {str(e)[:150]}")
+
+        threading.Thread(target=_run_studio, daemon=True).start()
+
     # === COMANDOS DE MODERACION (C8L Guardian) ===
 
     def _is_admin(msg):

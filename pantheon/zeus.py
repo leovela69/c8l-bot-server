@@ -103,6 +103,7 @@ def _local_intent_detection(text):
     # Mapeo de keywords a agentes (incluye jerga, abreviaciones, faltas)
     mappings = [
         (["imagen", "dibuja", "foto", "ilustra", "logo", "banner", "disena", "diseña", "genera una imagen", "crea una imagen", "hazme una imagen", "quiero una imagen", "pintame", "genera", "crea un", "img", "imgen", "azte un logo", "aste un logo", "dame una img", "dibujo", "render", "3d", "hazme un", "quiero un"], "vulcano", "Generar imagen"),
+        (["studio imagen", "studio video", "studio diseno", "creative studio", "genera con ia", "genera imagen ia", "genera video ia"], "studio", "Creative Studio IA"),
         (["juego", "game", "codigo", "programa", "script", "app", "html", "snake", "tetris", "pong", "codea", "programame", "code", "webapp", "landing"], "hefesto", "Generar codigo/juego"),
         (["video", "clip", "animacion", "cortometraje", "storyboard", "videoclip"], "ares", "Generar guion de video"),
         (["cancion", "musica", "prompt para suno", "prompt para udio", "beat", "letra", "muzica", "musika", "song", "track", "componme", "compone"], "apolo", "Generar musica/prompt musical"),
