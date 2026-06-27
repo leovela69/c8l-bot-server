@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>C.8.L. Cyber Slots Arena</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&amp;family=Inter:wght@400;600&amp;family=Manrope:wght@500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Manrope:wght@100..900&amp;family=Space+Grotesk:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container": "#201f1f",
+                        "background": "#0d0d0e",
+                        "tertiary": "#ffbfb0",
+                        "secondary": "#bdf4ff",
+                        "surface-container-highest": "#353534",
+                        "primary-container": "#d4af37",
+                        "surface-container-high": "#2a2a2a",
+                        "primary": "#f2ca50",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#d0c5af",
+                        "outline-variant": "rgba(77, 70, 53, 0.15)",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "display": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Manrope"]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass {
+            background: rgba(19, 19, 19, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .neon-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; text-shadow: 0 0 20px rgba(242, 202, 80, 0.5); }
+            50% { opacity: .8; text-shadow: 0 0 10px rgba(242, 202, 80, 0.2); }
+        }
+        .ticker-scroll {
+            display: flex;
+            white-space: nowrap;
+            animation: scroll 30s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .slot-reel {
+            background: linear-gradient(to bottom, transparent, #131313 10%, #131313 90%, transparent);
+        }
+        .ghost-border {
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body overflow-hidden h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-8 py-4 z-50 bg-surface/60 backdrop-blur-xl shadow-[0px_0px_40px_rgba(242,202,80,0.06)] fixed top-0">
+<div class="flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 font-label text-xs uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                Back to Casino Lobby
+            </a>
+<h1 class="font-headline font-bold text-primary tracking-tighter italic text-xl">C.8.L. Cyber Slots Arena</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-4 bg-surface-container-low px-4 py-2 rounded-lg ghost-border">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-display font-bold text-primary">1,250 COINS</span>
+</div>
+<div class="w-px h-4 bg-outline-variant"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#A855F7]" style="font-variation-settings: 'FILL' 1;">memory</span>
+<span class="font-display font-bold text-[#A855F7]">10 BZCN</span>
+</div>
+</div>
+<button class="bg-primary hover:scale-95 transition-all duration-200 text-on-primary font-label px-6 py-2 rounded-sm font-bold uppercase tracking-tight text-sm">
+                Top Up
+            </button>
+<div class="flex items-center gap-3 ml-2">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">settings</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-primary/30 flex items-center justify-center overflow-hidden">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBvkREiXUil54YZDT9MZy-650Fy5Zbls3juTa3Hwhu2E_hJGqEXdPyD6fvul9NkE1olamSlu8oUQs5PkfrTnr_fFuGU3v8ppObRcs8RUNveeFYB9tKtZoX9FWqlyVrwB7a6aobcM3otygv3q54XgETGHwepIBWphjcPGFjCRryYGcEDljVv_ZbyN1OZqHaHH4yJ11bHRGu1jszMTaImCKtR5aSEGli1RIy6EILkOPwNNHf8qDiOHqCLCFNMSvBfqrAUCiGiKjFW8s"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 flex pt-20 pb-12 overflow-hidden">
+<!-- Content Canvas -->
+<div class="flex-1 flex flex-col px-8 overflow-y-auto custom-scrollbar">
+<!-- Hero Section -->
+<section class="relative w-full h-48 mb-8 mt-4 rounded-xl overflow-hidden glass shadow-[0px_0px_50px_rgba(242,202,80,0.1)] flex items-center justify-center">
+
+<div class="relative z-10 text-center">
+<h2 class="font-headline font-bold text-secondary text-lg tracking-[0.3em] uppercase neon-pulse mb-2">Quantum Super Jackpot</h2>
+<div class="text-6xl font-display font-extrabold text-primary tracking-tighter flex items-center gap-4">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">stars</span>
+                        8,420,500
+                        <span class="text-2xl font-label text-primary-container mt-4">COINS</span>
+</div>
+</div>
+<div class="absolute bottom-4 right-6 flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<span class="font-label text-[10px] text-secondary tracking-widest uppercase">Network Live: Quantum Link Active</span>
+</div>
+</section>
+<!-- Main Game Area: Slot Cabinets -->
+<section class="grid grid-cols-3 gap-8 mb-8 h-[550px]">
+<!-- Cabinet 1: Ziria Coins -->
+<div class="flex flex-col bg-surface-container-low/40 rounded-xl ghost-border p-1 relative group overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
+<div class="p-4 border-b border-primary/20 flex justify-between items-center">
+<span class="font-headline font-bold text-primary tracking-widest text-sm uppercase">Ziria Coins</span>
+<span class="material-symbols-outlined text-primary text-sm">workspace_premium</span>
+</div>
+<div class="flex-1 p-6 flex flex-col gap-4">
+<div class="grid grid-cols-3 grid-rows-3 gap-2 flex-1 slot-reel p-2 bg-black/40 rounded shadow-inner">
+<!-- Symbol grid 3x3 -->
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary"><span class="material-symbols-outlined text-3xl">crown</span></div>
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary"><span class="material-symbols-outlined text-3xl">paid</span></div>
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary"><span class="material-symbols-outlined text-3xl">diamond</span></div>
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary"><span class="material-symbols-outlined text-3xl">paid</span></div>
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary scale-110 shadow-[0_0_15px_rgba(242,202,80,0.3)]"><span class="material-symbols-outlined text-3xl">military_tech</span></div>
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary"><span class="material-symbols-outlined text-3xl">paid</span></div>
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary"><span class="material-symbols-outlined text-3xl">database</span></div>
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary"><span class="material-symbols-outlined text-3xl">crown</span></div>
+<div class="flex items-center justify-center glass rounded border border-primary/10 text-primary"><span class="material-symbols-outlined text-3xl">paid</span></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-primary uppercase mb-1">Bet</span>
+<div class="bg-black/60 p-2 font-display text-sm border-b border-primary/40 text-on-surface">50 COINS</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-primary uppercase mb-1">Win</span>
+<div class="bg-black/60 p-2 font-display text-sm border-b border-primary/40 text-primary">0</div>
+</div>
+</div>
+<button class="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary font-display font-black py-4 rounded-lg shadow-[0_0_30px_rgba(242,202,80,0.2)] hover:scale-[0.98] active:scale-95 transition-all">
+                            GIRAR / SPIN
+                        </button>
+</div>
+</div>
+<!-- Cabinet 2: Sirenas Slot -->
+<div class="flex flex-col bg-surface-container-low/40 rounded-xl ghost-border p-1 relative group overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-b from-secondary/5 to-transparent pointer-events-none"></div>
+<div class="p-4 border-b border-secondary/20 flex justify-between items-center">
+<span class="font-headline font-bold text-secondary tracking-widest text-sm uppercase">Sirenas Slot</span>
+<span class="material-symbols-outlined text-secondary text-sm">waves</span>
+</div>
+<div class="flex-1 p-6 flex flex-col gap-4">
+<div class="grid grid-cols-3 grid-rows-3 gap-2 flex-1 slot-reel p-2 bg-black/40 rounded shadow-inner">
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary"><span class="material-symbols-outlined text-3xl">set_meal</span></div>
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary"><span class="material-symbols-outlined text-3xl">water_drop</span></div>
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary"><span class="material-symbols-outlined text-3xl">sailing</span></div>
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary"><span class="material-symbols-outlined text-3xl">water_drop</span></div>
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary scale-110 shadow-[0_0_15px_rgba(0,227,253,0.3)]"><span class="material-symbols-outlined text-3xl">star</span></div>
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary"><span class="material-symbols-outlined text-3xl">water_drop</span></div>
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary"><span class="material-symbols-outlined text-3xl">scuba_diving</span></div>
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary"><span class="material-symbols-outlined text-3xl">set_meal</span></div>
+<div class="flex items-center justify-center glass rounded border border-secondary/10 text-secondary"><span class="material-symbols-outlined text-3xl">water_drop</span></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-secondary uppercase mb-1">Bet</span>
+<div class="bg-black/60 p-2 font-display text-sm border-b border-secondary/40 text-on-surface">50 COINS</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-secondary uppercase mb-1">Win</span>
+<div class="bg-black/60 p-2 font-display text-sm border-b border-secondary/40 text-secondary">0</div>
+</div>
+</div>
+<button class="w-full bg-gradient-to-r from-secondary to-secondary-container text-on-secondary font-display font-black py-4 rounded-lg shadow-[0_0_30px_rgba(0,227,253,0.2)] hover:scale-[0.98] active:scale-95 transition-all">
+                            GIRAR / SPIN
+                        </button>
+</div>
+</div>
+<!-- Cabinet 3: C8L Quantum -->
+<div class="flex flex-col bg-surface-container-low/40 rounded-xl ghost-border p-1 relative group overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-b from-[#A855F7]/5 to-transparent pointer-events-none"></div>
+<div class="p-4 border-b border-[#A855F7]/20 flex justify-between items-center">
+<span class="font-headline font-bold text-[#A855F7] tracking-widest text-sm uppercase">C8L Quantum</span>
+<span class="material-symbols-outlined text-[#A855F7] text-sm">bolt</span>
+</div>
+<div class="flex-1 p-6 flex flex-col gap-4">
+<div class="grid grid-cols-3 grid-rows-3 gap-2 flex-1 slot-reel p-2 bg-black/40 rounded shadow-inner">
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7]"><span class="material-symbols-outlined text-3xl">memory</span></div>
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7]"><span class="material-symbols-outlined text-3xl">hub</span></div>
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7]"><span class="material-symbols-outlined text-3xl">looks_3</span></div>
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7]"><span class="material-symbols-outlined text-3xl">bolt</span></div>
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7] scale-110 shadow-[0_0_15px_rgba(168,85,247,0.3)]"><span class="material-symbols-outlined text-3xl">electric_bolt</span></div>
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7]"><span class="material-symbols-outlined text-3xl">bolt</span></div>
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7]"><span class="material-symbols-outlined text-3xl">microwave</span></div>
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7]"><span class="material-symbols-outlined text-3xl">memory</span></div>
+<div class="flex items-center justify-center glass rounded border border-[#A855F7]/10 text-[#A855F7]"><span class="material-symbols-outlined text-3xl">looks_3</span></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-[#A855F7] uppercase mb-1">Bet</span>
+<div class="bg-black/60 p-2 font-display text-sm border-b border-[#A855F7]/40 text-on-surface">50 COINS</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-[#A855F7] uppercase mb-1">Win</span>
+<div class="bg-black/60 p-2 font-display text-sm border-b border-[#A855F7]/40 text-[#A855F7]">0</div>
+</div>
+</div>
+<button class="w-full bg-gradient-to-r from-[#A855F7] to-[#8a1d00] text-white font-display font-black py-4 rounded-lg shadow-[0_0_30px_rgba(168,85,247,0.2)] hover:scale-[0.98] active:scale-95 transition-all">
+                            GIRAR / SPIN
+                        </button>
+</div>
+</div>
+</section>
+</div>
+<!-- SideNavBar / Right Sidebar -->
+<aside class="fixed right-0 top-0 h-full flex flex-col pt-24 pb-8 z-40 bg-surface-container-low/40 backdrop-blur-2xl shadow-[-10px_0px_30px_rgba(0,227,253,0.05)] w-72">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-secondary">analytics</span>
+<h3 class="font-headline font-bold text-secondary uppercase tracking-widest text-xs">Arena Tactical</h3>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label text-[10px] text-on-surface-variant uppercase opacity-60">Quantum Status: Active</span>
+<span class="font-label text-[10px] text-on-surface-variant uppercase opacity-60">User Rank: Diamond</span>
+</div>
+</div>
+<div class="flex-1 px-6 space-y-8 overflow-y-auto">
+<!-- Paytables -->
+<div>
+<h4 class="font-label text-[10px] text-primary uppercase tracking-widest mb-4">Paytables</h4>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-2 bg-surface-container-high/20 rounded">
+<span class="material-symbols-outlined text-primary text-xl">crown</span>
+<span class="font-display text-xs">5,000x</span>
+</div>
+<div class="flex items-center justify-between p-2 bg-surface-container-high/20 rounded">
+<span class="material-symbols-outlined text-secondary text-xl">star</span>
+<span class="font-display text-xs">2,500x</span>
+</div>
+<div class="flex items-center justify-between p-2 bg-surface-container-high/20 rounded">
+<span class="material-symbols-outlined text-[#A855F7] text-xl">electric_bolt</span>
+<span class="font-display text-xs">1,000x</span>
+</div>
+</div>
+</div>
+<!-- Multiplier Meter -->
+<div>
+<h4 class="font-label text-[10px] text-secondary uppercase tracking-widest mb-4">Multiplier Meter</h4>
+<div class="flex flex-col gap-2">
+<div class="relative h-48 w-12 bg-surface-container-highest/30 rounded-full mx-auto p-1 flex flex-col justify-end">
+<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-secondary to-secondary-container rounded-full transition-all duration-500 h-[20%] shadow-[0_0_15px_rgba(0,227,253,0.4)]"></div>
+<div class="relative z-10 flex flex-col justify-between h-full py-4 text-[10px] font-black text-center text-on-surface-variant">
+<span>10X</span>
+<span>5X</span>
+<span>3X</span>
+<span class="text-secondary">2X</span>
+</div>
+</div>
+</div>
+</div>
+<!-- History/Support Tabs (Style from JSON) -->
+<div class="pt-4 border-t border-outline-variant space-y-1">
+<div class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant/40 hover:text-secondary cursor-pointer transition-all font-label uppercase tracking-widest text-[10px]">
+<span class="material-symbols-outlined">history</span> History
+                    </div>
+<div class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant/40 hover:text-secondary cursor-pointer transition-all font-label uppercase tracking-widest text-[10px]">
+<span class="material-symbols-outlined">support_agent</span> Support
+                    </div>
+</div>
+</div>
+<div class="px-6 mt-4">
+<button class="w-full bg-secondary/10 border border-secondary text-secondary font-label py-3 uppercase tracking-widest text-xs hover:bg-secondary hover:text-black transition-all">
+                    VIP Vault
+                </button>
+</div>
+</aside>
+</main>
+<!-- Footer: Live Ticker -->
+<footer class="fixed bottom-0 left-0 w-full px-6 py-2 flex justify-between items-center z-50 bg-surface-container-lowest shadow-none h-10 border-t border-primary/10">
+<div class="flex items-center gap-4 w-full">
+<div class="bg-primary/20 px-3 py-0.5 rounded-sm border border-primary/30 z-10">
+<span class="font-label text-[9px] font-black text-primary uppercase tracking-tighter">Live Feed</span>
+</div>
+<div class="flex-1 overflow-hidden relative">
+<div class="ticker-scroll flex gap-20">
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="text-primary">🏆</span> Operative Leo won 1,500 Coins on Sirenas Slot!
+                    </p>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="text-secondary">🔥</span> Operative Vela hit 5x multiplier on Ziria Coins!
+                    </p>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="text-primary">🏆</span> Operative Kael secure 850 Coins Jackpot!
+                    </p>
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="text-secondary">🔥</span> Operative Jax active in C8L Quantum!
+                    </p>
+</div>
+</div>
+<div class="flex items-center gap-6 ml-4 z-10 bg-surface-container-lowest pl-4">
+<span class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">© 2024 C.8.L. Agency</span>
+<div class="flex gap-4">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label text-[10px] uppercase tracking-widest" href="#">Live Ticker</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label text-[10px] uppercase tracking-widest" href="#">Fairness Policy</a>
+</div>
+</div>
+</div>
+</footer>
+<script>
+        // Simple Micro-interaction for the Spin buttons
+        document.querySelectorAll('button').forEach(btn => {
+            if(btn.innerText.includes('SPIN')) {
+                btn.addEventListener('mousedown', () => {
+                    btn.classList.add('scale-95');
+                });
+                btn.addEventListener('mouseup', () => {
+                    btn.classList.remove('scale-95');
+                });
+                btn.addEventListener('click', () => {
+                    // Visual feedback for spin
+                    const cabinet = btn.closest('div.flex-col');
+                    const reels = cabinet.querySelector('.slot-reel');
+                    reels.style.opacity = '0.5';
+                    setTimeout(() => {
+                        reels.style.opacity = '1';
+                    }, 500);
+                });
+            }
+        });
+    </script>
+</body></html>

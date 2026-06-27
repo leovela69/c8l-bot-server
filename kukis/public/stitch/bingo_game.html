@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>C.8.L. Kinetic Vault - Bingo</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&amp;family=Inter:wght@400;500;600&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-primary-fixed": "#241a00",
+            "surface-bright": "#3a3939",
+            "primary": "#f2ca50",
+            "secondary-container": "#00e3fd",
+            "on-tertiary": "#621100",
+            "error": "#ffb4ab",
+            "surface-container": "#201f1f",
+            "surface-dim": "#131313",
+            "inverse-on-surface": "#313030",
+            "on-secondary-fixed": "#001f24",
+            "on-background": "#e5e2e1",
+            "on-tertiary-fixed": "#3c0700",
+            "on-primary-container": "#554300",
+            "surface-tint": "#e9c349",
+            "surface-container-high": "#2a2a2a",
+            "inverse-surface": "#e5e2e1",
+            "surface-variant": "#353534",
+            "tertiary-fixed-dim": "#ffb4a2",
+            "secondary-fixed-dim": "#00daf3",
+            "on-tertiary-fixed-variant": "#8a1d00",
+            "on-surface-variant": "#d0c5af",
+            "surface-container-lowest": "#0e0e0e",
+            "on-tertiary-container": "#861c00",
+            "on-secondary": "#00363d",
+            "outline": "#99907c",
+            "secondary-fixed": "#9cf0ff",
+            "background": "#131313",
+            "tertiary-container": "#ff977d",
+            "primary-fixed": "#ffe088",
+            "on-secondary-fixed-variant": "#004f58",
+            "on-secondary-container": "#00616d",
+            "outline-variant": "#4d4635",
+            "surface-container-low": "#1c1b1b",
+            "error-container": "#93000a",
+            "surface": "#131313",
+            "primary-container": "#d4af37",
+            "on-surface": "#e5e2e1",
+            "primary-fixed-dim": "#e9c349",
+            "inverse-primary": "#735c00",
+            "secondary": "#bdf4ff",
+            "on-primary": "#3c2f00",
+            "surface-container-highest": "#353534",
+            "on-error": "#690005",
+            "tertiary-fixed": "#ffdad2",
+            "tertiary": "#ffbfb0",
+            "on-primary-fixed-variant": "#574500",
+            "on-error-container": "#ffdad6",
+            "bingo-b": "#FF0055",
+            "bingo-i": "#A855F7",
+            "bingo-n": "#D4AF37",
+            "bingo-g": "#00F3FF",
+            "bingo-o": "#10B981"
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          fontFamily: {
+            "headline": ["Space Grotesk"],
+            "display": ["Space Grotesk"],
+            "body": ["Inter"],
+            "label": ["Manrope"],
+            "mono": ["Courier New", "monospace"]
+          },
+          backgroundImage: {
+            'glass-gradient': 'linear-gradient(135deg, rgba(19, 19, 19, 0.6) 0%, rgba(28, 27, 27, 0.4) 100%)',
+            'primary-gradient': 'linear-gradient(to right, #f2ca50, #d4af37)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0D0D0E;
+      color: #e5e2e1;
+      overflow-x: hidden;
+      min-height: max(884px, 100dvh);
+    }
+    .scanline {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.3;
+    }
+    .glass-panel {
+      background: rgba(19, 19, 19, 0.6);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(153, 144, 124, 0.15);
+      position: relative;
+    }
+    .corner-accents::before, .corner-accents::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-color: #f2ca50;
+      border-style: solid;
+    }
+    .corner-accents::before {
+      top: -1px; left: -1px;
+      border-width: 1px 0 0 1px;
+    }
+    .corner-accents::after {
+      bottom: -1px; right: -1px;
+      border-width: 0 1px 1px 0;
+    }
+    .bingo-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #18181b;
+      position: relative;
+      transition: all 0.3s ease;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+    .bingo-cell.marked {
+      background: linear-gradient(135deg, rgba(255, 0, 85, 0.2), rgba(168, 85, 247, 0.2));
+      box-shadow: inset 0 0 15px rgba(168, 85, 247, 0.3);
+      color: #fff;
+    }
+    .bingo-cell.marked::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 6px;
+      height: 6px;
+      background-color: #FF0055;
+      border-radius: 50%;
+      box-shadow: 0 0 5px #FF0055;
+    }
+    .bingo-cell.free {
+      color: #d4af37;
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+      font-size: 0.8rem;
+      flex-direction: column;
+    }
+    .orbital-ring {
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px dashed rgba(0, 243, 255, 0.5);
+      animation: spin 10s linear infinite;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+    .header-cell-b { color: #FF0055; text-shadow: 0 0 15px #FF0055; }
+    .header-cell-i { color: #A855F7; text-shadow: 0 0 15px #A855F7; }
+    .header-cell-n { color: #D4AF37; text-shadow: 0 0 15px #D4AF37; }
+    .header-cell-g { color: #00F3FF; text-shadow: 0 0 15px #00F3FF; }
+    .header-cell-o { color: #10B981; text-shadow: 0 0 15px #10B981; }
+  </style>
+</head>
+<body class="font-body text-on-surface antialiased min-h-screen flex flex-col md:flex-row pb-24 md:pb-0 pt-16 md:pt-0">
+  <div class="scanline"></div>
+  
+  <!-- Sidebar Navigation -->
+  <aside class="hidden md:flex flex-col h-full w-80 fixed left-0 top-0 z-[60] py-8 px-4 bg-[#131313] rounded-r-lg shadow-2xl divide-y divide-white/5">
+    <div class="pb-6 px-4">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-12 h-12 rounded-full bg-zinc-800 overflow-hidden border border-outline-variant">
+          <div class="w-full h-full bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-bold">C8L</div>
+        </div>
+        <div>
+          <h2 class="font-headline text-primary font-bold tracking-tight">C8L_OPERATIVE</h2>
+          <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">ELITE_MANAGEMENT</p>
+          <p class="font-label text-[8px] text-secondary uppercase tracking-widest mt-1"><span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary animate-pulse mr-1"></span>ACTIVE_SESSION</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 pt-6 font-['Space_Grotesk'] text-sm tracking-normal">
+      <ul class="space-y-2">
+        <li>
+          <a class="flex items-center gap-3 px-4 py-3 text-neutral-400 hover:bg-white/5 hover:pl-2 transition-all duration-300" href="/stitch/casino_lobby.html">
+            <span class="material-symbols-outlined">casino</span>
+            CASINO_LOBBY
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center gap-3 px-4 py-3 text-[#00e3fd] bg-[#00e3fd]/5 border-l-4 border-[#00e3fd] hover:pl-2 transition-all duration-300" href="#">
+            <span class="material-symbols-outlined">terminal</span>
+            BINGO_GAME
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center gap-3 px-4 py-3 text-neutral-400 hover:bg-white/5 hover:pl-2 transition-all duration-300" href="/stitch/poker_game.html">
+            <span class="material-symbols-outlined">playing_cards</span>
+            POKER_GAME
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center gap-3 px-4 py-3 text-neutral-400 hover:bg-white/5 hover:pl-2 transition-all duration-300" href="/stitch/chess_game.html">
+            <span class="material-symbols-outlined">grid_on</span>
+            CHESS_GAME
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content Canvas -->
+  <main class="flex-1 md:ml-80 p-4 md:p-8 flex flex-col gap-8 relative z-10">
+    <!-- Bingo Card Section -->
+    <section class="glass-panel corner-accents p-6 md:p-8 flex flex-col items-center max-w-3xl mx-auto w-full rounded-2xl">
+      <div class="flex items-center gap-4 mb-6">
+        <span class="material-symbols-outlined text-primary">auto_awesome</span>
+        <h1 class="font-headline text-primary text-2xl md:text-3xl font-bold tracking-widest uppercase">CARTÓN DE BINGO</h1>
+        <span class="material-symbols-outlined text-primary">auto_awesome</span>
+      </div>
+      
+      <div class="w-full flex justify-between items-center mb-8 bg-surface-container-low px-4 py-2 border border-outline-variant/30 text-sm font-label uppercase tracking-wider">
+        <div class="flex gap-4">
+          <span class="text-on-surface-variant">Cost: <span class="text-primary font-bold">15 Coins</span></span>
+          <span class="text-on-surface-variant hidden md:inline">Line: <span class="text-primary font-bold">50</span></span>
+          <span class="text-on-surface-variant hidden md:inline">Bingo: <span class="text-primary font-bold">500</span></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-on-surface-variant">Progress:</span>
+          <span class="text-[#00e3fd] font-mono font-bold">8/25</span>
+        </div>
+      </div>
+
+      <div class="w-full max-w-md">
+        <!-- Headers -->
+        <div class="grid grid-cols-5 gap-2 mb-2 text-center font-display font-black text-3xl md:text-4xl">
+          <div class="header-cell-b">B</div>
+          <div class="header-cell-i">I</div>
+          <div class="header-cell-n">N</div>
+          <div class="header-cell-g">G</div>
+          <div class="header-cell-o">O</div>
+        </div>
+        <!-- 5x5 Cells -->
+        <div class="grid grid-cols-5 gap-2">
+          <div class="bingo-cell marked">05</div>
+          <div class="bingo-cell">18</div>
+          <div class="bingo-cell">32</div>
+          <div class="bingo-cell marked">55</div>
+          <div class="bingo-cell">68</div>
+          
+          <div class="bingo-cell">12</div>
+          <div class="bingo-cell marked">24</div>
+          <div class="bingo-cell">41</div>
+          <div class="bingo-cell">59</div>
+          <div class="bingo-cell">71</div>
+          
+          <div class="bingo-cell marked">08</div>
+          <div class="bingo-cell">29</div>
+          <div class="bingo-cell free marked">
+            <span class="material-symbols-outlined text-2xl mb-1">star</span>
+            <span>FREE</span>
+          </div>
+          <div class="bingo-cell marked">48</div>
+          <div class="bingo-cell">64</div>
+          
+          <div class="bingo-cell">15</div>
+          <div class="bingo-cell">22</div>
+          <div class="bingo-cell marked">38</div>
+          <div class="bingo-cell">51</div>
+          <div class="bingo-cell">75</div>
+          
+          <div class="bingo-cell marked">03</div>
+          <div class="bingo-cell">27</div>
+          <div class="bingo-cell">44</div>
+          <div class="bingo-cell">60</div>
+          <div class="bingo-cell marked">72</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ball Machine Section -->
+    <section class="glass-panel corner-accents p-6 md:p-8 flex flex-col md:flex-row gap-8 max-w-5xl mx-auto w-full items-center md:items-stretch rounded-2xl">
+      <div class="flex-1 flex flex-col items-center justify-center border-r-0 md:border-r border-outline-variant/20 pr-0 md:pr-8">
+        <div class="flex items-center gap-2 mb-8">
+          <div class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></div>
+          <h2 class="font-headline text-secondary text-xl font-bold tracking-widest uppercase">MÁQUINA DE BOLAS</h2>
+          <div class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></div>
+        </div>
+        <div class="relative w-32 h-32 flex items-center justify-center bg-surface-container-lowest rounded-full border border-bingo-g mb-8 shadow-[0_0_30px_rgba(0,243,255,0.15)]">
+          <div class="orbital-ring"></div>
+          <div class="text-center">
+            <span class="block font-display font-bold text-bingo-g text-xl leading-none">G</span>
+            <span class="block font-mono font-bold text-white text-5xl">55</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <div class="w-8 h-8 rounded-full bg-zinc-900 border border-rose-500 flex items-center justify-center font-mono text-xs text-white">B5</div>
+          <div class="w-8 h-8 rounded-full bg-zinc-900 border border-purple-400 flex items-center justify-center font-mono text-xs text-white">I24</div>
+          <div class="w-8 h-8 rounded-full bg-zinc-900 border border-emerald-400 flex items-center justify-center font-mono text-xs text-white">O72</div>
+          <div class="w-8 h-8 rounded-full bg-zinc-900 border border-rose-500 flex items-center justify-center font-mono text-xs text-white">B8</div>
+          <div class="w-8 h-8 rounded-full bg-zinc-900 border border-[#D4AF37] flex items-center justify-center font-mono text-xs text-white">N38</div>
+        </div>
+      </div>
+      <div class="flex-1 flex flex-col justify-between">
+        <div class="mb-8 space-y-4">
+          <div class="p-4 bg-zinc-950/60 border border-zinc-800 rounded-xl flex items-center gap-3">
+            <input type="checkbox" checked id="autoMark" class="rounded border-zinc-800 bg-zinc-900 text-[#00e3fd] focus:ring-[#00e3fd]"/>
+            <label for="autoMark" class="font-label text-xs uppercase tracking-wide text-zinc-400 font-bold cursor-pointer">Marcado Automático</label>
+          </div>
+          <button class="w-full py-4 px-6 bg-primary-gradient text-black font-headline font-black text-lg uppercase tracking-widest rounded-xl hover:brightness-110 transition shadow-[0_0_20px_rgba(242,202,80,0.15)] border-2 border-black">
+            JUGAR BINGO (15 COINS)
+          </button>
+        </div>
+        <div class="bg-zinc-950/80 p-4 border border-zinc-850 rounded-xl">
+          <h3 class="font-label text-[10px] text-zinc-500 uppercase tracking-widest mb-3">Historial de Bolas</h3>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="px-2.5 py-0.5 text-[10px] font-mono bg-rose-950/20 border border-rose-500/30 text-rose-400 rounded">B05</span>
+            <span class="px-2.5 py-0.5 text-[10px] font-mono bg-purple-950/20 border border-purple-400/30 text-purple-400 rounded">I24</span>
+            <span class="px-2.5 py-0.5 text-[10px] font-mono bg-emerald-950/20 border border-emerald-400/30 text-emerald-400 rounded">O72</span>
+            <span class="px-2.5 py-0.5 text-[10px] font-mono bg-rose-950/20 border border-rose-500/30 text-rose-400 rounded">B08</span>
+            <span class="px-2.5 py-0.5 text-[10px] font-mono bg-yellow-950/20 border border-[#D4AF37]/30 text-[#D4AF37] rounded">N38</span>
+            <span class="px-2.5 py-0.5 text-[10px] font-mono bg-[#00F3FF]/10 border border-[#00F3FF]/30 text-[#00F3FF] rounded">G55</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

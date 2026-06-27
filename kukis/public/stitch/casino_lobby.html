@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>C.8.L. Casino Lobby - Stitch Preview</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&amp;family=Inter:wght@400;500;600&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#f2ca50",
+            "secondary": "#bdf4ff",
+            "background": "#131313",
+            "surface": "#131313",
+            "primary-container": "#d4af37",
+            "on-surface": "#e5e2e1",
+            "outline": "#99907c"
+          },
+          fontFamily: {
+            "headline": ["Space Grotesk"],
+            "display": ["Space Grotesk"],
+            "body": ["Inter"],
+            "label": ["Manrope"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0D0D0E;
+      color: #e5e2e1;
+      overflow-x: hidden;
+      min-height: max(884px, 100dvh);
+    }
+    .scanline {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.3;
+    }
+    .glass-panel {
+      background: rgba(19, 19, 19, 0.6);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(153, 144, 124, 0.15);
+      position: relative;
+    }
+    .text-glow-gold {
+      text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+    }
+  </style>
+</head>
+<body class="font-body text-on-surface antialiased min-h-screen flex flex-col pb-24">
+  <div class="scanline"></div>
+
+  <!-- Header -->
+  <header class="w-full z-50 px-6 h-16 flex items-center justify-between bg-[#131313] border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+    <div class="flex items-center gap-4">
+      <span class="font-['Space_Grotesk'] uppercase tracking-[0.2em] font-bold text-[#d4af37] font-black">C8L_CASINO</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black/60 border border-[var(--color-gold)]/30 text-sm font-mono text-[var(--color-gold)]">
+        <span>🪙 12,450 Coins</span>
+      </div>
+      <div class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-purple-950/20 border border-purple-500/30 text-sm font-mono text-purple-400">
+        <span class="material-symbols-outlined">cpu</span>
+        <span>10 BZCN</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Lobby -->
+  <main class="flex-1 p-6 md:p-12 max-w-6xl mx-auto w-full flex flex-col gap-10">
+    <div class="text-center">
+      <span class="text-[10px] font-mono text-[#D4AF37] uppercase tracking-widest font-black block mb-1">
+        C8L Social Platform Casino
+      </span>
+      <h1 class="font-headline font-black text-4xl md:text-5xl uppercase tracking-tight text-white">
+        El Casino Quantum
+      </h1>
+      <p class="text-zinc-500 text-xs mt-2 max-w-md mx-auto">
+        Juega a los clásicos del azar y destreza en un entorno retro-futurista completamente integrado.
+      </p>
+    </div>
+
+    <!-- Games Cabinets Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- Roulette -->
+      <a href="/stitch/roulette_game.html" class="glass-panel p-6 rounded-3xl border border-zinc-800 hover:border-[#00F3FF]/40 transition flex flex-col justify-between min-h-[180px] group">
+        <div class="text-3xl">🎰</div>
+        <div>
+          <h3 class="font-heading font-black text-lg text-white group-hover:text-[#00F3FF] transition">Ruleta Quantum</h3>
+          <p class="text-[10px] text-zinc-500 mt-1">Apuesta a números o colores clásicos.</p>
+        </div>
+      </a>
+
+      <!-- F1 Game -->
+      <a href="/stitch/f1_game.html" class="glass-panel p-6 rounded-3xl border border-zinc-800 hover:border-[#FF0055]/40 transition flex flex-col justify-between min-h-[180px] group">
+        <div class="text-3xl">🏎️</div>
+        <div>
+          <h3 class="font-heading font-black text-lg text-white group-hover:text-[#FF0055] transition">Micro F1 Racing</h3>
+          <p class="text-[10px] text-zinc-500 mt-1">Carreras en miniatura con motor Web Audio.</p>
+        </div>
+      </a>
+
+      <!-- Poker -->
+      <a href="/stitch/poker_game.html" class="glass-panel p-6 rounded-3xl border border-zinc-800 hover:border-[#D4AF37]/40 transition flex flex-col justify-between min-h-[180px] group">
+        <div class="text-3xl">🎴</div>
+        <div>
+          <h3 class="font-heading font-black text-lg text-white group-hover:text-[#D4AF37] transition">Texas Hold'em</h3>
+          <p class="text-[10px] text-zinc-500 mt-1">Desafía a Vela el León con resubidas.</p>
+        </div>
+      </a>
+
+      <!-- Bingo -->
+      <a href="/stitch/bingo_game.html" class="glass-panel p-6 rounded-3xl border border-zinc-800 hover:border-emerald-500/40 transition flex flex-col justify-between min-h-[180px] group">
+        <div class="text-3xl">🎟️</div>
+        <div>
+          <h3 class="font-heading font-black text-lg text-white group-hover:text-emerald-400 transition">Bingo Quantum</h3>
+          <p class="text-[10px] text-zinc-500 mt-1">Completa cartones y reclama líneas.</p>
+        </div>
+      </a>
+
+      <!-- Chess -->
+      <a href="/stitch/chess_game.html" class="glass-panel p-6 rounded-3xl border border-zinc-800 hover:border-purple-500/40 transition flex flex-col justify-between min-h-[180px] group">
+        <div class="text-3xl">♟️</div>
+        <div>
+          <h3 class="font-heading font-black text-lg text-white group-hover:text-purple-400 transition">Ajedrez Minimax</h3>
+          <p class="text-[10px] text-zinc-500 mt-1">Planifica jugadas contra nuestra IA local.</p>
+        </div>
+      </a>
+      
+    </div>
+  </main>
+</body>
+</html>

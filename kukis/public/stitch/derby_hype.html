@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>C.8.L. VAULT // DERBY HYPE BETTING</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#861c00",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed": "#3c0700",
+                        "on-primary": "#3c2f00",
+                        "surface-container-high": "#2a2a2a",
+                        "on-secondary": "#00363d",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-secondary-container": "#00616d",
+                        "on-secondary-fixed": "#001f24",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-container": "#ff977d",
+                        "error-container": "#93000a",
+                        "surface": "#131313",
+                        "on-primary-fixed-variant": "#574500",
+                        "inverse-on-surface": "#313030",
+                        "tertiary-fixed": "#ffdad2",
+                        "background": "#0D0D0E",
+                        "surface-container-highest": "#353534",
+                        "primary-fixed-dim": "#e9c349",
+                        "on-background": "#e5e2e1",
+                        "surface-container-low": "#1c1b1b",
+                        "on-tertiary-fixed-variant": "#8a1d00",
+                        "primary-container": "#d4af37",
+                        "surface-container": "#201f1f",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-fixed": "#241a00",
+                        "tertiary": "#ffbfb0",
+                        "outline-variant": "#4d4635",
+                        "on-primary-container": "#554300",
+                        "primary-fixed": "#ffe088",
+                        "secondary-container": "#00e3fd",
+                        "primary": "#f2ca50",
+                        "surface-variant": "#353534",
+                        "surface-bright": "#3a3939",
+                        "secondary-fixed": "#9cf0ff",
+                        "on-secondary-fixed-variant": "#004f58",
+                        "inverse-primary": "#735c00",
+                        "surface-tint": "#e9c349",
+                        "secondary": "#bdf4ff",
+                        "tertiary-fixed-dim": "#ffb4a2",
+                        "surface-dim": "#131313",
+                        "secondary-fixed-dim": "#00daf3",
+                        "outline": "#99907c",
+                        "inverse-surface": "#e5e2e1",
+                        "on-tertiary": "#621100",
+                        "on-surface-variant": "#d0c5af",
+                        "error": "#ffb4ab",
+                        "bizcoin": "#A855F7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "display": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Manrope"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0D0D0E;
+            color: #e5e2e1;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(19, 19, 19, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 227, 253, 0.2);
+        }
+        .neon-glow-pink {
+            box-shadow: 0 0 15px rgba(255, 115, 241, 0.2);
+        }
+        .gold-gradient {
+            background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+        }
+        .terminal-scroll::-webkit-scrollbar {
+            width: 2px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #f2ca50;
+        }
+        @keyframes pulse-cyan {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+        .animate-pulse-cyan {
+            animation: pulse-cyan 2s infinite;
+        }
+        .racetrack-grid {
+            background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.02) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="selection:bg-primary/30">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-8 py-4 sticky top-0 z-50 bg-surface/60 backdrop-blur-xl shadow-[0_0_40px_rgba(242,202,80,0.06)]">
+<div class="flex items-center gap-6">
+<a class="flex items-center gap-2 group transition-all" href="#">
+<span class="material-symbols-outlined text-primary group-hover:-translate-x-1 transition-transform">arrow_back</span>
+<span class="font-display font-black text-primary uppercase tracking-widest text-sm">BACK TO LOBBY</span>
+</a>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<div class="font-display font-black text-primary uppercase tracking-widest text-lg">C.8.L. VAULT // TERMINAL 08</div>
+</div>
+<div class="flex items-center gap-8">
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-display tracking-tight text-sm" href="#">STABLES</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-display tracking-tight text-sm" href="#">RACEWAY</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-display tracking-tight text-sm" href="#">FINANCE</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-display tracking-tight text-sm" href="#">GOVERNANCE</a>
+</nav>
+<div class="flex items-center gap-4 bg-surface-container-low px-4 py-2 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">payments</span>
+<span class="font-display font-bold text-primary tracking-tighter">1,250 COINS</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-bizcoin text-sm">memory</span>
+<span class="font-display font-bold text-bizcoin tracking-tighter">10 BZCN</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all active:scale-95">account_balance_wallet</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all active:scale-95">sensors</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all active:scale-95">settings</button>
+</div>
+</div>
+</header>
+<main class="max-w-[1600px] mx-auto px-8 py-8 space-y-6">
+<!-- Racetrack Panel -->
+<section class="glass-panel rounded-xl p-1 relative overflow-hidden h-[400px]">
+<!-- Decorative Background Shader -->
+
+<div class="relative z-10 w-full h-full p-6 flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<div class="flex items-center gap-4">
+<div class="bg-primary/10 border border-primary/20 px-3 py-1 rounded text-xs font-bold tracking-widest text-primary">LIVE TRANSMISSION</div>
+<h2 class="font-display text-2xl font-bold tracking-tight">KINETIC DERBY // SECTOR 08</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right">
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Race Progress</p>
+<p class="font-display font-bold text-secondary">LAP 2/3</p>
+</div>
+<div class="w-48 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-2/3 shadow-[0_0_10px_#00e3fd]"></div>
+</div>
+</div>
+</div>
+<!-- 2D Racetrack Layout -->
+<div class="flex-grow racetrack-grid relative rounded-lg border border-outline-variant/10 flex items-center justify-center">
+<!-- Neon Track Path -->
+<svg class="absolute inset-0 w-full h-full p-12" viewbox="0 0 800 300">
+<path d="M50,150 C50,50 150,50 400,50 C650,50 750,50 750,150 C750,250 650,250 400,250 C150,250 50,250 50,150" fill="none" stroke="rgba(0, 227, 253, 0.2)" stroke-linecap="round" stroke-width="40"></path>
+<path d="M50,150 C50,50 150,50 400,50 C650,50 750,50 750,150 C750,250 650,250 400,250 C150,250 50,250 50,150" fill="none" stroke="rgba(0, 227, 253, 0.4)" stroke-dasharray="10 20" stroke-width="2"></path>
+</svg>
+<!-- Horse Markers -->
+<!-- Gold -->
+<div class="absolute top-[25%] left-[45%] flex flex-col items-center gap-1 group cursor-pointer transition-transform hover:scale-110">
+<div class="bg-primary px-2 py-0.5 rounded text-[10px] font-bold text-on-primary shadow-[0_0_15px_rgba(242,202,80,0.5)]">142 km/h</div>
+<div class="w-4 h-4 rounded-full bg-primary border-2 border-white neon-glow-cyan"></div>
+<div class="text-[9px] font-black uppercase tracking-tighter text-primary">GOLD HYPE</div>
+</div>
+<!-- Red -->
+<div class="absolute top-[20%] left-[55%] flex flex-col items-center gap-1 opacity-80">
+<div class="bg-red-500 px-2 py-0.5 rounded text-[10px] font-bold text-white">138 km/h</div>
+<div class="w-4 h-4 rounded-full bg-red-500 border-2 border-white"></div>
+</div>
+<!-- Blue -->
+<div class="absolute bottom-[20%] left-[30%] flex flex-col items-center gap-1">
+<div class="bg-blue-400 px-2 py-0.5 rounded text-[10px] font-bold text-white">135 km/h</div>
+<div class="w-4 h-4 rounded-full bg-blue-400 border-2 border-white"></div>
+<div class="text-[9px] font-black uppercase tracking-tighter text-blue-400">QUANTUM CHAGER</div>
+</div>
+<!-- Pink -->
+<div class="absolute top-[50%] right-[10%] flex flex-col items-center gap-1">
+<div class="bg-pink-500 px-2 py-0.5 rounded text-[10px] font-bold text-white">121 km/h</div>
+<div class="w-4 h-4 rounded-full bg-pink-500 border-2 border-white"></div>
+<div class="text-[9px] font-black uppercase tracking-tighter text-pink-500">ZIRIA PEARL</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Live Log Feed -->
+<div class="glass-panel rounded-lg py-3 px-6 flex items-center gap-4 overflow-hidden">
+<span class="material-symbols-outlined text-primary animate-pulse text-sm">sensors</span>
+<div class="flex-grow relative h-6 overflow-hidden">
+<div class="absolute inset-0 flex items-center gap-8 whitespace-nowrap animate-marquee">
+<span class="text-xs font-label uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="text-secondary font-bold">14:02:11</span> 🏇 Quantum Charger takes the lead on turn 2!
+                    </span>
+<span class="text-xs font-label uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="text-secondary font-bold">14:02:15</span> 💥 Ziria Pearl skids in wet sector!
+                    </span>
+<span class="text-xs font-label uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+<span class="text-secondary font-bold">14:02:22</span> ⚡ Gold Hype activating kinetic boost...
+                    </span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-6">
+<!-- Odds & Standings (Bottom Left) -->
+<section class="col-span-12 lg:col-span-8 glass-panel rounded-xl overflow-hidden">
+<div class="px-6 py-4 bg-surface-container-low flex justify-between items-center">
+<h3 class="font-display font-bold text-sm tracking-widest uppercase">LIVE ANALYTICS // STANDINGS</h3>
+<div class="flex gap-4">
+<span class="text-[10px] text-on-surface-variant flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary"></span> TRACK: DRY</span>
+<span class="text-[10px] text-on-surface-variant flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> VAULT: SECURE</span>
+</div>
+</div>
+<div class="p-6">
+<table class="w-full text-left">
+<thead>
+<tr class="text-[10px] font-label text-on-surface-variant uppercase tracking-[0.2em] border-b border-outline-variant/10">
+<th class="pb-4 font-normal">POS</th>
+<th class="pb-4 font-normal">HORSE</th>
+<th class="pb-4 font-normal">SPEED (KM/H)</th>
+<th class="pb-4 font-normal">ODDS</th>
+<th class="pb-4 font-normal text-right">STATUS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<tr class="group hover:bg-surface-container-high/40 transition-colors">
+<td class="py-4 font-display font-bold text-primary">01</td>
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-1 h-8 bg-primary rounded-full"></div>
+<div>
+<p class="text-sm font-bold tracking-tight">GOLD HYPE</p>
+<p class="text-[10px] text-on-surface-variant">OPERATOR_88</p>
+</div>
+</div>
+</td>
+<td class="py-4 font-display text-sm tracking-tighter">142.4</td>
+<td class="py-4 font-display font-bold text-primary">2.5x</td>
+<td class="py-4 text-right">
+<span class="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded border border-primary/20">LEADING</span>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-high/40 transition-colors">
+<td class="py-4 font-display font-bold text-on-surface-variant">02</td>
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-1 h-8 bg-secondary rounded-full"></div>
+<div>
+<p class="text-sm font-bold tracking-tight">QUANTUM CHARGER</p>
+<p class="text-[10px] text-on-surface-variant">OPERATOR_12</p>
+</div>
+</div>
+</td>
+<td class="py-4 font-display text-sm tracking-tighter">135.8</td>
+<td class="py-4 font-display font-bold text-secondary">4.2x</td>
+<td class="py-4 text-right">
+<span class="bg-secondary/10 text-secondary text-[10px] font-black px-2 py-0.5 rounded border border-secondary/20">STEADY</span>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-high/40 transition-colors">
+<td class="py-4 font-display font-bold text-on-surface-variant">03</td>
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-1 h-8 bg-pink-500 rounded-full"></div>
+<div>
+<p class="text-sm font-bold tracking-tight">ZIRIA PEARL</p>
+<p class="text-[10px] text-on-surface-variant">OPERATOR_04</p>
+</div>
+</div>
+</td>
+<td class="py-4 font-display text-sm tracking-tighter">121.2</td>
+<td class="py-4 font-display font-bold text-pink-400">12.0x</td>
+<td class="py-4 text-right">
+<span class="bg-error/10 text-error text-[10px] font-black px-2 py-0.5 rounded border border-error/20">SKIDDING</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Betting Console (Bottom Right) -->
+<section class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+<div class="glass-panel rounded-xl p-6 flex flex-col gap-6 border-l-4 border-l-primary">
+<header>
+<h3 class="font-display font-bold text-sm tracking-widest uppercase mb-1">TACTICAL INTERFACE</h3>
+<p class="text-[10px] text-on-surface-variant uppercase">EXECUTE PROTOCOL // PLACE WAGER</p>
+</header>
+<!-- Horse Selector -->
+<div class="space-y-2">
+<label class="text-[10px] font-label text-primary uppercase tracking-widest">Select Target</label>
+<div class="grid grid-cols-1 gap-2">
+<button class="flex justify-between items-center bg-surface-container-high p-3 rounded border border-primary/40 shadow-[0_0_10px_rgba(242,202,80,0.1)]">
+<span class="text-sm font-bold">GOLD HYPE</span>
+<span class="text-xs text-primary font-display">2.5x</span>
+</button>
+<button class="flex justify-between items-center bg-surface-container-low p-3 rounded border border-outline-variant/10 hover:bg-surface-container-high transition-all">
+<span class="text-sm font-bold text-on-surface-variant">QUANTUM CHARGER</span>
+<span class="text-xs text-secondary font-display">4.2x</span>
+</button>
+</div>
+</div>
+<!-- Currency Toggle -->
+<div class="space-y-2">
+<label class="text-[10px] font-label text-primary uppercase tracking-widest">Transaction Asset</label>
+<div class="flex p-1 bg-surface-container-lowest rounded-lg gap-1">
+<button class="flex-1 py-2 text-[10px] font-bold rounded bg-primary text-on-primary uppercase transition-all">COINS</button>
+<button class="flex-1 py-2 text-[10px] font-bold rounded text-on-surface-variant hover:text-on-surface uppercase transition-all">BIZCOINS</button>
+</div>
+</div>
+<!-- Bet Input -->
+<div class="space-y-3">
+<label class="text-[10px] font-label text-primary uppercase tracking-widest">Quantum Allocation</label>
+<div class="relative">
+<input class="w-full bg-surface-container-high border-0 border-b-2 border-primary py-4 px-4 font-display text-2xl font-bold focus:ring-0 text-white" type="number" value="100"/>
+<span class="absolute right-4 top-1/2 -translate-y-1/2 text-primary material-symbols-outlined">toll</span>
+</div>
+<div class="grid grid-cols-4 gap-2">
+<button class="bg-surface-container-low border border-outline-variant/10 py-2 rounded text-[10px] font-bold hover:bg-primary/20 transition-all">20</button>
+<button class="bg-surface-container-low border border-outline-variant/10 py-2 rounded text-[10px] font-bold hover:bg-primary/20 transition-all">50</button>
+<button class="bg-surface-container-high border border-primary/40 py-2 rounded text-[10px] font-bold text-primary transition-all">100</button>
+<button class="bg-surface-container-low border border-outline-variant/10 py-2 rounded text-[10px] font-bold hover:bg-primary/20 transition-all">500</button>
+</div>
+</div>
+<!-- Submit -->
+<button class="gold-gradient w-full py-4 rounded font-display font-black text-on-primary tracking-[0.2em] uppercase shadow-[0_4px_20px_rgba(242,202,80,0.3)] hover:scale-[1.02] active:scale-95 transition-all">
+                        CONFIRM APUESTA
+                    </button>
+</div>
+<div class="glass-panel rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-secondary/10 flex items-center justify-center border border-secondary/20">
+<span class="material-symbols-outlined text-secondary">trending_up</span>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Est. Return</p>
+<p class="font-display font-bold text-primary">250.00 COINS</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant opacity-20">verified_user</span>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full px-12 py-6 flex justify-between items-center border-t border-outline-variant/15 bg-surface-container-lowest mt-12">
+<div class="flex flex-col gap-1">
+<span class="text-on-surface font-bold font-display tracking-widest text-xs uppercase">C.8.L. AGENCY</span>
+<span class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant">© 2124 | KINETIC VAULT ENCRYPTION ACTIVE</span>
+</div>
+<div class="flex gap-8">
+<a class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant hover:text-secondary transition-colors" href="#">API_ACCESS</a>
+<a class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant hover:text-secondary transition-colors" href="#">TERMS_OF_SERVICE</a>
+<a class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant hover:text-secondary transition-colors" href="#">NETWORK_STATUS</a>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_#00e3fd]"></span>
+<span class="font-label text-[10px] tracking-widest uppercase text-secondary">SYSTEMS_NOMINAL</span>
+</div>
+</footer>
+<style>
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+            animation: marquee 25s linear infinite;
+        }
+    </style>
+<script>
+        // Micro-interaction for numbers
+        document.querySelectorAll('.font-display').forEach(el => {
+            if(!isNaN(el.innerText)) {
+                // Potential number rolling effect if needed
+            }
+        });
+
+        // Simple tab/selection logic for UI feel
+        const bettingButtons = document.querySelectorAll('.betting-btn');
+        bettingButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                bettingButtons.forEach(b => b.classList.remove('border-primary', 'bg-surface-container-high'));
+                btn.classList.add('border-primary', 'bg-surface-container-high');
+            });
+        });
+    </script>
+</body></html>

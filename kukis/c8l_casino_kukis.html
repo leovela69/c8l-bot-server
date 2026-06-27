@@ -674,16 +674,11 @@
             position: relative;
             overflow: hidden;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .game-thumb::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 50%;
-            background: linear-gradient(to top, rgba(10, 10, 28, 0.8), transparent);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 80%),
+                linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
+            background-size: 100% 100%, 20px 20px, 20px 20px;
         }
 
         .game-emoji {
@@ -1328,34 +1323,134 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: radial-gradient(circle at 50% 30%, #1a0e16 0%, #0a0508 100%);
-            border-radius: 16px;
-            border: 1px solid rgba(236, 72, 153, 0.2);
-            padding: 16px;
-            gap: 16px;
+            background: linear-gradient(180deg, #1b0c16 0%, #0c040a 100%);
+            border-radius: 24px;
+            border: 6px solid #b47e24; /* Wood/Gold border trim */
+            box-shadow: 0 0 35px rgba(244, 180, 26, 0.35),
+                        inset 0 0 30px rgba(0,0,0,0.9);
+            padding: 24px;
+            gap: 20px;
+            position: relative;
         }
+
+        /* Slot Machine Cabinet Header Style */
+        .slot-cabinet-header {
+            width: 100%;
+            text-align: center;
+            padding: 12px;
+            background: radial-gradient(circle at 50% 50%, #501235 0%, #200414 100%);
+            border: 3px solid #f4b41a;
+            border-radius: 16px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+
+        .slot-cabinet-title {
+            font-family: var(--font-title);
+            font-size: 1.85rem;
+            font-weight: 900;
+            color: #ef4444;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 2px 2px 0px #000;
+            letter-spacing: 2px;
+        }
+
+        .slot-cabinet-subtitle {
+            font-family: var(--font-title);
+            font-size: 0.85rem;
+            color: var(--gold);
+            font-weight: 800;
+            letter-spacing: 4px;
+        }
+
+        /* Dual portraits inside slot header */
+        .slot-portraits-row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 10px;
+            gap: 12px;
+        }
+
+        .slot-portrait-card {
+            width: 90px;
+            height: 90px;
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .slot-portrait-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slot-portrait-card::after {
+            content: 'ARTISTA';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(244, 180, 26, 0.85);
+            color: #000;
+            font-size: 0.55rem;
+            font-weight: 900;
+            text-align: center;
+            padding: 2px 0;
+        }
+
         .slot-reels-strip {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             width: 100%;
             max-width: 600px;
             justify-content: center;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.6);
             padding: 16px;
             border-radius: 20px;
-            border: 2px solid var(--pink);
-            box-shadow: 0 0 25px rgba(236, 72, 153, 0.15);
+            border: 4px solid var(--pink);
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.35);
+            position: relative;
         }
+
+        /* Neon side lights blinking animation */
+        .slot-reels-strip::before, .slot-reels-strip::after {
+            content: '';
+            position: absolute;
+            top: 10%;
+            width: 4px;
+            height: 80%;
+            background: var(--pink);
+            box-shadow: 0 0 15px var(--pink);
+            border-radius: 4px;
+            animation: neonBlink 1s infinite alternate;
+        }
+        .slot-reels-strip::before { left: -10px; }
+        .slot-reels-strip::after { right: -10px; }
+
+        @keyframes neonBlink {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
         .slot-reel-column {
-            width: 90px;
+            width: 96px;
             height: 240px;
             background: #04040a;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.05);
             overflow: hidden;
             position: relative;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.9);
         }
+
         .slot-reel-inner {
             position: absolute;
             top: 0;
@@ -1365,6 +1460,8 @@
             flex-direction: column;
             transition: top 1.2s cubic-bezier(0.25, 1, 0.5, 1);
         }
+
+        /* Circular glowing reel symbol frames as shown in design */
         .slot-reel-cell {
             height: 80px;
             display: flex;
@@ -1372,6 +1469,90 @@
             justify-content: center;
             font-size: 2.8rem;
             filter: drop-shadow(0 0 10px rgba(255,255,255,0.15));
+            border-radius: 50%;
+            border: 2px solid rgba(244, 180, 26, 0.15);
+            background: radial-gradient(circle, #2a0f1e 0%, #0a0408 100%);
+            margin: 2px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+
+        .slot-reel-cell:hover {
+            transform: scale(1.08);
+            border-color: var(--gold);
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        /* ==========================================
+           🃏 BLACKJACK VIP HIGH FIDELITY LAYOUT
+           ========================================== */
+        .blackjack-container {
+            width: 100%;
+            max-width: 720px;
+            background: radial-gradient(circle at 50% 30%, #0d2319 0%, #030a07 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 20px;
+        }
+        .blackjack-table {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .bj-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 110px;
+        }
+        .bj-zone-title {
+            font-family: var(--font-title);
+            font-size: 0.8rem;
+            color: #8888a5;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        .score-badge {
+            background: rgba(0,0,0,0.4);
+            color: var(--gold);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-family: var(--font-title);
+        }
+        .bj-cards {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 80px;
+        }
+        .bj-card {
+            width: 60px;
+            height: 88px;
+            background: #fff;
+            color: #000;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px;
+            font-family: var(--font-title);
+            font-weight: 800;
+            font-size: 0.95rem;
+            animation: dealCard 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+        .bj-card.red-suit {
+            color: var(--red);
+        }
+        @keyframes dealCard {
+            from { transform: translateY(-50px) rotate(15deg); opacity: 0; }
+            to { transform: translateY(0) rotate(0); opacity: 1; }
         }
 
         /* ==========================================
@@ -1951,6 +2132,7 @@
                     <button class="cat-tab" data-cat="crash">🚀 CRASH</button>
                     <button class="cat-tab" data-cat="slots">🎰 SLOTS</button>
                     <button class="cat-tab" data-cat="mesa">🃏 MESA</button>
+                    <button class="cat-tab" data-cat="bingo">🎱 BINGO</button>
                     <button class="cat-tab" data-cat="kukis">🍪 KUKIS</button>
                 </div>
             </nav>
@@ -1970,7 +2152,7 @@
                 <h2 id="modalTitle">🎮 GAME</h2>
                 <button class="btn-close" onclick="closeGame()">✕</button>
             </div>
-<div class="win-banner" id="winBanner"></div>
+            <div class="win-banner" id="winBanner"></div>
             <div id="modalContent">
                 <!-- Rendered by JS -->
             </div>
@@ -2029,13 +2211,47 @@
         function anim(){ctx.save();ps.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.life-=p.dec;if(p.life<=0){ps.splice(i,1);return}ctx.globalAlpha=p.life;ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,p.sz*.4,0,Math.PI*2);ctx.fill()});ctx.restore();if(ps.length>0)requestAnimationFrame(anim)}anim()
     }
 
-    // === GAMES DATA ===
+    // === GAMES DATA (30 Games + KUKIS) ===
     const GAMES = [
+        // CRASH (6 games)
         {id:'crash',name:'Crash C8L',cat:'crash',icon:'🚀',badge:'🔥 MULTIPLICADOR',gradient:'#ef4444,#f97316',rtp:.96},
-        {id:'mines',name:'Mines C8L',cat:'crash',icon:'💣',badge:'💎 5x5',gradient:'#f59e0b,#d97706',rtp:.95},
+        {id:'mines',name:'Mines C8L',cat:'crash',icon:'💣',badge:'💎 Tablero 5x5',gradient:'#f59e0b,#d97706',rtp:.95},
         {id:'plinko',name:'Plinko C8L',cat:'crash',icon:'🟡',badge:'⚡ CLAVOS',gradient:'#8b5cf6,#6d28d9',rtp:.97},
-        {id:'ruleta',name:'Ruleta C8L',cat:'mesa',icon:'🎡',badge:'🎯 EUROPEA',gradient:'#e74c3c,#c0392b',rtp:.97},
+        {id:'aviator',name:'Aviator C8L',cat:'crash',icon:'✈️',badge:'🔥 ALTITUD',gradient:'#ef4444,#7f1d1d',rtp:.96},
+        {id:'cohete',name:'Cohete Facciones',cat:'crash',icon:'🚀',badge:'🛡️ ALIANZA',gradient:'#00f0ff,#0369a1',rtp:.97},
+        {id:'subida',name:'Subida de Chips',cat:'crash',icon:'📈',badge:'💰 VELOCIDAD',gradient:'#10b981,#047857',rtp:.95},
+        
+        // SLOTS (10 games)
         {id:'slot',name:'Corazones Locos Slot',cat:'slots',icon:'❤️',badge:'🎰 x5 MULTI',gradient:'#ec4899,#be185d',rtp:.96},
+        {id:'leon_dorado',name:'León Dorado Slot',cat:'slots',icon:'🦁',badge:'👑 JACKPOT',gradient:'#ffd700,#d97706',rtp:.96},
+        {id:'freneticos',name:'Corazones Frenéticos',cat:'slots',icon:'💖',badge:'⚡ FRENETIC',gradient:'#be185d,#500724',rtp:.97},
+        {id:'sirenas',name:'Sirenas Slot',cat:'slots',icon:'🧜‍♀️',badge:'🌊 OCÉANO',gradient:'#06b6d4,#0891b2',rtp:.95},
+        {id:'choco_jackpot',name:'Jackpot de Chocolate',cat:'slots',icon:'🍫',badge:'🍩 DULCE',gradient:'#7c2d12,#451a03',rtp:.96},
+        {id:'frutas',name:'Frutas Locas',cat:'slots',icon:'🍉',badge:'🍒 CLÁSICO',gradient:'#ea580c,#c2410c',rtp:.95},
+        {id:'faraon',name:'Faraón de Oro',cat:'slots',icon:'👑',badge:'🏺 EGIPTO',gradient:'#eab308,#a16207',rtp:.96},
+        {id:'siete',name:'Siete Caliente',cat:'slots',icon:'7️⃣',badge:'🔥 FUEGO',gradient:'#dc2626,#991b1b',rtp:.96},
+        {id:'olimpo',name:'Olimpo Gold',cat:'slots',icon:'⚡',badge:'🏛️ MITOS',gradient:'#ffd700,#b45309',rtp:.97},
+        {id:'gemas',name:'Gemas C8L',cat:'slots',icon:'💎',badge:'✨ CRISTAL',gradient:'#06b6d4,#4f46e5',rtp:.95},
+
+        // MESA (8 games)
+        {id:'blackjack',name:'Blackjack VIP',cat:'mesa',icon:'🃏',badge:'♣️ CARTAS',gradient:'#10b981,#064e3b',rtp:.97},
+        {id:'ruleta',name:'Ruleta C8L',cat:'mesa',icon:'🎡',badge:'🎯 EUROPEA',gradient:'#e74c3c,#c0392b',rtp:.97},
+        {id:'poker',name:'C8L Poker Lounge',cat:'mesa',icon:'♠️',badge:'🎙️ EN VIVO',gradient:'#3e2723,#1a0c08',rtp:.98},
+        {id:'dados',name:'Kings of Combo Dados',cat:'mesa',icon:'🎲',badge:'🎲 DADOS',gradient:'#1e293b,#0f172a',rtp:.96},
+        {id:'baccarat',name:'Baccarat Facciones',cat:'mesa',icon:'👑',badge:'🛡️ BATALLA',gradient:'#4f46e5,#312e81',rtp:.97},
+        {id:'holdem',name:'Casino Hold\'em',cat:'mesa',icon:'🃏',badge:'🏆 VIP',gradient:'#111827,#030712',rtp:.97},
+        {id:'dados_locos',name:'Dados Locos',cat:'mesa',icon:'🎲',badge:'🔥 RÁPIDO',gradient:'#f97316,#c2410c',rtp:.95},
+        {id:'ruleta_relampago',name:'Ruleta Relámpago',cat:'mesa',icon:'⚡',badge:'💥 MULTI',gradient:'#eab308,#78350f',rtp:.97},
+
+        // BINGO (6 games)
+        {id:'bingo_agencia',name:'Bingo de la Agencia',cat:'bingo',icon:'🎱',badge:'📺 STREAMING',gradient:'#ec4899,#a21caf',rtp:.95},
+        {id:'bingo_3d',name:'Bingo Quantum 3D',cat:'bingo',icon:'🪐',badge:'🪐 3D',gradient:'#8b5cf6,#4c1d95',rtp:.96},
+        {id:'bingo_facciones',name:'Bingo de Facciones',cat:'bingo',icon:'🛡️',badge:'⚔️ COMBATE',gradient:'#3b82f6,#1d4ed8',rtp:.95},
+        {id:'super_bingo',name:'Súper Bingo C8L',cat:'bingo',icon:'🎱',badge:'🔥 MEGA',gradient:'#ffd700,#b45309',rtp:.96},
+        {id:'bingo_oro',name:'Bingo de Oro',cat:'bingo',icon:'💰',badge:'💎 PREMIUM',gradient:'#eab308,#854d0e',rtp:.96},
+        {id:'bingo_galaxia',name:'Bingo de la Galaxia',cat:'bingo',icon:'🌌',badge:'🚀 ESPACIO',gradient:'#06b6d4,#1e1b4b',rtp:.95},
+
+        // KUKIS (1 game)
         {id:'kukis',name:'KUKIS',cat:'kukis',icon:'🍪',badge:'🍪 INVESTIGACIÓN',gradient:'#8B4513,#FF69B4',rtp:.94}
     ];
 
@@ -2043,10 +2259,25 @@
     function renderGrid(filter='all'){
         const grid=document.getElementById('gamesGrid');
         const list=filter==='all'?GAMES:GAMES.filter(g=>g.cat===filter);
-        grid.innerHTML=list.map(g=>`
+        
+        grid.innerHTML=list.map(g=>{
+            // High fidelity stylized card thumbnails
+            let bgThumbContent = '';
+            if(g.cat === 'crash') {
+                bgThumbContent = `<svg width="100%" height="100%" style="position:absolute;top:0;left:0;opacity:0.25;pointer-events:none;"><path d="M 10 160 Q 120 160 260 20" fill="none" stroke="${g.id==='mines'?'#f59e0b':'#00f0ff'}" stroke-width="3"/></svg>`;
+            } else if(g.cat === 'slots') {
+                bgThumbContent = `<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;gap:4px;padding:20px;opacity:0.12;pointer-events:none;"><div style="flex:1;background:#fff;border-radius:4px;"></div><div style="flex:1;background:#fff;border-radius:4px;"></div><div style="flex:1;background:#fff;border-radius:4px;"></div></div>`;
+            } else if(g.cat === 'mesa') {
+                bgThumbContent = `<div style="position:absolute;font-size:3rem;bottom:10px;left:20px;opacity:0.1;pointer-events:none;transform:rotate(-15deg);">🃏♠️</div>`;
+            } else if(g.cat === 'bingo') {
+                bgThumbContent = `<div style="position:absolute;width:100%;height:100%;background:radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 60%);top:0;left:0;opacity:0.6;pointer-events:none;"></div>`;
+            }
+
+            return `
             <div class="game-card" onclick="openGame('${g.id}')">
                 <div class="game-thumb" style="background:linear-gradient(135deg,${g.gradient},#0a0a18)">
-                    <span class="game-emoji" style="color: ${g.id==='slot'?'#ec4899':g.id==='plinko'?'#8b5cf6':g.id==='mines'?'#f59e0b':'#00f0ff'}">${g.icon}</span>
+                    ${bgThumbContent}
+                    <span class="game-emoji" style="color: ${g.id==='slot'||g.id==='freneticos'?'#ec4899':g.id==='plinko'?'#8b5cf6':['mines','leon_dorado','faraon','olimpo','bingo_oro'].includes(g.id)?'#f59e0b':'#00f0ff'}">${g.icon}</span>
                     <span class="game-badge">${g.badge}</span>
                 </div>
                 <div class="game-info">
@@ -2054,7 +2285,8 @@
                     <div class="game-type">${g.cat.toUpperCase()}</div>
                     <div class="game-rtp">RTP: ${(g.rtp*100).toFixed(1)}%</div>
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     }
 
     // === CATEGORIES ===
@@ -2106,9 +2338,16 @@
             document.getElementById('gameCtrls')&&(document.getElementById('gameCtrls').style.display='none');
             kukisInit();
         } else {
+            // Determine engine mapping based on category/id
+            let engineId = id;
+            if(g.cat === 'slots') engineId = 'slot';
+            else if(g.cat === 'bingo') engineId = 'plinko';
+            else if(g.cat === 'mesa' && id !== 'ruleta') engineId = 'blackjack';
+            else if(g.cat === 'crash' && !['mines','plinko'].includes(id)) engineId = 'crash';
+
             // Render specific HTML structure for high fidelity designs
             let gameHTML = '';
-            if(id==='crash'){
+            if(engineId==='crash'){
                 gameHTML = `<div class="canvas-wrap">
                     <div class="crash-container">
                         <div class="crash-screen">
@@ -2129,7 +2368,7 @@
                         </div>
                     </div>
                 </div>`;
-            } else if(id==='mines'){
+            } else if(engineId==='mines'){
                 let cells = '';
                 for(let i=0; i<25; i++) cells += `<button class="mines-cell-btn" id="mineCell_${i}" onclick="revealMineCell(${i})">❓</button>`;
                 gameHTML = `<div class="canvas-wrap">
@@ -2146,32 +2385,34 @@
                         </div>
                     </div>
                 </div>`;
-            } else if(id==='plinko'){
+            } else if(engineId==='plinko'){
+                let slotMultipliers = id.startsWith('bingo') ? 
+                    ['1.0x', '1.2x', '1.5x', '2.0x', '5.0x', '2.0x', '1.5x', '1.2x', '1.0x'] : 
+                    ['0.2x', '0.5x', '1.5x', '3.0x', '10.0x', '3.0x', '1.5x', '0.5x', '0.2x'];
+                
                 gameHTML = `<div class="canvas-wrap">
                     <div class="plinko-container">
                         <div class="plinko-board-wrapper" id="plinkoBoard">
-                            <!-- Pegs and ball added by JS -->
                             <div class="plinko-ball-node" id="plinkoBall"></div>
                         </div>
                         <div class="plinko-slots-row">
-                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_0">0.2x</div>
-                            <div class="plinko-slot-cell plinko-slot-orange" id="pslot_1">0.5x</div>
-                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_2">1.5x</div>
-                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_3">3.0x</div>
-                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_4">10.0x</div>
-                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_5">3.0x</div>
-                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_6">1.5x</div>
-                            <div class="plinko-slot-cell plinko-slot-orange" id="pslot_7">0.5x</div>
-                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_8">0.2x</div>
+                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_0">${slotMultipliers[0]}</div>
+                            <div class="plinko-slot-cell plinko-slot-orange" id="pslot_1">${slotMultipliers[1]}</div>
+                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_2">${slotMultipliers[2]}</div>
+                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_3">${slotMultipliers[3]}</div>
+                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_4">${slotMultipliers[4]}</div>
+                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_5">${slotMultipliers[5]}</div>
+                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_6">${slotMultipliers[6]}</div>
+                            <div class="plinko-slot-cell plinko-slot-orange" id="pslot_7">${slotMultipliers[7]}</div>
+                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_8">${slotMultipliers[8]}</div>
                         </div>
                     </div>
                 </div>`;
-            } else if(id==='ruleta'){
+            } else if(engineId==='ruleta'){
                 gameHTML = `<div class="canvas-wrap">
                     <div class="ruleta-container">
                         <div class="ruleta-wheel-box">
                             <div class="ruleta-wheel-pointer">▼</div>
-                            <!-- A beautiful rotating wheel design -->
                             <svg class="ruleta-wheel-svg" id="ruletaWheel" viewBox="0 0 200 200">
                                 <circle cx="100" cy="100" r="95" fill="#0f0f23" stroke="#f4b41a" stroke-width="4"/>
                                 ${buildRuletaSlices()}
@@ -2184,17 +2425,47 @@
                     </div>
                     <div class="ruleta-history-strip" id="ruletaHistory"></div>
                 </div>`;
-            } else if(id==='slot'){
+            } else if(engineId==='blackjack'){
+                gameHTML = `<div class="canvas-wrap">
+                    <div class="blackjack-container">
+                        <div class="blackjack-table">
+                            <div class="bj-zone crupier">
+                                <div class="bj-zone-title">CRUPIER <span id="bjCrupierScore" class="score-badge"></span></div>
+                                <div class="bj-cards" id="bjCrupierCards"></div>
+                            </div>
+                            <div class="bj-zone jugador">
+                                <div class="bj-zone-title">JUGADOR <span id="bjJugadorScore" class="score-badge"></span></div>
+                                <div class="bj-cards" id="bjJugadorCards"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            } else if(engineId==='slot'){
                 let columns = '';
                 for(let i=0; i<5; i++) {
                     columns += `<div class="slot-reel-column">
                         <div class="slot-reel-inner" id="slotReel_${i}">
-                            <!-- Reels symbols -->
                         </div>
                     </div>`;
                 }
                 gameHTML = `<div class="canvas-wrap">
                     <div class="slot-layout-container">
+                        <!-- Cabinet Header -->
+                        <div class="slot-cabinet-header">
+                            <div class="slot-cabinet-title">CORAZONES LOCOS</div>
+                            <div class="slot-cabinet-subtitle">AGENCY</div>
+                            <div class="slot-portraits-row">
+                                <div class="slot-portrait-card">
+                                    <img src="public/lion-mascot.png" onerror="this.src='https://raw.githubusercontent.com/leovela69/c8l-bot-server/main/public/lion-mascot.png'">
+                                </div>
+                                <div style="font-size:2rem;align-self:center;">🦁</div>
+                                <div class="slot-portrait-card">
+                                    <img src="public/ai-bot.png" onerror="this.src='https://raw.githubusercontent.com/leovela69/c8l-bot-server/main/public/ai-bot.png'">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reels Strip -->
                         <div class="slot-reels-strip">
                             ${columns}
                         </div>
@@ -2217,7 +2488,7 @@
             if(btn){btn.textContent=getLabel(id);btn.disabled=false}
             
             // Set up static game displays
-            drawGame(id);
+            drawGame(engineId);
         }
     }
 
@@ -2229,7 +2500,6 @@
             const angle = (i * 360 / 37);
             const nextAngle = ((i + 1) * 360 / 37);
             const color = num === 0 ? '#10b981' : i % 2 === 0 ? '#e74c3c' : '#0c0c16';
-            // Simple visual slices using SVG lines or arcs
             const rad1 = (angle - 90) * Math.PI / 180;
             const rad2 = (nextAngle - 90) * Math.PI / 180;
             const x1 = 100 + 90 * Math.cos(rad1);
@@ -2237,7 +2507,6 @@
             const x2 = 100 + 90 * Math.cos(rad2);
             const y2 = 100 + 90 * Math.sin(rad2);
             html += `<path d="M 100 100 L ${x1} ${y1} A 90 90 0 0 1 ${x2} ${y2} Z" fill="${color}" stroke="rgba(244,180,26,0.35)" stroke-width="0.5"/>`;
-            // text placement
             const textAngle = angle + 180 / 37;
             const textRad = (textAngle - 90) * Math.PI / 180;
             const tx = 100 + 74 * Math.cos(textRad);
@@ -2254,10 +2523,7 @@
             [2, '#0e0e1a'], [5, '#e74c3c'], [8, '#0e0e1a'], [11, '#0e0e1a'], [14, '#e74c3c'], [17, '#0e0e1a'], [20, '#0e0e1a'], [23, '#e74c3c'], [26, '#0e0e1a'], [29, '#0e0e1a'], [32, '#e74c3c'], [35, '#0e0e1a'],
             [1, '#e74c3c'], [4, '#0e0e1a'], [7, '#e74c3c'], [10, '#0e0e1a'], [13, '#0e0e1a'], [16, '#e74c3c'], [19, '#e74c3c'], [22, '#0e0e1a'], [25, '#e74c3c'], [28, '#0e0e1a'], [31, '#0e0e1a'], [34, '#e74c3c']
         ];
-        
-        // Zero cell spanning left
         html += `<div class="ruleta-table-cell ruleta-cell-green" onclick="selectRuletaBet(0)">0</div>`;
-        
         numbers.forEach((cell) => {
             const cls = cell[1] === '#e74c3c' ? 'ruleta-cell-red' : 'ruleta-cell-black';
             html += `<div class="ruleta-table-cell ${cls}" id="rcell_${cell[0]}" onclick="selectRuletaBet(${cell[0]})">${cell[0]}</div>`;
@@ -2265,7 +2531,7 @@
         return html;
     }
 
-    let selectedRuletaBetVal = 17; // default
+    let selectedRuletaBetVal = 17;
     function selectRuletaBet(num){
         selectedRuletaBetVal = num;
         document.querySelectorAll('.ruleta-table-cell').forEach(c=>c.classList.remove('selected-bet'));
@@ -2280,11 +2546,10 @@
     document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeGame()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGame()});
 
-    // === PLAY GAME (HTML Engine) ===
+    // === PLAY GAME ===
     function playGame(){
         if(!STATE.currentGame||STATE.spinning)return;
         
-        // Custom handling for Mines in game (only cashout)
         if(STATE.currentGame.id === 'mines' && minesGameState.playing){
             minesCashout();
             return;
@@ -2300,8 +2565,13 @@
         const id=STATE.currentGame.id;
         const win=calcWin(STATE.currentGame);
         
-        // Trigger high-fidelity component animations
-        animateGameFidelity(id, win, () => {
+        let engineId = id;
+        if(STATE.currentGame.cat === 'slots') engineId = 'slot';
+        else if(STATE.currentGame.cat === 'bingo') engineId = 'plinko';
+        else if(STATE.currentGame.cat === 'mesa' && id !== 'ruleta') engineId = 'blackjack';
+        else if(STATE.currentGame.cat === 'crash' && !['mines','plinko'].includes(id)) engineId = 'crash';
+
+        animateGameFidelity(engineId, win, () => {
             if(win>0){
                 updateBal(win);
                 const wb2=document.getElementById('winBanner');
@@ -2312,16 +2582,8 @@
                 sfx.lose();
             }
             STATE.spinning=false;if(btn)btn.disabled=false;
-            drawGame(id);
+            drawGame(engineId);
         });
-    }
-
-    function calcWin(game){
-        const r=Math.random(),rtp=game.rtp;
-        if(r<rtp*.30)return Math.floor(STATE.bet*(1+Math.random()*2.2));
-        if(r<rtp*.13)return Math.floor(STATE.bet*(3+Math.random()*7));
-        if(r<rtp*.025)return Math.floor(STATE.bet*(10+Math.random()*45));
-        return 0;
     }
 
     // === STATIC GAME STATE DRAWING ===
@@ -2351,7 +2613,6 @@
                 const reel = document.getElementById(`slotReel_${i}`);
                 if(reel) {
                     let html = '';
-                    // Populate with static symbols
                     for(let j=0; j<15; j++) {
                         html += `<div class="slot-reel-cell">${syms[Math.floor(Math.random()*syms.length)]}</div>`;
                     }
@@ -2361,6 +2622,11 @@
             }
         } else if(id === 'ruleta') {
             selectRuletaBet(selectedRuletaBetVal);
+        } else if(id === 'blackjack') {
+            document.getElementById('bjJugadorScore').textContent = '0';
+            document.getElementById('bjCrupierScore').textContent = '0';
+            document.getElementById('bjJugadorCards').innerHTML = `<div style="font-size:2.5rem;opacity:0.15;align-self:center">♠️</div>`;
+            document.getElementById('bjCrupierCards').innerHTML = `<div style="font-size:2.5rem;opacity:0.15;align-self:center">♦️</div>`;
         }
     }
 
@@ -2388,7 +2654,6 @@
                     document.getElementById('crashMulti').textContent = mult.toFixed(2) + 'x';
                     document.getElementById('crashMulti').style.color = 'var(--cyan)';
                     
-                    // Move rocket SVG/HTML coordinate
                     const rocket = document.getElementById('crashRocket');
                     if(rocket) {
                         const pct = (mult - 1) / (target - 1 || 1);
@@ -2401,7 +2666,6 @@
             }, 45);
         }
         else if(id === 'mines') {
-            // Mines plays as an interactive mini-session
             startMinesGame(win, callback);
         }
         else if(id === 'plinko') {
@@ -2410,13 +2674,12 @@
             ball.style.left = '50%';
             ball.style.top = '20px';
             
-            // Generate board pegs if they don't exist yet
             const board = document.getElementById('plinkoBoard');
             if(board.querySelectorAll('.plinko-peg').length === 0) {
                 for(let row=0;row<8;row++){
                     const pegs=row+3;
                     for(let p=0;p<pegs;p++){
-                        const x = 50 - (pegs-1)*4 + p*8; // relative percentages
+                        const x = 50 - (pegs-1)*4 + p*8;
                         const y = 15 + row*10;
                         const peg = document.createElement('div');
                         peg.className = 'plinko-peg';
@@ -2427,17 +2690,16 @@
                 }
             }
             
-            // Animate physics drops
             let step = 0;
-            let currentX = 50; // percentage
+            let currentX = 50;
             const slotTarget = win > 0 ? (win / STATE.bet >= 3 ? 4 : (Math.random() < 0.5 ? 2 : 6)) : (Math.random() < 0.5 ? 0 : 8);
-            const targetX = 5 + slotTarget * 11 + 5.5; // Landing center percentage
+            const targetX = 5 + slotTarget * 11 + 5.5;
             
             const interval = setInterval(() => {
                 step++;
-                const y = 20 + step * 8; // move down
+                const y = 20 + step * 8;
                 const drift = (targetX - 50) * Math.pow(step / 30, 1.3);
-                currentX = 50 + drift + (Math.sin(step) * 2.5); // Add peg bounce jitter
+                currentX = 50 + drift + (Math.sin(step) * 2.5);
                 
                 ball.style.left = `${currentX}%`;
                 ball.style.top = `${y}px`;
@@ -2446,7 +2708,6 @@
                     clearInterval(interval);
                     ball.style.display = 'none';
                     
-                    // Trigger slot flash
                     const slot = document.getElementById(`pslot_${slotTarget}`);
                     if(slot) {
                         slot.classList.add('active-hit');
@@ -2461,18 +2722,16 @@
             const numDisplay = document.getElementById('ruletaNumberDisplay');
             const numbers = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
             
-            // Choose winning number based on bet
             let winningNum = 0;
             if(win > 0) {
                 winningNum = selectedRuletaBetVal;
             } else {
-                // select a random losing number
                 const losingNums = numbers.filter(n => n !== selectedRuletaBetVal);
                 winningNum = losingNums[Math.floor(Math.random() * losingNums.length)];
             }
             
             const numIndex = numbers.indexOf(winningNum);
-            const targetAngle = 1440 + (360 - (numIndex * 360 / 37)); // Spin 4 times then land on number
+            const targetAngle = 1440 + (360 - (numIndex * 360 / 37));
             
             wheel.style.transform = `rotate(${targetAngle}deg)`;
             
@@ -2480,7 +2739,6 @@
                 numDisplay.textContent = winningNum;
                 numDisplay.style.color = winningNum === 0 ? 'var(--green)' : [3,9,12,18,21,27,30,36,5,14,23,32,1,7,16,19,25,34].includes(winningNum) ? 'var(--red)' : '#fff';
                 
-                // Add to history strip
                 const hist = document.getElementById('ruletaHistory');
                 if(hist) {
                     const item = document.createElement('div');
@@ -2493,24 +2751,65 @@
                 callback();
             }, 3050);
         }
+        else if(id === 'blackjack') {
+            const playerZone = document.getElementById('bjJugadorCards');
+            const crupierZone = document.getElementById('bjCrupierCards');
+            playerZone.innerHTML = '';
+            crupierZone.innerHTML = '';
+            
+            const cardValues = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+            const cardSuits = ['♥','♦','♣','♠'];
+            
+            let playerSum = 0;
+            let crupierSum = 0;
+            
+            const deal = (zone, scoreId, isCrupier) => {
+                const val = cardValues[Math.floor(Math.random() * cardValues.length)];
+                const suit = cardSuits[Math.floor(Math.random() * cardSuits.length)];
+                const isRed = ['♥','♦'].includes(suit);
+                
+                const card = document.createElement('div');
+                card.className = `bj-card ${isRed ? 'red-suit' : ''}`;
+                card.innerHTML = `<div>${val}</div><div style="font-size:1.4rem;align-self:center">${suit}</div><div style="align-self:flex-end">${val}</div>`;
+                zone.appendChild(card);
+                
+                const numericalVal = ['J','Q','K'].includes(val) ? 10 : val === 'A' ? 11 : parseInt(val);
+                if(isCrupier) crupierSum += numericalVal;
+                else playerSum += numericalVal;
+                
+                document.getElementById(scoreId).textContent = isCrupier ? crupierSum : playerSum;
+                sfx.win();
+            };
+
+            setTimeout(() => deal(playerZone, 'bjJugadorScore', false), 200);
+            setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 400);
+            setTimeout(() => deal(playerZone, 'bjJugadorScore', false), 600);
+            
+            setTimeout(() => {
+                if(win > 0) {
+                    setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 200);
+                    setTimeout(callback, 800);
+                } else {
+                    setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 200);
+                    setTimeout(callback, 800);
+                }
+            }, 1000);
+        }
         else if(id === 'slot') {
             const syms = ['❤️','💎','🦁','⭐','7️⃣','🍒','👑'];
             let doneCount = 0;
             for(let i=0; i<5; i++) {
                 const reel = document.getElementById(`slotReel_${i}`);
                 if(reel) {
-                    // Populate inner contents
                     let html = '';
                     for(let j=0; j<45; j++) {
                         html += `<div class="slot-reel-cell">${syms[Math.floor(Math.random()*syms.length)]}</div>`;
                     }
-                    // Insert winning symbol at correct offset if win
                     if(win > 0 && i < 3) {
                         html += `<div class="slot-reel-cell">❤️</div>`;
                     }
                     reel.innerHTML = html;
                     
-                    // Trigger spin transitions at staggered times
                     setTimeout(() => {
                         reel.style.top = '-3200px';
                         setTimeout(() => {
@@ -2532,7 +2831,7 @@
         playing: false,
         winAmount: 0,
         diamondsFound: 0,
-        mineLayout: [], // true for diamond, false for bomb
+        mineLayout: [], 
         revealed: [],
         callback: null
     };
@@ -2544,8 +2843,6 @@
         minesGameState.revealed = Array(25).fill(false);
         minesGameState.callback = callback;
         
-        // Pre-generate grid
-        // 5 diamonds, 20 bombs
         const layout = Array(25).fill(false);
         let diamondsPlaced = 0;
         while(diamondsPlaced < 5) {
@@ -2566,14 +2863,12 @@
         btnCashout.textContent = 'Cobrar';
         btnCashout.style.background = 'linear-gradient(135deg, #10b981, #059669)';
         
-        // Disable spin button, handle controls via Mines Sidebar
         const spinBtn = document.getElementById('btnMain');
         if(spinBtn) {
             spinBtn.textContent = 'Jugando...';
             spinBtn.disabled = true;
         }
 
-        // Enable board clicking
         for(let i=0; i<25; i++) {
             const cell = document.getElementById(`mineCell_${i}`);
             if(cell) {
@@ -2592,7 +2887,6 @@
         const cell = document.getElementById(`mineCell_${idx}`);
         
         if(minesGameState.mineLayout[idx]) {
-            // Found a Diamond!
             sfx.win();
             cell.className = 'mines-cell-btn revealed-diamond';
             cell.textContent = '💎';
@@ -2600,12 +2894,10 @@
             document.getElementById('minesCountText').textContent = `${minesGameState.diamondsFound} / 5`;
             toast('💎 ¡Excelente! Encontraste un diamante.');
             
-            // Check if player has found all 5 diamonds
             if(minesGameState.diamondsFound === 5) {
                 minesCashout();
             }
         } else {
-            // Hit a Bomb! Game Over.
             sfx.lose();
             cell.className = 'mines-cell-btn revealed-bomb';
             cell.textContent = '💥';
@@ -2615,12 +2907,10 @@
             document.getElementById('minesStatusText').style.color = 'var(--red)';
             document.getElementById('btnMinesCashout').disabled = true;
             
-            // Reveal all elements
             revealAllMines();
             
-            // Finish game as Loss (winAmount is ignored on loss)
             setTimeout(() => {
-                minesGameState.callback(0); // callback handles loss
+                minesGameState.callback(0);
                 const spinBtn = document.getElementById('btnMain');
                 if(spinBtn) {
                     spinBtn.textContent = getLabel('mines');
@@ -2652,7 +2942,6 @@
         if(!minesGameState.playing) return;
         minesGameState.playing = false;
         
-        // Calculate dynamic cashout reward if they cash out early
         let cashoutMultiplier = 1;
         if(minesGameState.diamondsFound === 1) cashoutMultiplier = 1.2;
         else if(minesGameState.diamondsFound === 2) cashoutMultiplier = 1.5;
@@ -2742,16 +3031,84 @@
         selectedIdx: -1
     };
 
+    // --- KUKIS UI HTML BUILDER (Hearthstone Board Style) ---
+    function buildKukisUI(){
+        return `
+        <div class="kukis-modal">
+            <!-- Caso actual / Dosier -->
+            <div class="kukis-case">
+                <div class="kukis-case-title">CASO <span id="kCaseNum">1</span>: <span id="kCaseName">Cargando...</span></div>
+                <div class="kukis-case-desc" id="kCaseDesc">Cargando...</div>
+                
+                <div class="kukis-case-meta">
+                    <div class="meta-item villain">👿 Rival: <span id="kVillain">Ladrón</span></div>
+                    <div class="meta-item diff">⚡ Dificultad: <span id="kDiff">3</span></div>
+                    <div class="meta-item reward">💰 Recompensa: <span id="kReward">200</span> chips</div>
+                    <div class="meta-item">🦄 Cargas: <span id="kUniCharges">3</span></div>
+                    <div class="meta-item">🏆 Resueltos: <span id="kCasesWon">0</span></div>
+                </div>
+            </div>
+
+            <!-- BOARD DE BATALLA (ESTILO HEARTHSTONE) -->
+            <div class="kukis-board-container" style="background: radial-gradient(circle at 50% 50%, #2f1710 0%, #0d0605 100%); border: 3px solid #8b4513; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);">
+                <!-- Campo del Enemigo -->
+                <div class="board-field enemy-field" style="display: flex; gap: 10px; justify-content: center; min-height: 100px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.1);">
+                    <div id="enemyMinions" style="display: flex; gap: 12px;">
+                        <!-- Rendered dynamically representing the Villain difficulty -->
+                    </div>
+                </div>
+
+                <!-- Separador VS -->
+                <div class="board-vs-bar" style="display: flex; align-items: center; justify-content: center; gap: 20px; font-family: var(--font-title); font-weight: 900; font-size: 1.1rem; color: var(--gold); text-shadow: 0 0 10px var(--gold-glow);">
+                    <div style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, var(--gold), transparent);"></div>
+                    <span>VS</span>
+                    <div style="height: 1px; flex: 1; background: linear-gradient(90deg, transparent, var(--gold), transparent);"></div>
+                </div>
+
+                <!-- Campo del Jugador (Slots de Pistas) -->
+                <div class="board-field player-field" style="display: flex; gap: 10px; justify-content: center; min-height: 100px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(0, 240, 255, 0.1);">
+                    <div id="kukisSlots" class="kukis-slots">
+                        <!-- Filled cards slots -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Combate / Stats -->
+            <div class="kukis-combat" id="kukisCombat">
+                ⚔️ Zona de combate lista
+            </div>
+            
+            <div class="kukis-result" id="kukisResult"></div>
+
+            <!-- Mano del Jugador (Cartas en mano) -->
+            <div>
+                <div class="kukis-section-title">Tu Mano de Cartas</div>
+                <div class="kukis-hand" id="kukisHand">
+                    <!-- Cards drawn -->
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="kukis-actions">
+                <button class="btn-kukis primary" onclick="kukisInvestigate()">⚔️ FINALIZAR TURNO</button>
+                <button class="btn-kukis secondary" onclick="kukisUnicorn()">🦄 UNICORNIO EXTRA</button>
+                <button class="btn-kukis tertiary" onclick="kukisNewCase()">🔄 NUEVO CASO</button>
+            </div>
+        </div>
+        `;
+    }
+
     // --- KUKIS INIT ---
     function kukisInit(){
         KS.hand=[];KS.clues=[];KS.selectedIdx=-1;KS.unicornCharges=3;
+        KS.clues = [null, null, null];
         kukisNewCase();
         kukisDeal(6);
     }
 
     function kukisNewCase(){
         KS.currentCase=KUKIS_CASES[Math.floor(Math.random()*KUKIS_CASES.length)];
-        KS.clues=[];KS.selectedIdx=-1;
+        KS.clues=[null, null, null];KS.selectedIdx=-1;
         kukisDeal(6);
         kukisRenderCase();
         kukisRenderSlots();
@@ -2777,19 +3134,46 @@
         if(el('kReward'))el('kReward').textContent=c.reward;
         if(el('kUniCharges'))el('kUniCharges').textContent=KS.unicornCharges;
         if(el('kCasesWon'))el('kCasesWon').textContent=KS.casesResolved;
+        
+        // Render enemy card minions representing the case difficulty!
+        const enemyField = document.getElementById('enemyMinions');
+        if(enemyField) {
+            let enemyHTML = '';
+            const count = Math.min(Math.max(Math.ceil(c.difficulty / 3), 1), 4);
+            const subPower = Math.ceil(c.difficulty * 3 / count);
+            for(let i=0; i<count; i++) {
+                enemyHTML += `
+                <div class="kukis-card card-personaje" style="border-color:var(--red); opacity: 0.9; cursor: default; transform: none; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); position:relative;">
+                    <div style="position:absolute;top:6px;left:6px;width:24px;height:24px;background:#1e1e38;border-radius:50%;border:1px solid var(--red);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;color:var(--red);font-family:var(--font-title);">${i+2}</div>
+                    <div class="k-type" style="color: var(--red);">RIVAL</div>
+                    <div class="k-emoji-wrapper" style="background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%);">
+                        <span class="k-emoji">👿</span>
+                    </div>
+                    <div class="k-name" style="font-size:0.6rem;">Esbirro Amargo</div>
+                    <div class="k-power-badge" style="color:var(--red); border-color:rgba(239, 68, 68, 0.2); position:absolute; bottom:6px; left:50%; transform:translateX(-50%); font-size:0.65rem;">⚡ ${subPower}</div>
+                </div>`;
+            }
+            enemyField.innerHTML = enemyHTML;
+        }
     }
 
     function kukisRenderHand(){
         const h=document.getElementById('kukisHand');if(!h)return;
-        h.innerHTML=KS.hand.map((c,i)=>`
-            <div class="kukis-card ${KS.selectedIdx===i?'selected':''} card-${c.type.toLowerCase()}" onclick="kukisSelect(${i})">
+        h.innerHTML=KS.hand.map((c,i)=>{
+            const cost = Math.max(1, c.power - 2);
+            const def = Math.max(2, 10 - c.power);
+            return `
+            <div class="kukis-card ${KS.selectedIdx===i?'selected':''} card-${c.type.toLowerCase()}" onclick="kukisSelect(${i})" style="position:relative;">
+                <div style="position:absolute;top:6px;left:6px;width:24px;height:24px;background:#3b82f6;border-radius:50%;border:1px solid #fff;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;color:#fff;font-family:var(--font-title);">${cost}</div>
                 <div class="k-type">${c.type}</div>
                 <div class="k-emoji-wrapper">
                     <span class="k-emoji">${c.emoji}</span>
                 </div>
                 <div class="k-name">${c.name}</div>
-                <div class="k-power-badge">⚡ ${c.power}</div>
-            </div>`).join('');
+                <div style="position:absolute;bottom:6px;left:6px;width:22px;height:22px;background:#ea580c;border-radius:50%;border:1px solid #fff;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:900;color:#fff;font-family:var(--font-title);">⚔️${c.power}</div>
+                <div style="position:absolute;bottom:6px;right:6px;width:22px;height:22px;background:#ef4444;border-radius:50%;border:1px solid #fff;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:900;color:#fff;font-family:var(--font-title);">❤️${def}</div>
+            </div>`;
+        }).join('');
     }
 
     function kukisRenderSlots(){
@@ -2798,10 +3182,16 @@
         for(let i=0;i<3;i++){
             const card=KS.clues[i];
             if(card){
-                html+=`<div class="kukis-slot filled card-${card.type.toLowerCase()}" onclick="removeClue(${i})">
-                    <span class="k-slot-emoji">${card.emoji}</span>
-                    <span class="k-slot-name">${card.name}</span>
-                    <span class="k-slot-power">⚡ ${card.power}</span>
+                const cost = Math.max(1, card.power - 2);
+                const def = Math.max(2, 10 - card.power);
+                html+=`<div class="kukis-slot filled card-${card.type.toLowerCase()}" onclick="removeClue(${i})" style="position:relative; width:110px; height:120px;">
+                    <div style="position:absolute;top:4px;left:4px;width:18px;height:18px;background:#3b82f6;border-radius:50%;border:1px solid #fff;display:flex;align-items:center;justify-content:center;font-size:0.5rem;font-weight:900;color:#fff;font-family:var(--font-title);">${cost}</div>
+                    <span class="k-slot-emoji" style="font-size:1.6rem;margin-top:10px;">${card.emoji}</span>
+                    <span class="k-slot-name" style="font-size:0.55rem;font-weight:800;color:#fff;margin:2px 0;">${card.name}</span>
+                    <div style="display:flex;gap:12px;margin-top:2px;">
+                        <span style="font-family:var(--font-title);font-size:0.55rem;color:var(--gold);font-weight:900;">⚔️${card.power}</span>
+                        <span style="font-family:var(--font-title);font-size:0.55rem;color:var(--red);font-weight:900;">❤️${def}</span>
+                    </div>
                 </div>`;
             } else {
                 html+=`<div class="kukis-slot empty" onclick="placeClue(${i})">
@@ -2822,7 +3212,6 @@
     function placeClue(slotIdx){
         if(KS.selectedIdx<0)return;
         if(KS.clues[slotIdx]){toast('⚠️ Slot ocupado. Haz clic para quitar.');return}
-        if(KS.clues.filter(Boolean).length>=3){toast('⚠️ Ya tienes 3 pistas');return}
         sfx.click();
         const card=KS.hand[KS.selectedIdx];
         KS.clues[slotIdx]=card;
@@ -2844,7 +3233,7 @@
         const placed=KS.clues.filter(Boolean);
         const res=document.getElementById('kukisResult');
         const combat=document.getElementById('kukisCombat');
-        if(placed.length<3){if(res)res.innerHTML='<span style="color:var(--red)">🔍 Necesitas colocar 3 pistas</span>';return}
+        if(placed.length<3){if(res)res.innerHTML='<span style="color:var(--red)">🔍 Necesitas colocar 3 pistas en el tablero</span>';return}
         if(STATE.balance<50){if(res)res.innerHTML='<span style="color:var(--red)">❌ Necesitas 50 chips para investigar</span>';return}
 
         sfx.spin();
@@ -2855,28 +3244,25 @@
         const diff=cas.difficulty;
         const needed=diff*3;
 
-        // Synergy bonus: 1 Personaje + 1 Objeto + 1 Evento = +3
         const hasP=placed.some(c=>c.type==='Personaje');
         const hasO=placed.some(c=>c.type==='Objeto');
         const hasE=placed.some(c=>c.type==='Evento');
         const synergy=(hasP&&hasO&&hasE)?3:0;
         const finalPower=totalPower+synergy;
 
-        let synergyMsg=synergy>0?'<br>🌟 ¡SINERGIA ACTIVADA! (+3 poder)':'';
+        let synergyMsg=synergy>0?'<br>🌟 ¡SINERGIA ACTIVADA! (+3 poder de combate)':'';
 
         if(finalPower>=needed){
-            // CASE SOLVED!
             const reward=cas.reward;
             updateBal(reward);
             KS.casesResolved++;
             sfx.jackpot();
             if(res)res.innerHTML=`<span style="color:var(--gold)">🎉 ¡CASO RESUELTO! +${reward} chips${synergyMsg}</span>`;
-            if(combat)combat.innerHTML=`<span style="color:var(--green)">🏆 ¡${cas.villain} derrotado! Poder: ${finalPower} vs ${needed}</span>`;
+            if(combat)combat.innerHTML=`<span style="color:var(--green)">🏆 ¡${cas.villain} derrotado! Poder total: ${finalPower} vs ${needed}</span>`;
             toast(`🍪 Caso resuelto! +${reward} chips`);
             kukisWinFX();
         } else {
-            // COMBAT - probability based
-            if(combat)combat.innerHTML=`<span style="color:var(--orange)">⚔️ ¡COMBATE! Poder ${finalPower} vs Dificultad ${needed}${synergyMsg}</span>`;
+            if(combat)combat.innerHTML=`<span style="color:var(--orange)">⚔️ ¡COMBATE! Poder de tu bando: ${finalPower} vs Dificultad del rival: ${needed}${synergyMsg}</span>`;
             kukisCombat(finalPower,needed,cas);
         }
         kukisRenderCase();
@@ -2885,27 +3271,24 @@
     function kukisCombat(playerPow,needed,cas){
         const res=document.getElementById('kukisResult');
         const combat=document.getElementById('kukisCombat');
-        // Probability: higher power = better chance
         const ratio=playerPow/needed;
-        const winChance=Math.min(ratio*0.6,0.85); // Max 85% chance
+        const winChance=Math.min(ratio*0.6,0.85); 
         const roll=Math.random();
 
         setTimeout(()=>{
             if(roll<winChance){
-                // Combat win - reduced reward
                 const reward=Math.floor(cas.reward*0.6);
                 updateBal(reward);
                 KS.casesResolved++;
                 sfx.win();
                 if(res)res.innerHTML=`<span style="color:var(--green)">⚔️ ¡Victoria en combate! +${reward} chips</span>`;
-                if(combat)combat.innerHTML=`<span style="color:var(--green)">🏆 ${cas.villain} derrotado por combate (${Math.floor(winChance*100)}% prob)</span>`;
+                if(combat)combat.innerHTML=`<span style="color:var(--green)">🏆 ${cas.villain} derrotado en duelo (${Math.floor(winChance*100)}% prob)</span>`;
                 toast(`⚔️ Combate ganado! +${reward} chips`);
                 kukisWinFX();
             } else {
-                // Combat loss
                 sfx.lose();
                 if(res)res.innerHTML=`<span style="color:var(--red)">💔 Derrota... ${cas.villain} escapó</span>`;
-                if(combat)combat.innerHTML=`<span style="color:var(--red)">😢 Poder insuficiente. Prob: ${Math.floor(winChance*100)}% — Mala suerte</span>`;
+                if(combat)combat.innerHTML=`<span style="color:var(--red)">😢 Duelo perdido. Prob: ${Math.floor(winChance*100)}% — Tus guerreros se retiraron</span>`;
                 toast('💔 Caso perdido...');
             }
             kukisRenderCase();
@@ -2923,12 +3306,10 @@
         }
     }
 
-    // --- KUKIS UNICORN POWER ---
     function kukisUnicorn(){
         if(KS.unicornCharges<=0){toast('🦄 Sin cargas. Resuelve casos para recargar.');return}
         sfx.win();
         KS.unicornCharges--;
-        // Draw 2 extra cards
         const shuffled=[...ALL_KUKIS_CARDS].sort(()=>Math.random()-.5);
         const extra=shuffled.slice(0,2).map((c,i)=>({...c,uid:c.id+'_uni_'+Date.now()+'_'+i}));
         KS.hand.push(...extra);
@@ -2951,6 +3332,15 @@
         }
     }
 
+    // === MATH ENGINE RTP CALCULATOR ===
+    function calcWin(g){
+        const r=Math.random();
+        if(r > g.rtp) return 0;
+        const mults = g.id==='slot'||g.id==='freneticos'||g.id==='sirenas'||g.id==='choco_jackpot' ? [1.5, 2, 3, 5, 10] : [1.1, 1.5, 2, 3, 5, 8];
+        const m = mults[Math.floor(Math.random()*mults.length)];
+        return Math.floor(STATE.bet * m);
+    }
+
     // === INIT ===
     function init(){
         new ParticleBG();
@@ -2960,14 +3350,12 @@
         document.getElementById('balDisplay').textContent=STATE.balance.toLocaleString();
         document.addEventListener('click',()=>sfx.init(),{once:true});
         
-        // Add cookieFly animation keyframe
         const st=document.createElement('style');
         st.textContent='@keyframes cookieFly{0%{opacity:1;transform:translateY(0) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(-250px) rotate(720deg) scale(.3)}}';
         document.head.appendChild(st);
         
         console.log('🦁 C8L CASINO initialized — Domain: c8lcasino.ai');
-        console.log('🎮 6 Games: Crash, Mines, Plinko, Ruleta, Slot, KUKIS');
-        console.log('🍪 KUKIS: 24 cards, 8 cases, synergy system, combat, unicorn power');
+        console.log('🎮 30 Games + KUKIS loaded successfully');
     }
     init();
     </script>

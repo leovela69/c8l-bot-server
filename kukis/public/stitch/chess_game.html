@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>C.8.L. Kinetic Vault - Chess</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&amp;family=Inter:wght@400;500;600&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#f2ca50",
+            "secondary": "#bdf4ff",
+            "background": "#131313",
+            "surface": "#131313",
+            "primary-container": "#d4af37",
+            "on-surface": "#e5e2e1",
+            "outline": "#99907c"
+          },
+          fontFamily: {
+            "headline": ["Space Grotesk"],
+            "display": ["Space Grotesk"],
+            "body": ["Inter"],
+            "label": ["Manrope"],
+            "mono": ["Courier New", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0D0D0E;
+      color: #e5e2e1;
+      overflow-x: hidden;
+      min-height: max(884px, 100dvh);
+    }
+    .scanline {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.3;
+    }
+    .glass-panel {
+      background: rgba(19, 19, 19, 0.6);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(153, 144, 124, 0.15);
+      position: relative;
+    }
+    .board-square {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      transition: all 0.2s ease;
+    }
+    .square-light {
+      background-color: #3b3b40;
+    }
+    .square-dark {
+      background-color: #1a1a1e;
+    }
+  </style>
+</head>
+<body class="font-body text-on-surface antialiased min-h-screen flex flex-col md:flex-row pb-24 md:pb-0 pt-16 md:pt-0">
+  <div class="scanline"></div>
+  
+  <!-- Sidebar Navigation -->
+  <aside class="hidden md:flex flex-col h-full w-80 fixed left-0 top-0 z-[60] py-8 px-4 bg-[#131313] rounded-r-lg shadow-2xl divide-y divide-white/5">
+    <div class="pb-6 px-4">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-12 h-12 rounded-full bg-zinc-800 overflow-hidden border border-outline-variant">
+          <div class="w-full h-full bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-bold">C8L</div>
+        </div>
+        <div>
+          <h2 class="font-headline text-primary font-bold tracking-tight">C8L_OPERATIVE</h2>
+          <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">ELITE_MANAGEMENT</p>
+          <p class="font-label text-[8px] text-secondary uppercase tracking-widest mt-1"><span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary animate-pulse mr-1"></span>ACTIVE_SESSION</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 pt-6 font-['Space_Grotesk'] text-sm tracking-normal">
+      <ul class="space-y-2">
+        <li>
+          <a class="flex items-center gap-3 px-4 py-3 text-neutral-400 hover:bg-white/5 hover:pl-2 transition-all duration-300" href="/stitch/casino_lobby.html">
+            <span class="material-symbols-outlined">casino</span>
+            CASINO_LOBBY
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center gap-3 px-4 py-3 text-neutral-400 hover:bg-white/5 hover:pl-2 transition-all duration-300" href="/stitch/bingo_game.html">
+            <span class="material-symbols-outlined">terminal</span>
+            BINGO_GAME
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center gap-3 px-4 py-3 text-neutral-400 hover:bg-white/5 hover:pl-2 transition-all duration-300" href="/stitch/poker_game.html">
+            <span class="material-symbols-outlined">playing_cards</span>
+            POKER_GAME
+          </a>
+        </li>
+        <li>
+          <a class="flex items-center gap-3 px-4 py-3 text-[#00e3fd] bg-[#00e3fd]/5 border-l-4 border-[#00e3fd] hover:pl-2 transition-all duration-300" href="#">
+            <span class="material-symbols-outlined">grid_on</span>
+            CHESS_GAME
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content Canvas -->
+  <main class="flex-1 md:ml-80 p-4 md:p-8 flex flex-col md:flex-row gap-8 relative z-10 max-w-6xl mx-auto w-full items-stretch">
+    
+    <!-- Left: Chess Board felt -->
+    <div class="flex-grow md:w-[65%] border-[3px] border-black bg-zinc-950 rounded-3xl p-6 relative shadow-[6px_6px_0px_#00F3FF] flex flex-col justify-between">
+      <div class="flex justify-between items-center text-[10px] text-zinc-400 uppercase tracking-widest border-b border-zinc-800 pb-2 font-bold mb-4">
+        <span>♟️ Minimax Chess Engine v1</span>
+        <span>Turn: <span class="text-[#00F3FF] font-black">Your Turn (Gold)</span></span>
+      </div>
+
+      <!-- 8x8 Grid board -->
+      <div class="w-full max-w-md mx-auto aspect-square border-4 border-black rounded-xl overflow-hidden grid grid-cols-8 grid-rows-8">
+        <!-- Row 1 -->
+        <div class="board-square square-light text-zinc-400">♜</div>
+        <div class="board-square square-dark text-zinc-400">♞</div>
+        <div class="board-square square-light text-zinc-400">♝</div>
+        <div class="board-square square-dark text-zinc-400">♛</div>
+        <div class="board-square square-light text-zinc-400">♚</div>
+        <div class="board-square square-dark text-zinc-400">♝</div>
+        <div class="board-square square-light text-zinc-400">♞</div>
+        <div class="board-square square-dark text-zinc-400">♜</div>
+        <!-- Row 2 -->
+        <div class="board-square square-dark text-zinc-400">♟</div>
+        <div class="board-square square-light text-zinc-400">♟</div>
+        <div class="board-square square-dark text-zinc-400">♟</div>
+        <div class="board-square square-light text-zinc-400">♟</div>
+        <div class="board-square square-dark text-zinc-400">♟</div>
+        <div class="board-square square-light text-zinc-400">♟</div>
+        <div class="board-square square-dark text-zinc-400">♟</div>
+        <div class="board-square square-light text-zinc-400">♟</div>
+        <!-- Rows 3-6 (empty) -->
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <div class="board-square square-dark"></div>
+        <div class="board-square square-light"></div>
+        <!-- Row 7 -->
+        <div class="board-square square-light text-[#D4AF37]">♟</div>
+        <div class="board-square square-dark text-[#D4AF37]">♟</div>
+        <div class="board-square square-light text-[#D4AF37]">♟</div>
+        <div class="board-square square-dark text-[#D4AF37]">♟</div>
+        <div class="board-square square-light text-[#D4AF37]">♟</div>
+        <div class="board-square square-dark text-[#D4AF37]">♟</div>
+        <div class="board-square square-light text-[#D4AF37]">♟</div>
+        <div class="board-square square-dark text-[#D4AF37]">♟</div>
+        <!-- Row 8 -->
+        <div class="board-square square-dark text-[#D4AF37]">♜</div>
+        <div class="board-square square-light text-[#D4AF37]">♞</div>
+        <div class="board-square square-dark text-[#D4AF37]">♝</div>
+        <div class="board-square square-light text-[#D4AF37]">♛</div>
+        <div class="board-square square-dark text-[#D4AF37]">♚</div>
+        <div class="board-square square-light text-[#D4AF37]">♝</div>
+        <div class="board-square square-dark text-[#D4AF37]">♞</div>
+        <div class="board-square square-light text-[#D4AF37]">♜</div>
+      </div>
+
+      <div class="bg-black/60 border border-zinc-800 p-2.5 h-16 overflow-y-auto text-[9px] text-zinc-500 rounded-lg flex flex-col gap-0.5 mt-4">
+        <p>▶ [08:05:12] Mover E2 a E4 iniciado.</p>
+        <p>▶ [08:05:00] Partida contra Vela el León en marcha.</p>
+      </div>
+    </div>
+
+    <!-- Right: Stats Panel -->
+    <div class="md:w-[35%] border-[3px] border-black bg-[#0d0d0e] p-5 rounded-3xl shadow-[6px_6px_0px_#D4AF37] flex flex-col justify-between relative overflow-hidden">
+      <div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,_rgba(212,175,55,0.02)_50%)] bg-[size:100%_4px] pointer-events-none" />
+      
+      <div class="relative z-10 flex flex-col gap-6">
+        <div class="border-b border-white/5 pb-3 flex justify-between items-center">
+          <div>
+            <span class="text-[9px] text-zinc-500 uppercase tracking-widest block">Minimax Core</span>
+            <h3 class="font-heading font-black text-base text-[#D4AF37] uppercase">Tactical Chess</h3>
+          </div>
+          <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1 px-3 py-1 bg-black border-2 border-black text-[10px] rounded-full text-[#D4AF37] shadow-[2.5px_2.5px_0px_#D4AF37] font-bold">
+              <span>🪙 450 Coins</span>
+            </div>
+            <div class="flex items-center gap-1 px-3 py-1 bg-black border-2 border-black text-[10px] rounded-full text-purple-400 shadow-[2.5px_2.5px_0px_#A855F7] font-bold">
+              <span class="material-symbols-outlined">cpu</span>
+              <span>10 BZCN</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lion Mascot -->
+        <div class="bg-black/40 border border-zinc-800/50 rounded-2xl p-3 flex flex-col gap-2">
+          <div class="h-20 flex items-center justify-center text-5xl">🦁</div>
+          <p class="text-[9px] text-zinc-300 bg-zinc-900 border border-zinc-855 p-2.5 rounded-xl text-center italic relative flex items-center justify-center min-h-[45px]">
+            El león dice: "Estudiando el tablero... Elige una buena casilla."
+          </p>
+        </div>
+
+        <!-- Settings panel -->
+        <div class="bg-black/60 border border-zinc-800 rounded-xl p-3 flex flex-col gap-3">
+          <div class="flex flex-col gap-1">
+            <span class="text-[8px] text-zinc-500 uppercase font-bold tracking-wider">Dificultad de la IA</span>
+            <div class="grid grid-cols-3 gap-1">
+              <button class="bg-[#D4AF37] text-black font-bold text-[9px] py-1 rounded">FÁCIL</button>
+              <button class="bg-zinc-800 text-zinc-400 text-[9px] py-1 rounded">MEDIO</button>
+              <button class="bg-zinc-800 text-zinc-400 text-[9px] py-1 rounded">EXPERTO</button>
+            </div>
+          </div>
+          <button class="w-full py-3 bg-[#00F3FF] text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-[2.5px_2.5px_0px_#000000] border-2 border-black">
+            INICIAR PARTIDA
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>C.8.L. QUANTUM | ROULETTE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#99907c",
+                        "inverse-surface": "#e5e2e1",
+                        "surface": "#131313",
+                        "on-background": "#e5e2e1",
+                        "on-secondary-fixed-variant": "#004f58",
+                        "on-secondary-fixed": "#001f24",
+                        "error-container": "#93000a",
+                        "surface-container": "#201f1f",
+                        "secondary-fixed": "#9cf0ff",
+                        "on-secondary-container": "#00616d",
+                        "on-error": "#690005",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-tint": "#e9c349",
+                        "surface-variant": "#353534",
+                        "on-primary-fixed": "#241a00",
+                        "on-tertiary-fixed-variant": "#8a1d00",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-tertiary": "#621100",
+                        "on-primary": "#3c2f00",
+                        "surface-bright": "#3a3939",
+                        "background": "#131313",
+                        "inverse-on-surface": "#313030",
+                        "on-secondary": "#00363d",
+                        "surface-container-highest": "#353534",
+                        "on-tertiary-container": "#861c00",
+                        "primary-fixed-dim": "#e9c349",
+                        "tertiary-fixed-dim": "#ffb4a2",
+                        "primary-container": "#d4af37",
+                        "outline-variant": "#4d4635",
+                        "surface-dim": "#131313",
+                        "tertiary-fixed": "#ffdad2",
+                        "tertiary-container": "#ff977d",
+                        "tertiary": "#ffbfb0",
+                        "secondary-container": "#00e3fd",
+                        "on-primary-container": "#554300",
+                        "secondary-fixed-dim": "#00daf3",
+                        "primary": "#f2ca50",
+                        "surface-container-low": "#1c1b1b",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed": "#3c0700",
+                        "inverse-primary": "#735c00",
+                        "primary-fixed": "#ffe088",
+                        "on-surface": "#e5e2e1",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#bdf4ff",
+                        "on-surface-variant": "#d0c5af",
+                        "on-primary-fixed-variant": "#574500",
+                        "neon-purple": "#8A2BE2",
+                        "neon-pink": "#FF0055"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "display": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Manrope"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0D0D0E;
+            color: #e5e2e1;
+            overflow-x: hidden;
+        }
+        .kinetic-bg {
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 90% 90%, rgba(212, 175, 55, 0.1) 0%, transparent 50%);
+        }
+        .glass-panel {
+            background: rgba(19, 19, 19, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glow-gold { filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4)); }
+        .glow-purple { filter: drop-shadow(0 0 10px rgba(138, 43, 226, 0.4)); }
+        .roulette-rim {
+            border: 8px solid #d4af37;
+            box-shadow: inset 0 0 40px rgba(212, 175, 55, 0.2), 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+        .number-cell {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .number-cell:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        @keyframes pulse-gold {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+        .shimmer-gold {
+            animation: pulse-gold 4s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-body kinetic-bg min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface/60 backdrop-blur-xl flex justify-between items-center w-full px-8 py-4 z-50 fixed top-0 border-b border-white/5 shadow-[0_0_40px_rgba(229,226,225,0.06)]">
+<div class="flex items-center gap-6">
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">
+<span class="material-symbols-outlined">arrow_back</span>
+<span class="font-label text-xs tracking-widest uppercase">Lobby</span>
+</a>
+<div class="text-primary font-headline text-2xl font-bold tracking-widest">C.8.L. QUANTUM</div>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="flex flex-col items-end">
+<span class="font-label text-[10px] tracking-[0.2em] text-on-surface-variant/60 uppercase">Gold Assets</span>
+<span class="text-primary font-headline font-bold text-lg">1,250 COINS</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">toll</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex flex-col items-end">
+<span class="font-label text-[10px] tracking-[0.2em] text-on-surface-variant/60 uppercase">Telemetry Units</span>
+<span class="text-neon-purple font-headline font-bold text-lg">10 BZCN</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-neon-purple/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-neon-purple">memory</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="h-10 w-10 overflow-hidden rounded-lg border border-outline-variant/30">
+<img alt="Manager Avatar" class="w-full h-full object-cover" data-alt="A professional male streamer manager with a sharp, tech-forward aesthetic. He is wearing a dark, minimalist tactical jacket in a high-security vault setting. The lighting is low-key with purple and gold highlights, matching a premium cyber-agency brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVP5t7Ws27V6eLhl6EyLbFpg_f4q9iTlPThJUEFRPNgXl1pgjjTYm_riGjIjBavinOFaPgN5Ly_LfzZgKVImaRjITjpcA1XLYQr5Vp86mL5-vOlJBOOZEwnSY4FmDuWTakaEt3C3GXFHe6BIjZ4BY4Xnxx3kv_hZdHFeEr57UQUjRtWyrRIZs8nCGtaczJsXv7k6Rnw-34ZohisqHa6Oo07BgwL17sHql6KVVwrDMnpC7WzmDMMByFTqfM4HlSUyJQsmT4Ddn4RmA"/>
+</div>
+</div>
+</header>
+<!-- Sidebar (Suppressed for focused gameplay as per rule, but following layout logic for "Operations") -->
+<aside class="fixed left-0 top-0 h-full z-40 flex flex-col pt-24 pb-8 bg-surface-container-lowest w-20 border-r border-white/5 md:flex hidden">
+<div class="flex flex-col items-center gap-8 w-full">
+<div class="p-3 bg-surface-container-high text-primary border-l-4 border-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">casino</span>
+</div>
+<div class="p-3 text-on-surface-variant opacity-50 hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div class="p-3 text-on-surface-variant opacity-50 hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined">history</span>
+</div>
+<div class="p-3 text-on-surface-variant opacity-50 hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+</div>
+</div>
+</aside>
+<main class="pt-24 pl-8 md:pl-28 pr-8 pb-12 min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-[1600px] mx-auto">
+<!-- Left Column: Roulette Module -->
+<div class="lg:col-span-7 flex flex-col gap-6">
+<div class="glass-panel rounded-xl p-12 flex flex-col items-center justify-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-neon-purple/5 to-primary/5 shimmer-gold pointer-events-none"></div>
+<!-- Roulette Wheel (2D Representation) -->
+<div class="relative w-80 h-80 md:w-[480px] md:h-[480px] rounded-full roulette-rim flex items-center justify-center bg-[#0D0D0E]">
+<!-- Outer Decorative Glow -->
+<div class="absolute inset-0 rounded-full border border-white/10 blur-[2px]"></div>
+<!-- SVG Roulette Wheel -->
+<svg class="w-full h-full transform transition-transform duration-[4000ms] ease-out" viewbox="0 0 100 100">
+<!-- Simplified segments -->
+<circle cx="50" cy="50" fill="none" r="45" stroke="#1c1b1b" stroke-width="8"></circle>
+<!-- Winning segment highlight example -->
+<path class="opacity-80" d="M 50 50 L 50 5 L 60 8 Z" fill="#d4af37"></path>
+<!-- Ball -->
+<circle class="glow-purple" cx="58" cy="12" fill="white" r="1.5">
+<animatetransform attributename="transform" dur="0.5s" from="0 50 50" repeatcount="3" to="360 50 50" type="rotate"></animatetransform>
+</circle>
+<!-- Center Cap -->
+<circle cx="50" cy="50" fill="#d4af37" r="8"></circle>
+<circle cx="50" cy="50" fill="#0D0D0E" r="4"></circle>
+</svg>
+<!-- Center Display -->
+<div class="absolute flex flex-col items-center pointer-events-none">
+<span class="font-label text-[10px] tracking-[0.3em] text-on-surface-variant/40 uppercase">Winning Result</span>
+<span class="font-headline text-5xl font-bold text-primary glow-gold">0</span>
+</div>
+</div>
+<!-- HUD Metadata -->
+<div class="grid grid-cols-4 w-full mt-12 gap-1 border-t border-white/5 pt-8">
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-on-surface-variant/40 uppercase tracking-widest">Speed</span>
+<span class="font-mono text-sm text-neon-purple">0.0 rad/s</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-on-surface-variant/40 uppercase tracking-widest">Ball RPM</span>
+<span class="font-mono text-sm text-on-surface">0</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-on-surface-variant/40 uppercase tracking-widest">Hot Numbers</span>
+<span class="font-mono text-sm text-primary">0, 32, 17</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label text-[10px] text-on-surface-variant/40 uppercase tracking-widest">History</span>
+<div class="flex gap-2">
+<span class="font-mono text-sm text-on-surface">15</span>
+<span class="font-mono text-sm text-neon-pink">32</span>
+<span class="font-mono text-sm text-on-surface">4</span>
+<span class="font-mono text-sm text-primary">0</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Mascot Panel -->
+<div class="glass-panel rounded-xl p-6 flex items-center gap-6 relative border-l-4 border-primary">
+<div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-surface-container-high relative">
+<img alt="Vela the Lion" class="w-full h-full object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-500" data-alt="A futuristic robotic lion avatar with neon purple glowing eyes and gold plated armor panels. The background is a dark, tech-dense laboratory with holographic screens. The aesthetic is extremely detailed, cinematic, and matches a high-end quantum gambling interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyjKzyLPmQmsnGDGta2XGQJ-pVId40cH3LzjTUNoPCHE5J8-RfALHS1r8dLJO5Vx3Z2V0l5KKz2pSTNixaaPPdDmSR8QV-mGiBlW4VPxAovH5LKF43WHpRwEmxvZnpZYuJ7DlZbCQY2TpxKx7xuuJuh76KqfsBm9uMydIrqN7NunswunWdecf84Il8muPw7dPB9KHwh_twrkoWujUCLXhZr_92DzT3F1xuCPPcdoh8Da8rAoeB59qWtHoPNBTnK5JeExQ8Pg0FFvE"/>
+<div class="absolute inset-0 bg-neon-purple/10"></div>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-headline font-bold text-primary tracking-widest text-sm uppercase">Vela the Lion</span>
+<span class="px-2 py-0.5 rounded text-[8px] bg-primary/10 text-primary border border-primary/20">QUANTUM ADVISOR</span>
+</div>
+<p class="text-on-surface-variant text-sm italic font-medium leading-relaxed">
+                        "Quantum entropy is peaking. High probability of <span class="text-neon-pink">Red</span> sectors in the next sequence. Secure your positions."
+                    </p>
+</div>
+</div>
+</div>
+<!-- Right Column: Control & Betting -->
+<div class="lg:col-span-5 flex flex-col gap-6">
+<!-- Betting Board -->
+<div class="glass-panel rounded-xl p-4">
+<div class="grid grid-cols-12 gap-1 mb-1">
+<!-- Zero Sector -->
+<div class="col-span-1 row-span-3 flex items-center justify-center bg-surface-container-low border border-primary/30 text-primary font-bold text-lg rounded-sm hover:bg-primary/20 cursor-pointer">0</div>
+<!-- Numbers Grid (Representative subset) -->
+<div class="col-span-11 grid grid-cols-3 grid-rows-12 gap-1 h-[400px]">
+<!-- JS would ideally render this, but here is the manual structural representative -->
+<div class="number-cell bg-neon-purple/20 border border-neon-purple/40 rounded-sm flex items-center justify-center text-xs font-bold text-secondary">3</div>
+<div class="number-cell bg-neon-pink/20 border border-neon-pink/40 rounded-sm flex items-center justify-center text-xs font-bold text-white">6</div>
+<div class="number-cell bg-neon-purple/20 border border-neon-purple/40 rounded-sm flex items-center justify-center text-xs font-bold text-secondary">9</div>
+<div class="number-cell bg-neon-pink/20 border border-neon-pink/40 rounded-sm flex items-center justify-center text-xs font-bold text-white">12</div>
+<!-- ... repeated for brevity, styling logic holds -->
+<div class="number-cell bg-neon-pink/20 border border-neon-pink/40 rounded-sm flex items-center justify-center text-xs font-bold text-white">15</div>
+<div class="number-cell bg-neon-purple/20 border border-neon-purple/40 rounded-sm flex items-center justify-center text-xs font-bold text-secondary">18</div>
+<div class="number-cell bg-neon-pink/20 border border-neon-pink/40 rounded-sm flex items-center justify-center text-xs font-bold text-white">21</div>
+<div class="number-cell bg-neon-purple/20 border border-neon-purple/40 rounded-sm flex items-center justify-center text-xs font-bold text-secondary">24</div>
+<div class="number-cell bg-neon-pink/20 border border-neon-pink/40 rounded-sm flex items-center justify-center text-xs font-bold text-white">27</div>
+<div class="number-cell bg-neon-pink/20 border border-neon-pink/40 rounded-sm flex items-center justify-center text-xs font-bold text-white">30</div>
+<div class="number-cell bg-neon-purple/20 border border-neon-purple/40 rounded-sm flex items-center justify-center text-xs font-bold text-secondary">33</div>
+<div class="number-cell bg-neon-pink/20 border border-neon-pink/40 rounded-sm flex items-center justify-center text-xs font-bold text-white">36</div>
+<!-- Fill remainder with placeholders to show the grid concept -->
+<div class="col-span-3 flex items-center justify-center py-2 text-[10px] font-label text-on-surface-variant/40 tracking-widest uppercase">Grid continues to 36...</div>
+</div>
+</div>
+<!-- Outside Bets -->
+<div class="grid grid-cols-6 gap-1 mt-4">
+<div class="bg-surface-container-high border border-white/5 py-3 flex items-center justify-center rounded-sm font-label text-[10px] tracking-widest hover:bg-white/10 cursor-pointer">1-18</div>
+<div class="bg-surface-container-high border border-white/5 py-3 flex items-center justify-center rounded-sm font-label text-[10px] tracking-widest hover:bg-white/10 cursor-pointer">EVEN</div>
+<div class="bg-neon-pink/40 border border-neon-pink/60 py-3 flex items-center justify-center rounded-sm font-label text-[10px] tracking-widest hover:brightness-125 cursor-pointer">RED</div>
+<div class="bg-black border border-white/10 py-3 flex items-center justify-center rounded-sm font-label text-[10px] tracking-widest hover:bg-white/10 cursor-pointer text-white">BLACK</div>
+<div class="bg-surface-container-high border border-white/5 py-3 flex items-center justify-center rounded-sm font-label text-[10px] tracking-widest hover:bg-white/10 cursor-pointer">ODD</div>
+<div class="bg-surface-container-high border border-white/5 py-3 flex items-center justify-center rounded-sm font-label text-[10px] tracking-widest hover:bg-white/10 cursor-pointer">19-36</div>
+</div>
+</div>
+<!-- Bet Selector -->
+<div class="flex items-center justify-between glass-panel rounded-xl p-6">
+<span class="font-label text-xs tracking-widest text-on-surface-variant uppercase">Select Chip</span>
+<div class="flex gap-4">
+<button class="w-12 h-12 rounded-full border-2 border-primary/50 flex items-center justify-center text-primary font-bold text-xs bg-primary/10 hover:bg-primary/30 transition-all scale-100 hover:scale-110">10</button>
+<button class="w-12 h-12 rounded-full border-2 border-neon-purple/50 flex items-center justify-center text-neon-purple font-bold text-xs bg-neon-purple/10 hover:bg-neon-purple/30 transition-all scale-100 hover:scale-110">50</button>
+<button class="w-12 h-12 rounded-full border-2 border-neon-pink/50 flex items-center justify-center text-neon-pink font-bold text-xs bg-neon-pink/10 hover:bg-neon-pink/30 transition-all scale-100 hover:scale-110">100</button>
+<button class="w-12 h-12 rounded-full border-2 border-white/50 flex items-center justify-center text-white font-bold text-xs bg-white/10 hover:bg-white/30 transition-all scale-100 hover:scale-110 ring-2 ring-primary ring-offset-4 ring-offset-[#0D0D0E]">250</button>
+</div>
+</div>
+<!-- Action Area -->
+<div class="flex flex-col gap-4 mt-auto">
+<div class="flex justify-between items-center px-2">
+<div class="flex flex-col">
+<span class="text-[10px] font-label tracking-widest text-on-surface-variant/40 uppercase">Total Bet</span>
+<span class="font-headline font-bold text-xl text-white">500.00 COINS</span>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">delete</span>
+<span class="font-label text-[10px] tracking-widest uppercase">Clear All</span>
+</button>
+</div>
+<button class="w-full py-6 rounded-lg bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-headline font-bold text-2xl tracking-[0.2em] shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:shadow-[0_0_50px_rgba(212,175,55,0.5)] active:scale-[0.98] transition-all duration-300 relative overflow-hidden group">
+<div class="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12"></div>
+                    SPIN WHEEL
+                </button>
+<div class="flex gap-4">
+<button class="flex-1 py-4 glass-panel rounded-lg font-label text-xs tracking-[0.2em] uppercase hover:bg-white/5 transition-all text-on-surface-variant">Rebet x2</button>
+<button class="flex-1 py-4 glass-panel rounded-lg font-label text-xs tracking-[0.2em] uppercase hover:bg-white/5 transition-all text-on-surface-variant">Auto-Quantum</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="fixed bottom-0 w-full z-50 flex justify-between items-center px-12 py-2 border-t border-outline-variant/15 bg-surface-container-low shadow-[0_0_15px_rgba(0,227,253,0.1)]">
+<div class="flex items-center gap-6">
+<span class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant/50">C.8.L. AGENCY © 2024 - QUANTUM TELEMETRY ACTIVE</span>
+</div>
+<div class="flex gap-8">
+<a class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant/50 hover:text-secondary transition-colors" href="#">System Status</a>
+<a class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant/50 hover:text-secondary transition-colors" href="#">Security Protocol</a>
+<a class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant/50 hover:text-secondary transition-colors" href="#">API</a>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></div>
+<span class="font-label text-[10px] tracking-widest uppercase text-secondary glow-sm">Server Latency: 12ms</span>
+</div>
+</footer>
+<script>
+        // Micro-interactions for roulette feel
+        document.querySelector('button.bg-gradient-to-r').addEventListener('click', function() {
+            const wheel = document.querySelector('svg.transform');
+            const randomDegree = Math.floor(Math.random() * 360) + 1440; // At least 4 full spins
+            wheel.style.transform = `rotate(${randomDegree}deg)`;
+            
+            // Add sound effect simulation or flash effect
+            this.classList.add('scale-95');
+            setTimeout(() => this.classList.remove('scale-95'), 100);
+        });
+
+        // Toggle chip selection
+        const chips = document.querySelectorAll('.flex.gap-4 button');
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => c.classList.remove('ring-2', 'ring-primary', 'ring-offset-4', 'ring-offset-[#0D0D0E]'));
+                chip.classList.add('ring-2', 'ring-primary', 'ring-offset-4', 'ring-offset-[#0D0D0E]');
+            });
+        });
+    </script>
+</body></html>
