@@ -2425,6 +2425,138 @@ def main():
             f"¡Hasta la próxima, detective! Usa /kukis para jugar de nuevo.",
             parse_mode="Markdown")
 
+    # === COMANDOS DE GAME DESIGNER (C8L Game Architect 3D/4D) ===
+
+    @bot.message_handler(commands=["gamebot"])
+    def cmd_gamebot(msg):
+        """Bot de diseño de videojuegos 3D/4D. Uso: /gamebot [descripción del juego]"""
+        from game_designer.game_bot import get_game_bot
+        gbot = get_game_bot()
+        text = msg.text.replace("/gamebot", "").strip()
+
+        if not text:
+            # Sin argumento: mostrar bienvenida
+            tg_send(msg.chat.id, gbot.get_welcome(), parse_mode="Markdown")
+            return
+
+        # Con descripción: generar juego con IA
+        tg_typing(msg.chat.id)
+        tg_send(msg.chat.id, "🎮 *Diseñando tu juego...*\n\n🔺 Generando polígonos y mundos...", parse_mode="Markdown")
+
+        from openrouter_client import call_openrouter
+        prompt = gbot.generate_game_prompt(text)
+        result = call_openrouter(
+            prompt=prompt,
+            system_prompt=gbot.get_system_prompt(),
+            agent_name="gamebot",
+            temperature=0.8
+        )
+
+        if result and "<!DOCTYPE" in result:
+            # Extraer solo el HTML
+            start = result.find("<!DOCTYPE")
+            end = result.rfind("</html>") + len("</html>")
+            if end > start:
+                game_html = result[start:end]
+            else:
+                game_html = result[start:]
+
+            # Guardar
+            game_name = text[:30] if text else "custom_game"
+            filepath, filename = gbot.save_game(msg.from_user.id, game_html, game_name)
+
+            # Enviar como documento
+            try:
+                with open(filepath, 'rb') as f:
+                    bot.send_document(
+                        msg.chat.id, f,
+                        caption=(
+                            f"🎮 *Tu juego está listo!*\n\n"
+                            f"📁 {filename}\n"
+                            f"🕹️ Ábrelo en un navegador para jugar\n\n"
+                            f"💡 Controles: WASD + Mouse + Space\n"
+                            f"📐 Motor: WebGL 3D/4D Polygon Engine"
+                        ),
+                        parse_mode="Markdown"
+                    )
+            except Exception as e:
+                tg_send(msg.chat.id, f"✅ Juego generado pero no pude enviarlo como archivo.\n\nError: {e}")
+        elif result:
+            # La IA respondió pero no es HTML puro
+            tg_send(msg.chat.id, f"🎮 *Respuesta del Game Architect:*\n\n{result[:3000]}", parse_mode="Markdown")
+        else:
+            tg_send(msg.chat.id, "❌ No pude generar el juego. Intenta con otra descripción.")
+
+        levels.add_xp(msg.from_user.id, msg.from_user.first_name, "game")
+
+    @bot.message_handler(commands=["gamebot_demo"])
+    def cmd_gamebot_demo(msg):
+        """Muestra info de la demo 3D/4D jugable."""
+        from game_designer.game_bot import get_game_bot
+        tg_send(msg.chat.id, get_game_bot().get_demo_info(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["gamebot_templates"])
+    def cmd_gamebot_templates(msg):
+        """Lista plantillas de juegos disponibles."""
+        from game_designer.game_bot import get_game_bot
+        tg_send(msg.chat.id, get_game_bot().get_templates_list(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["gamebot_crear"])
+    def cmd_gamebot_crear(msg):
+        """Genera juego desde plantilla. Uso: /gamebot_crear [número]"""
+        from game_designer.game_bot import get_game_bot
+        gbot = get_game_bot()
+        text = msg.text.replace("/gamebot_crear", "").strip()
+
+        if not text:
+            tg_send(msg.chat.id, gbot.get_templates_list(), parse_mode="Markdown")
+            return
+
+        try:
+            idx = int(text) - 1
+            if 0 <= idx < len(gbot.templates):
+                template = gbot.templates[idx]
+                # Redirigir al generador con la descripción de la plantilla
+                fake_request = (
+                    f"Crea un juego tipo '{template['name']}': {template['desc']}. "
+                    f"Dimensiones: {template['dimensions']}. "
+                    f"Estilo: polígonos neón sobre fondo oscuro."
+                )
+                tg_typing(msg.chat.id)
+                tg_send(msg.chat.id,
+                    f"🎮 Generando: {template['emoji']} *{template['name']}*\n"
+                    f"📐 {template['dimensions']} | {'⭐'*template['complexity']}\n\n"
+                    f"⏳ Esto puede tardar 30-60 segundos...",
+                    parse_mode="Markdown")
+
+                from openrouter_client import call_openrouter
+                prompt = gbot.generate_game_prompt(fake_request)
+                result = call_openrouter(
+                    prompt=prompt,
+                    system_prompt=gbot.get_system_prompt(),
+                    agent_name="gamebot",
+                    temperature=0.8
+                )
+
+                if result and "<!DOCTYPE" in result:
+                    start = result.find("<!DOCTYPE")
+                    end = result.rfind("</html>") + len("</html>")
+                    game_html = result[start:end] if end > start else result[start:]
+                    filepath, filename = gbot.save_game(msg.from_user.id, game_html, template['name'])
+                    try:
+                        with open(filepath, 'rb') as f:
+                            bot.send_document(msg.chat.id, f,
+                                caption=f"🎮 *{template['emoji']} {template['name']}*\n\n📁 Ábrelo en tu navegador para jugar!",
+                                parse_mode="Markdown")
+                    except Exception as e:
+                        tg_send(msg.chat.id, f"✅ Generado pero error al enviar: {e}")
+                else:
+                    tg_send(msg.chat.id, "❌ No pude generar ese juego. Intenta de nuevo.")
+            else:
+                tg_send(msg.chat.id, f"❌ Número inválido. Hay {len(gbot.templates)} plantillas.")
+        except ValueError:
+            tg_send(msg.chat.id, "❌ Usa un número. Ej: /gamebot\\_crear 1", parse_mode="Markdown")
+
     # === CALLBACK: Botones 👍👎 (Auto-Evolución) ===
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("feedback_"))
