@@ -642,23 +642,26 @@
             gap: 24px;
         }
 
-        /* Game Cards */
+        /* Game Cards — Ornate Gold Casino Machine Style */
         .game-card {
-            background: var(--bg-panel);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
+            background: linear-gradient(180deg, #1a0a00 0%, #0d0400 50%, #1a0800 100%);
+            border: 3px solid #8b6914;
+            border-radius: 16px;
             overflow: hidden;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
             position: relative;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6),
+                        0 0 15px rgba(139, 105, 20, 0.2),
+                        inset 0 1px 0 rgba(212, 160, 23, 0.3);
         }
 
         .game-card:hover {
             transform: translateY(-8px);
-            border-color: var(--gold);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6),
-                        0 0 25px rgba(244, 180, 26, 0.15);
+            border-color: #d4a017;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7),
+                        0 0 30px rgba(212, 160, 23, 0.35),
+                        inset 0 1px 0 rgba(255, 215, 0, 0.4);
         }
 
         .game-card:active {
@@ -673,44 +676,68 @@
             justify-content: center;
             position: relative;
             overflow: hidden;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 80%),
-                linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
-            background-size: 100% 100%, 20px 20px, 20px 20px;
+            border-bottom: 3px solid #8b6914;
+            background: radial-gradient(ellipse at 50% 50%, #1a0a02 0%, #0a0400 100%);
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Ornamental corner decorations */
+        .game-thumb::before {
+            content: '◆';
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            color: #8b6914;
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .game-thumb::after {
+            content: '◆';
+            position: absolute;
+            bottom: 12px;
+            right: 10px;
+            color: #8b6914;
+            font-size: 0.7rem;
+            opacity: 0.6;
         }
 
         .game-emoji {
             font-size: 5.25rem;
-            filter: drop-shadow(0 0 25px currentColor);
+            filter: drop-shadow(0 0 20px rgba(212, 160, 23, 0.5))
+                    drop-shadow(0 0 40px currentColor);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.25);
             z-index: 1;
         }
 
         .game-card:hover .game-emoji {
             transform: scale(1.18) rotate(4deg);
+            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.7))
+                    drop-shadow(0 0 50px currentColor);
         }
 
         .game-badge {
             position: absolute;
-            top: 14px;
-            right: 14px;
-            background: linear-gradient(135deg, var(--red), #b91c1c);
-            color: #fff;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, #d4a017, #8b6914);
+            color: #1a0a00;
             padding: 5px 12px;
             border-radius: 50px;
             font-size: 0.65rem;
-            font-weight: 800;
+            font-weight: 900;
             font-family: var(--font-title);
             letter-spacing: 1px;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+            box-shadow: 0 2px 8px rgba(212, 160, 23, 0.5),
+                        inset 0 1px 0 rgba(255, 215, 0, 0.4);
             z-index: 2;
+            border: 1px solid rgba(255, 215, 0, 0.3);
         }
 
         .game-info {
             padding: 18px 20px;
-            background: rgba(6, 6, 12, 0.4);
+            background: linear-gradient(180deg, rgba(26, 10, 0, 0.6), rgba(13, 4, 0, 0.8));
+            border-top: 1px solid rgba(139, 105, 20, 0.3);
         }
 
         .game-name {
@@ -718,7 +745,10 @@
             font-size: 1.15rem;
             font-weight: 800;
             margin-bottom: 6px;
-            color: #fff;
+            background: linear-gradient(135deg, #ffd700, #d4a017);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .game-type {
@@ -742,14 +772,14 @@
             display: inline-block;
         }
 
-        /* Modal Overlay and Glass Box */
+        /* Modal Overlay and Glass Box — Ornate Gold Machine Frame */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(2, 2, 6, 0.85);
+            background: rgba(2, 2, 6, 0.9);
             z-index: 1000;
             display: none;
             align-items: center;
@@ -762,18 +792,49 @@
         }
 
         .modal-box {
-            background: rgba(10, 10, 22, 0.85);
-            border-radius: 24px;
+            background: linear-gradient(180deg, #1a0a00 0%, #0d0400 40%, #1a0800 80%, #0d0400 100%);
+            border-radius: 18px;
             width: 95%;
             max-width: 900px;
             max-height: 94vh;
             overflow-y: auto;
-            border: 2px solid var(--gold);
-            box-shadow: 0 0 40px var(--gold-glow),
-                        0 24px 70px rgba(0, 0, 0, 0.8);
+            border: 4px solid #8b6914;
+            box-shadow: 0 0 50px rgba(139, 105, 20, 0.4),
+                        0 0 100px rgba(212, 160, 23, 0.15),
+                        0 24px 70px rgba(0, 0, 0, 0.8),
+                        inset 0 1px 0 rgba(255, 215, 0, 0.2),
+                        inset 0 -1px 0 rgba(139, 105, 20, 0.3);
             position: relative;
             backdrop-filter: blur(25px);
             animation: modalScaleUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards;
+        }
+
+        /* Top ornamental gold bar */
+        .modal-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 5%;
+            width: 90%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #d4a017, #ffd700, #d4a017, transparent);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+            z-index: 10;
+        }
+
+        /* Bottom ornamental gold bar */
+        .modal-box::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5%;
+            width: 90%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #8b6914, #d4a017, #8b6914, transparent);
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 0 8px rgba(212, 160, 23, 0.4);
+            z-index: 10;
         }
 
         @keyframes modalScaleUp {
@@ -783,11 +844,11 @@
 
         .modal-hdr {
             padding: 16px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 3px solid #8b6914;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0, 0, 0, 0.4);
+            background: linear-gradient(180deg, rgba(26, 10, 0, 0.8), rgba(13, 4, 0, 0.9));
         }
 
         #modalTitle {
@@ -820,26 +881,28 @@
             box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
         }
 
-        /* Canvas Wrapper & Styled Games Frame */
+        /* Canvas Wrapper & Styled Games Frame — Ornate Machine Interior */
         .canvas-wrap {
             padding: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
-            background: radial-gradient(circle, rgba(16, 16, 36, 0.8), #06060f);
+            background: radial-gradient(ellipse at 50% 50%, #1a0a02 0%, #0a0400 100%);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.6);
         }
 
         .game-ctrls {
             padding: 20px 24px;
-            background: rgba(0, 0, 0, 0.4);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(180deg, rgba(26, 10, 0, 0.6), rgba(13, 4, 0, 0.8));
+            border-top: 3px solid #8b6914;
             display: flex;
             gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
             align-items: center;
             width: 100%;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
         .btn-spin {
