@@ -3,9 +3,26 @@
 🏛️ C8L AGENT v17.0 — PANTEON MASTER
 Configuracion central del sistema multi-agente.
 SEGURO: Todas las keys se leen de variables de entorno.
+Si existe un archivo .env en la misma carpeta, se carga automaticamente.
 """
 
 import os
+
+# ---------------------------------------------------------------------------
+# Auto-cargar .env si existe (para VPS sin docker/render)
+# Esto hace que tu VPS siga funcionando sin instalar nada extra
+# ---------------------------------------------------------------------------
+_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(_env_path):
+    with open(_env_path, "r") as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _key, _val = _line.split("=", 1)
+                _key = _key.strip()
+                _val = _val.strip().strip('"').strip("'")
+                if _key and _key not in os.environ:  # No sobreescribir si ya existe
+                    os.environ[_key] = _val
 
 # ---------------------------------------------------------------------------
 # Telegram
