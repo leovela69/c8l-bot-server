@@ -17,7 +17,7 @@ from periodista.config import (
 )
 from periodista.news_fetcher import fetch_top_news
 from periodista.news_analyzer import analyze_news_with_ai, extract_learnings
-from periodista.news_formatter import format_news_flash, format_question_post
+from periodista.news_formatter import format_news_flash, format_question_post, format_casino_launch_announcement
 from periodista.news_memory import store_learnings, get_recent_knowledge
 
 
@@ -154,6 +154,24 @@ async def periodista_loop():
         except Exception as e:
             print(f"[PERIODISTA] Error en ciclo: {e}")
             # No crashear, seguir en el siguiente ciclo
+
+
+# ---------------------------------------------------------------------------
+# ANUNCIOS ESPECIALES
+# ---------------------------------------------------------------------------
+
+async def announce_casino_launch(chat_id: str = ""):
+    """
+    Publica el anuncio de lanzamiento de C8L Casino en el grupo.
+    Llamar UNA VEZ cuando el casino esté deployeado y funcional.
+    """
+    message = format_casino_launch_announcement()
+    success = await send_telegram_message(message, chat_id)
+    if success:
+        print("[PERIODISTA] 🎰 Anuncio de C8L Casino enviado exitosamente!")
+    else:
+        print("[PERIODISTA] Error al enviar anuncio del casino")
+    return success
 
 
 # ---------------------------------------------------------------------------
