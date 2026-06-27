@@ -5,6 +5,11 @@ data/memory/
 data/reports/
 *.log
 .env
+.env.local
+.env.production
+.env.*.local
 node_modules/
 .next/
 out/
+bot.log
+tunnel.log

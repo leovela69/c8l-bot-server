@@ -4,17 +4,56 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
+    plan: free
+    autoDeploy: true
+    branch: main
+    healthCheckPath: /
     envVars:
+      # --- REQUERIDAS ---
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: GEMINI_API_KEY_2
-        sync: false
-      - key: HUGGINGFACE_TOKEN
         sync: false
       - key: ADMIN_CHAT_ID
         sync: false
+      - key: GROUP_CHAT_ID
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      # --- IA BACKUP ---
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: HUGGINGFACE_TOKEN
+        sync: false
+      # --- GEMINI ---
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_ENABLED
+        value: "false"
+      # --- WHATSAPP ---
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_ID
+        sync: false
+      - key: WHATSAPP_BUSINESS_ID
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        value: "c8l_verify_2024"
+      # --- MUSICA ---
+      - key: SUNO_COOKIE
+        sync: false
+      - key: MUSICAPI_KEY
+        sync: false
+      # --- MEDIA ---
+      - key: POLLINATIONS_API_KEY
+        sync: false
+      # --- HERMES ---
+      - key: HERMES_BOT_TOKEN
+        sync: false
+      # --- URLS ---
+      - key: C8L_WEB_URL
+        value: "https://c8l-agency.vercel.app"
+      # --- SERVER ---
       - key: PORT
         value: "8080"
       - key: RENDER_SERVICE_NAME
