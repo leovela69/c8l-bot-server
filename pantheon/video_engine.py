@@ -37,10 +37,11 @@ logger = logging.getLogger("c8l.video_engine")
 
 # Import API keys
 try:
-    from config import POLLINATIONS_API_KEY_P, HUGGINGFACE_TOKEN
+    from config import POLLINATIONS_API_KEY_P, HUGGINGFACE_TOKEN, KLING_API_KEY
 except ImportError:
     POLLINATIONS_API_KEY_P = ""
     HUGGINGFACE_TOKEN = ""
+    KLING_API_KEY = ""
 
 # ---------------------------------------------------------------------------
 # CONFIGURACION DE MODELOS
@@ -48,6 +49,17 @@ except ImportError:
 
 # Modelos ordenados por prioridad/calidad
 VIDEO_MODELS = {
+    "kling": {
+        "name": "Kling AI",
+        "description": "Video IA premium (5 gratis/dia)",
+        "duration_range": (2, 10),
+        "default_duration": 5,
+        "has_audio": False,
+        "best_for": ["premium", "cinematico", "alta_calidad", "profesional", "realista"],
+        "quality": 10,
+        "speed": 5,
+        "engine": "kling_api",
+    },
     "wan-fast": {
         "name": "Wan Fast",
         "description": "Rapido y bueno, con audio",
@@ -172,7 +184,7 @@ VIDEO_MODELS = {
 
 # Cadena de fallback (orden en que se intentan si el modelo elegido falla)
 FALLBACK_CHAIN = [
-    "wan-fast", "ltx-2", "wan", "seedance-pro", "veo",
+    "kling", "wan-fast", "ltx-2", "wan", "seedance-pro", "veo",
     "seedance-2.0", "grok-video-pro", "p-video-720p",
     "wan-pro", "nova-reel", "p-video-1080p"
 ]
@@ -252,14 +264,21 @@ class VideoEngine:
 
             logger.info(f"  Intento {attempts}: {model_info['name']} ({model_id}) | {model_duration}s | audio={request_audio}")
 
-            video_bytes = self._call_pollinations(
-                prompt=enhanced_prompt,
-                model=model_id,
-                duration=model_duration,
-                aspect_ratio=aspect_ratio,
-                image_url=image_url,
-                audio=request_audio,
-            )
+            # Kling AI usa su propia API
+            if model_id == "kling" and KLING_API_KEY:
+                video_bytes = self._call_kling(enhanced_prompt, model_duration, aspect_ratio)
+            elif model_id == "kling" and not KLING_API_KEY:
+                logger.info("  Kling: sin API key, saltando...")
+                continue
+            else:
+                video_bytes = self._call_pollinations(
+                    prompt=enhanced_prompt,
+                    model=model_id,
+                    duration=model_duration,
+                    aspect_ratio=aspect_ratio,
+                    image_url=image_url,
+                    audio=request_audio,
+                )
 
             if video_bytes:
                 self.generations_count += 1
@@ -486,6 +505,88 @@ class VideoEngine:
     # ---------------------------------------------------------------------------
     # LLAMADA A POLLINATIONS API
     # ---------------------------------------------------------------------------
+
+    def _call_kling(self, prompt, duration, aspect_ratio="16:9"):
+        """
+        Genera video con Kling AI API oficial.
+        5 videos/día gratis. Calidad premium.
+        Es ASÍNCRONO: primero crea tarea, luego hace polling hasta completar.
+        """
+        try:
+            headers = {
+                "Authorization": f"Bearer {KLING_API_KEY}",
+                "Content-Type": "application/json",
+            }
+
+            # Paso 1: Crear tarea de generación
+            payload = {
+                "prompt": prompt,
+                "duration": str(min(duration, 10)),
+                "aspect_ratio": aspect_ratio.replace(":", ":"),
+                "model": "kling-v1",
+            }
+
+            r = requests.post(
+                "https://api.klingai.com/v1/videos/text2video",
+                headers=headers, json=payload, timeout=30,
+            )
+
+            if r.status_code not in (200, 201):
+                logger.warning(f"  Kling create error: {r.status_code} - {r.text[:100]}")
+                return None
+
+            data = r.json()
+            task_id = data.get("data", {}).get("task_id")
+            if not task_id:
+                logger.warning(f"  Kling: no task_id in response")
+                return None
+
+            logger.info(f"  Kling task creada: {task_id}, esperando...")
+
+            # Paso 2: Polling hasta que complete (max 3 minutos)
+            max_wait = 180  # 3 minutos
+            poll_interval = 10  # cada 10 segundos
+            elapsed = 0
+
+            while elapsed < max_wait:
+                time.sleep(poll_interval)
+                elapsed += poll_interval
+
+                status_r = requests.get(
+                    f"https://api.klingai.com/v1/videos/{task_id}",
+                    headers={"Authorization": f"Bearer {KLING_API_KEY}"},
+                    timeout=15,
+                )
+
+                if status_r.status_code != 200:
+                    continue
+
+                status_data = status_r.json().get("data", {})
+                status = status_data.get("status", "")
+
+                if status == "completed":
+                    video_url = status_data.get("video_url", "")
+                    if video_url:
+                        # Descargar video
+                        vid_r = requests.get(video_url, timeout=120)
+                        if vid_r.status_code == 200 and len(vid_r.content) > 50000:
+                            logger.info(f"  ✅ Kling video OK: {len(vid_r.content)} bytes")
+                            return vid_r.content
+                    logger.warning("  Kling: completed pero sin video_url")
+                    return None
+
+                elif status == "failed":
+                    logger.warning(f"  Kling: tarea falló - {status_data.get('error', '?')}")
+                    return None
+
+                logger.info(f"  Kling: esperando... ({elapsed}s, status={status})")
+
+            logger.warning(f"  Kling: timeout después de {max_wait}s")
+            return None
+
+        except Exception as e:
+            logger.error(f"  Kling error: {e}")
+            return None
 
     def _call_pollinations(self, prompt, model, duration, aspect_ratio="16:9",
                            image_url=None, audio=False):

@@ -194,6 +194,9 @@ STUDIO_URL: str = os.environ.get("STUDIO_URL", "http://localhost:8084")
 # Stability AI (Stable Diffusion) — Imagen IA profesional
 STABILITY_API_KEY: str = os.environ.get("STABILITY_API_KEY", "")
 
+# Kling AI — Video IA (5 videos/día gratis)
+KLING_API_KEY: str = os.environ.get("KLING_API_KEY", "")
+
 # ---------------------------------------------------------------------------
 # Hermes Bot (backup/obrero) — corre en el mismo VPS
 # ---------------------------------------------------------------------------
