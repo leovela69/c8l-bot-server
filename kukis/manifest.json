@@ -1,0 +1,20 @@
+{
+  "name": "C8L Casino - Casino Gratis Sin Registro",
+  "short_name": "C8L Casino",
+  "description": "Casino online gratuito con 30+ juegos: Slots, Crash, Poker, Ruleta, Bingo, Kukis. Sin registro, sin descarga. Juega ahora.",
+  "start_url": "/kukis/c8l_casino_kukis.html",
+  "display": "standalone",
+  "background_color": "#06060f",
+  "theme_color": "#f4b41a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦁</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "es",
+  "dir": "ltr"
+}
