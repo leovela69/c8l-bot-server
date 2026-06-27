@@ -829,18 +829,10 @@
         .canvas-wrap {
             padding: 24px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             position: relative;
             background: radial-gradient(circle, rgba(16, 16, 36, 0.8), #06060f);
-        }
-
-        #gameCanvas {
-            border-radius: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 40px rgba(0, 240, 255, 0.12);
-            max-width: 100%;
-            height: auto;
-            background: #030309;
         }
 
         .game-ctrls {
@@ -852,6 +844,7 @@
             justify-content: center;
             flex-wrap: wrap;
             align-items: center;
+            width: 100%;
         }
 
         .btn-spin {
@@ -982,8 +975,408 @@
         }
 
         /* ==========================================================================
-           🍪 KUKIS (SWEET CARD GAME) VISUAL REDESIGN
+           🚀 CRASH C8L HIGH FIDELITY LAYOUT
            ========================================================================== */
+        .crash-container {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            background: radial-gradient(circle at 50% 30%, #150914 0%, #060307 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            position: relative;
+        }
+        .crash-screen {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            background: #030307;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+        .crash-grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        .crash-chart-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+        .crash-multiplier-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: var(--font-title);
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--red);
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+            z-index: 3;
+            letter-spacing: 2px;
+        }
+        .crash-rocket-glow {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, var(--cyan) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 4;
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(0 0 10px var(--cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.65rem;
+            bottom: 30px;
+            left: 50px;
+        }
+
+        /* ==========================================================================
+           💣 MINES C8L HIGH FIDELITY LAYOUT
+           ========================================================================== */
+        .mines-container {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            gap: 24px;
+            background: radial-gradient(circle at 50% 30%, #151109 0%, #070503 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        .mines-grid-wrapper {
+            display: grid;
+            grid-template-columns: repeat(5, 64px);
+            grid-template-rows: repeat(5, 64px);
+            gap: 12px;
+            background: rgba(0,0,0,0.35);
+            padding: 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        }
+        .mines-cell-btn {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #1c1a2d 0%, #0d0c16 100%);
+            border: 2px solid rgba(245, 158, 11, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+        .mines-cell-btn:hover:not(:disabled) {
+            transform: scale(1.06) translateY(-2px);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+        .mines-cell-btn.revealed-diamond {
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, #081a24 100%) !important;
+            border-color: var(--cyan) !important;
+            box-shadow: 0 0 12px var(--cyan-glow) !important;
+            transform: rotateY(180deg);
+        }
+        .mines-cell-btn.revealed-bomb {
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.2) 0%, #240808 100%) !important;
+            border-color: var(--red) !important;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important;
+            transform: rotateY(180deg) scale(0.95);
+        }
+        .mines-sidebar-panel {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(10, 10, 20, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .mines-stat-title {
+            font-family: var(--font-title);
+            font-size: 0.8rem;
+            color: #8888a5;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .mines-stat-value {
+            font-family: var(--font-title);
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        /* ==========================================================================
+           🟡 PLINKO C8L HIGH FIDELITY LAYOUT
+           ========================================================================== */
+        .plinko-container {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: radial-gradient(circle at 50% 30%, #110e1a 0%, #05040a 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 16px;
+        }
+        .plinko-board-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 580px;
+            height: 320px;
+            background: #030307;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
+        }
+        .plinko-peg {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #f4b41a;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px var(--gold);
+        }
+        .plinko-ball-node {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle at 35% 35%, #fff 0%, var(--orange) 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.8);
+            z-index: 10;
+            top: 20px;
+            left: 50%;
+            display: none;
+        }
+        .plinko-slots-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 580px;
+            margin-top: 10px;
+            gap: 4px;
+        }
+        .plinko-slot-cell {
+            flex: 1;
+            padding: 8px 2px;
+            border-radius: 8px;
+            text-align: center;
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            font-weight: 800;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        .plinko-slot-red { background: linear-gradient(135deg, #ef4444, #991b1b); color: #fff; }
+        .plinko-slot-orange { background: linear-gradient(135deg, #f59e0b, #92400e); color: #fff; }
+        .plinko-slot-green { background: linear-gradient(135deg, #10b981, #065f46); color: #fff; }
+        .plinko-slot-cell.active-hit {
+            transform: scale(1.15);
+            filter: brightness(1.3);
+            box-shadow: 0 0 15px rgba(244, 180, 26, 0.7);
+        }
+
+        /* ==========================================================================
+           🎡 RULETA C8L HIGH FIDELITY LAYOUT
+           ========================================================================== */
+        .ruleta-container {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            gap: 20px;
+            background: radial-gradient(circle at 50% 30%, #150909 0%, #060303 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(231, 76, 60, 0.2);
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 16px;
+        }
+        .ruleta-wheel-box {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            border: 8px solid #2e1d0f;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8),
+                        0 0 20px rgba(244,180,26,0.1);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ruleta-wheel-svg {
+            width: 100%;
+            height: 100%;
+            transition: transform 3s cubic-bezier(0.1, 0.8, 0.1, 1);
+        }
+        .ruleta-wheel-pointer {
+            position: absolute;
+            top: 2px;
+            font-size: 1.6rem;
+            color: var(--gold);
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        .ruleta-wheel-center {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #2d2a45 0%, #0f0f23 100%);
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-title);
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--gold);
+        }
+        .ruleta-betting-table {
+            flex: 1;
+            min-width: 300px;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 4px;
+            background: rgba(4, 4, 10, 0.8);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .ruleta-table-cell {
+            padding: 10px 2px;
+            text-align: center;
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            font-weight: 800;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        .ruleta-cell-red { background: #e74c3c; color: #fff; }
+        .ruleta-cell-black { background: #0e0e1a; color: #fff; border-color: rgba(255,255,255,0.05); }
+        .ruleta-cell-green { background: #10b981; color: #fff; grid-row: span 2; display: flex; align-items: center; justify-content: center; }
+        .ruleta-table-cell:hover, .ruleta-table-cell.selected-bet {
+            transform: scale(1.08);
+            filter: brightness(1.25);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+        .ruleta-history-strip {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            justify-content: center;
+            margin-top: 14px;
+        }
+        .ruleta-history-item {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        /* ==========================================
+           🎰 SLOT C8L HIGH FIDELITY LAYOUT
+           ========================================== */
+        .slot-layout-container {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: radial-gradient(circle at 50% 30%, #1a0e16 0%, #0a0508 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            padding: 16px;
+            gap: 16px;
+        }
+        .slot-reels-strip {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+            background: rgba(0,0,0,0.4);
+            padding: 16px;
+            border-radius: 20px;
+            border: 2px solid var(--pink);
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.15);
+        }
+        .slot-reel-column {
+            width: 90px;
+            height: 240px;
+            background: #04040a;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+        }
+        .slot-reel-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: top 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .slot-reel-cell {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.15));
+        }
+
+        /* ==========================================
+           🍪 KUKIS (SWEET CARD GAME) VISUAL REDESIGN
+           ========================================== */
         
         .kukis-modal {
             padding: 24px;
@@ -1712,8 +2105,104 @@
             document.getElementById('gameCtrls')&&(document.getElementById('gameCtrls').style.display='none');
             kukisInit();
         } else {
-            document.getElementById('modalContent').innerHTML=`
-                <div class="canvas-wrap"><canvas id="gameCanvas" width="720" height="460"></canvas></div>
+            // Render specific HTML structure for high fidelity designs
+            let gameHTML = '';
+            if(id==='crash'){
+                gameHTML = `<div class="canvas-wrap">
+                    <div class="crash-container">
+                        <div class="crash-screen">
+                            <div class="crash-grid-lines"></div>
+                            <svg class="crash-chart-svg" id="crashChart">
+                                <path id="crashPath" d="M 50 280 Q 250 280 500 80" fill="none" stroke="#00f0ff" stroke-width="4" stroke-dasharray="8 8" opacity="0.15"/>
+                                <path id="crashPathActive" d="M 50 280" fill="none" stroke="url(#crashGrad)" stroke-width="6"/>
+                                <defs>
+                                    <linearGradient id="crashGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ef4444" />
+                                        <stop offset="50%" stop-color="#f4b41a" />
+                                        <stop offset="100%" stop-color="#00f0ff" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div class="crash-multiplier-text" id="crashMulti">1.00x</div>
+                            <div class="crash-rocket-glow" id="crashRocket">🚀</div>
+                        </div>
+                    </div>
+                </div>`;
+            } else if(id==='mines'){
+                let cells = '';
+                for(let i=0; i<25; i++) cells += `<button class="mines-cell-btn" id="mineCell_${i}" onclick="revealMineCell(${i})">❓</button>`;
+                gameHTML = `<div class="canvas-wrap">
+                    <div class="mines-container">
+                        <div class="mines-grid-wrapper">
+                            ${cells}
+                        </div>
+                        <div class="mines-sidebar-panel">
+                            <div class="mines-stat-title">Estado</div>
+                            <div class="mines-stat-value" id="minesStatusText">Listo</div>
+                            <div class="mines-stat-title">Diamantes</div>
+                            <div class="mines-stat-value" id="minesCountText">0 / 5</div>
+                            <button class="mines-action-btn" id="btnMinesCashout" onclick="minesCashout()" disabled>Cobrar</button>
+                        </div>
+                    </div>
+                </div>`;
+            } else if(id==='plinko'){
+                gameHTML = `<div class="canvas-wrap">
+                    <div class="plinko-container">
+                        <div class="plinko-board-wrapper" id="plinkoBoard">
+                            <!-- Pegs and ball added by JS -->
+                            <div class="plinko-ball-node" id="plinkoBall"></div>
+                        </div>
+                        <div class="plinko-slots-row">
+                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_0">0.2x</div>
+                            <div class="plinko-slot-cell plinko-slot-orange" id="pslot_1">0.5x</div>
+                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_2">1.5x</div>
+                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_3">3.0x</div>
+                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_4">10.0x</div>
+                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_5">3.0x</div>
+                            <div class="plinko-slot-cell plinko-slot-green" id="pslot_6">1.5x</div>
+                            <div class="plinko-slot-cell plinko-slot-orange" id="pslot_7">0.5x</div>
+                            <div class="plinko-slot-cell plinko-slot-red" id="pslot_8">0.2x</div>
+                        </div>
+                    </div>
+                </div>`;
+            } else if(id==='ruleta'){
+                gameHTML = `<div class="canvas-wrap">
+                    <div class="ruleta-container">
+                        <div class="ruleta-wheel-box">
+                            <div class="ruleta-wheel-pointer">▼</div>
+                            <!-- A beautiful rotating wheel design -->
+                            <svg class="ruleta-wheel-svg" id="ruletaWheel" viewBox="0 0 200 200">
+                                <circle cx="100" cy="100" r="95" fill="#0f0f23" stroke="#f4b41a" stroke-width="4"/>
+                                ${buildRuletaSlices()}
+                            </svg>
+                            <div class="ruleta-wheel-center" id="ruletaNumberDisplay">C8L</div>
+                        </div>
+                        <div class="ruleta-betting-table">
+                            ${buildRuletaTable()}
+                        </div>
+                    </div>
+                    <div class="ruleta-history-strip" id="ruletaHistory"></div>
+                </div>`;
+            } else if(id==='slot'){
+                let columns = '';
+                for(let i=0; i<5; i++) {
+                    columns += `<div class="slot-reel-column">
+                        <div class="slot-reel-inner" id="slotReel_${i}">
+                            <!-- Reels symbols -->
+                        </div>
+                    </div>`;
+                }
+                gameHTML = `<div class="canvas-wrap">
+                    <div class="slot-layout-container">
+                        <div class="slot-reels-strip">
+                            ${columns}
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            document.getElementById('modalContent').innerHTML = `
+                ${gameHTML}
                 <div class="win-banner" id="winBanner"></div>
                 <div class="game-ctrls" id="gameCtrls">
                     <button class="btn-spin" id="btnMain" onclick="playGame()">🎲 JUGAR</button>
@@ -1723,10 +2212,67 @@
                     </div>
                     <button class="btn-bet-adj" onclick="changeBet(1)">➕</button>
                 </div>`;
-            const btn=document.getElementById('btnMain');
+            
+            const btn = document.getElementById('btnMain');
             if(btn){btn.textContent=getLabel(id);btn.disabled=false}
+            
+            // Set up static game displays
             drawGame(id);
         }
+    }
+
+    // Helper functions for wheel building
+    function buildRuletaSlices(){
+        let html = '';
+        const numbers = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+        numbers.forEach((num, i) => {
+            const angle = (i * 360 / 37);
+            const nextAngle = ((i + 1) * 360 / 37);
+            const color = num === 0 ? '#10b981' : i % 2 === 0 ? '#e74c3c' : '#0c0c16';
+            // Simple visual slices using SVG lines or arcs
+            const rad1 = (angle - 90) * Math.PI / 180;
+            const rad2 = (nextAngle - 90) * Math.PI / 180;
+            const x1 = 100 + 90 * Math.cos(rad1);
+            const y1 = 100 + 90 * Math.sin(rad1);
+            const x2 = 100 + 90 * Math.cos(rad2);
+            const y2 = 100 + 90 * Math.sin(rad2);
+            html += `<path d="M 100 100 L ${x1} ${y1} A 90 90 0 0 1 ${x2} ${y2} Z" fill="${color}" stroke="rgba(244,180,26,0.35)" stroke-width="0.5"/>`;
+            // text placement
+            const textAngle = angle + 180 / 37;
+            const textRad = (textAngle - 90) * Math.PI / 180;
+            const tx = 100 + 74 * Math.cos(textRad);
+            const ty = 100 + 74 * Math.sin(textRad);
+            html += `<text x="${tx}" y="${ty}" font-family="Orbitron" font-size="5" fill="#fff" font-weight="900" text-anchor="middle" transform="rotate(${textAngle+90}, ${tx}, ${ty})">${num}</text>`;
+        });
+        return html;
+    }
+
+    function buildRuletaTable() {
+        let html = '';
+        const numbers = [
+            [3, '#e74c3c'], [6, '#0e0e1a'], [9, '#e74c3c'], [12, '#e74c3c'], [15, '#0e0e1a'], [18, '#e74c3c'], [21, '#e74c3c'], [24, '#0e0e1a'], [27, '#e74c3c'], [30, '#e74c3c'], [33, '#0e0e1a'], [36, '#e74c3c'],
+            [2, '#0e0e1a'], [5, '#e74c3c'], [8, '#0e0e1a'], [11, '#0e0e1a'], [14, '#e74c3c'], [17, '#0e0e1a'], [20, '#0e0e1a'], [23, '#e74c3c'], [26, '#0e0e1a'], [29, '#0e0e1a'], [32, '#e74c3c'], [35, '#0e0e1a'],
+            [1, '#e74c3c'], [4, '#0e0e1a'], [7, '#e74c3c'], [10, '#0e0e1a'], [13, '#0e0e1a'], [16, '#e74c3c'], [19, '#e74c3c'], [22, '#0e0e1a'], [25, '#e74c3c'], [28, '#0e0e1a'], [31, '#0e0e1a'], [34, '#e74c3c']
+        ];
+        
+        // Zero cell spanning left
+        html += `<div class="ruleta-table-cell ruleta-cell-green" onclick="selectRuletaBet(0)">0</div>`;
+        
+        numbers.forEach((cell) => {
+            const cls = cell[1] === '#e74c3c' ? 'ruleta-cell-red' : 'ruleta-cell-black';
+            html += `<div class="ruleta-table-cell ${cls}" id="rcell_${cell[0]}" onclick="selectRuletaBet(${cell[0]})">${cell[0]}</div>`;
+        });
+        return html;
+    }
+
+    let selectedRuletaBetVal = 17; // default
+    function selectRuletaBet(num){
+        selectedRuletaBetVal = num;
+        document.querySelectorAll('.ruleta-table-cell').forEach(c=>c.classList.remove('selected-bet'));
+        const activeCell = num===0 ? document.querySelector('.ruleta-cell-green') : document.getElementById(`rcell_${num}`);
+        if(activeCell) activeCell.classList.add('selected-bet');
+        sfx.click();
+        toast(`🎯 Apuesta colocada en: ${num}`);
     }
 
     function getLabel(id){return{crash:'🚀 CASH OUT',mines:'💎 DESTAPAR',plinko:'🟡 SOLTAR',ruleta:'🎡 GIRAR',slot:'❤️ GIRAR'}[id]||'🎲 JUGAR'}
@@ -1734,32 +2280,40 @@
     document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeGame()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGame()});
 
-    // === PLAY GAME (Non-Kukis) ===
+    // === PLAY GAME (HTML Engine) ===
     function playGame(){
         if(!STATE.currentGame||STATE.spinning)return;
+        
+        // Custom handling for Mines in game (only cashout)
+        if(STATE.currentGame.id === 'mines' && minesGameState.playing){
+            minesCashout();
+            return;
+        }
+
         if(STATE.balance<STATE.bet){toast('❌ Saldo insuficiente');sfx.lose();return}
         sfx.init();STATE.spinning=true;
         const btn=document.getElementById('btnMain');if(btn)btn.disabled=true;
         updateBal(-STATE.bet);addWager(STATE.bet);
         const wb=document.getElementById('winBanner');if(wb){wb.textContent='';wb.classList.remove('show')}
         sfx.spin();
+        
         const id=STATE.currentGame.id;
-        animateGame(id);
-        setTimeout(()=>{
-            const win=calcWin(STATE.currentGame);
+        const win=calcWin(STATE.currentGame);
+        
+        // Trigger high-fidelity component animations
+        animateGameFidelity(id, win, () => {
             if(win>0){
                 updateBal(win);
                 const wb2=document.getElementById('winBanner');
                 if(wb2){wb2.textContent=`¡GANASTE ${win.toLocaleString()} chips! 🎉`;wb2.classList.add('show')}
                 if(win>=STATE.bet*8){sfx.jackpot();toast(`💥 JACKPOT x${(win/STATE.bet).toFixed(1)}!`)}else{sfx.win()}
-                const cv=document.getElementById('gameCanvas');if(cv)spawnWinParticles(cv,cv.getContext('2d'),cv.width/2,cv.height/2,70);
             } else {
                 const wb2=document.getElementById('winBanner');if(wb2){wb2.textContent='🔄 Inténtalo de nuevo';wb2.classList.remove('show')}
                 sfx.lose();
             }
             STATE.spinning=false;if(btn)btn.disabled=false;
             drawGame(id);
-        },1500);
+        });
     }
 
     function calcWin(game){
@@ -1770,92 +2324,360 @@
         return 0;
     }
 
-    // === DRAW GAMES ON CANVAS ===
+    // === STATIC GAME STATE DRAWING ===
     function drawGame(id){
-        const cv=document.getElementById('gameCanvas');if(!cv)return;
-        const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
-        ctx.fillStyle='#04040a';ctx.fillRect(0,0,cv.width,cv.height);
-        switch(id){
-            case 'crash':drawCrash(ctx,cv);break;
-            case 'mines':drawMines(ctx,cv);break;
-            case 'plinko':drawPlinko(ctx,cv);break;
-            case 'ruleta':drawRuleta(ctx,cv);break;
-            case 'slot':drawSlot(ctx,cv);break;
+        if(id === 'crash') {
+            document.getElementById('crashMulti').textContent = '1.00x';
+            document.getElementById('crashMulti').style.color = 'var(--cyan)';
+            const rocket = document.getElementById('crashRocket');
+            if(rocket) { rocket.style.left = '50px'; rocket.style.bottom = '30px'; }
+        } else if(id === 'mines') {
+            if(!minesGameState.playing) {
+                document.getElementById('minesStatusText').textContent = 'Listo';
+                document.getElementById('minesCountText').textContent = '0 / 5';
+                document.getElementById('btnMinesCashout').disabled = true;
+                for(let i=0; i<25; i++) {
+                    const cell = document.getElementById(`mineCell_${i}`);
+                    if(cell) {
+                        cell.className = 'mines-cell-btn';
+                        cell.textContent = '❓';
+                        cell.disabled = false;
+                    }
+                }
+            }
+        } else if(id === 'slot') {
+            const syms = ['❤️','💎','🦁','⭐','7️⃣','🍒','👑'];
+            for(let i=0; i<5; i++) {
+                const reel = document.getElementById(`slotReel_${i}`);
+                if(reel) {
+                    let html = '';
+                    // Populate with static symbols
+                    for(let j=0; j<15; j++) {
+                        html += `<div class="slot-reel-cell">${syms[Math.floor(Math.random()*syms.length)]}</div>`;
+                    }
+                    reel.innerHTML = html;
+                    reel.style.top = '0px';
+                }
+            }
+        } else if(id === 'ruleta') {
+            selectRuletaBet(selectedRuletaBetVal);
         }
     }
 
-    function animateGame(id){
-        const cv=document.getElementById('gameCanvas');if(!cv)return;
-        const ctx=cv.getContext('2d');let f=0;
-        function anim(){if(f>=25)return;ctx.fillStyle=`rgba(244,180,26,${.3-f/25*.3})`;ctx.fillRect(0,0,cv.width,cv.height);f++;requestAnimationFrame(anim)}anim()
-    }
-
-    // --- CRASH ---
-    function drawCrash(ctx,cv){
-        const cx=cv.width/2,cy=cv.height/2;
-        // Grid
-        ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=1;
-        for(let i=0;i<10;i++){ctx.beginPath();ctx.moveTo(60+i*70,cv.height-60);ctx.lineTo(60+i*70,40);ctx.stroke();ctx.beginPath();ctx.moveTo(60,40+i*42);ctx.lineTo(cv.width-40,40+i*42);ctx.stroke()}
-        // Curve
-        const grd=ctx.createLinearGradient(60,cv.height-60,cv.width-60,60);grd.addColorStop(0,'#ef4444');grd.addColorStop(.5,'#f4b41a');grd.addColorStop(1,'#00f0ff');
-        ctx.strokeStyle=grd;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(60,cv.height-60);
-        const mult=1+Math.random()*4;
-        for(let x=0;x<cv.width-120;x+=5){const y=(cv.height-60)-(x/(cv.width-120))*(cv.height-120)*Math.pow(x/(cv.width-120),.7);ctx.lineTo(60+x,y)}
-        ctx.stroke();
-        // Multiplier
-        const m=(1+Math.random()*3.5).toFixed(2);
-        ctx.fillStyle='#f4b41a';ctx.font='bold 65px Orbitron';ctx.textAlign='center';ctx.fillText(m+'x',cx,cy-50);
-        ctx.fillStyle='#fff';ctx.font='18px Montserrat';ctx.fillText('Retira antes de que explote',cx,cy+10);
-        // Rocket
-        ctx.font='40px Arial';ctx.fillText('🚀',cv.width-100,80);
-    }
-
-    // --- MINES ---
-    function drawMines(ctx,cv){
-        const sz=5,cell=72,offX=(cv.width-sz*cell)/2,offY=(cv.height-sz*cell)/2;
-        for(let r=0;r<sz;r++)for(let c=0;c<sz;c++){
-            ctx.fillStyle='#0f0f23';ctx.strokeStyle='#f4b41a';ctx.lineWidth=2;
-            roundRect(ctx,offX+c*cell+4,offY+r*cell+4,cell-8,cell-8,12);ctx.fill();ctx.stroke();
-            if(Math.random()<.35){ctx.font='32px Arial';ctx.textAlign='center';ctx.fillText(Math.random()<.75?'💎':'💣',offX+c*cell+cell/2,offY+r*cell+cell/2+10)}
+    // === HIGH FIDELITY ANIMATION ROUTINES ===
+    function animateGameFidelity(id, win, callback) {
+        if(id === 'crash') {
+            let mult = 1.00;
+            const target = win > 0 ? (win / STATE.bet) : (1.05 + Math.random() * 0.9);
+            const interval = setInterval(() => {
+                mult += (target - 1) / 30 + 0.02;
+                if(mult >= target) {
+                    mult = target;
+                    clearInterval(interval);
+                    
+                    if(win === 0) {
+                        document.getElementById('crashMulti').textContent = '¡CRASH!';
+                        document.getElementById('crashMulti').style.color = 'var(--red)';
+                        sfx.lose();
+                    } else {
+                        document.getElementById('crashMulti').textContent = mult.toFixed(2) + 'x';
+                        document.getElementById('crashMulti').style.color = 'var(--gold)';
+                    }
+                    setTimeout(callback, 500);
+                } else {
+                    document.getElementById('crashMulti').textContent = mult.toFixed(2) + 'x';
+                    document.getElementById('crashMulti').style.color = 'var(--cyan)';
+                    
+                    // Move rocket SVG/HTML coordinate
+                    const rocket = document.getElementById('crashRocket');
+                    if(rocket) {
+                        const pct = (mult - 1) / (target - 1 || 1);
+                        const px = 50 + pct * 420;
+                        const py = 30 + Math.pow(pct, 0.7) * 200;
+                        rocket.style.left = `${px}px`;
+                        rocket.style.bottom = `${py}px`;
+                    }
+                }
+            }, 45);
         }
-        ctx.fillStyle='#f4b41a';ctx.font='bold 20px Orbitron';ctx.textAlign='center';ctx.fillText('Encuentra 💎 Evita 💣',cv.width/2,32);
-    }
-
-    // --- PLINKO ---
-    function drawPlinko(ctx,cv){
-        for(let row=0;row<9;row++){const pegs=row+3;for(let p=0;p<pegs;p++){const x=cv.width/2-(pegs-1)*35+p*70,y=60+row*42;ctx.fillStyle='#f4b41a';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill()}}
-        const mults=['0.2x','0.5x','1x','2x','5x','10x','5x','2x','1x','0.5x','0.2x'];
-        mults.forEach((m,i)=>{ctx.fillStyle=i===5?'#ef4444':i>=3&&i<=7?'#f4b41a':'#10b981';ctx.font='bold 14px Orbitron';ctx.textAlign='center';ctx.fillText(m,65+i*58,cv.height-20)});
-        // Ball
-        ctx.fillStyle='#ff6b35';ctx.beginPath();ctx.arc(cv.width/2+Math.random()*40-20,50+Math.random()*200,10,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cv.width/2+Math.random()*40-20,50+Math.random()*200,4,0,Math.PI*2);ctx.fill();
-    }
-
-    // --- RULETA ---
-    function drawRuleta(ctx,cv){
-        const cx=cv.width/2,cy=cv.height/2+10;
-        for(let i=0;i<37;i++){ctx.fillStyle=i===0?'#10b981':i%2===0?'#e74c3c':'#0c0c16';ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,190,(i*Math.PI/18.5),((i+1)*Math.PI/18.5));ctx.closePath();ctx.fill();ctx.strokeStyle='#f4b41a';ctx.lineWidth=1;ctx.stroke()}
-        ctx.fillStyle='#0f0f23';ctx.beginPath();ctx.arc(cx,cy,50,0,Math.PI*2);ctx.fill();
-        ctx.strokeStyle='#f4b41a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx,cy,50,0,Math.PI*2);ctx.stroke();
-        ctx.fillStyle='#f4b41a';ctx.font='bold 22px Orbitron';ctx.textAlign='center';ctx.fillText('C8L',cx,cy+8);
-        // Arrow
-        ctx.fillStyle='#f4b41a';ctx.beginPath();ctx.moveTo(cx,cy-185);ctx.lineTo(cx-12,cy-210);ctx.lineTo(cx+12,cy-210);ctx.closePath();ctx.fill();
-    }
-
-    // --- SLOT ---
-    function drawSlot(ctx,cv){
-        const syms=['❤️','💎','🦁','⭐','7️⃣','🍒','👑'],reels=5,rw=cv.width/(reels+1);
-        for(let i=0;i<reels;i++){
-            const x=rw*(i+.5);ctx.fillStyle='#0f0f23';ctx.strokeStyle='#ec4899';ctx.lineWidth=3;
-            roundRect(ctx,x-rw*.38,70,rw*.76,310,14);ctx.fill();ctx.stroke();
-            for(let j=0;j<3;j++){ctx.font='44px Arial';ctx.textAlign='center';ctx.fillText(syms[Math.floor(Math.random()*syms.length)],x,160+j*95)}
+        else if(id === 'mines') {
+            // Mines plays as an interactive mini-session
+            startMinesGame(win, callback);
         }
-        ctx.strokeStyle='#f4b41a';ctx.lineWidth=3;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(40,240);ctx.lineTo(cv.width-40,240);ctx.stroke();ctx.setLineDash([]);
-        ctx.fillStyle='#f4b41a';ctx.font='bold 18px Orbitron';ctx.textAlign='center';ctx.fillText('CORAZONES LOCOS',cv.width/2,40);
+        else if(id === 'plinko') {
+            const ball = document.getElementById('plinkoBall');
+            ball.style.display = 'block';
+            ball.style.left = '50%';
+            ball.style.top = '20px';
+            
+            // Generate board pegs if they don't exist yet
+            const board = document.getElementById('plinkoBoard');
+            if(board.querySelectorAll('.plinko-peg').length === 0) {
+                for(let row=0;row<8;row++){
+                    const pegs=row+3;
+                    for(let p=0;p<pegs;p++){
+                        const x = 50 - (pegs-1)*4 + p*8; // relative percentages
+                        const y = 15 + row*10;
+                        const peg = document.createElement('div');
+                        peg.className = 'plinko-peg';
+                        peg.style.left = `${x}%`;
+                        peg.style.top = `${y}%`;
+                        board.appendChild(peg);
+                    }
+                }
+            }
+            
+            // Animate physics drops
+            let step = 0;
+            let currentX = 50; // percentage
+            const slotTarget = win > 0 ? (win / STATE.bet >= 3 ? 4 : (Math.random() < 0.5 ? 2 : 6)) : (Math.random() < 0.5 ? 0 : 8);
+            const targetX = 5 + slotTarget * 11 + 5.5; // Landing center percentage
+            
+            const interval = setInterval(() => {
+                step++;
+                const y = 20 + step * 8; // move down
+                const drift = (targetX - 50) * Math.pow(step / 30, 1.3);
+                currentX = 50 + drift + (Math.sin(step) * 2.5); // Add peg bounce jitter
+                
+                ball.style.left = `${currentX}%`;
+                ball.style.top = `${y}px`;
+                
+                if(y >= 300) {
+                    clearInterval(interval);
+                    ball.style.display = 'none';
+                    
+                    // Trigger slot flash
+                    const slot = document.getElementById(`pslot_${slotTarget}`);
+                    if(slot) {
+                        slot.classList.add('active-hit');
+                        setTimeout(() => slot.classList.remove('active-hit'), 800);
+                    }
+                    callback();
+                }
+            }, 40);
+        }
+        else if(id === 'ruleta') {
+            const wheel = document.getElementById('ruletaWheel');
+            const numDisplay = document.getElementById('ruletaNumberDisplay');
+            const numbers = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+            
+            // Choose winning number based on bet
+            let winningNum = 0;
+            if(win > 0) {
+                winningNum = selectedRuletaBetVal;
+            } else {
+                // select a random losing number
+                const losingNums = numbers.filter(n => n !== selectedRuletaBetVal);
+                winningNum = losingNums[Math.floor(Math.random() * losingNums.length)];
+            }
+            
+            const numIndex = numbers.indexOf(winningNum);
+            const targetAngle = 1440 + (360 - (numIndex * 360 / 37)); // Spin 4 times then land on number
+            
+            wheel.style.transform = `rotate(${targetAngle}deg)`;
+            
+            setTimeout(() => {
+                numDisplay.textContent = winningNum;
+                numDisplay.style.color = winningNum === 0 ? 'var(--green)' : [3,9,12,18,21,27,30,36,5,14,23,32,1,7,16,19,25,34].includes(winningNum) ? 'var(--red)' : '#fff';
+                
+                // Add to history strip
+                const hist = document.getElementById('ruletaHistory');
+                if(hist) {
+                    const item = document.createElement('div');
+                    item.className = `ruleta-history-item ${winningNum===0?'ruleta-cell-green':[3,9,12,18,21,27,30,36,5,14,23,32,1,7,16,19,25,34].includes(winningNum)?'ruleta-cell-red':'ruleta-cell-black'}`;
+                    item.textContent = winningNum;
+                    hist.insertBefore(item, hist.firstChild);
+                    if(hist.childNodes.length > 10) hist.removeChild(hist.lastChild);
+                }
+                
+                callback();
+            }, 3050);
+        }
+        else if(id === 'slot') {
+            const syms = ['❤️','💎','🦁','⭐','7️⃣','🍒','👑'];
+            let doneCount = 0;
+            for(let i=0; i<5; i++) {
+                const reel = document.getElementById(`slotReel_${i}`);
+                if(reel) {
+                    // Populate inner contents
+                    let html = '';
+                    for(let j=0; j<45; j++) {
+                        html += `<div class="slot-reel-cell">${syms[Math.floor(Math.random()*syms.length)]}</div>`;
+                    }
+                    // Insert winning symbol at correct offset if win
+                    if(win > 0 && i < 3) {
+                        html += `<div class="slot-reel-cell">❤️</div>`;
+                    }
+                    reel.innerHTML = html;
+                    
+                    // Trigger spin transitions at staggered times
+                    setTimeout(() => {
+                        reel.style.top = '-3200px';
+                        setTimeout(() => {
+                            doneCount++;
+                            if(doneCount === 5) {
+                                callback();
+                            }
+                        }, 1200);
+                    }, i * 150);
+                }
+            }
+        }
     }
 
-    // roundRect helper
-    function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
+    // ============================================
+    // 💣 CUSTOM HIGH FIDELITY INTERACTIVE MINES GAME ENGINE
+    // ============================================
+    const minesGameState = {
+        playing: false,
+        winAmount: 0,
+        diamondsFound: 0,
+        mineLayout: [], // true for diamond, false for bomb
+        revealed: [],
+        callback: null
+    };
+
+    function startMinesGame(win, callback) {
+        minesGameState.playing = true;
+        minesGameState.winAmount = win;
+        minesGameState.diamondsFound = 0;
+        minesGameState.revealed = Array(25).fill(false);
+        minesGameState.callback = callback;
+        
+        // Pre-generate grid
+        // 5 diamonds, 20 bombs
+        const layout = Array(25).fill(false);
+        let diamondsPlaced = 0;
+        while(diamondsPlaced < 5) {
+            const idx = Math.floor(Math.random() * 25);
+            if(!layout[idx]) {
+                layout[idx] = true;
+                diamondsPlaced++;
+            }
+        }
+        minesGameState.mineLayout = layout;
+        
+        document.getElementById('minesStatusText').textContent = 'Jugando...';
+        document.getElementById('minesStatusText').style.color = 'var(--gold)';
+        document.getElementById('minesCountText').textContent = '0 / 5';
+        
+        const btnCashout = document.getElementById('btnMinesCashout');
+        btnCashout.disabled = false;
+        btnCashout.textContent = 'Cobrar';
+        btnCashout.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        
+        // Disable spin button, handle controls via Mines Sidebar
+        const spinBtn = document.getElementById('btnMain');
+        if(spinBtn) {
+            spinBtn.textContent = 'Jugando...';
+            spinBtn.disabled = true;
+        }
+
+        // Enable board clicking
+        for(let i=0; i<25; i++) {
+            const cell = document.getElementById(`mineCell_${i}`);
+            if(cell) {
+                cell.className = 'mines-cell-btn';
+                cell.textContent = '❓';
+                cell.disabled = false;
+            }
+        }
+        toast('💣 Minas iniciadas. ¡Haz clic para destapar casillas!');
+    }
+
+    function revealMineCell(idx) {
+        if(!minesGameState.playing || minesGameState.revealed[idx]) return;
+        
+        minesGameState.revealed[idx] = true;
+        const cell = document.getElementById(`mineCell_${idx}`);
+        
+        if(minesGameState.mineLayout[idx]) {
+            // Found a Diamond!
+            sfx.win();
+            cell.className = 'mines-cell-btn revealed-diamond';
+            cell.textContent = '💎';
+            minesGameState.diamondsFound++;
+            document.getElementById('minesCountText').textContent = `${minesGameState.diamondsFound} / 5`;
+            toast('💎 ¡Excelente! Encontraste un diamante.');
+            
+            // Check if player has found all 5 diamonds
+            if(minesGameState.diamondsFound === 5) {
+                minesCashout();
+            }
+        } else {
+            // Hit a Bomb! Game Over.
+            sfx.lose();
+            cell.className = 'mines-cell-btn revealed-bomb';
+            cell.textContent = '💥';
+            minesGameState.playing = false;
+            
+            document.getElementById('minesStatusText').textContent = '¡BUM!';
+            document.getElementById('minesStatusText').style.color = 'var(--red)';
+            document.getElementById('btnMinesCashout').disabled = true;
+            
+            // Reveal all elements
+            revealAllMines();
+            
+            // Finish game as Loss (winAmount is ignored on loss)
+            setTimeout(() => {
+                minesGameState.callback(0); // callback handles loss
+                const spinBtn = document.getElementById('btnMain');
+                if(spinBtn) {
+                    spinBtn.textContent = getLabel('mines');
+                    spinBtn.disabled = false;
+                }
+            }, 1000);
+        }
+    }
+
+    function revealAllMines() {
+        for(let i=0; i<25; i++) {
+            const cell = document.getElementById(`mineCell_${i}`);
+            if(cell && !minesGameState.revealed[i]) {
+                cell.disabled = true;
+                if(minesGameState.mineLayout[i]) {
+                    cell.className = 'mines-cell-btn revealed-diamond';
+                    cell.textContent = '💎';
+                    cell.style.opacity = '0.5';
+                } else {
+                    cell.className = 'mines-cell-btn revealed-bomb';
+                    cell.textContent = '💣';
+                    cell.style.opacity = '0.5';
+                }
+            }
+        }
+    }
+
+    function minesCashout() {
+        if(!minesGameState.playing) return;
+        minesGameState.playing = false;
+        
+        // Calculate dynamic cashout reward if they cash out early
+        let cashoutMultiplier = 1;
+        if(minesGameState.diamondsFound === 1) cashoutMultiplier = 1.2;
+        else if(minesGameState.diamondsFound === 2) cashoutMultiplier = 1.5;
+        else if(minesGameState.diamondsFound === 3) cashoutMultiplier = 2.0;
+        else if(minesGameState.diamondsFound === 4) cashoutMultiplier = 3.5;
+        else if(minesGameState.diamondsFound === 5) cashoutMultiplier = 8.0;
+        
+        const finalWin = Math.floor(STATE.bet * cashoutMultiplier);
+        
+        document.getElementById('minesStatusText').textContent = 'Cobrado';
+        document.getElementById('minesStatusText').style.color = 'var(--green)';
+        document.getElementById('btnMinesCashout').disabled = true;
+        
+        revealAllMines();
+        toast(`💰 Cobraste ${finalWin.toLocaleString()} chips!`);
+        
+        setTimeout(() => {
+            minesGameState.callback(finalWin);
+            const spinBtn = document.getElementById('btnMain');
+            if(spinBtn) {
+                spinBtn.textContent = getLabel('mines');
+                spinBtn.disabled = false;
+            }
+        }, 1000);
+    }
 
     // ============================================
     // 🍪 KUKIS CARD GAME - FULL IMPLEMENTATION
@@ -1920,50 +2742,6 @@
         selectedIdx: -1
     };
 
-    // --- BUILD KUKIS UI ---
-    function buildKukisUI(){
-        return `<div class="kukis-modal" id="kukisGame">
-            <div class="kukis-case" id="kukisCasePanel">
-                <div class="kukis-case-title">📋 Caso #<span id="kCaseNum">1</span>: <span id="kCaseName">...</span></div>
-                <div class="kukis-case-desc" id="kCaseDesc">Cargando caso...</div>
-                <div class="kukis-case-meta">
-                    <span class="meta-item villain"><span class="icon">⚔️</span> Villano: <span id="kVillain">???</span></span>
-                    <span class="meta-item diff"><span class="icon">⭐</span> Dificultad: <span id="kDiff">?</span></span>
-                    <span class="meta-item reward"><span class="icon">💰</span> Recompensa: <span id="kReward">???</span></span>
-                </div>
-            </div>
-            
-            <div class="kukis-sub-title">
-                Selecciona una carta de tu mano y colócala en un slot de pista haciendo clic
-            </div>
-
-            <div class="kukis-section-title">🃏 Tu Mano (6 cartas)</div>
-            <div class="kukis-hand" id="kukisHand"></div>
-
-            <div class="kukis-section-title">🔎 Pistas Colocadas (3 slots)</div>
-            <div class="kukis-slots" id="kukisSlots">
-                <div class="kukis-slot empty" onclick="placeClue(0)">Pista 1</div>
-                <div class="kukis-slot empty" onclick="placeClue(1)">Pista 2</div>
-                <div class="kukis-slot empty" onclick="placeClue(2)">Pista 3</div>
-            </div>
-
-            <div class="kukis-info" id="kukisInfo">
-                <div class="info-badge">🦄 Unicornio: <span id="kUniCharges">3</span> cargas</div>
-                <div class="info-badge">📋 Casos resueltos: <span id="kCasesWon">0</span></div>
-                <div class="info-badge cost">💰 Coste: 50 chips</div>
-            </div>
-
-            <div class="kukis-combat" id="kukisCombat">⚔️ Zona de combate</div>
-            <div class="kukis-result" id="kukisResult"></div>
-
-            <div class="kukis-actions">
-                <button class="btn-kukis primary" id="btnInvestigate" onclick="kukisInvestigate()">🔍 INVESTIGAR</button>
-                <button class="btn-kukis secondary" onclick="kukisUnicorn()">🦄 Poder Unicornio</button>
-                <button class="btn-kukis tertiary" onclick="kukisNewCase()">📋 Nuevo Caso</button>
-            </div>
-        </div>`;
-    }
-
     // --- KUKIS INIT ---
     function kukisInit(){
         KS.hand=[];KS.clues=[];KS.selectedIdx=-1;KS.unicornCharges=3;
@@ -2014,7 +2792,6 @@
             </div>`).join('');
     }
 
-    // Fixed template rendering for slots
     function kukisRenderSlots(){
         const s=document.getElementById('kukisSlots');if(!s)return;
         let html='';
