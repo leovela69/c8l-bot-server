@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>C8L Poker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:
+    radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#050403 100%);
+  font-family:Georgia,'Times New Roman',serif;
+  color:#f0e6d0;min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+/* === MESA === */
+.table-outer{
+  position:relative;
+  width:min(880px,94vw);
+  height:min(540px,62vh);
+  border-radius:50%/42%;
+  /* Marco de madera oscura con veta */
+  background:
+    repeating-linear-gradient(92deg,rgba(80,50,20,0.15) 0px,transparent 2px,transparent 8px),
+    linear-gradient(180deg,#3d2810 0%,#261808 30%,#1a1004 60%,#261808 100%);
+  padding:18px;
+  box-shadow:
+    0 0 0 3px #0a0700,
+    0 0 0 6px #8b6914,
+    0 0 0 8px #5c4510,
+    0 0 0 12px #0a0700,
+    0 30px 80px rgba(0,0,0,0.8),
+    inset 0 2px 4px rgba(200,160,60,0.2);
+}
+
+/* Tachones dorados en el marco */
+.table-outer::before{
+  content:'';position:absolute;
+  top:6px;left:6px;right:6px;bottom:6px;
+  border-radius:50%/42%;
+  border:2px solid transparent;
+  background:none;
+  box-shadow:
+    inset 0 0 0 1px rgba(139,105,20,0.3);
+  pointer-events:none;
+}
+
+.table-felt{
+  width:100%;height:100%;
+  border-radius:50%/42%;
+  position:relative;
+  overflow:hidden;
+  /* Fieltro verde con textura de tela */
+  background:
+    repeating-linear-gradient(0deg,rgba(0,0,0,0.02) 0px,transparent 1px,transparent 3px),
+    repeating-linear-gradient(90deg,rgba(0,0,0,0.02) 0px,transparent 1px,transparent 3px),
+    radial-gradient(ellipse at 50% 40%,#1d7a3c 0%,#166b30 25%,#105a26 50%,#0b4a1e 75%,#083d18 100%);
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.5),
+    inset 0 0 120px rgba(0,0,0,0.3),
+    inset 0 4px 8px rgba(0,0,0,0.4);
+}
+
+/* Línea ovalada decorativa en el fieltro */
+.table-felt::before{
+  content:'';position:absolute;
+  top:15%;left:12%;right:12%;bottom:15%;
+  border-radius:50%/45%;
+  border:1.5px solid rgba(201,162,39,0.15);
+  pointer-events:none;
+}
+
+/* Reflejo de luz superior */
+.table-felt::after{
+  content:'';position:absolute;
+  top:0;left:20%;right:20%;height:35%;
+  border-radius:0 0 50% 50%;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* === CARTAS === */
+.card{
+  width:68px;height:96px;
+  border-radius:6px;
+  position:relative;
+  display:inline-flex;
+  flex-shrink:0;
+  transition:transform 0.3s ease,box-shadow 0.3s ease;
+  cursor:default;
+  perspective:600px;
+}
+.card:hover{transform:translateY(-6px) scale(1.03)}
+
+.card-inner{
+  width:100%;height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform 0.5s ease;
+}
+.card.face-down .card-inner{transform:rotateY(180deg)}
+
+.card-face{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  backface-visibility:hidden;
+  border-radius:6px;
+}
+
+.card-front{
+  background:linear-gradient(160deg,#fffef9 0%,#f5f0e6 50%,#ebe4d4 100%);
+  border:1px solid #bbb;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.15),
+    0 4px 12px rgba(0,0,0,0.2),
+    0 8px 24px rgba(0,0,0,0.15),
+    inset 0 0 0 3px #fff,
+    inset 0 0 0 4px rgba(0,0,0,0.05);
+  display:flex;flex-direction:column;
+  padding:5px 7px;
+  font-family:'Times New Roman',serif;
+}
+.card-front .rank-top{font-size:0.85em;font-weight:700;line-height:1}
+.card-front .suit-center{flex:1;display:flex;align-items:center;justify-content:center;font-size:2em}
+.card-front .rank-bot{font-size:0.85em;font-weight:700;line-height:1;align-self:flex-end;transform:rotate(180deg)}
+.card-front.red{color:#b71c1c}
+.card-front.black{color:#1a1a1a}
+
+.card-back-face{
+  transform:rotateY(180deg);
+  background:
+    repeating-conic-gradient(#1a2744 0% 25%,#1e3050 25% 50%) 50%/8px 8px,
+    linear-gradient(135deg,#162540 0%,#0d1a30 50%,#162540 100%);
+  border:2.5px solid #b8860b;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.15),
+    0 4px 12px rgba(0,0,0,0.2),
+    0 8px 24px rgba(0,0,0,0.15),
+    inset 0 0 20px rgba(0,0,0,0.3);
+  display:flex;align-items:center;justify-content:center;
+}
+.card-back-face::before{
+  content:'';position:absolute;
+  top:8px;left:8px;right:8px;bottom:8px;
+  border:1px solid rgba(184,134,11,0.4);
+  border-radius:3px;
+}
+.card-back-face .back-emblem{
+  font-size:1.6em;color:#b8860b;
+  text-shadow:0 0 8px rgba(184,134,11,0.5);
+  position:relative;z-index:1;
+}
+
+/* === ZONAS === */
+.zone{position:absolute;display:flex;gap:8px;align-items:center;justify-content:center}
+.zone-dealer{top:10%;left:50%;transform:translateX(-50%)}
+.zone-comm{top:40%;left:50%;transform:translateX(-50%)}
+.zone-player{bottom:8%;left:50%;transform:translateX(-50%)}
+
+.pot-display{
+  position:absolute;top:27%;left:50%;transform:translateX(-50%);
+  background:rgba(10,8,4,0.7);
+  border:1px solid rgba(184,134,11,0.5);
+  border-radius:20px;padding:5px 16px;
+  font-size:0.95em;color:#d4a017;font-weight:700;
+  text-shadow:0 0 6px rgba(212,160,23,0.3);
+  backdrop-filter:blur(3px);
+}
+
+.label-tag{
+  position:absolute;
+  background:rgba(10,8,4,0.8);border:1px solid #555;
+  border-radius:4px;padding:3px 10px;font-size:0.7em;
+  letter-spacing:1px;text-transform:uppercase;
+  backdrop-filter:blur(3px);
+}
+.label-tag.top{top:4%;left:50%;transform:translateX(-50%);color:#ff6b6b}
+.label-tag.bottom{bottom:2%;left:50%;transform:translateX(-50%);color:#69db7c}
+
+/* === PANEL INFERIOR === */
+.bottom-panel{
+  width:min(880px,94vw);
+  margin-top:16px;
+  background:linear-gradient(180deg,#1a1508,#0d0b06);
+  border:1px solid #5c4510;
+  border-radius:12px;
+  padding:14px 20px;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.5);
+}
+.info-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;flex-wrap:wrap;gap:8px;
+}
+.info-box{
+  background:rgba(0,0,0,0.4);border:1px solid #3d2810;
+  border-radius:6px;padding:6px 12px;text-align:center;
+}
+.info-box .lbl{font-size:0.65em;color:#8b6914;text-transform:uppercase;letter-spacing:1px}
+.info-box .val{font-size:1.1em;color:#d4a017;font-weight:700}
+
+.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn{
+  padding:10px 22px;border:none;border-radius:6px;
+  font-size:0.95em;font-weight:700;cursor:pointer;
+  font-family:Georgia,serif;letter-spacing:0.5px;
+  transition:all 0.2s;
+  box-shadow:0 3px 8px rgba(0,0,0,0.4);
+}
+.btn:active{transform:scale(0.95);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+.btn-gold{background:linear-gradient(180deg,#c9a227,#8b6914);color:#0a0700;border:1px solid #d4a017}
+.btn-gold:hover:not(:disabled){background:linear-gradient(180deg,#d4b030,#a07a18);box-shadow:0 0 12px rgba(201,162,39,0.4)}
+.btn-green{background:linear-gradient(180deg,#2e7d32,#1b5e20);color:#fff;border:1px solid #4caf50}
+.btn-green:hover:not(:disabled){box-shadow:0 0 12px rgba(76,175,80,0.4)}
+.btn-blue{background:linear-gradient(180deg,#1565c0,#0d47a1);color:#fff;border:1px solid #42a5f5}
+.btn-blue:hover:not(:disabled){box-shadow:0 0 12px rgba(66,165,245,0.4)}
+.btn-red{background:linear-gradient(180deg,#c62828,#8e0000);color:#fff;border:1px solid #ef5350}
+.btn-red:hover:not(:disabled){box-shadow:0 0 12px rgba(239,83,80,0.4)}
+
+.msg{text-align:center;font-size:1em;color:#d4a017;min-height:24px;margin-bottom:8px;font-style:italic}
+
+@media(max-width:600px){
+  .card{width:52px;height:74px}
+  .card-front .suit-center{font-size:1.5em}
+  .btn{padding:8px 14px;font-size:0.85em}
+  .table-outer{height:min(400px,55vh)}
+}
+</style>
+</head>
+<body>
+<div id="root">
+<div class="table-outer">
+<div class="table-felt">
+  <span class="label-tag top">CRUPIER</span>
+  <div class="zone zone-dealer" id="zDealer"></div>
+  <div class="pot-display" id="potDisp">Bote: 0</div>
+  <div class="zone zone-comm" id="zComm"></div>
+  <div class="zone zone-player" id="zPlayer"></div>
+  <span class="label-tag bottom">JUGADOR</span>
+</div>
+</div>
+<div class="bottom-panel">
+  <div class="msg" id="msg">Pulsa REPARTIR para jugar</div>
+  <div class="info-row">
+    <div class="info-box"><div class="lbl">Fichas</div><div class="val" id="vBal">10,000</div></div>
+    <div class="info-box"><div class="lbl">Mano</div><div class="val" id="vHand">—</div></div>
+    <div class="info-box"><div class="lbl">Fase</div><div class="val" id="vStage">—</div></div>
+    <div class="info-box"><div class="lbl">Apuesta</div><div class="val">50</div></div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-gold" id="bDeal" onclick="deal()">REPARTIR</button>
+    <button class="btn btn-green" id="bCall" onclick="call()" disabled>IGUALAR</button>
+    <button class="btn btn-blue" id="bRaise" onclick="raise()" disabled>SUBIR</button>
+    <button class="btn btn-red" id="bFold" onclick="fold()" disabled>RETIRARSE</button>
+  </div>
+</div>
+</div>
+<script>
+// === C8L POKER v3 ===
+const SUITS=['♠','♥','♦','♣'],RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RV={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+let bal=10000,pot=0,bet=50,deck=[],pH=[],bH=[],comm=[],stage='idle';
+
+function cardEl(c,hidden){
+  const isRed=c&&(c.s==='♥'||c.s==='♦');
+  if(hidden) return `<div class="card face-down"><div class="card-inner"><div class="card-face card-front black"><span class="rank-top"></span><span class="suit-center"></span><span class="rank-bot"></span></div><div class="card-face card-back-face"><span class="back-emblem">♠</span></div></div></div>`;
+  const cls=isRed?'red':'black';
+  return `<div class="card"><div class="card-inner"><div class="card-face card-front ${cls}"><span class="rank-top">${c.r}${c.s}</span><span class="suit-center">${c.s}</span><span class="rank-bot">${c.r}${c.s}</span></div><div class="card-face card-back-face"><span class="back-emblem">♠</span></div></div></div>`;
+}
+function render(){
+  document.getElementById('zDealer').innerHTML=bH.map(c=>stage==='show'?cardEl(c):cardEl(c,true)).join('');
+  document.getElementById('zPlayer').innerHTML=pH.map(c=>cardEl(c)).join('');
+  document.getElementById('zComm').innerHTML=comm.map(c=>cardEl(c)).join('');
+  document.getElementById('potDisp').textContent='Bote: '+pot;
+  document.getElementById('vBal').textContent=bal.toLocaleString();
+  const stg={idle:'—',pre:'Pre-Flop',flop:'Flop',turn:'Turn',river:'River',show:'Showdown'};
+  document.getElementById('vStage').textContent=stg[stage]||'—';
+  if(pH.length) document.getElementById('vHand').textContent=evaluate([...pH,...comm]).name;
+}
+function makeDeck(){deck=[];for(const s of SUITS)for(const r of RANKS)deck.push({r,s,v:RV[r]});for(let i=deck.length-1;i>0;i--){const j=0|Math.random()*(i+1);[deck[i],deck[j]]=[deck[j],deck[i]]}}
+function deal(){if(bal<bet)return;bal-=bet;pot=bet*2;makeDeck();pH=[deck.pop(),deck.pop()];bH=[deck.pop(),deck.pop()];comm=[];stage='pre';setB(0,1,1,1);msg('Pre-Flop — Tu turno');render()}
+function call(){if(stage==='idle'||stage==='show')return;advance()}
+function raise(){if(stage==='idle'||stage==='show'||bal<bet)return;bal-=bet;pot+=bet*2;advance()}
+function fold(){stage='show';pot=0;msg('Te retiraste');setB(1,0,0,0);render()}
+function advance(){
+  const ba=botAI();if(ba==='fold'){win('Bot se retiró');return}
+  if(stage==='pre'){stage='flop';comm.push(deck.pop(),deck.pop(),deck.pop());msg('Flop')}
+  else if(stage==='flop'){stage='turn';comm.push(deck.pop());msg('Turn')}
+  else if(stage==='turn'){stage='river';comm.push(deck.pop());msg('River')}
+  else if(stage==='river'){showdown();return}
+  render();
+}
+function showdown(){
+  stage='show';
+  const ps=evaluate([...pH,...comm]),bs=evaluate([...bH,...comm]);
+  render();
+  if(ps.rank>bs.rank||(ps.rank===bs.rank&&ps.high>bs.high)){win(ps.name+' gana a '+bs.name)}
+  else if(ps.rank===bs.rank&&ps.high===bs.high){bal+=pot/2;msg('Empate: '+ps.name);setB(1,0,0,0)}
+  else{msg('Bot gana: '+bs.name+' vs '+ps.name);setB(1,0,0,0)}
+}
+function win(t){bal+=pot;msg('¡Victoria! '+t+' — +'+pot);pot=0;setB(1,0,0,0);render()}
+function botAI(){const s=evaluate([...bH,...comm]);const r=Math.random();if(r<0.12)return'raise';if(s.rank>=3)return'call';if(s.rank>=2)return r<0.7?'call':'fold';return r<0.4?'fold':'call'}
+function msg(t){document.getElementById('msg').textContent=t}
+function setB(d,c,r,f){document.getElementById('bDeal').disabled=!d;document.getElementById('bCall').disabled=!c;document.getElementById('bRaise').disabled=!r;document.getElementById('bFold').disabled=!f}
+function evaluate(cards){
+  if(cards.length<5)return{rank:0,name:'—',high:0};
+  const vals=cards.map(c=>c.v).sort((a,b)=>b-a);
+  const suits=cards.map(c=>c.s);
+  const cnt={};vals.forEach(v=>{cnt[v]=(cnt[v]||0)+1});
+  const ent=Object.entries(cnt).map(([v,c])=>({v:+v,c})).sort((a,b)=>b.c-a.c||b.v-a.v);
+  const sc={};suits.forEach(s=>{sc[s]=(sc[s]||0)+1});
+  const flush=Object.values(sc).some(c=>c>=5);
+  const uniq=[...new Set(vals)].sort((a,b)=>b-a);
+  let str=false,strH=0;
+  for(let i=0;i<=uniq.length-5;i++){if(uniq[i]-uniq[i+4]===4){str=true;strH=uniq[i];break}}
+  if(!str&&uniq.includes(14)&&[2,3,4,5].every(v=>uniq.includes(v))){str=true;strH=5}
+  if(flush&&str)return{rank:9,name:'Escalera Color',high:strH};
+  if(ent[0].c===4)return{rank:8,name:'Póker',high:ent[0].v};
+  if(ent[0].c===3&&ent.length>=2&&ent[1].c>=2)return{rank:7,name:'Full House',high:ent[0].v};
+  if(flush)return{rank:6,name:'Color',high:vals[0]};
+  if(str)return{rank:5,name:'Escalera',high:strH};
+  if(ent[0].c===3)return{rank:4,name:'Trío',high:ent[0].v};
+  if(ent[0].c===2&&ent.length>=2&&ent[1].c===2)return{rank:3,name:'Doble Par',high:Math.max(ent[0].v,ent[1].v)};
+  if(ent[0].c===2)return{rank:2,name:'Par',high:ent[0].v};
+  return{rank:1,name:'Carta Alta',high:vals[0]};
+}
+render();
+</script>
+</body>
+</html>
