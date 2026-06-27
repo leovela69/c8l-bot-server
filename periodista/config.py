@@ -22,6 +22,11 @@ PROMO_LINKS = [
         "url": "https://gen-lang-client-0744582882.web.app/feed/",
         "emoji": "🌐",
     },
+    {
+        "text": "🎰 C8L Casino — 26 juegos premium GRATIS",
+        "url": "https://c8l-casino.vercel.app/",
+        "emoji": "🎰",
+    },
 ]
 
 # ---------------------------------------------------------------------------

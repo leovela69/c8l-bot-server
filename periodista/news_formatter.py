@@ -112,9 +112,56 @@ def format_question_post() -> str:
         "🚀 ¿Ya probasteis C8L Generate? Cread con IA → https://c8l-web8.vercel.app/generate",
         "💰 ¿En qué crypto confiais más ahora mismo?",
         "🎵 ¿Qué estáis escuchando esta semana? Recomendad algo!",
+        "🎰 ¿Cuál es vuestro juego favorito del C8L Casino? → https://c8l-casino.vercel.app/",
+        "🎲 ¿Alguien ha conseguido racha en el Crash? Yo llegué a 5x → https://c8l-casino.vercel.app/",
+        "🃏 Reto: ¿Quién consigue más fichas hoy en el Blackjack? → https://c8l-casino.vercel.app/",
     ]
 
     return random.choice(questions)
+
+
+def format_casino_launch_announcement() -> str:
+    """
+    Formato especial para anunciar el lanzamiento de C8L Casino.
+    Se usa una sola vez o cuando el admin lo invoque.
+    """
+    now = datetime.utcnow()
+    fecha = now.strftime("%d/%m/%Y")
+
+    msg = (
+        "🎰🎰🎰 <b>NUEVO LANZAMIENTO</b> 🎰🎰🎰\n"
+        "━━━━━━━━━━━━━━━━━━━\n\n"
+        "📰 <b>FLASH ESPECIAL — C8L AGENCY</b>\n"
+        f"<i>{fecha}</i>\n\n"
+        "🎲 <b>C8L CASINO ya está ONLINE!</b>\n\n"
+        "El casino más completo de la comunidad acaba de abrir sus puertas:\n\n"
+        "👉 <b>https://c8l-casino.vercel.app/</b>\n\n"
+        "🃏 <b>26 JUEGOS PREMIUM incluidos:</b>\n"
+        "• 🃏 Blackjack, Poker Texas, Baccarat, Video Poker\n"
+        "• 🎡 Ruleta Europea y Americana, Craps, Sic Bo\n"
+        "• 🍒 5 Slots temáticos (Egipto, Espacio, Frutas, Jackpot...)\n"
+        "• 💣 Mines, Plinko, Crash, Tower, Dice\n"
+        "• 👑 Keno, Bingo, Wheel of Fortune, Scratch Cards, Hi-Lo\n"
+        "• ⚡ Coin Flip, Dragon Tiger, Casino War\n\n"
+        "🏆 <b>Sistema completo:</b>\n"
+        "• 10,000 fichas GRATIS al empezar\n"
+        "• Niveles VIP (Bronze → Diamond)\n"
+        "• Bonus diario\n"
+        "• Rankings y estadísticas\n"
+        "• Sin dinero real — diversión pura\n\n"
+        "━━━━━━━━━━━━━━━━━━━\n"
+        "🔥 <b>JUEGA AHORA:</b>\n"
+        "→ https://c8l-casino.vercel.app/\n\n"
+        "🚀 <b>C8L Generate — Crea con IA:</b>\n"
+        "→ https://c8l-web8.vercel.app/generate\n\n"
+        "🎨 <b>Editor de diseño:</b>\n"
+        "→ https://c8l-web8.vercel.app/\n"
+        "━━━━━━━━━━━━━━━━━━━\n\n"
+        "La casa SIEMPRE gana... pero nosotros SOMOS la casa. 🏛️\n"
+        "<i>— C8L Agency | Panteón de Dioses</i>"
+    )
+
+    return msg
 
 
 def format_launch_announcement() -> str:
