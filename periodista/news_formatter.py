@@ -109,8 +109,48 @@ def format_question_post() -> str:
         "🔬 ¿Habéis probado alguna IA nueva últimamente? ¿Cuál os gusta más?",
         "🌍 Si pudierais cambiar UNA cosa del mundo ahora mismo, ¿qué sería?",
         "🎨 ¿Habéis probado el editor de diseño? → https://c8l-web8.vercel.app/",
+        "🚀 ¿Ya probasteis C8L Generate? Cread con IA → https://c8l-web8.vercel.app/generate",
         "💰 ¿En qué crypto confiais más ahora mismo?",
         "🎵 ¿Qué estáis escuchando esta semana? Recomendad algo!",
     ]
 
     return random.choice(questions)
+
+
+def format_launch_announcement() -> str:
+    """
+    Formato especial para anunciar el lanzamiento de C8L Generate.
+    Se usa una sola vez o cuando el admin lo invoque.
+    """
+    now = datetime.utcnow()
+    fecha = now.strftime("%d/%m/%Y")
+
+    msg = (
+        "🚀🚀🚀 <b>LANZAMIENTO OFICIAL</b> 🚀🚀🚀\n"
+        "━━━━━━━━━━━━━━━━━━━\n\n"
+        "📰 <b>FLASH ESPECIAL — C8L AGENCY</b>\n"
+        f"<i>{fecha}</i>\n\n"
+        "🧠 <b>C8L GENERATE ya está ONLINE!</b>\n\n"
+        "Acabamos de lanzar nuestra plataforma de creación con Inteligencia Artificial:\n\n"
+        "👉 <b>https://c8l-web8.vercel.app/generate</b>\n\n"
+        "🎨 <b>¿Qué podéis hacer?</b>\n"
+        "• Generar imágenes con IA\n"
+        "• Crear código al instante\n"
+        "• Producir contenido creativo\n"
+        "• Herramientas profesionales GRATIS\n\n"
+        "⚡ <b>¿Por qué es diferente?</b>\n"
+        "• Hecho POR C8L, PARA C8L\n"
+        "• Sin límites absurdos\n"
+        "• Interfaz limpia y rápida\n"
+        "• IA de última generación\n\n"
+        "━━━━━━━━━━━━━━━━━━━\n"
+        "🔥 <b>Probadlo AHORA:</b>\n"
+        "→ https://c8l-web8.vercel.app/generate\n\n"
+        "🎨 <b>Editor de diseño:</b>\n"
+        "→ https://c8l-web8.vercel.app/\n"
+        "━━━━━━━━━━━━━━━━━━━\n\n"
+        "El futuro de la creación es NUESTRO. 🏛️\n"
+        "<i>— C8L Agency | Panteón de Dioses</i>"
+    )
+
+    return msg

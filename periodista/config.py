@@ -8,12 +8,17 @@
 # ---------------------------------------------------------------------------
 PROMO_LINKS = [
     {
+        "text": "🚀 C8L Generate — Crea con IA (imágenes, código, contenido)",
+        "url": "https://c8l-web8.vercel.app/generate",
+        "emoji": "🚀",
+    },
+    {
         "text": "🎨 Editor de diseño GRATIS estilo Canva",
         "url": "https://c8l-web8.vercel.app/",
         "emoji": "🎨",
     },
     {
-        "text": "🌐 C8L Agency — Plataforma de creación",
+        "text": "🌐 C8L Agency — Plataforma oficial",
         "url": "https://gen-lang-client-0744582882.web.app/feed/",
         "emoji": "🌐",
     },

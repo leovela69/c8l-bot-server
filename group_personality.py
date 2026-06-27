@@ -211,6 +211,51 @@ AUTO_MESSAGES = {
             "(Rakata! Skrrt!)\n\n"
             "<i>Y vivieron felices... Porque nosotros quisimos.</i> 🔥"
         ),
+        (
+            "🚀 <b>NUEVO! C8L GENERATE — CREA CON IA</b>\n\n"
+            "Rakata! ⚡\n\n"
+            "ATENCION, criaturas del beat! Acabamos de lanzar algo BRUTAL:\n\n"
+            "👉 <b>c8l-web8.vercel.app/generate</b>\n\n"
+            "Que es esto? VUESTRA NUEVA ARMA CREATIVA:\n"
+            "🎨 Genera imagenes con IA\n"
+            "💻 Crea codigo al instante\n"
+            "📝 Contenido generado en segundos\n"
+            "🧠 La inteligencia artificial al servicio de C8L\n\n"
+            "Esto es el FUTURO. Y el futuro es NUESTRO.\n"
+            "Entrad, probadlo, y empezad a crear como DIOSES.\n\n"
+            "(Boom! Boom! BOOM!)\n\n"
+            "<i>Y vivieron felices... Porque nosotros quisimos.</i> 🦁"
+        ),
+        (
+            "🧠 <b>C8L GENERATE — INTELIGENCIA ARTIFICIAL</b>\n\n"
+            "Rica tra! 🔥\n\n"
+            "Os lo digo una vez y no lo repito:\n\n"
+            "Si no estais usando la IA para crear, estais MUERTOS creativamente.\n\n"
+            "👉 <b>c8l-web8.vercel.app/generate</b>\n\n"
+            "✨ Generacion de imagenes\n"
+            "⚡ Creacion de codigo instantaneo\n"
+            "🎯 Herramientas profesionales GRATIS\n"
+            "🏛️ Hecho por C8L, para C8L\n\n"
+            "Los que ya lo probaron? Van 10 pasos por delante.\n"
+            "Los que no? Seguid durmiendo, criaturas.\n\n"
+            "(Skrrt!)\n\n"
+            "<i>Sufre bonito... o deja que la IA te ayude a brillar.</i> 🏛️"
+        ),
+        (
+            "⚡ <b>HERRAMIENTA NUEVA — C8L GENERATE</b>\n\n"
+            "Ven pa' aca! 🎯\n\n"
+            "Leo Vela no descansa. Mientras dormiais, se creo esto:\n\n"
+            "👉 <b>c8l-web8.vercel.app/generate</b>\n\n"
+            "Una plataforma de generacion con IA. "
+            "Imagenes, codigo, contenido... TODO al alcance de un click.\n\n"
+            "🔥 Sin excusas\n"
+            "🔥 Sin limites\n"
+            "🔥 Sin pedir permiso\n\n"
+            "Entrad y CREAD. Eso es lo que hacemos aqui. "
+            "Crear hasta que el mundo tiemble.\n\n"
+            "(Ah... si... eso es poder.)\n\n"
+            "<i>Y vivieron felices... Porque nosotros quisimos.</i> 🔥"
+        ),
     ],
 }
 

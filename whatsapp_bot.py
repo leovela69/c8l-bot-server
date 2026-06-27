@@ -1653,6 +1653,19 @@ def main():
         else:
             bot.reply_to(msg, "❌ No pude enviar.")
 
+    @bot.message_handler(commands=["lanzamiento"])
+    def cmd_lanzamiento(msg):
+        """Admin: anuncia el lanzamiento de C8L Generate al grupo."""
+        if not _is_admin(msg):
+            return bot.reply_to(msg, "🚫 Solo el admin puede hacer lanzamientos.")
+        from periodista.news_formatter import format_launch_announcement
+        announcement = format_launch_announcement()
+        ok = broadcast_to_group(announcement, "HTML")
+        if ok:
+            bot.reply_to(msg, "🚀✅ ¡Anuncio de lanzamiento de C8L Generate enviado al grupo!")
+        else:
+            bot.reply_to(msg, "❌ No pude enviar. ¿El bot está en el grupo?")
+
     @bot.message_handler(commands=["diagnosticar"])
     def cmd_diagnosticar(msg):
         tg_typing(msg.chat.id)
