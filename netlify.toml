@@ -1,0 +1,15 @@
+[build]
+  publish = "kukis"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Language = ["es"]}
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    X-Frame-Options = "ALLOWALL"
+    Cache-Control = "public, max-age=3600"

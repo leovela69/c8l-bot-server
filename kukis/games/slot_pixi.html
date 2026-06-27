@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C8L GOLDEN SLOTS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: linear-gradient(180deg, #06060f 0%, #0d0400 100%);
+    overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#game-container canvas {
+    display: block;
+}
+</style>
+</head>
+<body>
+<div id="game-container"></div>
+<script>
+
+// ============================================================
+// C8L GOLDEN SLOTS - Professional PixiJS Slot Machine
+// ============================================================
+
+const CONFIG = {
+    REELS: 5,
+    ROWS: 3,
+    SYMBOL_SIZE: 120,
+    REEL_GAP: 10,
+    SPIN_SPEED: 40,
+    SPIN_DURATION: 2000,
+    REEL_DELAY: 200,
+    BOUNCE_AMOUNT: 20,
+    SYMBOLS_PER_STRIP: 24,
+    PAYLINES: [
+        [1,1,1,1,1], [0,0,0,0,0], [2,2,2,2,2],
+        [0,1,2,1,0], [2,1,0,1,2], [0,0,1,2,2],
+        [2,2,1,0,0], [1,0,1,0,1], [1,2,1,2,1],
+        [0,1,0,1,0], [2,1,2,1,2], [1,0,0,0,1],
+        [1,2,2,2,1], [0,1,1,1,0], [2,1,1,1,2],
+        [0,2,0,2,0], [2,0,2,0,2], [1,1,0,1,1],
+        [1,1,2,1,1], [0,2,2,2,0]
+    ],
+    BETS: [10, 25, 50, 100, 250],
+    LINE_OPTIONS: [1, 5, 10, 20]
+};
+
+const SYMBOLS = {
+    LION:    { id: 0, name: 'LION', value: 50, color: 0xFFD700, isWild: true },
+    DIAMOND: { id: 1, name: 'DIAMOND', value: 25, color: 0x00FFFF },
+    CROWN:   { id: 2, name: 'CROWN', value: 15, color: 0xFFD700 },
+    STAR:    { id: 3, name: 'STAR', value: 10, color: 0xFFFF00, isScatter: true },
+    SEVEN:   { id: 4, name: 'SEVEN', value: 8, color: 0xFFD700 },
+    BELL:    { id: 5, name: 'BELL', value: 6, color: 0xFFA500 },
+    CHERRY:  { id: 6, name: 'CHERRY', value: 5, color: 0xFF2222 },
+    BAR:     { id: 7, name: 'BAR', value: 4, color: 0xFFFFFF }
+};
+const SYMBOL_LIST = Object.values(SYMBOLS);
+
+
+// ============================================================
+// AUDIO ENGINE (Web Audio API)
+// ============================================================
+class AudioEngine {
+    constructor() {
+        this.ctx = null;
+        this.enabled = true;
+    }
+    init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+    play(type) {
+        if (!this.enabled || !this.ctx) return;
+        try {
+            switch(type) {
+                case 'spin': this._whoosh(); break;
+                case 'stop': this._thunk(); break;
+                case 'click': this._click(); break;
+                case 'win': this._winChime(); break;
+                case 'bigwin': this._fanfare(); break;
+                case 'freespin': this._freeSpinSound(); break;
+            }
+        } catch(e) {}
+    }
+    _whoosh() {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(200, this.ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.3);
+        g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + 0.3);
+    }
+    _thunk() {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(150, this.ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.1);
+        g.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + 0.1);
+    }
+    _click() {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 600;
+        g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + 0.05);
+    }
+
+    _winChime() {
+        const notes = [523, 659, 784, 1047];
+        notes.forEach((freq, i) => {
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = 'sine'; o.frequency.value = freq;
+            g.gain.setValueAtTime(0.15, this.ctx.currentTime + i*0.1);
+            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i*0.1 + 0.3);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(this.ctx.currentTime + i*0.1);
+            o.stop(this.ctx.currentTime + i*0.1 + 0.3);
+        });
+    }
+    _fanfare() {
+        const notes = [523, 659, 784, 659, 784, 1047, 784, 1047, 1318];
+        notes.forEach((freq, i) => {
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = 'triangle'; o.frequency.value = freq;
+            g.gain.setValueAtTime(0.2, this.ctx.currentTime + i*0.12);
+            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i*0.12 + 0.4);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(this.ctx.currentTime + i*0.12);
+            o.stop(this.ctx.currentTime + i*0.12 + 0.4);
+        });
+    }
+    _freeSpinSound() {
+        const notes = [440, 554, 659, 880, 1108, 1318];
+        notes.forEach((freq, i) => {
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = 'sine'; o.frequency.value = freq;
+            g.gain.setValueAtTime(0.2, this.ctx.currentTime + i*0.08);
+            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i*0.08 + 0.5);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(this.ctx.currentTime + i*0.08);
+            o.stop(this.ctx.currentTime + i*0.08 + 0.5);
+        });
+    }
+}
+const audio = new AudioEngine();
+
+
+// ============================================================
+// SYMBOL DRAWING (PIXI.Graphics)
+// ============================================================
+function createSymbolGraphic(symbolDef, size) {
+    const container = new PIXI.Container();
+    const g = new PIXI.Graphics();
+    const s = size * 0.4;
+    const color = symbolDef.color;
+
+    switch(symbolDef.id) {
+        case 0: // LION - gold pentagon (Wild)
+            g.beginFill(color);
+            const pts = [];
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                pts.push(Math.cos(angle) * s, Math.sin(angle) * s);
+            }
+            g.moveTo(pts[0], pts[1]);
+            for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i+1]);
+            g.closePath(); g.endFill();
+            g.beginFill(0xB8860B);
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                g.drawCircle(Math.cos(angle) * s * 0.5, Math.sin(angle) * s * 0.5, 4);
+            }
+            g.endFill();
+            // WILD text
+            const wildText = new PIXI.Text('WILD', {
+                fontSize: 14, fill: 0x000000, fontWeight: 'bold', fontFamily: 'Arial'
+            });
+            wildText.anchor.set(0.5); wildText.y = s + 12;
+            container.addChild(wildText);
+            break;
+        case 1: // DIAMOND - cyan diamond
+            g.beginFill(color);
+            g.moveTo(0, -s); g.lineTo(s*0.7, 0);
+            g.lineTo(0, s); g.lineTo(-s*0.7, 0);
+            g.closePath(); g.endFill();
+            g.beginFill(0x88FFFF, 0.5);
+            g.moveTo(0, -s); g.lineTo(s*0.3, 0);
+            g.lineTo(0, s*0.3); g.lineTo(-s*0.3, 0);
+            g.closePath(); g.endFill();
+            break;
+        case 2: // CROWN - gold crown
+            g.beginFill(color);
+            g.moveTo(-s, s*0.5); g.lineTo(-s, -s*0.2);
+            g.lineTo(-s*0.5, s*0.1); g.lineTo(0, -s*0.6);
+            g.lineTo(s*0.5, s*0.1); g.lineTo(s, -s*0.2);
+            g.lineTo(s, s*0.5); g.closePath(); g.endFill();
+            g.beginFill(0xFF0000);
+            g.drawCircle(-s*0.5, -s*0.05, 5);
+            g.drawCircle(0, -s*0.4, 5);
+            g.drawCircle(s*0.5, -s*0.05, 5);
+            g.endFill();
+            break;
+
+        case 3: // STAR - yellow 5-point star (Scatter)
+            g.beginFill(color);
+            for (let i = 0; i < 10; i++) {
+                const angle = (i * Math.PI / 5) - Math.PI / 2;
+                const r = i % 2 === 0 ? s : s * 0.4;
+                const x = Math.cos(angle) * r;
+                const y = Math.sin(angle) * r;
+                if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+            }
+            g.closePath(); g.endFill();
+            g.beginFill(0xFFFF88, 0.6);
+            g.drawCircle(0, 0, s * 0.25);
+            g.endFill();
+            const scatText = new PIXI.Text('SCATTER', {
+                fontSize: 10, fill: 0x000000, fontWeight: 'bold', fontFamily: 'Arial'
+            });
+            scatText.anchor.set(0.5); scatText.y = s + 12;
+            container.addChild(scatText);
+            break;
+        case 4: // SEVEN - gold "7"
+            const sevenText = new PIXI.Text('7', {
+                fontSize: size * 0.6, fill: color, fontWeight: 'bold',
+                fontFamily: 'Arial', stroke: 0x8B6914, strokeThickness: 3,
+                dropShadow: true, dropShadowColor: 0x000000, dropShadowDistance: 2
+            });
+            sevenText.anchor.set(0.5);
+            container.addChild(sevenText);
+            break;
+        case 5: // BELL - gold bell shape
+            g.beginFill(color);
+            g.arc(0, -s*0.1, s*0.7, Math.PI, 0);
+            g.lineTo(s*0.8, s*0.4);
+            g.quadraticCurveTo(0, s*0.6, -s*0.8, s*0.4);
+            g.closePath(); g.endFill();
+            g.beginFill(0xB8860B);
+            g.drawCircle(0, s*0.5, s*0.15);
+            g.endFill();
+            g.beginFill(color);
+            g.drawCircle(0, -s*0.55, s*0.12);
+            g.endFill();
+            break;
+        case 6: // CHERRY - red circles
+            g.beginFill(color);
+            g.drawCircle(-s*0.3, s*0.2, s*0.35);
+            g.drawCircle(s*0.3, s*0.1, s*0.35);
+            g.endFill();
+            g.beginFill(0x88FF88, 0.8);
+            g.lineStyle(2, 0x228B22);
+            g.moveTo(-s*0.3, -s*0.1); g.quadraticCurveTo(0, -s*0.7, s*0.3, -s*0.2);
+            g.lineStyle(0);
+            g.endFill();
+            g.beginFill(0x00AA00);
+            g.ellipse(0, -s*0.5, s*0.2, s*0.12);
+            g.endFill();
+            break;
+        case 7: // BAR - white "BAR" text block
+            g.beginFill(0x222222);
+            g.drawRoundedRect(-s*0.9, -s*0.4, s*1.8, s*0.8, 6);
+            g.endFill();
+            g.lineStyle(2, 0xFFD700);
+            g.drawRoundedRect(-s*0.9, -s*0.4, s*1.8, s*0.8, 6);
+            g.lineStyle(0);
+            const barText = new PIXI.Text('BAR', {
+                fontSize: size * 0.28, fill: 0xFFFFFF, fontWeight: 'bold', fontFamily: 'Arial'
+            });
+            barText.anchor.set(0.5);
+            container.addChild(barText);
+            break;
+    }
+    container.addChildAt(g, 0);
+    return container;
+}
+
+
+// ============================================================
+// GAME STATE
+// ============================================================
+const state = {
+    balance: 10000,
+    betIndex: 0,
+    linesIndex: 3,
+    spinning: false,
+    autoSpin: 0,
+    autoSpinRemaining: 0,
+    freeSpins: 0,
+    freeSpinActive: false,
+    lastWin: 0,
+    totalWin: 0,
+    reelStrips: [],
+    reelPositions: [],
+    finalPositions: [],
+    paytableVisible: false
+};
+
+function getBet() { return CONFIG.BETS[state.betIndex]; }
+function getLines() { return CONFIG.LINE_OPTIONS[state.linesIndex]; }
+function getTotalBet() { return getBet() * getLines(); }
+
+// Generate random reel strips
+function generateReelStrips() {
+    state.reelStrips = [];
+    for (let r = 0; r < CONFIG.REELS; r++) {
+        const strip = [];
+        for (let i = 0; i < CONFIG.SYMBOLS_PER_STRIP; i++) {
+            // Weighted: wilds and scatters are rarer
+            const rand = Math.random();
+            if (rand < 0.03) strip.push(0); // LION (Wild) 3%
+            else if (rand < 0.08) strip.push(3); // STAR (Scatter) 5%
+            else if (rand < 0.15) strip.push(1); // DIAMOND 7%
+            else if (rand < 0.24) strip.push(2); // CROWN 9%
+            else if (rand < 0.38) strip.push(4); // SEVEN 14%
+            else if (rand < 0.55) strip.push(5); // BELL 17%
+            else if (rand < 0.75) strip.push(6); // CHERRY 20%
+            else strip.push(7); // BAR 25%
+        }
+        state.reelStrips.push(strip);
+    }
+}
+generateReelStrips();
+
+
+// ============================================================
+// PIXI APPLICATION SETUP
+// ============================================================
+const app = new PIXI.Application({
+    width: 1024,
+    height: 700,
+    backgroundColor: 0x06060f,
+    antialias: true,
+    resolution: window.devicePixelRatio || 1,
+    autoDensity: true
+});
+document.getElementById('game-container').appendChild(app.view);
+
+// Resize handler
+function resize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const scale = Math.min(w / 1024, h / 700);
+    app.view.style.width = (1024 * scale) + 'px';
+    app.view.style.height = (700 * scale) + 'px';
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Main containers
+const bgContainer = new PIXI.Container();
+const frameContainer = new PIXI.Container();
+const reelsContainer = new PIXI.Container();
+const winLinesContainer = new PIXI.Container();
+const particleContainer = new PIXI.Container();
+const hudContainer = new PIXI.Container();
+const overlayContainer = new PIXI.Container();
+
+app.stage.addChild(bgContainer);
+app.stage.addChild(frameContainer);
+app.stage.addChild(reelsContainer);
+app.stage.addChild(winLinesContainer);
+app.stage.addChild(particleContainer);
+app.stage.addChild(hudContainer);
+app.stage.addChild(overlayContainer);
+
+
+// ============================================================
+// BACKGROUND & FRAME
+// ============================================================
+function drawBackground() {
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x06060f);
+    bg.drawRect(0, 0, 1024, 700);
+    bg.endFill();
+    bgContainer.addChild(bg);
+}
+
+const REEL_AREA = {
+    x: 162, y: 80,
+    width: CONFIG.REELS * (CONFIG.SYMBOL_SIZE + CONFIG.REEL_GAP) - CONFIG.REEL_GAP,
+    height: CONFIG.ROWS * CONFIG.SYMBOL_SIZE
+};
+
+function drawFrame() {
+    const frame = new PIXI.Graphics();
+    const pad = 12;
+    const fx = REEL_AREA.x - pad - 20;
+    const fy = REEL_AREA.y - pad - 20;
+    const fw = REEL_AREA.width + pad * 2 + 40;
+    const fh = REEL_AREA.height + pad * 2 + 40;
+
+    // Outer gold border
+    frame.lineStyle(6, 0xFFD700);
+    frame.drawRoundedRect(fx, fy, fw, fh, 12);
+    // Inner border
+    frame.lineStyle(3, 0x8B6914);
+    frame.drawRoundedRect(fx + 8, fy + 8, fw - 16, fh - 16, 8);
+    // Corner ornaments
+    const corners = [[fx, fy], [fx+fw, fy], [fx, fy+fh], [fx+fw, fy+fh]];
+    corners.forEach(([cx, cy]) => {
+        frame.lineStyle(0);
+        frame.beginFill(0xFFD700);
+        frame.drawCircle(cx, cy, 10);
+        frame.endFill();
+        frame.beginFill(0x8B6914);
+        frame.drawCircle(cx, cy, 5);
+        frame.endFill();
+    });
+    // Reel background
+    frame.lineStyle(0);
+    frame.beginFill(0x0a0500);
+    frame.drawRoundedRect(REEL_AREA.x - 5, REEL_AREA.y - 5, REEL_AREA.width + 10, REEL_AREA.height + 10, 4);
+    frame.endFill();
+
+    frameContainer.addChild(frame);
+
+    // Payline indicators
+    for (let i = 0; i < 20; i++) {
+        const side = i < 10 ? 'left' : 'right';
+        const idx = i < 10 ? i : i - 10;
+        const lineY = REEL_AREA.y + (idx / 9) * (REEL_AREA.height - 20) + 10;
+        const lineX = side === 'left' ? REEL_AREA.x - 30 : REEL_AREA.x + REEL_AREA.width + 15;
+        const indicator = new PIXI.Graphics();
+        indicator.beginFill(getPaylineColor(i), 0.7);
+        indicator.drawCircle(0, 0, 8);
+        indicator.endFill();
+        const num = new PIXI.Text((i+1).toString(), {fontSize: 8, fill: 0xFFFFFF, fontFamily: 'Arial'});
+        num.anchor.set(0.5);
+        indicator.addChild(num);
+        indicator.x = lineX; indicator.y = lineY;
+        frameContainer.addChild(indicator);
+    }
+}
+
+function getPaylineColor(idx) {
+    const colors = [0xFF0000,0x00FF00,0x0000FF,0xFFFF00,0xFF00FF,
+                    0x00FFFF,0xFF8800,0x88FF00,0x0088FF,0xFF0088,
+                    0xFFAA00,0x00FFAA,0xAA00FF,0xAAFF00,0x00AAFF,
+                    0xFF00AA,0x88FF88,0xFF8888,0x8888FF,0xFFFF88];
+    return colors[idx % colors.length];
+}
+
+
+// ============================================================
+// TITLE
+// ============================================================
+function drawTitle() {
+    const title = new PIXI.Text('C8L GOLDEN SLOTS', {
+        fontSize: 36,
+        fill: ['#FFD700', '#FFA500', '#FFD700'],
+        fillGradientType: 0,
+        fontWeight: 'bold',
+        fontFamily: 'Arial',
+        stroke: '#8B6914',
+        strokeThickness: 3,
+        dropShadow: true,
+        dropShadowColor: '#000000',
+        dropShadowBlur: 4,
+        dropShadowDistance: 2
+    });
+    title.anchor.set(0.5, 0);
+    title.x = 512; title.y = 15;
+    frameContainer.addChild(title);
+}
+
+// ============================================================
+// REEL SYSTEM
+// ============================================================
+const reels = [];
+const reelMasks = [];
+
+function buildReels() {
+    for (let r = 0; r < CONFIG.REELS; r++) {
+        const reelContainer = new PIXI.Container();
+        const reelX = REEL_AREA.x + r * (CONFIG.SYMBOL_SIZE + CONFIG.REEL_GAP);
+        reelContainer.x = reelX;
+        reelContainer.y = REEL_AREA.y;
+
+        // Create mask for this reel
+        const mask = new PIXI.Graphics();
+        mask.beginFill(0xFFFFFF);
+        mask.drawRect(reelX, REEL_AREA.y, CONFIG.SYMBOL_SIZE, REEL_AREA.height);
+        mask.endFill();
+        reelsContainer.addChild(mask);
+        reelContainer.mask = mask;
+        reelMasks.push(mask);
+
+        // Create symbol containers for reel (ROWS + 2 buffer)
+        const symbols = [];
+        for (let row = 0; row < CONFIG.ROWS + 2; row++) {
+            const symIdx = state.reelStrips[r][row % CONFIG.SYMBOLS_PER_STRIP];
+            const symContainer = createSymbolGraphic(SYMBOL_LIST[symIdx], CONFIG.SYMBOL_SIZE);
+            symContainer.x = CONFIG.SYMBOL_SIZE / 2;
+            symContainer.y = (row - 1) * CONFIG.SYMBOL_SIZE + CONFIG.SYMBOL_SIZE / 2;
+            symContainer._symbolId = symIdx;
+            reelContainer.addChild(symContainer);
+            symbols.push(symContainer);
+        }
+
+        reelsContainer.addChild(reelContainer);
+        reels.push({
+            container: reelContainer,
+            symbols: symbols,
+            position: 0,
+            targetPosition: 0,
+            spinning: false,
+            speed: 0,
+            phase: 'idle', // idle, accelerating, spinning, decelerating, bouncing
+            bounceOffset: 0
+        });
+    }
+    state.reelPositions = new Array(CONFIG.REELS).fill(0);
+}
+
+
+// ============================================================
+// SPIN MECHANICS
+// ============================================================
+function startSpin() {
+    if (state.spinning) return;
+    if (state.balance < getTotalBet() && !state.freeSpinActive) return;
+
+    audio.init();
+    audio.play('spin');
+    winLinesContainer.removeChildren();
+    particleContainer.removeChildren();
+
+    if (!state.freeSpinActive) {
+        state.balance -= getTotalBet();
+    }
+    state.spinning = true;
+    state.lastWin = 0;
+    updateHUD();
+
+    // Determine final positions (random)
+    state.finalPositions = [];
+    for (let r = 0; r < CONFIG.REELS; r++) {
+        state.finalPositions.push(Math.floor(Math.random() * CONFIG.SYMBOLS_PER_STRIP));
+    }
+
+    // Start each reel with delay
+    reels.forEach((reel, i) => {
+        setTimeout(() => {
+            reel.phase = 'accelerating';
+            reel.speed = 0;
+            reel.spinning = true;
+            reel.spinStart = performance.now();
+        }, i * 50);
+    });
+
+    // Schedule stops
+    const baseStop = CONFIG.SPIN_DURATION;
+    reels.forEach((reel, i) => {
+        setTimeout(() => {
+            reel.phase = 'decelerating';
+            reel.targetStop = state.finalPositions[i];
+        }, baseStop + i * CONFIG.REEL_DELAY);
+    });
+}
+
+function updateReels(delta) {
+    let allStopped = true;
+    reels.forEach((reel, i) => {
+        if (reel.phase === 'idle') return;
+        allStopped = false;
+
+        switch(reel.phase) {
+            case 'accelerating':
+                reel.speed = Math.min(reel.speed + 2 * delta, CONFIG.SPIN_SPEED);
+                if (reel.speed >= CONFIG.SPIN_SPEED) reel.phase = 'spinning';
+                reel.position += reel.speed * delta;
+                break;
+            case 'spinning':
+                reel.position += CONFIG.SPIN_SPEED * delta;
+                break;
+            case 'decelerating':
+                reel.speed = Math.max(reel.speed - 1.5 * delta, 5);
+                reel.position += reel.speed * delta;
+                if (reel.speed <= 5) {
+                    reel.phase = 'bouncing';
+                    reel.bounceOffset = CONFIG.BOUNCE_AMOUNT;
+                    reel.bounceDir = -1;
+                    audio.play('stop');
+                    // Snap to final position
+                    reel.position = reel.targetStop * CONFIG.SYMBOL_SIZE;
+                }
+                break;
+            case 'bouncing':
+                reel.bounceOffset += reel.bounceDir * 3 * delta;
+                if (reel.bounceOffset <= -CONFIG.BOUNCE_AMOUNT * 0.3) {
+                    reel.bounceDir = 1;
+                }
+                if (reel.bounceOffset >= 0 && reel.bounceDir > 0) {
+                    reel.bounceOffset = 0;
+                    reel.phase = 'idle';
+                    reel.spinning = false;
+                }
+                break;
+        }
+
+        // Update symbol positions
+        renderReelSymbols(reel, i);
+    });
+
+    if (state.spinning && allStopped && reels.every(r => r.phase === 'idle')) {
+        state.spinning = false;
+        evaluateWin();
+    }
+}
+
+
+function renderReelSymbols(reel, reelIdx) {
+    const strip = state.reelStrips[reelIdx];
+    const stripLen = strip.length;
+    const symSize = CONFIG.SYMBOL_SIZE;
+
+    // Remove old symbols
+    reel.container.removeChildren();
+
+    let basePos;
+    if (reel.phase === 'idle' || reel.phase === 'bouncing') {
+        basePos = state.finalPositions[reelIdx];
+    } else {
+        basePos = reel.position / symSize;
+    }
+
+    const offset = reel.bounceOffset || 0;
+
+    for (let row = -1; row <= CONFIG.ROWS; row++) {
+        const stripIdx = (Math.floor(basePos) + row + stripLen * 100) % stripLen;
+        const symId = strip[stripIdx];
+        const symGraphic = createSymbolGraphic(SYMBOL_LIST[symId], symSize);
+        symGraphic.x = symSize / 2;
+
+        let yPos;
+        if (reel.phase === 'idle' || reel.phase === 'bouncing') {
+            yPos = row * symSize + symSize / 2 + offset;
+        } else {
+            const frac = basePos - Math.floor(basePos);
+            yPos = (row - frac) * symSize + symSize / 2;
+        }
+        symGraphic.y = yPos;
+        symGraphic._symbolId = symId;
+        symGraphic._row = row;
+        reel.container.addChild(symGraphic);
+    }
+}
+
+function getVisibleSymbols() {
+    const grid = [];
+    for (let r = 0; r < CONFIG.REELS; r++) {
+        const col = [];
+        const strip = state.reelStrips[r];
+        const pos = state.finalPositions[r];
+        for (let row = 0; row < CONFIG.ROWS; row++) {
+            const idx = (pos + row) % strip.length;
+            col.push(strip[idx]);
+        }
+        grid.push(col);
+    }
+    return grid;
+}
+
+
+// ============================================================
+// WIN EVALUATION
+// ============================================================
+function evaluateWin() {
+    const grid = getVisibleSymbols();
+    let totalWin = 0;
+    const winningLines = [];
+
+    // Check paylines
+    const activeLines = getLines();
+    for (let l = 0; l < activeLines; l++) {
+        const payline = CONFIG.PAYLINES[l];
+        const lineSymbols = payline.map((row, col) => grid[col][row]);
+
+        // Find matches from left (wild substitutes)
+        const firstNonWild = lineSymbols.findIndex(s => s !== 0); // 0 = LION/Wild
+        const matchSymbol = firstNonWild === -1 ? 0 : lineSymbols[firstNonWild];
+
+        let matchCount = 0;
+        for (let c = 0; c < CONFIG.REELS; c++) {
+            if (lineSymbols[c] === matchSymbol || lineSymbols[c] === 0) {
+                matchCount++;
+            } else {
+                break;
+            }
+        }
+
+        if (matchCount >= 3) {
+            const symDef = SYMBOL_LIST[matchSymbol];
+            let multiplier = 1;
+            if (matchCount === 3) multiplier = 1;
+            else if (matchCount === 4) multiplier = 3;
+            else if (matchCount === 5) multiplier = 10;
+
+            let lineWin = symDef.value * getBet() * multiplier;
+            if (state.freeSpinActive) lineWin *= 2;
+
+            totalWin += lineWin;
+            winningLines.push({ line: l, count: matchCount, symbol: matchSymbol, win: lineWin, payline });
+        }
+    }
+
+    // Check scatters (anywhere)
+    let scatterCount = 0;
+    for (let r = 0; r < CONFIG.REELS; r++) {
+        for (let row = 0; row < CONFIG.ROWS; row++) {
+            if (grid[r][row] === 3) scatterCount++; // STAR
+        }
+    }
+
+    if (scatterCount >= 3) {
+        const scatterWin = getBet() * getLines() * (scatterCount === 3 ? 5 : scatterCount === 4 ? 20 : 50);
+        totalWin += scatterWin;
+        triggerFreeSpins(scatterCount);
+    }
+
+    state.lastWin = totalWin;
+    state.balance += totalWin;
+    updateHUD();
+
+    if (totalWin > 0) {
+        showWinLines(winningLines);
+        const betMultiple = totalWin / getTotalBet();
+        if (betMultiple >= 100) celebrateWin('mega', totalWin);
+        else if (betMultiple >= 50) celebrateWin('big', totalWin);
+        else if (betMultiple >= 10) celebrateWin('medium', totalWin);
+        else celebrateWin('small', totalWin);
+    } else {
+        // Continue auto-spin or free spins
+        continueAutoPlay();
+    }
+}
+
+function triggerFreeSpins(count) {
+    const spins = count === 3 ? 5 : count === 4 ? 10 : 15;
+    if (state.freeSpinActive) {
+        state.freeSpins += 5; // retrigger
+    } else {
+        state.freeSpins = spins;
+        state.freeSpinActive = true;
+    }
+    audio.play('freespin');
+    showFreeSpinOverlay(state.freeSpins);
+}
+
+
+// ============================================================
+// WIN DISPLAY & CELEBRATION
+// ============================================================
+function showWinLines(winningLines) {
+    winLinesContainer.removeChildren();
+    winningLines.forEach((wl, idx) => {
+        setTimeout(() => {
+            const line = new PIXI.Graphics();
+            const color = getPaylineColor(wl.line);
+            line.lineStyle(3, color, 0.8);
+            for (let c = 0; c < wl.count; c++) {
+                const row = wl.payline[c];
+                const x = REEL_AREA.x + c * (CONFIG.SYMBOL_SIZE + CONFIG.REEL_GAP) + CONFIG.SYMBOL_SIZE / 2;
+                const y = REEL_AREA.y + row * CONFIG.SYMBOL_SIZE + CONFIG.SYMBOL_SIZE / 2;
+                if (c === 0) line.moveTo(x, y); else line.lineTo(x, y);
+            }
+            winLinesContainer.addChild(line);
+
+            // Glow on winning symbols
+            for (let c = 0; c < wl.count; c++) {
+                const row = wl.payline[c];
+                const glow = new PIXI.Graphics();
+                glow.beginFill(color, 0.2);
+                glow.drawRoundedRect(
+                    REEL_AREA.x + c * (CONFIG.SYMBOL_SIZE + CONFIG.REEL_GAP) - 2,
+                    REEL_AREA.y + row * CONFIG.SYMBOL_SIZE - 2,
+                    CONFIG.SYMBOL_SIZE + 4, CONFIG.SYMBOL_SIZE + 4, 6
+                );
+                glow.endFill();
+                glow.alpha = 0;
+                winLinesContainer.addChild(glow);
+                animatePulse(glow);
+            }
+        }, idx * 500);
+    });
+}
+
+function animatePulse(obj) {
+    let t = 0;
+    const ticker = () => {
+        t += 0.05;
+        obj.alpha = 0.3 + Math.sin(t * 3) * 0.3;
+        if (t > 6) {
+            app.ticker.remove(ticker);
+            if (obj.parent) obj.parent.removeChild(obj);
+        }
+    };
+    app.ticker.add(ticker);
+}
+
+function celebrateWin(level, amount) {
+    switch(level) {
+        case 'small': audio.play('win'); spawnParticles(10); break;
+        case 'medium': audio.play('win'); spawnParticles(30); showWinText('WIN!', amount); break;
+        case 'big': audio.play('bigwin'); spawnParticles(60); showWinText('BIG WIN!', amount); screenFlash(); break;
+        case 'mega': audio.play('bigwin'); spawnParticles(100); showWinText('MEGA WIN!', amount); screenFlash(); screenShake(); break;
+    }
+    // Delay auto-continue
+    setTimeout(() => continueAutoPlay(), level === 'small' ? 1500 : 3000);
+}
+
+
+function showWinText(label, amount) {
+    const winText = new PIXI.Text(label, {
+        fontSize: 60, fill: ['#FFD700', '#FFFFFF', '#FFD700'],
+        fillGradientType: 0, fontWeight: 'bold', fontFamily: 'Arial',
+        stroke: '#000000', strokeThickness: 5,
+        dropShadow: true, dropShadowColor: '#FFD700', dropShadowBlur: 10
+    });
+    winText.anchor.set(0.5);
+    winText.x = 512; winText.y = 350;
+    winText.scale.set(0.1);
+    overlayContainer.addChild(winText);
+
+    const amountText = new PIXI.Text(amount.toLocaleString(), {
+        fontSize: 40, fill: '#FFFFFF', fontWeight: 'bold', fontFamily: 'Arial',
+        stroke: '#FFD700', strokeThickness: 3
+    });
+    amountText.anchor.set(0.5);
+    amountText.x = 512; amountText.y = 410;
+    amountText.alpha = 0;
+    overlayContainer.addChild(amountText);
+
+    let t = 0;
+    const anim = () => {
+        t += 0.02;
+        // Zoom in
+        const scale = Math.min(1, t * 3);
+        winText.scale.set(scale + Math.sin(t * 10) * 0.03);
+        if (t > 0.3) amountText.alpha = Math.min(1, (t - 0.3) * 3);
+        if (t > 3) {
+            winText.alpha -= 0.05;
+            amountText.alpha -= 0.05;
+        }
+        if (t > 4) {
+            app.ticker.remove(anim);
+            overlayContainer.removeChild(winText);
+            overlayContainer.removeChild(amountText);
+        }
+    };
+    app.ticker.add(anim);
+}
+
+function screenFlash() {
+    const flash = new PIXI.Graphics();
+    flash.beginFill(0xFFFFFF, 0.3);
+    flash.drawRect(0, 0, 1024, 700);
+    flash.endFill();
+    overlayContainer.addChild(flash);
+    let t = 0;
+    const anim = () => {
+        t += 0.05;
+        flash.alpha = Math.max(0, 0.3 - t * 0.3);
+        if (flash.alpha <= 0) {
+            app.ticker.remove(anim);
+            overlayContainer.removeChild(flash);
+        }
+    };
+    app.ticker.add(anim);
+}
+
+function screenShake() {
+    let t = 0;
+    const origX = app.stage.x, origY = app.stage.y;
+    const anim = () => {
+        t += 1;
+        app.stage.x = origX + (Math.random() - 0.5) * 8;
+        app.stage.y = origY + (Math.random() - 0.5) * 8;
+        if (t > 30) {
+            app.stage.x = origX; app.stage.y = origY;
+            app.ticker.remove(anim);
+        }
+    };
+    app.ticker.add(anim);
+}
+
+
+// ============================================================
+// PARTICLES
+// ============================================================
+function spawnParticles(count) {
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const p = new PIXI.Graphics();
+            const color = [0xFFD700, 0xFFA500, 0xFFFF00, 0xFFFFFF][Math.floor(Math.random() * 4)];
+            p.beginFill(color);
+            if (Math.random() > 0.5) {
+                p.drawCircle(0, 0, 3 + Math.random() * 4);
+            } else {
+                p.drawRect(-3, -3, 6, 6);
+            }
+            p.endFill();
+            p.x = 200 + Math.random() * 624;
+            p.y = 100 + Math.random() * 300;
+            p._vx = (Math.random() - 0.5) * 6;
+            p._vy = -3 - Math.random() * 5;
+            p._gravity = 0.15;
+            p._life = 1;
+            particleContainer.addChild(p);
+        }, i * 30);
+    }
+}
+
+function updateParticles(delta) {
+    const toRemove = [];
+    particleContainer.children.forEach(p => {
+        if (!p._vx) return;
+        p.x += p._vx * delta;
+        p._vy += p._gravity * delta;
+        p.y += p._vy * delta;
+        p._life -= 0.01 * delta;
+        p.alpha = Math.max(0, p._life);
+        if (p._life <= 0 || p.y > 700) toRemove.push(p);
+    });
+    toRemove.forEach(p => particleContainer.removeChild(p));
+}
+
+// ============================================================
+// FREE SPINS OVERLAY
+// ============================================================
+function showFreeSpinOverlay(spins) {
+    const overlay = new PIXI.Graphics();
+    overlay.beginFill(0x000000, 0.7);
+    overlay.drawRect(0, 0, 1024, 700);
+    overlay.endFill();
+    overlayContainer.addChild(overlay);
+
+    const text = new PIXI.Text(`FREE SPINS x${spins}!`, {
+        fontSize: 50, fill: ['#FF00FF', '#FFFF00', '#FF00FF'],
+        fillGradientType: 0, fontWeight: 'bold', fontFamily: 'Arial',
+        stroke: '#000000', strokeThickness: 4
+    });
+    text.anchor.set(0.5);
+    text.x = 512; text.y = 350;
+    overlayContainer.addChild(text);
+
+    setTimeout(() => {
+        overlayContainer.removeChild(overlay);
+        overlayContainer.removeChild(text);
+        if (state.freeSpinActive) playFreeSpin();
+    }, 2000);
+}
+
+function playFreeSpin() {
+    if (state.freeSpins > 0) {
+        state.freeSpins--;
+        updateHUD();
+        startSpin();
+    } else {
+        state.freeSpinActive = false;
+        updateHUD();
+        continueAutoPlay();
+    }
+}
+
+function continueAutoPlay() {
+    if (state.freeSpinActive && state.freeSpins > 0) {
+        setTimeout(() => playFreeSpin(), 1000);
+    } else if (state.freeSpinActive && state.freeSpins <= 0) {
+        state.freeSpinActive = false;
+        updateHUD();
+    }
+    if (state.autoSpinRemaining > 0 && !state.freeSpinActive) {
+        state.autoSpinRemaining--;
+        if (state.balance >= getTotalBet()) {
+            setTimeout(() => startSpin(), 500);
+        } else {
+            state.autoSpinRemaining = 0;
+        }
+        updateHUD();
+    }
+}
+
+
+// ============================================================
+// HUD (PIXI-based)
+// ============================================================
+let hudElements = {};
+
+function buildHUD() {
+    // Bottom panel background
+    const panel = new PIXI.Graphics();
+    panel.beginFill(0x1a1a2e, 0.95);
+    panel.drawRoundedRect(50, 610, 924, 80, 10);
+    panel.endFill();
+    panel.lineStyle(2, 0xFFD700, 0.5);
+    panel.drawRoundedRect(50, 610, 924, 80, 10);
+    hudContainer.addChild(panel);
+
+    // Balance
+    hudElements.balanceLabel = createHUDLabel('BALANCE', 120, 622);
+    hudElements.balanceValue = createHUDValue(state.balance.toLocaleString(), 120, 645);
+
+    // Bet
+    hudElements.betLabel = createHUDLabel('BET', 280, 622);
+    hudElements.betValue = createHUDValue(getBet().toString(), 280, 645);
+    createHUDButton('-', 230, 650, () => { changeBet(-1); });
+    createHUDButton('+', 330, 650, () => { changeBet(1); });
+
+    // Lines
+    hudElements.linesLabel = createHUDLabel('LINES', 420, 622);
+    hudElements.linesValue = createHUDValue(getLines().toString(), 420, 645);
+    createHUDButton('-', 370, 650, () => { changeLines(-1); });
+    createHUDButton('+', 470, 650, () => { changeLines(1); });
+
+    // Total Bet
+    hudElements.totalBetLabel = createHUDLabel('TOTAL BET', 560, 622);
+    hudElements.totalBetValue = createHUDValue(getTotalBet().toString(), 560, 645);
+
+    // Win
+    hudElements.winLabel = createHUDLabel('WIN', 700, 622);
+    hudElements.winValue = createHUDValue('0', 700, 645);
+
+    // SPIN button
+    const spinBtn = new PIXI.Graphics();
+    spinBtn.beginFill(0x228B22);
+    spinBtn.drawRoundedRect(0, 0, 100, 55, 10);
+    spinBtn.endFill();
+    spinBtn.lineStyle(2, 0xFFD700);
+    spinBtn.drawRoundedRect(0, 0, 100, 55, 10);
+    spinBtn.x = 830; spinBtn.y = 620;
+    spinBtn.eventMode = 'static';
+    spinBtn.cursor = 'pointer';
+    spinBtn.on('pointerdown', () => { audio.play('click'); startSpin(); });
+    const spinText = new PIXI.Text('SPIN', {
+        fontSize: 22, fill: 0xFFFFFF, fontWeight: 'bold', fontFamily: 'Arial'
+    });
+    spinText.anchor.set(0.5); spinText.x = 50; spinText.y = 27;
+    spinBtn.addChild(spinText);
+    hudContainer.addChild(spinBtn);
+    hudElements.spinBtn = spinBtn;
+
+    // MAX BET button
+    const maxBtn = createHUDSmallButton('MAX', 140, 670, () => {
+        state.betIndex = CONFIG.BETS.length - 1;
+        state.linesIndex = CONFIG.LINE_OPTIONS.length - 1;
+        updateHUD();
+    });
+    hudContainer.addChild(maxBtn);
+
+    // Auto-spin button
+    const autoBtn = createHUDSmallButton('AUTO', 200, 670, () => {
+        audio.play('click');
+        cycleAutoSpin();
+    });
+    hudContainer.addChild(autoBtn);
+    hudElements.autoBtn = autoBtn;
+
+    // Paytable button
+    const payBtn = createHUDSmallButton('PAY', 940, 622, () => {
+        audio.play('click');
+        togglePaytable();
+    });
+    hudContainer.addChild(payBtn);
+
+    // Free spins indicator
+    hudElements.freeSpinText = new PIXI.Text('', {
+        fontSize: 16, fill: 0xFF00FF, fontWeight: 'bold', fontFamily: 'Arial'
+    });
+    hudElements.freeSpinText.x = 512; hudElements.freeSpinText.y = 598;
+    hudElements.freeSpinText.anchor.set(0.5);
+    hudContainer.addChild(hudElements.freeSpinText);
+}
+
+
+function createHUDLabel(text, x, y) {
+    const t = new PIXI.Text(text, {
+        fontSize: 11, fill: 0xAAAAAA, fontFamily: 'Arial'
+    });
+    t.anchor.set(0.5, 0); t.x = x; t.y = y;
+    hudContainer.addChild(t);
+    return t;
+}
+
+function createHUDValue(text, x, y) {
+    const t = new PIXI.Text(text, {
+        fontSize: 20, fill: 0xFFD700, fontWeight: 'bold', fontFamily: 'Arial'
+    });
+    t.anchor.set(0.5, 0); t.x = x; t.y = y;
+    hudContainer.addChild(t);
+    return t;
+}
+
+function createHUDButton(label, x, y, onClick) {
+    const btn = new PIXI.Graphics();
+    btn.beginFill(0x333333);
+    btn.drawCircle(0, 0, 14);
+    btn.endFill();
+    btn.lineStyle(1, 0xFFD700);
+    btn.drawCircle(0, 0, 14);
+    btn.x = x; btn.y = y;
+    btn.eventMode = 'static'; btn.cursor = 'pointer';
+    btn.on('pointerdown', () => { audio.play('click'); onClick(); });
+    const t = new PIXI.Text(label, { fontSize: 16, fill: 0xFFFFFF, fontFamily: 'Arial' });
+    t.anchor.set(0.5); btn.addChild(t);
+    hudContainer.addChild(btn);
+    return btn;
+}
+
+function createHUDSmallButton(label, x, y, onClick) {
+    const btn = new PIXI.Graphics();
+    btn.beginFill(0x333344);
+    btn.drawRoundedRect(0, 0, 50, 22, 5);
+    btn.endFill();
+    btn.lineStyle(1, 0x888888);
+    btn.drawRoundedRect(0, 0, 50, 22, 5);
+    btn.x = x; btn.y = y;
+    btn.eventMode = 'static'; btn.cursor = 'pointer';
+    btn.on('pointerdown', onClick);
+    const t = new PIXI.Text(label, { fontSize: 10, fill: 0xFFFFFF, fontFamily: 'Arial' });
+    t.anchor.set(0.5); t.x = 25; t.y = 11;
+    btn.addChild(t);
+    return btn;
+}
+
+function changeBet(dir) {
+    if (state.spinning) return;
+    state.betIndex = Math.max(0, Math.min(CONFIG.BETS.length - 1, state.betIndex + dir));
+    updateHUD();
+}
+
+function changeLines(dir) {
+    if (state.spinning) return;
+    state.linesIndex = Math.max(0, Math.min(CONFIG.LINE_OPTIONS.length - 1, state.linesIndex + dir));
+    updateHUD();
+}
+
+function cycleAutoSpin() {
+    const options = [0, 10, 25, 50, 100];
+    const current = options.indexOf(state.autoSpinRemaining);
+    const next = (current + 1) % options.length;
+    state.autoSpinRemaining = options[next];
+    if (state.autoSpinRemaining > 0 && !state.spinning) {
+        startSpin();
+    }
+    updateHUD();
+}
+
+function updateHUD() {
+    if (!hudElements.balanceValue) return;
+    hudElements.balanceValue.text = state.balance.toLocaleString();
+    hudElements.betValue.text = getBet().toString();
+    hudElements.linesValue.text = getLines().toString();
+    hudElements.totalBetValue.text = getTotalBet().toString();
+    hudElements.winValue.text = state.lastWin > 0 ? state.lastWin.toLocaleString() : '0';
+    hudElements.freeSpinText.text = state.freeSpinActive ? `FREE SPINS: ${state.freeSpins} remaining (x2 multiplier)` : '';
+    // Auto spin indicator
+    const autoText = hudElements.autoBtn.children[hudElements.autoBtn.children.length - 1];
+    if (autoText && autoText.text !== undefined) {
+        autoText.text = state.autoSpinRemaining > 0 ? `A:${state.autoSpinRemaining}` : 'AUTO';
+    }
+}
+
+
+// ============================================================
+// PAYTABLE
+// ============================================================
+let paytableContainer = null;
+
+function togglePaytable() {
+    if (paytableContainer) {
+        overlayContainer.removeChild(paytableContainer);
+        paytableContainer = null;
+        return;
+    }
+    paytableContainer = new PIXI.Container();
+
+    // Background
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x0a0a1a, 0.95);
+    bg.drawRoundedRect(50, 30, 924, 620, 12);
+    bg.endFill();
+    bg.lineStyle(2, 0xFFD700);
+    bg.drawRoundedRect(50, 30, 924, 620, 12);
+    bg.eventMode = 'static';
+    paytableContainer.addChild(bg);
+
+    // Title
+    const title = new PIXI.Text('PAYTABLE', {
+        fontSize: 28, fill: 0xFFD700, fontWeight: 'bold', fontFamily: 'Arial'
+    });
+    title.anchor.set(0.5, 0); title.x = 512; title.y = 45;
+    paytableContainer.addChild(title);
+
+    // Symbol payouts
+    const startY = 90;
+    SYMBOL_LIST.forEach((sym, idx) => {
+        const y = startY + idx * 55;
+        const x = 100;
+
+        // Draw mini symbol
+        const mini = createSymbolGraphic(sym, 40);
+        mini.x = x + 20; mini.y = y + 20;
+        mini.scale.set(0.5);
+        paytableContainer.addChild(mini);
+
+        // Name and values
+        let info = `${sym.name}`;
+        if (sym.isWild) info += ' (WILD - substitutes all)';
+        if (sym.isScatter) info += ' (SCATTER - any position)';
+        const nameText = new PIXI.Text(info, {
+            fontSize: 14, fill: sym.color, fontWeight: 'bold', fontFamily: 'Arial'
+        });
+        nameText.x = x + 60; nameText.y = y + 5;
+        paytableContainer.addChild(nameText);
+
+        const payText = new PIXI.Text(
+            `3x = ${sym.value} | 4x = ${sym.value * 3} | 5x = ${sym.value * 10}  (× bet)`,
+            { fontSize: 12, fill: 0xCCCCCC, fontFamily: 'Arial' }
+        );
+        payText.x = x + 60; payText.y = y + 25;
+        paytableContainer.addChild(payText);
+    });
+
+    // Rules section
+    const rulesY = startY + SYMBOL_LIST.length * 55 + 10;
+    const rules = [
+        'WILD (Lion): Substitutes for any symbol except Scatter.',
+        'SCATTER (Star): 3+ anywhere = Free Spins (5/10/15). All wins x2 during Free Spins.',
+        'Wins pay left to right on active paylines. Highest win per line.',
+        '20 paylines available. Total bet = Bet × Lines.'
+    ];
+    rules.forEach((rule, i) => {
+        const rt = new PIXI.Text(`• ${rule}`, {
+            fontSize: 12, fill: 0xAAAAFF, fontFamily: 'Arial', wordWrap: true, wordWrapWidth: 800
+        });
+        rt.x = 100; rt.y = rulesY + i * 22;
+        paytableContainer.addChild(rt);
+    });
+
+    // Close button
+    const closeBtn = new PIXI.Graphics();
+    closeBtn.beginFill(0xFF3333);
+    closeBtn.drawCircle(0, 0, 16);
+    closeBtn.endFill();
+    closeBtn.x = 940; closeBtn.y = 50;
+    closeBtn.eventMode = 'static'; closeBtn.cursor = 'pointer';
+    closeBtn.on('pointerdown', () => togglePaytable());
+    const closeX = new PIXI.Text('X', {fontSize: 14, fill: 0xFFFFFF, fontWeight: 'bold'});
+    closeX.anchor.set(0.5); closeBtn.addChild(closeX);
+    paytableContainer.addChild(closeBtn);
+
+    overlayContainer.addChild(paytableContainer);
+}
+
+
+// ============================================================
+// FREE SPIN BACKGROUND TINT
+// ============================================================
+let freeSpinBg = null;
+
+function updateFreeSpinBackground() {
+    if (state.freeSpinActive && !freeSpinBg) {
+        freeSpinBg = new PIXI.Graphics();
+        freeSpinBg.beginFill(0x330033, 0.3);
+        freeSpinBg.drawRect(0, 0, 1024, 700);
+        freeSpinBg.endFill();
+        bgContainer.addChild(freeSpinBg);
+    } else if (!state.freeSpinActive && freeSpinBg) {
+        bgContainer.removeChild(freeSpinBg);
+        freeSpinBg = null;
+    }
+}
+
+// ============================================================
+// MAIN GAME LOOP
+// ============================================================
+app.ticker.add((delta) => {
+    updateReels(delta);
+    updateParticles(delta);
+    updateFreeSpinBackground();
+});
+
+// ============================================================
+// KEYBOARD SUPPORT
+// ============================================================
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); startSpin(); }
+});
+
+// ============================================================
+// INITIALIZE
+// ============================================================
+function init() {
+    drawBackground();
+    drawFrame();
+    drawTitle();
+    buildReels();
+    buildHUD();
+
+    // Set initial reel display
+    state.finalPositions = [];
+    for (let r = 0; r < CONFIG.REELS; r++) {
+        state.finalPositions.push(Math.floor(Math.random() * CONFIG.SYMBOLS_PER_STRIP));
+    }
+    reels.forEach((reel, i) => renderReelSymbols(reel, i));
+    updateHUD();
+}
+
+init();
+
+</script>
+</body>
+</html>
