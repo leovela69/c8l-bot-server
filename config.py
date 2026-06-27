@@ -97,11 +97,11 @@ NVIDIA_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
 NVIDIA_MODEL: str = "deepseek-ai/deepseek-v4-pro"
 
 # ---------------------------------------------------------------------------
-# HuggingFace (Imagenes SDXL) — GRATIS
+# HuggingFace (Imagenes SDXL + Creative Studio) — GRATIS
 # ---------------------------------------------------------------------------
-_HF_P1 = "hf_htCXebTQMcMq"
-_HF_P2 = "DmQEyGfCyzdSvddJQWvRfG"
-HUGGINGFACE_TOKEN: str = os.environ.get("HUGGINGFACE_TOKEN", _HF_P1 + _HF_P2)
+HUGGINGFACE_TOKEN: str = os.environ.get("HUGGINGFACE_TOKEN", "")
+# Alias para el Creative Studio
+HF_API_KEY: str = HUGGINGFACE_TOKEN
 
 # ---------------------------------------------------------------------------
 # WhatsApp Cloud API (Meta)
@@ -185,6 +185,14 @@ _os.makedirs(REPORTS_DIR, exist_ok=True)
 # ---------------------------------------------------------------------------
 MAX_HISTORY_PER_USER: int = 50
 C8L_WEB_URL: str = os.environ.get("C8L_WEB_URL", "https://gen-lang-client-0744582882.web.app")
+
+# ---------------------------------------------------------------------------
+# Creative Studio Cloud — Motor creativo con IA
+# ---------------------------------------------------------------------------
+STUDIO_URL: str = os.environ.get("STUDIO_URL", "http://localhost:8084")
+
+# Stability AI (Stable Diffusion) — Imagen IA profesional
+STABILITY_API_KEY: str = os.environ.get("STABILITY_API_KEY", "")
 
 # ---------------------------------------------------------------------------
 # Hermes Bot (backup/obrero) — corre en el mismo VPS
