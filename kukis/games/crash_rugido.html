@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🚀 CRASH C8L — Rugido del León</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06060f;color:#fff;font-family:'Segoe UI',Arial,sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+#header{text-align:center;padding:12px 10px;background:linear-gradient(180deg,#0d0d1a 0%,#06060f 100%);border-bottom:1px solid #1a1a2e}
+#header h1{font-size:1.3rem;background:linear-gradient(90deg,#f4b41a,#ffdd57,#f4b41a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+#header h1 span{-webkit-text-fill-color:initial}
+#main{flex:1;display:flex;flex-direction:column;padding:8px;gap:8px;max-width:900px;margin:0 auto;width:100%}
+#chart-wrap{position:relative;flex:1;min-height:280px;border-radius:12px;overflow:hidden;border:1px solid #1a1a2e;background:#0a0a18}
+#chart-canvas{width:100%;height:100%;display:block}
+#multiplier-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:3.5rem;font-weight:900;text-shadow:0 0 30px rgba(244,180,26,0.5);transition:color 0.1s;pointer-events:none;z-index:5}
+#crash-msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:900;pointer-events:none;z-index:6;display:none;text-align:center}
+#hud{display:flex;justify-content:space-between;padding:8px 12px;background:#0d0d1a;border-radius:8px;border:1px solid #1a1a2e;flex-wrap:wrap;gap:4px}
+.hud-item{text-align:center;min-width:80px}
+.hud-label{font-size:0.65rem;color:#888;text-transform:uppercase;letter-spacing:1px}
+.hud-value{font-size:1rem;font-weight:700;color:#f4b41a}
+#controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0}
+#bet-section{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.bet-btn{padding:6px 12px;border:1px solid #333;background:#1a1a2e;color:#f4b41a;border-radius:6px;cursor:pointer;font-weight:700;font-size:0.85rem;transition:all 0.2s}
+.bet-btn:hover{background:#f4b41a;color:#06060f}
+.bet-btn.active{background:#f4b41a;color:#06060f;border-color:#f4b41a}
+#action-btn{padding:12px 28px;border:none;border-radius:8px;font-size:1.1rem;font-weight:900;cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:1px}
+#action-btn.bet{background:linear-gradient(135deg,#f4b41a,#ff8c00);color:#06060f}
+#action-btn.cashout{background:linear-gradient(135deg,#00f0ff,#00b4d8);color:#06060f;animation:pulse-btn 0.5s infinite alternate}
+#action-btn.disabled{background:#333;color:#666;cursor:not-allowed;animation:none}
+#action-btn:active:not(.disabled){transform:scale(0.95)}
+@keyframes pulse-btn{0%{box-shadow:0 0 10px #00f0ff}100%{box-shadow:0 0 25px #00f0ff,0 0 50px rgba(0,240,255,0.3)}}
+#auto-section{display:flex;align-items:center;gap:6px}
+#auto-section label{font-size:0.75rem;color:#888}
+#auto-cashout{width:60px;padding:4px 6px;border-radius:4px;border:1px solid #333;background:#1a1a2e;color:#fff;font-size:0.85rem;text-align:center}
+#history{display:flex;gap:6px;padding:6px 0;overflow-x:auto;flex-wrap:nowrap}
+.hist-chip{padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:700;white-space:nowrap}
+.hist-low{background:rgba(0,240,255,0.15);color:#00f0ff}
+.hist-mid{background:rgba(244,180,26,0.15);color:#f4b41a}
+.hist-high{background:rgba(239,68,68,0.15);color:#ef4444}
+@keyframes shake{0%,100%{transform:translate(-50%,-50%) rotate(0)}25%{transform:translate(-48%,-52%) rotate(-2deg)}50%{transform:translate(-52%,-48%) rotate(2deg)}75%{transform:translate(-50%,-50%) rotate(-1deg)}}
+.shake{animation:shake 0.4s ease-in-out 3}
+@media(max-width:600px){
+  #multiplier-display{font-size:2.5rem}
+  #crash-msg{font-size:1.4rem}
+  #action-btn{padding:10px 20px;font-size:0.95rem}
+  .bet-btn{padding:5px 8px;font-size:0.75rem}
+}
+</style>
+</head>
+<body>
+<div id="header"><h1><span>🚀</span> CRASH C8L — Rugido del León <span>🦁</span></h1></div>
+<div id="main">
+  <div id="hud">
+    <div class="hud-item"><div class="hud-label">Balance</div><div class="hud-value" id="hud-balance">10,000</div></div>
+    <div class="hud-item"><div class="hud-label">Apuesta</div><div class="hud-value" id="hud-bet">100</div></div>
+    <div class="hud-item"><div class="hud-label">Multiplicador</div><div class="hud-value" id="hud-mult" style="color:#00f0ff">1.00x</div></div>
+    <div class="hud-item"><div class="hud-label">Ganancia</div><div class="hud-value" id="hud-profit" style="color:#4ade80">+0</div></div>
+  </div>
+  <div id="chart-wrap">
+    <canvas id="chart-canvas"></canvas>
+    <div id="multiplier-display" style="color:#00f0ff">1.00x</div>
+    <div id="crash-msg"></div>
+  </div>
+  <div id="history"></div>
+  <div id="controls">
+    <div id="bet-section">
+      <button class="bet-btn" data-amt="10">10</button>
+      <button class="bet-btn" data-amt="50">50</button>
+      <button class="bet-btn active" data-amt="100">100</button>
+      <button class="bet-btn" data-amt="500">500</button>
+      <button class="bet-btn" data-amt="1000">1K</button>
+    </div>
+    <button id="action-btn" class="bet">APOSTAR</button>
+    <div id="auto-section">
+      <label>Auto x</label>
+      <input type="number" id="auto-cashout" min="1.1" max="100" step="0.1" value="" placeholder="OFF">
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+// === STATE ===
+const STATE = { WAITING: 0, PLAYING: 1, CRASHED: 2, CASHED_OUT: 3 };
+let state = STATE.WAITING;
+let balance = 10000;
+let currentBet = 100;
+let multiplier = 1.0;
+let crashPoint = 1.0;
+let startTime = 0;
+let speed = 0.00006; // controls curve steepness
+let animFrame = null;
+let history = [];
+let particles = [];
+let bgStars = [];
+let curvePoints = [];
+
+// === DOM ===
+const canvas = document.getElementById('chart-canvas');
+const ctx = canvas.getContext('2d');
+const multDisplay = document.getElementById('multiplier-display');
+const crashMsg = document.getElementById('crash-msg');
+const hudBalance = document.getElementById('hud-balance');
+const hudBet = document.getElementById('hud-bet');
+const hudMult = document.getElementById('hud-mult');
+const hudProfit = document.getElementById('hud-profit');
+const actionBtn = document.getElementById('action-btn');
+const historyEl = document.getElementById('history');
+const autoCashoutInput = document.getElementById('auto-cashout');
+const betBtns = document.querySelectorAll('.bet-btn');
+
+// === AUDIO ===
+let audioCtx = null;
+let riseOsc = null;
+let riseGain = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function startRiseSound() {
+  if (!audioCtx) return;
+  riseOsc = audioCtx.createOscillator();
+  riseGain = audioCtx.createGain();
+  riseOsc.type = 'sine';
+  riseOsc.frequency.value = 200;
+  riseGain.gain.value = 0.08;
+  riseOsc.connect(riseGain);
+  riseGain.connect(audioCtx.destination);
+  riseOsc.start();
+}
+
+function updateRiseSound(mult) {
+  if (!riseOsc) return;
+  riseOsc.frequency.value = 200 + (mult - 1) * 80;
+  riseGain.gain.value = Math.min(0.15, 0.05 + (mult - 1) * 0.01);
+}
+
+function stopRiseSound() {
+  if (riseOsc) { try { riseOsc.stop(); } catch(e){} riseOsc = null; }
+}
+
+function playCashoutSound() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(880, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1);
+  g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + 0.4);
+}
+
+function playCrashSound() {
+  if (!audioCtx) return;
+  const bufSize = audioCtx.sampleRate * 0.3;
+  const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+  const src = audioCtx.createBufferSource();
+  const g = audioCtx.createGain();
+  src.buffer = buf;
+  g.gain.value = 0.3;
+  src.connect(g); g.connect(audioCtx.destination);
+  src.start();
+}
+
+// === RESIZE ===
+function resize() {
+  const wrap = document.getElementById('chart-wrap');
+  canvas.width = wrap.clientWidth * window.devicePixelRatio;
+  canvas.height = wrap.clientHeight * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  canvas.style.width = wrap.clientWidth + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+  initBgStars();
+}
+window.addEventListener('resize', resize);
+
+// === BACKGROUND STARS ===
+function initBgStars() {
+  bgStars = [];
+  const w = canvas.width / window.devicePixelRatio;
+  const h = canvas.height / window.devicePixelRatio;
+  for (let i = 0; i < 60; i++) {
+    bgStars.push({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.5 + 0.3, a: Math.random(), speed: Math.random() * 0.005 + 0.002 });
+  }
+}
+
+// === CRASH POINT (85% RTP) ===
+function generateCrashPoint() {
+  const r = Math.random();
+  // House edge formula: E = 0.85 / (1 - r), clamped to [1, 100]
+  let cp = 0.85 / (1 - r);
+  if (cp < 1) cp = 1;
+  if (cp > 100) cp = 100;
+  return Math.round(cp * 100) / 100;
+}
+
+// === PARTICLES ===
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const spd = Math.random() * 4 + 2;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      life: 1,
+      decay: Math.random() * 0.02 + 0.015,
+      color,
+      size: Math.random() * 4 + 2
+    });
+  }
+}
+
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.1;
+    p.life -= p.decay;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// === DRAWING ===
+function getCanvasSize() {
+  return { w: canvas.width / window.devicePixelRatio, h: canvas.height / window.devicePixelRatio };
+}
+
+function drawBackground() {
+  const { w, h } = getCanvasSize();
+  ctx.fillStyle = '#0a0a18';
+  ctx.fillRect(0, 0, w, h);
+  
+  // Animated stars
+  const time = Date.now() * 0.001;
+  for (const s of bgStars) {
+    const alpha = 0.3 + Math.sin(time * s.speed * 100 + s.a * 10) * 0.3;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawGrid() {
+  const { w, h } = getCanvasSize();
+  const padding = { left: 50, right: 20, top: 30, bottom: 30 };
+  const chartW = w - padding.left - padding.right;
+  const chartH = h - padding.top - padding.bottom;
+  
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#555';
+  
+  // Y axis grid (multiplier)
+  const maxMult = Math.max(multiplier * 1.3, 2);
+  const ySteps = [1, 1.5, 2, 3, 5, 10, 20, 50, 100].filter(v => v <= maxMult);
+  for (const val of ySteps) {
+    const y = padding.top + chartH - (Math.log(val) / Math.log(maxMult)) * chartH;
+    if (y < padding.top || y > h - padding.bottom) continue;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(w - padding.right, y);
+    ctx.stroke();
+    ctx.fillText(val.toFixed(1) + 'x', 5, y + 3);
+  }
+  
+  // X axis grid (time)
+  const elapsed = state === STATE.PLAYING ? (Date.now() - startTime) / 1000 : (curvePoints.length > 0 ? curvePoints.length * 0.016 : 5);
+  const maxTime = Math.max(elapsed * 1.2, 3);
+  for (let t = 1; t <= maxTime; t += Math.max(1, Math.floor(maxTime / 5))) {
+    const x = padding.left + (t / maxTime) * chartW;
+    if (x > w - padding.right) break;
+    ctx.beginPath();
+    ctx.moveTo(x, padding.top);
+    ctx.lineTo(x, h - padding.bottom);
+    ctx.stroke();
+    ctx.fillText(t + 's', x - 5, h - 10);
+  }
+  
+  return { padding, chartW, chartH, maxMult, maxTime: maxTime };
+}
+
+function drawCurve(grid) {
+  if (curvePoints.length < 2) return;
+  const { padding, chartW, chartH, maxMult, maxTime } = grid;
+  const { w, h } = getCanvasSize();
+  
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  
+  // Draw gradient curve
+  for (let i = 1; i < curvePoints.length; i++) {
+    const p0 = curvePoints[i - 1];
+    const p1 = curvePoints[i];
+    
+    const t0 = (i - 1) / curvePoints.length;
+    const x0 = padding.left + (p0.t / maxTime) * chartW;
+    const y0 = padding.top + chartH - (Math.log(Math.max(p0.m, 1)) / Math.log(maxMult)) * chartH;
+    const x1 = padding.left + (p1.t / maxTime) * chartW;
+    const y1 = padding.top + chartH - (Math.log(Math.max(p1.m, 1)) / Math.log(maxMult)) * chartH;
+    
+    // Color gradient: green -> gold -> red
+    let color;
+    if (p1.m < 2) color = '#4ade80';
+    else if (p1.m < 5) color = '#f4b41a';
+    else color = '#ef4444';
+    
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x0, Math.max(y0, padding.top));
+    ctx.lineTo(x1, Math.max(y1, padding.top));
+    ctx.stroke();
+    
+    // Glow
+    ctx.strokeStyle = color.replace(')', ',0.3)').replace('rgb', 'rgba').replace('#', '');
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = color + '44';
+    ctx.beginPath();
+    ctx.moveTo(x0, Math.max(y0, padding.top));
+    ctx.lineTo(x1, Math.max(y1, padding.top));
+    ctx.stroke();
+    ctx.lineWidth = 3;
+  }
+  
+  // Draw rocket at end
+  if (curvePoints.length > 0) {
+    const last = curvePoints[curvePoints.length - 1];
+    const rx = padding.left + (last.t / maxTime) * chartW;
+    const ry = padding.top + chartH - (Math.log(Math.max(last.m, 1)) / Math.log(maxMult)) * chartH;
+    ctx.font = '24px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🚀', rx, Math.max(ry, padding.top + 15));
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    
+    // Particle trail during play
+    if (state === STATE.PLAYING && Math.random() < 0.3) {
+      spawnParticles(rx, Math.max(ry, padding.top + 15) + 10, '#f4b41a', 1);
+    }
+  }
+}
+
+function render() {
+  const { w, h } = getCanvasSize();
+  ctx.clearRect(0, 0, w, h);
+  drawBackground();
+  const grid = drawGrid();
+  drawCurve(grid);
+  updateParticles();
+  drawParticles();
+}
+
+// === GAME LOGIC ===
+function updateHUD() {
+  hudBalance.textContent = balance.toLocaleString();
+  hudBet.textContent = currentBet.toLocaleString();
+  hudMult.textContent = multiplier.toFixed(2) + 'x';
+  const profit = state === STATE.CASHED_OUT ? Math.floor(currentBet * multiplier - currentBet) : 0;
+  hudProfit.textContent = profit > 0 ? '+' + profit.toLocaleString() : '0';
+  hudProfit.style.color = profit > 0 ? '#4ade80' : '#888';
+}
+
+function updateMultiplierDisplay() {
+  let color = '#00f0ff';
+  if (multiplier >= 5) color = '#ef4444';
+  else if (multiplier >= 2) color = '#f4b41a';
+  multDisplay.style.color = color;
+  multDisplay.textContent = multiplier.toFixed(2) + 'x';
+  hudMult.textContent = multiplier.toFixed(2) + 'x';
+  hudMult.style.color = color;
+}
+
+function startRound() {
+  if (balance < currentBet) return;
+  initAudio();
+  balance -= currentBet;
+  state = STATE.PLAYING;
+  crashPoint = generateCrashPoint();
+  multiplier = 1.0;
+  startTime = Date.now();
+  curvePoints = [];
+  particles = [];
+  crashMsg.style.display = 'none';
+  multDisplay.style.display = 'block';
+  actionBtn.className = 'cashout';
+  actionBtn.textContent = 'CASH OUT';
+  updateHUD();
+  startRiseSound();
+  gameLoop();
+}
+
+function cashOut() {
+  if (state !== STATE.PLAYING) return;
+  state = STATE.CASHED_OUT;
+  const winnings = Math.floor(currentBet * multiplier);
+  balance += winnings;
+  const profit = winnings - currentBet;
+  stopRiseSound();
+  playCashoutSound();
+  
+  // Show message
+  crashMsg.style.display = 'block';
+  crashMsg.style.color = '#f4b41a';
+  crashMsg.innerHTML = '💰 CASH OUT!<br>+' + profit.toLocaleString() + ' chips';
+  crashMsg.className = '';
+  
+  // Gold particles
+  const { w, h } = getCanvasSize();
+  spawnParticles(w / 2, h / 2, '#f4b41a', 40);
+  spawnParticles(w / 2, h / 2, '#ffdd57', 30);
+  
+  hudProfit.textContent = '+' + profit.toLocaleString();
+  hudProfit.style.color = '#4ade80';
+  
+  addHistory(crashPoint);
+  actionBtn.className = 'bet';
+  actionBtn.textContent = 'APOSTAR';
+  updateHUD();
+  
+  // Continue rendering particles
+  setTimeout(() => { state = STATE.WAITING; }, 1500);
+}
+
+function crash() {
+  state = STATE.CRASHED;
+  stopRiseSound();
+  playCrashSound();
+  
+  multDisplay.style.display = 'none';
+  crashMsg.style.display = 'block';
+  crashMsg.style.color = '#ef4444';
+  crashMsg.innerHTML = '💥 CRASHED!<br>' + crashPoint.toFixed(2) + 'x<br><span style="font-size:0.7em;color:#888">JUGASTE DEMASIADO TARDE</span>';
+  crashMsg.className = 'shake';
+  
+  // Red particles
+  const { w, h } = getCanvasSize();
+  spawnParticles(w / 2, h / 2, '#ef4444', 50);
+  spawnParticles(w / 2, h / 2, '#ff6b6b', 30);
+  
+  addHistory(crashPoint);
+  actionBtn.className = 'bet';
+  actionBtn.textContent = 'APOSTAR';
+  updateHUD();
+  
+  setTimeout(() => { state = STATE.WAITING; }, 2000);
+}
+
+function addHistory(cp) {
+  history.unshift(cp);
+  if (history.length > 10) history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  historyEl.innerHTML = history.map(cp => {
+    let cls = 'hist-low';
+    if (cp >= 5) cls = 'hist-high';
+    else if (cp >= 2) cls = 'hist-mid';
+    return '<span class="hist-chip ' + cls + '">' + cp.toFixed(2) + 'x</span>';
+  }).join('');
+}
+
+function gameLoop() {
+  if (state !== STATE.PLAYING && state !== STATE.CASHED_OUT) {
+    render();
+    if (particles.length > 0) animFrame = requestAnimationFrame(gameLoop);
+    return;
+  }
+  
+  if (state === STATE.PLAYING) {
+    const elapsed = Date.now() - startTime;
+    multiplier = Math.pow(Math.E, elapsed * speed);
+    multiplier = Math.round(multiplier * 100) / 100;
+    
+    curvePoints.push({ t: elapsed / 1000, m: multiplier });
+    
+    updateMultiplierDisplay();
+    updateRiseSound(multiplier);
+    
+    // Auto cashout check
+    const autoVal = parseFloat(autoCashoutInput.value);
+    if (autoVal && multiplier >= autoVal) {
+      multiplier = autoVal;
+      cashOut();
+      render();
+      animFrame = requestAnimationFrame(gameLoop);
+      return;
+    }
+    
+    // Crash check
+    if (multiplier >= crashPoint) {
+      multiplier = crashPoint;
+      curvePoints.push({ t: (Date.now() - startTime) / 1000, m: multiplier });
+      crash();
+      render();
+      animFrame = requestAnimationFrame(gameLoop);
+      return;
+    }
+  }
+  
+  render();
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+// === EVENT HANDLERS ===
+actionBtn.addEventListener('click', () => {
+  if (state === STATE.WAITING) startRound();
+  else if (state === STATE.PLAYING) cashOut();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (state === STATE.PLAYING) cashOut();
+    else if (state === STATE.WAITING) startRound();
+  }
+});
+
+betBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (state !== STATE.WAITING) return;
+    betBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentBet = parseInt(btn.dataset.amt);
+    updateHUD();
+  });
+});
+
+// === INIT ===
+function init() {
+  resize();
+  updateHUD();
+  render();
+  // Start idle animation
+  function idleLoop() {
+    if (state === STATE.WAITING) render();
+    requestAnimationFrame(idleLoop);
+  }
+  idleLoop();
+}
+
+init();
+})();
+</script>
+</body>
+</html>
