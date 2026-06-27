@@ -1,3 +1,28 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": "out",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://c8l-bot-server.onrender.com/api/:path*"
+    }
+  ]
 }
