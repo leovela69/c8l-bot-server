@@ -1655,16 +1655,31 @@ def main():
 
     @bot.message_handler(commands=["lanzamiento"])
     def cmd_lanzamiento(msg):
-        """Admin: anuncia el lanzamiento de C8L Generate al grupo."""
+        """Admin: anuncia el lanzamiento de C8L Generate al grupo. Funciona en privado y en grupo."""
         if not _is_admin(msg):
             return bot.reply_to(msg, "🚫 Solo el admin puede hacer lanzamientos.")
         from periodista.news_formatter import format_launch_announcement
         announcement = format_launch_announcement()
-        ok = broadcast_to_group(announcement, "HTML")
-        if ok:
-            bot.reply_to(msg, "🚀✅ ¡Anuncio de lanzamiento de C8L Generate enviado al grupo!")
+        
+        chat_type = msg.chat.type
+        if 'group' in chat_type:
+            # Si se ejecuta en el grupo, enviar directamente ahí
+            try:
+                bot.send_message(msg.chat.id, announcement, parse_mode="HTML")
+                bot.reply_to(msg, "🚀✅ ¡Anuncio de C8L Generate publicado!")
+            except Exception as e:
+                bot.reply_to(msg, f"❌ Error: {e}")
         else:
-            bot.reply_to(msg, "❌ No pude enviar. ¿El bot está en el grupo?")
+            # Desde privado: intentar broadcast al grupo
+            ok = broadcast_to_group(announcement, "HTML")
+            if ok:
+                bot.reply_to(msg, "🚀✅ ¡Anuncio de lanzamiento de C8L Generate enviado al grupo!")
+            else:
+                # Si no hay GROUP_CHAT_ID, decir qué hacer
+                bot.reply_to(msg, 
+                    "❌ No pude enviar al grupo.\n\n"
+                    "💡 Solución: escribe /groupid en el grupo para registrarlo, "
+                    "o escribe /lanzamiento directamente en el grupo.")
 
     @bot.message_handler(commands=["diagnosticar"])
     def cmd_diagnosticar(msg):
@@ -2515,7 +2530,7 @@ def main():
 
     # === MENSAJE LIBRE (Zeus orquesta) ===
 
-    @bot.message_handler(func=lambda m: True, content_types=["text"])
+    @bot.message_handler(func=lambda m: m.text and not m.text.startswith('/'), content_types=["text"])
     def handle_msg(msg):
         chat_id = msg.chat.id
         user_name = msg.from_user.first_name or "Usuario"
