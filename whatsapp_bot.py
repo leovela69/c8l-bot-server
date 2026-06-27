@@ -2225,6 +2225,181 @@ def main():
         reply += "\n/ajedrez para nueva partida"
         tg_send(chat_id, reply, parse_mode="Markdown")
 
+    # === COMANDOS DE KUKIS (Juego de Cartas de Investigación Dulce) ===
+
+    @bot.message_handler(commands=["kukis"])
+    def cmd_kukis(msg):
+        """Inicia partida de Kukis. Uso: /kukis"""
+        from kukis.kukis_game import start_game as kukis_start, get_game as kukis_get, end_game as kukis_end
+
+        chat_id = msg.chat.id
+        # Si ya hay partida activa
+        game = kukis_get(chat_id)
+        if game:
+            tg_send(chat_id, game.get_full_display(), parse_mode="Markdown")
+            return
+
+        # Nueva partida
+        player_name = msg.from_user.first_name if msg.from_user else "Investigador"
+        game = kukis_start(chat_id, player_name, msg.from_user.id)
+
+        reply = (
+            "🍪🔍 *KUKIS — Agencia de Investigación Dulce* 🔍🍪\n\n"
+            "¡Bienvenido, detective! Tu misión: resolver misterios\n"
+            "usando cartas de personajes, objetos y eventos.\n\n"
+            f"🍪 Chips: {game.balance}\n"
+            f"🦄 Cargas Unicornio: {game.unicorn_charges}\n"
+            f"🃏 Cartas en mano: {len(game.hand)}\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        )
+        reply += game.get_case_info() + "\n\n"
+        reply += game.get_hand_info() + "\n\n"
+        reply += (
+            "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "*CÓMO JUGAR:*\n"
+            "1️⃣ /kukis\\_pista [n] — Coloca carta n como pista\n"
+            "2️⃣ Coloca 3 pistas (1 Personaje + 1 Objeto + 1 Evento = Sinergia!)\n"
+            "3️⃣ /investigar — Resuelve el caso\n\n"
+            "*OTROS COMANDOS:*\n"
+            "🃏 /kukis\\_mano — Ver tus cartas\n"
+            "📋 /kukis\\_caso — Nuevo caso\n"
+            "🦄 /kukis\\_unicornio — Roba 2 cartas extra\n"
+            "📊 /kukis\\_perfil — Tu perfil\n"
+            "🏆 /kukis\\_ranking — Top investigadores\n"
+            "🚪 /kukis\\_salir — Terminar partida"
+        )
+        tg_send(chat_id, reply, parse_mode="Markdown")
+        levels.add_xp(msg.from_user.id, msg.from_user.first_name, "game")
+
+    @bot.message_handler(commands=["kukis_pista"])
+    def cmd_kukis_pista(msg):
+        """Coloca una carta como pista. Uso: /kukis_pista 3"""
+        from kukis.kukis_game import get_game as kukis_get
+        chat_id = msg.chat.id
+        game = kukis_get(chat_id)
+        if not game:
+            return bot.reply_to(msg, "🍪 No tienes partida activa. Usa /kukis para empezar.")
+
+        text = msg.text.replace("/kukis_pista", "").strip()
+        if not text:
+            bot.reply_to(msg, "Uso: /kukis\\_pista [número]\nEj: /kukis\\_pista 3\n\n" + game.get_hand_info(),
+                        parse_mode="Markdown")
+            return
+
+        try:
+            index = int(text)
+        except ValueError:
+            return bot.reply_to(msg, "❌ Usa un número. Ej: /kukis\\_pista 2", parse_mode="Markdown")
+
+        ok, result = game.place_clue(index)
+        tg_send(chat_id, result, parse_mode="Markdown")
+
+    @bot.message_handler(commands=["investigar"])
+    def cmd_investigar(msg):
+        """Resuelve el caso con las 3 pistas colocadas."""
+        from kukis.kukis_game import get_game as kukis_get
+        from kukis.kukis_ranking import update_after_case, record_unicorn_use
+
+        chat_id = msg.chat.id
+        game = kukis_get(chat_id)
+        if not game:
+            return bot.reply_to(msg, "🍪 No tienes partida activa. Usa /kukis para empezar.")
+
+        tg_typing(chat_id)
+        success, result = game.investigate()
+
+        # Actualizar ranking si se intentó investigar (se cobraron chips)
+        if "RESULTADO" in result:
+            synergy = "Sinergia" in result
+            chips_won = 0
+            if success:
+                # Extraer recompensa del caso
+                chips_won = game.current_case['reward'] if game.current_case else 0
+            from kukis.kukis_ranking import update_after_case
+            stats, achievements = update_after_case(
+                msg.from_user.id,
+                msg.from_user.first_name,
+                success,
+                game.current_case['difficulty'] if game.current_case else 3,
+                chips_won,
+                synergy
+            )
+            # Recargar unicornio cada 2 casos
+            game.recharge_unicorn()
+
+            # Mostrar logros
+            if achievements:
+                result += "\n\n🏆 *¡LOGROS DESBLOQUEADOS!*\n"
+                for ach in achievements:
+                    result += f"  {ach['icon']} {ach['name']} (+{ach['coins']} C8L)\n"
+
+        tg_send(chat_id, result, parse_mode="Markdown")
+        levels.add_xp(msg.from_user.id, msg.from_user.first_name, "game")
+
+    @bot.message_handler(commands=["kukis_mano"])
+    def cmd_kukis_mano(msg):
+        """Muestra las cartas en tu mano."""
+        from kukis.kukis_game import get_game as kukis_get
+        game = kukis_get(msg.chat.id)
+        if not game:
+            return bot.reply_to(msg, "🍪 No tienes partida activa. Usa /kukis para empezar.")
+        tg_send(msg.chat.id, game.get_hand_info(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["kukis_caso"])
+    def cmd_kukis_caso(msg):
+        """Genera un nuevo caso de investigación."""
+        from kukis.kukis_game import get_game as kukis_get
+        chat_id = msg.chat.id
+        game = kukis_get(chat_id)
+        if not game:
+            return bot.reply_to(msg, "🍪 No tienes partida activa. Usa /kukis para empezar.")
+        game.new_case()
+        reply = "📋 *¡NUEVO CASO ASIGNADO!*\n\n" + game.get_case_info()
+        reply += "\n\n" + game.get_hand_info()
+        tg_send(chat_id, reply, parse_mode="Markdown")
+
+    @bot.message_handler(commands=["kukis_unicornio"])
+    def cmd_kukis_unicornio(msg):
+        """Usa poder unicornio para robar 2 cartas extra."""
+        from kukis.kukis_game import get_game as kukis_get
+        from kukis.kukis_ranking import record_unicorn_use
+        chat_id = msg.chat.id
+        game = kukis_get(chat_id)
+        if not game:
+            return bot.reply_to(msg, "🍪 No tienes partida activa. Usa /kukis para empezar.")
+        ok, result = game.use_unicorn_power()
+        if ok:
+            record_unicorn_use(msg.from_user.id)
+        tg_send(chat_id, result, parse_mode="Markdown")
+
+    @bot.message_handler(commands=["kukis_perfil"])
+    def cmd_kukis_perfil(msg):
+        """Muestra tu perfil de investigador Kukis."""
+        from kukis.kukis_ranking import get_player_profile
+        tg_send(msg.chat.id, get_player_profile(msg.from_user.id), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["kukis_ranking"])
+    def cmd_kukis_ranking(msg):
+        """Top investigadores de Kukis."""
+        from kukis.kukis_ranking import get_kukis_ranking
+        tg_send(msg.chat.id, get_kukis_ranking(), parse_mode="Markdown")
+
+    @bot.message_handler(commands=["kukis_salir"])
+    def cmd_kukis_salir(msg):
+        """Termina la partida de Kukis."""
+        from kukis.kukis_game import get_game as kukis_get, end_game as kukis_end
+        chat_id = msg.chat.id
+        game = kukis_get(chat_id)
+        if not game:
+            return bot.reply_to(msg, "🍪 No hay partida activa de Kukis.")
+        kukis_end(chat_id)
+        tg_send(chat_id,
+            f"🍪 *Partida de Kukis terminada*\n\n"
+            f"📋 Casos resueltos: {game.cases_resolved}\n"
+            f"🍪 Chips ganados: {game.total_chips_won}\n\n"
+            f"¡Hasta la próxima, detective! Usa /kukis para jugar de nuevo.",
+            parse_mode="Markdown")
+
     # === CALLBACK: Botones 👍👎 (Auto-Evolución) ===
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("feedback_"))
