@@ -1,10 +1,27 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
+venv/
+env/
+
+# Data (generada en runtime)
 data/memory/
 data/reports/
+data/pages/
+
+# Logs
 *.log
+bot.log
+tunnel.log
+
+# Environment (NUNCA subir)
 .env
-node_modules/
-.next/
-out/
+.env.local
+.env.production
+.env.*.local
+
+# System
+.DS_Store

@@ -1,60 +1,66 @@
-# 🦁 C8L Bot Server — Equipo de Bots Autónomos
+# C8L Bot Server — Bot Telegram/WhatsApp
 
-## Instalación (UN SOLO COMANDO)
+> **Solo el bot.** La web está en otro repo: [`c8l-web`](https://github.com/leovela69/c8l-web)
 
-```bash
-cd /root && rm -rf c8l-bot-server && git clone https://github.com/leovela69/c8l-bot-server.git && cd c8l-bot-server && bash install.sh
-```
+---
 
-## Arquitectura
+## Qué es esto
 
-```
-👑 AION (Coordinador) — cada 5 minutos
-├── 🦅 ÁGUILA 1 — Rendimiento web
-├── 🦅 ÁGUILA 2 — Contenido 
-├── 🦅 ÁGUILA 3 — Seguridad
-├── 🧠 CEREBRO 1 — Analista datos
-├── 🧠 CEREBRO 2 — Analista contenido
-├── 🛠️ MANO 1 — Fixer código
-└── 🛠️ MANO 2 — Fixer contenido
+Bot multi-agente con 11 IAs que maneja:
+- Telegram (grupo + privado)
+- WhatsApp Business
+- API para la web (música, imágenes, video, chat)
 
-🤖 Bot Telegram (@leon_leo_bot) — polling 24/7
-├── DeepSeek V4 Pro (NVIDIA) — principal
-├── Gemini 3.5 Flash — backup
-└── HuggingFace SDXL — imágenes
-```
+## Deploy en Render.com (GRATIS)
 
-## Comandos del Bot
+1. [render.com](https://render.com) → New Web Service → conecta este repo
+2. Render detecta `render.yaml` y `Dockerfile`
+3. Configura las Environment Variables (ver abajo)
+4. Deploy → listo en ~3 min
 
-- `/start` — Bienvenida
-- `/help` — Ayuda
-- `/clear` — Limpiar historial
-- `/status` — Estado del sistema
-
-## Para Hermes
-
-Ejecutar en el VPS:
-```bash
-cd /root && rm -rf c8l-bot-server && git clone https://github.com/leovela69/c8l-bot-server.git && cd c8l-bot-server && bash install.sh
-```
-
-Eso es todo. El script:
-1. Mata bots viejos
-2. Descarga código
-3. Instala dependencias
-4. Elimina webhooks (mata fantasma)
-5. Arranca bot + AION
-
-## Logs
+## Deploy en VPS
 
 ```bash
-tail -f /root/c8l-bot-server/data/logs/bot.log
-tail -f /root/c8l-bot-server/data/logs/aion.log
+git clone https://github.com/leovela69/c8l-bot-server.git
+cd c8l-bot-server
+cp .env.example .env
+# Edita .env con tus keys
+pip install -r requirements.txt
+bash start.sh
 ```
 
-## Parar todo
+## Variables de Entorno (Requeridas)
 
-```bash
-pkill -f "python.*whatsapp_bot"
-pkill -f "python.*aion_cron"
+| Variable | Donde obtener |
+|----------|---------------|
+| `TELEGRAM_BOT_TOKEN` | [@BotFather](https://t.me/botfather) |
+| `ADMIN_CHAT_ID` | [@userinfobot](https://t.me/userinfobot) |
+| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com/keys) (GRATIS) |
+
+## Estructura
+
 ```
+c8l-bot-server/
+├── whatsapp_bot.py       # Entry point principal
+├── config.py             # Configuracion (lee de env vars)
+├── pantheon/             # 11 agentes IA
+├── bots/                 # Bots especializados
+├── chess/                # Motor de ajedrez
+├── economy/              # Sistema economico
+├── Dockerfile            # Container
+├── render.yaml           # Deploy Render
+├── requirements.txt      # Dependencias Python
+└── start.sh              # Arranque VPS + Cloudflare tunnel
+```
+
+## Proyectos C8L
+
+| Proyecto | Repo | Deploy | Funcion |
+|----------|------|--------|---------|
+| **C8L Bot** (este) | `c8l-bot-server` | Render | Bot Telegram/WhatsApp + API |
+| **C8L Web** | `c8l-web` | Vercel | Plataforma de creacion |
+| **C8L Original** | — | Firebase | Web original (no tocar) |
+
+---
+
+*C8L Agency v17.0 — Corazones Locos Family. 2026.*
