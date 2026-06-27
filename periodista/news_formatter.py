@@ -1,0 +1,116 @@
+# -*- coding: utf-8 -*-
+"""
+📰 PERIODISTA — Formateador de noticias para Telegram
+Crea mensajes bonitos tipo flash informativo.
+"""
+
+import random
+from datetime import datetime
+from typing import List, Dict
+
+from periodista.config import PROMO_LINKS, NEWS_CATEGORIES
+
+
+def format_news_flash(analysis: Dict) -> str:
+    """
+    Formatea un flash informativo para enviar al grupo de Telegram.
+    Incluye noticias reales + enlace promocional de C8L.
+    """
+    articles = analysis.get("articles", [])
+    if not articles:
+        return ""
+
+    # Header
+    now = datetime.utcnow()
+    hora = now.strftime("%H:%M")
+    fecha = now.strftime("%d/%m/%Y")
+
+    msg = f"📰 <b>FLASH INFORMATIVO C8L</b> 📰\n"
+    msg += f"<i>{fecha} — {hora} UTC</i>\n"
+    msg += "━━━━━━━━━━━━━━━━━━━\n\n"
+
+    # Agrupar por categoría
+    by_category: Dict[str, List[Dict]] = {}
+    for article in articles:
+        cat_id = article.get("category_id", "general")
+        if cat_id not in by_category:
+            by_category[cat_id] = []
+        by_category[cat_id].append(article)
+
+    # Formatear por categoría
+    for cat in NEWS_CATEGORIES:
+        if cat["id"] in by_category:
+            cat_articles = by_category[cat["id"]]
+            msg += f"{cat['emoji']} <b>{cat['label']}</b>\n"
+
+            for article in cat_articles[:2]:  # Max 2 por categoría
+                summary = article.get("ai_summary", article["title"][:80])
+                msg += f"• {summary}\n"
+
+            msg += "\n"
+
+    # Insight de la IA (si hay)
+    if analysis.get("insights"):
+        msg += f"💡 <i>{analysis['insights']}</i>\n\n"
+
+    # Separador + Promo
+    msg += "━━━━━━━━━━━━━━━━━━━\n"
+
+    # Rotar entre los enlaces promocionales
+    promo = random.choice(PROMO_LINKS)
+    msg += f"{promo['emoji']} <b>{promo['text']}</b>\n"
+    msg += f"→ {promo['url']}\n"
+
+    # Segundo enlace (siempre mostrar los dos)
+    other_promo = [p for p in PROMO_LINKS if p['url'] != promo['url']]
+    if other_promo:
+        p2 = other_promo[0]
+        msg += f"{p2['emoji']} {p2['text']}\n"
+        msg += f"→ {p2['url']}\n"
+
+    msg += "━━━━━━━━━━━━━━━━━━━"
+
+    return msg
+
+
+def format_breaking_news(article: Dict) -> str:
+    """
+    Formato para noticia urgente / de última hora.
+    """
+    cat_emoji = article.get("category_emoji", "🔴")
+    summary = article.get("ai_summary", article["title"])
+
+    msg = f"🚨 <b>ÚLTIMA HORA</b> 🚨\n\n"
+    msg += f"{cat_emoji} {summary}\n"
+
+    if article.get("description"):
+        msg += f"\n<i>{article['description'][:200]}</i>\n"
+
+    if article.get("link"):
+        msg += f"\n🔗 <a href=\"{article['link']}\">Leer más</a>\n"
+
+    msg += "\n━━━━━━━━━━━━━━━━━━━\n"
+    # Siempre los dos enlaces
+    for promo in PROMO_LINKS:
+        msg += f"{promo['emoji']} {promo['url']}\n"
+
+    return msg
+
+
+def format_question_post() -> str:
+    """
+    Genera una pregunta para engagement del grupo.
+    Se envía de vez en cuando entre noticias.
+    """
+    questions = [
+        "🤔 ¿Qué opinais de las noticias de hoy? ¿Algo os ha sorprendido?",
+        "📊 ¿Cómo veis la economía este mes? ¿Mejor o peor que el anterior?",
+        "⚽ ¿Qué resultado esperáis en el próximo partido importante?",
+        "🔬 ¿Habéis probado alguna IA nueva últimamente? ¿Cuál os gusta más?",
+        "🌍 Si pudierais cambiar UNA cosa del mundo ahora mismo, ¿qué sería?",
+        "🎨 ¿Habéis probado el editor de diseño? → https://c8l-web8.vercel.app/",
+        "💰 ¿En qué crypto confiais más ahora mismo?",
+        "🎵 ¿Qué estáis escuchando esta semana? Recomendad algo!",
+    ]
+
+    return random.choice(questions)

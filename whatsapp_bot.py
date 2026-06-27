@@ -1403,6 +1403,21 @@ def main():
     auto_repair.start_scheduler(interval_hours=6)
     logger.info("🔧 Auto-repair activo — ciclo cada 6h")
 
+    # 📰 Periodista: noticias reales + aprendizaje autónomo
+    try:
+        import asyncio
+        from periodista.scheduler import periodista_loop
+
+        def _run_periodista():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(periodista_loop())
+
+        threading.Thread(target=_run_periodista, daemon=True).start()
+        logger.info("📰 Periodista activo — noticias cada ~4h + aprendizaje")
+    except Exception as e:
+        logger.warning(f"📰 Periodista no pudo arrancar: {e}")
+
     bot = TeleBot(TELEGRAM_BOT_TOKEN)
 
     # Notificar admin
