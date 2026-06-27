@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🦁 C8L CASINO - Premium Casino Lobby | c8lcasino.ai</title>
+    <link rel="canonical" href="https://c8lcasino.ai">
+    <style>
+        :root {
+            --bg-deep:#06060f;--gold:#f4b41a;--orange:#ff6b35;--cyan:#00f0ff;
+            --purple:#8b5cf6;--green:#10b981;--red:#ef4444;--pink:#ec4899;
+            --card-bg:rgba(18,18,35,0.85);--glass:rgba(255,255,255,0.04);
+            --cookie:#8B4513;--choco:#3E2723;--candy-pink:#FF69B4;
+            --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--bg-deep);background-image:radial-gradient(ellipse at 15% 10%,rgba(139,92,246,.12) 0%,transparent 55%),radial-gradient(ellipse at 85% 90%,rgba(0,240,255,.08) 0%,transparent 55%),radial-gradient(ellipse at 50% 50%,rgba(244,180,26,.05) 0%,transparent 60%);font-family:var(--font);color:#fff;min-height:100vh;overflow-x:hidden;user-select:none;-webkit-tap-highlight-color:transparent}
+        #particlesBg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+        .header{position:sticky;top:0;z-index:200;background:rgba(6,6,15,.94);backdrop-filter:blur(25px);border-bottom:2px solid var(--gold);box-shadow:0 4px 30px rgba(244,180,26,.2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+        .logo{display:flex;align-items:center;gap:10px;font-size:1.8em;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,#f4b41a,#ff8c42,#f4b41a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:goldPulse 2.5s infinite}
+        @keyframes goldPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4) saturate(1.2)}}
+        .balance-box{display:flex;align-items:center;gap:10px;background:var(--card-bg);border:2px solid var(--cyan);border-radius:50px;padding:10px 22px;box-shadow:0 0 25px rgba(0,240,255,.25);backdrop-filter:blur(15px)}
+        .balance-amt{font-size:1.6em;font-weight:800;color:var(--green);text-shadow:0 0 18px var(--green);min-width:90px;text-align:right}
+        .btn-gold{background:linear-gradient(135deg,#f4b41a,#e8900c);border:none;color:#06060f;padding:11px 26px;border-radius:50px;font-weight:800;font-size:.9em;cursor:pointer;letter-spacing:1px;transition:all .3s cubic-bezier(.175,.885,.32,1.275);box-shadow:0 0 25px rgba(244,180,26,.4);text-transform:uppercase}
+        .btn-gold:hover{transform:translateY(-4px);box-shadow:0 0 40px rgba(244,180,26,.7)}
+        .btn-gold:active{transform:scale(.94)}
+        .cat-nav{position:sticky;top:100px;z-index:180;background:rgba(6,6,15,.9);backdrop-filter:blur(18px);padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+        .cat-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 24px;scrollbar-width:none}
+        .cat-scroll::-webkit-scrollbar{display:none}
+        .cat-tab{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.15);color:#ccc;padding:10px 20px;border-radius:50px;white-space:nowrap;cursor:pointer;font-weight:700;font-size:.85em;transition:all .3s}
+        .cat-tab.active,.cat-tab:hover{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 0 22px rgba(139,92,246,.5);transform:translateY(-3px)}
+        .games-section{padding:35px 24px;position:relative;z-index:1}
+        .section-title{font-size:1.7em;font-weight:900;margin-bottom:28px;padding-left:16px;border-left:5px solid var(--gold);text-shadow:0 0 25px var(--gold)}
+        .games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:22px}
+        .game-card{background:var(--card-bg);border-radius:18px;overflow:hidden;cursor:pointer;transition:all .35s cubic-bezier(.175,.885,.32,1.275);border:2px solid transparent;position:relative;box-shadow:0 12px 35px rgba(0,0,0,.5);backdrop-filter:blur(10px)}
+        .game-card:hover{transform:translateY(-12px) scale(1.04);border-color:var(--gold);box-shadow:0 0 30px rgba(244,180,26,.35),0 22px 55px rgba(0,0,0,.65);z-index:15}
+        .game-card:active{transform:scale(.96)}
+        .game-thumb{width:100%;height:190px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+        .game-emoji{font-size:5em;filter:drop-shadow(0 0 25px currentColor);transition:transform .4s}
+        .game-card:hover .game-emoji{transform:scale(1.25) rotate(6deg)}
+        .game-badge{position:absolute;top:14px;right:14px;background:var(--red);color:#fff;padding:6px 16px;border-radius:50px;font-size:.75em;font-weight:800;letter-spacing:1.5px;box-shadow:0 0 18px rgba(239,68,68,.5)}
+        .game-info{padding:18px}
+        .game-name{font-size:1.25em;font-weight:800;margin-bottom:6px}
+        .game-type{font-size:.8em;color:#aaa;text-transform:uppercase;letter-spacing:2px}
+        .game-rtp{color:var(--green);font-weight:700;margin-top:8px}
+        .prestige-wrap{margin:0 24px 20px;padding:16px 22px;background:var(--card-bg);border-radius:16px;border:1px solid rgba(244,180,26,.3);backdrop-filter:blur(10px);position:relative;z-index:1}
+        .prestige-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+        .prestige-rank{font-weight:800;color:var(--gold);font-size:1.1em}
+        .prestige-bar{height:12px;background:#1a1a30;border-radius:20px;overflow:hidden}
+        .prestige-fill{height:100%;background:linear-gradient(90deg,#f4b41a,#ff8c42);border-radius:20px;transition:width .5s;box-shadow:0 0 15px rgba(244,180,26,.5)}
+        .prestige-next{font-size:.8em;color:#aaa;margin-top:6px}
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(12px)}
+        .modal-overlay.active{display:flex}
+        .modal-box{background:var(--card-bg);border-radius:22px;width:96%;max-width:900px;max-height:92vh;overflow-y:auto;border:2px solid var(--gold);box-shadow:0 0 30px rgba(244,180,26,.3),0 0 90px rgba(244,180,26,.15);position:relative;backdrop-filter:blur(25px)}
+        .modal-hdr{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.4)}
+        .btn-close{background:rgba(239,68,68,.3);border:none;color:#fff;width:42px;height:42px;border-radius:50%;font-size:1.6em;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center}
+        .btn-close:hover{background:var(--red);transform:rotate(90deg)}
+        .canvas-wrap{padding:18px;display:flex;justify-content:center;min-height:380px;position:relative}
+        #gameCanvas{border-radius:16px;box-shadow:0 0 50px rgba(0,240,255,.2);max-width:100%;background:#0a0a18}
+        .game-ctrls{padding:18px 24px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center}
+        .btn-spin{background:linear-gradient(135deg,#f4b41a,#e8900c);color:#06060f;padding:16px 40px;border-radius:50px;font-weight:900;font-size:1.2em;cursor:pointer;border:none;letter-spacing:1.5px;box-shadow:0 0 35px rgba(244,180,26,.5);transition:all .3s;text-transform:uppercase}
+        .btn-spin:hover{box-shadow:0 0 55px rgba(244,180,26,.8);transform:scale(1.06)}
+        .btn-spin:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.6)}
+        .win-banner{text-align:center;font-size:2em;font-weight:900;color:#f4b41a;text-shadow:0 0 35px #f4b41a,0 0 70px #ff8c42;min-height:50px;display:flex;align-items:center;justify-content:center}
+        .win-banner.show{animation:winPulse .5s ease-in-out infinite alternate}
+        @keyframes winPulse{from{transform:scale(1)}to{transform:scale(1.1)}}
+        .toast-area{position:fixed;top:24px;right:24px;z-index:3000;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+        .toast-msg{background:var(--card-bg);border:2px solid var(--gold);padding:14px 24px;border-radius:14px;animation:slideIn .45s ease-out;box-shadow:0 0 20px rgba(244,180,26,.3);font-weight:700;backdrop-filter:blur(15px)}
+        @keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+        /* KUKIS MODAL STYLES */
+        .kukis-modal{padding:20px;max-height:70vh;overflow-y:auto}
+        .kukis-case{background:rgba(139,69,19,.15);border:2px solid var(--gold);border-radius:16px;padding:16px;margin-bottom:16px}
+        .kukis-case-title{font-size:1.3em;color:var(--gold);margin-bottom:8px;font-weight:800}
+        .kukis-case-desc{color:#FFB6C1;line-height:1.5;font-size:.9em}
+        .kukis-hand{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+        .kukis-card{width:110px;height:160px;background:linear-gradient(145deg,#FFF8DC,#FFE4B5);border-radius:14px;cursor:pointer;transition:all .35s cubic-bezier(.175,.885,.32,1.275);border:3px solid #8B4513;box-shadow:0 6px 20px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px}
+        .kukis-card:hover{transform:translateY(-12px) rotate(2deg);box-shadow:0 12px 35px rgba(255,105,180,.5);border-color:#FF69B4}
+        .kukis-card.selected{border-color:#FFD700;box-shadow:0 0 25px rgba(255,215,0,.7);transform:translateY(-8px)}
+        .kukis-card .k-emoji{font-size:2.8em}
+        .kukis-card .k-name{font-size:.7em;font-weight:800;color:#8B4513;text-align:center;margin-top:4px}
+        .kukis-card .k-type{position:absolute;top:5px;right:5px;background:#FF69B4;color:#fff;padding:2px 6px;border-radius:8px;font-size:.55em;font-weight:700}
+        .kukis-card .k-power{font-size:.7em;color:#8B4513;font-weight:700}
+        .kukis-slots{display:flex;gap:12px;margin:12px 0;justify-content:center;flex-wrap:wrap}
+        .kukis-slot{width:100px;height:80px;background:rgba(255,248,220,.08);border:2px dashed var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.75em;color:#aaa;transition:all .3s;cursor:pointer}
+        .kukis-slot.filled{border-style:solid;background:rgba(255,215,0,.1);font-size:1.8em}
+        .kukis-info{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:12px 0;font-size:.85em}
+        .kukis-info span{background:rgba(255,255,255,.05);padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.15)}
+        .btn-kukis{background:linear-gradient(135deg,#FF69B4,#9B59B6);border:none;color:#fff;padding:12px 28px;border-radius:50px;font-weight:800;font-size:1em;cursor:pointer;transition:all .3s;box-shadow:0 0 20px rgba(255,105,180,.4);letter-spacing:1px}
+        .btn-kukis:hover{transform:translateY(-3px);box-shadow:0 0 35px rgba(255,105,180,.7)}
+        .btn-kukis:disabled{opacity:.5;cursor:not-allowed}
+        .kukis-result{text-align:center;font-size:1.4em;font-weight:900;min-height:40px;margin:10px 0}
+        .kukis-combat{background:rgba(239,68,68,.1);border:2px solid var(--red);border-radius:14px;padding:14px;margin:10px 0;text-align:center;min-height:60px;display:flex;align-items:center;justify-content:center;font-weight:700}
+        @media(max-width:768px){.header{padding:10px 14px}.logo{font-size:1.3em}.balance-amt{font-size:1.2em}.games-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px}.game-thumb{height:130px}.game-emoji{font-size:3.2em}.modal-box{width:99%;max-height:96vh}.kukis-card{width:90px;height:130px}.kukis-card .k-emoji{font-size:2em}}
+    </style>
+</head>
+<body>
+    <canvas id="particlesBg"></canvas>
+    <div class="toast-area" id="toastArea"></div>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">🦁 C8L CASINO</div>
+        <div class="balance-box">
+            <span style="font-size:1.4em">💰</span>
+            <span class="balance-amt" id="balDisplay">50,000</span>
+            <span style="font-size:.75em;color:#aaa">chips</span>
+        </div>
+        <button class="btn-gold" onclick="recargar()">💎 COMPRAR CHIPS</button>
+    </header>
+
+    <!-- PRESTIGE BAR -->
+    <div class="prestige-wrap">
+        <div class="prestige-hdr">
+            <span>🏆 C8L PRESTIGE</span>
+            <span class="prestige-rank" id="prestigeRank">🥉 Bronce</span>
+        </div>
+        <div class="prestige-bar"><div class="prestige-fill" id="prestigeFill" style="width:15%"></div></div>
+        <div class="prestige-next" id="prestigeNext">Siguiente: 🥈 Plata (wagered 25,000)</div>
+    </div>
+
+    <!-- CATEGORÍAS -->
+    <nav class="cat-nav">
+        <div class="cat-scroll" id="catNav">
+            <button class="cat-tab active" data-cat="all">TODOS</button>
+            <button class="cat-tab" data-cat="crash">🚀 CRASH</button>
+            <button class="cat-tab" data-cat="slots">🎰 SLOTS</button>
+            <button class="cat-tab" data-cat="mesa">🃏 MESA</button>
+            <button class="cat-tab" data-cat="kukis">🍪 KUKIS</button>
+        </div>
+    </nav>
+
+    <!-- GRID -->
+    <div class="games-section">
+        <h2 class="section-title">🔥 JUEGOS C8L CASINO</h2>
+        <div class="games-grid" id="gamesGrid"></div>
+    </div>
+
+    <!-- GAME MODAL -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box" id="modalBox">
+            <div class="modal-hdr">
+                <h2 id="modalTitle">🎮 GAME</h2>
+                <button class="btn-close" onclick="closeGame()">✕</button>
+            </div>
+            <div id="modalContent">
+                <div class="canvas-wrap"><canvas id="gameCanvas" width="720" height="460"></canvas></div>
+                <div class="win-banner" id="winBanner"></div>
+                <div class="game-ctrls" id="gameCtrls">
+                    <button class="btn-spin" id="btnMain">🎲 JUGAR</button>
+                    <button class="btn-gold" style="background:var(--cyan)" onclick="changeBet(-1)">➖</button>
+                    <span id="betDisp" style="font-size:1.5em;font-weight:800">100</span>
+                    <button class="btn-gold" style="background:var(--cyan)" onclick="changeBet(1)">➕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ============================================
+    // 🦁 C8L CASINO - COMPLETE ENGINE
+    // Domain: c8lcasino.ai
+    // 6 Games: Crash, Mines, Plinko, Ruleta, Corazones Locos Slot, KUKIS
+    // ============================================
+
+    // === GLOBAL STATE ===
+    const STATE = {
+        balance: 50000,
+        bet: 100,
+        minBet: 10,
+        maxBet: 5000,
+        wagered: 7500,
+        currentGame: null,
+        spinning: false,
+        prestigeRanks: [
+            {name:'🥉 Bronce',min:0,cb:.02},
+            {name:'🥈 Plata',min:25000,cb:.04},
+            {name:'🥇 Oro',min:100000,cb:.06},
+            {name:'💎 Platino',min:500000,cb:.08},
+            {name:'🦁 León Dorado',min:2000000,cb:.12}
+        ]
+    };
+
+    // === AUDIO ENGINE ===
+    class Audio8 {
+        constructor(){this.ctx=null;this.master=null;this.ok=false}
+        init(){if(this.ok)return;try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();this.master=this.ctx.createGain();this.master.connect(this.ctx.destination);this.master.gain.value=0.25;this.ok=true}catch(e){}}
+        tone(f,d,t='sine',v=.22){if(!this.ok)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=t;o.frequency.setValueAtTime(f,this.ctx.currentTime);g.gain.setValueAtTime(v,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+d);o.connect(g);g.connect(this.master);o.start();o.stop(this.ctx.currentTime+d)}
+        spin(){this.tone(220,.07,'square',.18);setTimeout(()=>this.tone(330,.07,'square',.18),70);setTimeout(()=>this.tone(440,.1,'square',.2),140)}
+        win(){this.tone(523,.1);setTimeout(()=>this.tone(659,.1),100);setTimeout(()=>this.tone(784,.12),200);setTimeout(()=>this.tone(1047,.22,'sine',.3),300)}
+        jackpot(){[523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,.25,'sawtooth',.3),i*80));for(let i=0;i<12;i++)setTimeout(()=>this.tone(600+Math.random()*1300,.15,'square',.1),Math.random()*450+400)}
+        click(){this.tone(650,.03,'square',.07)}
+        lose(){this.tone(170,.16,'sawtooth',.16);setTimeout(()=>this.tone(120,.22,'sawtooth',.12),160)}
+    }
+    const sfx = new Audio8();
+
+    // === PARTICLES BACKGROUND ===
+    class ParticleBG {
+        constructor(){this.c=document.getElementById('particlesBg');this.ctx=this.c.getContext('2d');this.p=[];this.resize();window.addEventListener('resize',()=>this.resize());this.spawn();this.loop()}
+        resize(){this.c.width=window.innerWidth;this.c.height=window.innerHeight}
+        spawn(){this.p=[];for(let i=0;i<60;i++)this.p.push({x:Math.random()*this.c.width,y:Math.random()*this.c.height,r:Math.random()*2+.4,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,col:`hsl(${Math.random()*40+35},100%,${50+Math.random()*35}%)`,a:Math.random()*.4+.12})}
+        loop(){this.ctx.clearRect(0,0,this.c.width,this.c.height);this.p.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=this.c.width;if(p.x>this.c.width)p.x=0;if(p.y<0)p.y=this.c.height;if(p.y>this.c.height)p.y=0;this.ctx.beginPath();this.ctx.arc(p.x,p.y,p.r,0,Math.PI*2);this.ctx.fillStyle=p.col;this.ctx.globalAlpha=p.a;this.ctx.fill()});this.ctx.globalAlpha=1;requestAnimationFrame(()=>this.loop())}
+    }
+
+    // === WIN PARTICLES ===
+    function spawnWinParticles(canvas,ctx,x,y,n=60){
+        const ps=[];for(let i=0;i<n;i++)ps.push({x,y,vx:(Math.random()-.5)*9,vy:(Math.random()-.5)*9-3,life:1,dec:Math.random()*.016+.007,col:`hsl(${Math.random()*50+30},100%,${50+Math.random()*40}%)`,sz:Math.random()*4+2});
+        function anim(){ctx.save();ps.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.life-=p.dec;if(p.life<=0){ps.splice(i,1);return}ctx.globalAlpha=p.life;ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,p.sz*.4,0,Math.PI*2);ctx.fill()});ctx.restore();if(ps.length>0)requestAnimationFrame(anim)}anim()
+    }
+
+    // === GAMES DATA ===
+    const GAMES = [
+        {id:'crash',name:'Crash C8L',cat:'crash',icon:'🚀',badge:'🔥 MULTIPLICADOR',gradient:'#ef4444,#f97316',rtp:.96},
+        {id:'mines',name:'Mines C8L',cat:'crash',icon:'💣',badge:'💎 5x5',gradient:'#f59e0b,#d97706',rtp:.95},
+        {id:'plinko',name:'Plinko C8L',cat:'crash',icon:'🟡',badge:'⚡ CLAVOS',gradient:'#8b5cf6,#6d28d9',rtp:.97},
+        {id:'ruleta',name:'Ruleta C8L',cat:'mesa',icon:'🎡',badge:'🎯 EUROPEA',gradient:'#e74c3c,#c0392b',rtp:.97},
+        {id:'slot',name:'Corazones Locos Slot',cat:'slots',icon:'❤️',badge:'🎰 x5 MULTI',gradient:'#ec4899,#be185d',rtp:.96},
+        {id:'kukis',name:'KUKIS',cat:'kukis',icon:'🍪',badge:'🍪 INVESTIGACIÓN',gradient:'#8B4513,#FF69B4',rtp:.94}
+    ];
+
+    // === RENDER GRID ===
+    function renderGrid(filter='all'){
+        const grid=document.getElementById('gamesGrid');
+        const list=filter==='all'?GAMES:GAMES.filter(g=>g.cat===filter);
+        grid.innerHTML=list.map(g=>`
+            <div class="game-card" onclick="openGame('${g.id}')">
+                <div class="game-thumb" style="background:linear-gradient(135deg,${g.gradient},#0a0a18)">
+                    <span class="game-emoji">${g.icon}</span>
+                    <span class="game-badge">${g.badge}</span>
+                </div>
+                <div class="game-info">
+                    <div class="game-name">${g.name}</div>
+                    <div class="game-type">${g.cat.toUpperCase()}</div>
+                    <div class="game-rtp">RTP: ${(g.rtp*100).toFixed(1)}%</div>
+                </div>
+            </div>`).join('');
+    }
+
+    // === CATEGORIES ===
+    document.getElementById('catNav').addEventListener('click',e=>{
+        if(e.target.classList.contains('cat-tab')){
+            document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+            e.target.classList.add('active');
+            renderGrid(e.target.dataset.cat);
+            sfx.click();
+        }
+    });
+
+    // === PRESTIGE ===
+    function updatePrestige(){
+        const w=STATE.wagered;let rank=STATE.prestigeRanks[0],next=STATE.prestigeRanks[1];
+        for(let i=STATE.prestigeRanks.length-1;i>=0;i--){if(w>=STATE.prestigeRanks[i].min){rank=STATE.prestigeRanks[i];next=STATE.prestigeRanks[i+1]||rank;break}}
+        document.getElementById('prestigeRank').textContent=rank.name;
+        const pct=next.min>rank.min?((w-rank.min)/(next.min-rank.min))*100:100;
+        document.getElementById('prestigeFill').style.width=Math.min(pct,100)+'%';
+        document.getElementById('prestigeNext').textContent=next.min>w?`Siguiente: ${next.name} (faltan ${(next.min-w).toLocaleString()} wagered)`:'¡Rango máximo! 🦁';
+    }
+
+    // === BALANCE ===
+    function updateBal(amt){STATE.balance+=amt;if(STATE.balance<0)STATE.balance=0;document.getElementById('balDisplay').textContent=STATE.balance.toLocaleString();actualizarSaldoServidor(STATE.balance)}
+    function addWager(amt){STATE.wagered+=amt;updatePrestige()}
+    function changeBet(d){if(STATE.spinning)return;const n=STATE.bet+d*50;if(n>=STATE.minBet&&n<=STATE.maxBet&&n<=STATE.balance){STATE.bet=n;document.getElementById('betDisp').textContent=STATE.bet;sfx.click()}}
+
+    // === HOOKS ===
+    function actualizarSaldoServidor(s){console.log('[C8L HOOK] Balance:',s)}
+    function recargarMonedasReal(){console.log('[C8L HOOK] Recarga solicitada')}
+    function recargar(){sfx.click();toast('💎 Conectando pasarela...');setTimeout(()=>{updateBal(10000);toast('✅ +10,000 chips (simulado)')},1000)}
+
+    // === TOAST ===
+    function toast(msg){const a=document.getElementById('toastArea'),t=document.createElement('div');t.className='toast-msg';t.textContent=msg;a.appendChild(t);setTimeout(()=>t.remove(),3200)}
+
+    // === OPEN GAME ===
+    function openGame(id){
+        sfx.init();sfx.click();
+        const g=GAMES.find(x=>x.id===id);if(!g)return;
+        STATE.currentGame=g;
+        document.getElementById('modalTitle').textContent=`${g.icon} ${g.name}`;
+        document.getElementById('winBanner').textContent='';
+        document.getElementById('winBanner').classList.remove('show');
+        document.getElementById('modalOverlay').classList.add('active');
+        STATE.spinning=false;
+
+        if(id==='kukis'){
+            document.getElementById('modalContent').innerHTML=buildKukisUI();
+            document.getElementById('gameCtrls')&&(document.getElementById('gameCtrls').style.display='none');
+            kukisInit();
+        } else {
+            document.getElementById('modalContent').innerHTML=`
+                <div class="canvas-wrap"><canvas id="gameCanvas" width="720" height="460"></canvas></div>
+                <div class="win-banner" id="winBanner"></div>
+                <div class="game-ctrls" id="gameCtrls">
+                    <button class="btn-spin" id="btnMain" onclick="playGame()">🎲 JUGAR</button>
+                    <button class="btn-gold" style="background:var(--cyan)" onclick="changeBet(-1)">➖</button>
+                    <span id="betDisp" style="font-size:1.5em;font-weight:800">${STATE.bet}</span>
+                    <button class="btn-gold" style="background:var(--cyan)" onclick="changeBet(1)">➕</button>
+                </div>`;
+            const btn=document.getElementById('btnMain');
+            if(btn){btn.textContent=getLabel(id);btn.disabled=false}
+            drawGame(id);
+        }
+    }
+
+    function getLabel(id){return{crash:'🚀 CASH OUT',mines:'💎 DESTAPAR',plinko:'🟡 SOLTAR',ruleta:'🎡 GIRAR',slot:'❤️ GIRAR'}[id]||'🎲 JUGAR'}
+    function closeGame(){document.getElementById('modalOverlay').classList.remove('active');STATE.currentGame=null;sfx.click()}
+    document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeGame()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGame()});
+
+    // === PLAY GAME (Non-Kukis) ===
+    function playGame(){
+        if(!STATE.currentGame||STATE.spinning)return;
+        if(STATE.balance<STATE.bet){toast('❌ Saldo insuficiente');sfx.lose();return}
+        sfx.init();STATE.spinning=true;
+        const btn=document.getElementById('btnMain');if(btn)btn.disabled=true;
+        updateBal(-STATE.bet);addWager(STATE.bet);
+        const wb=document.getElementById('winBanner');if(wb){wb.textContent='';wb.classList.remove('show')}
+        sfx.spin();
+        const id=STATE.currentGame.id;
+        animateGame(id);
+        setTimeout(()=>{
+            const win=calcWin(STATE.currentGame);
+            if(win>0){
+                updateBal(win);
+                const wb2=document.getElementById('winBanner');
+                if(wb2){wb2.textContent=`¡GANASTE ${win.toLocaleString()} chips! 🎉`;wb2.classList.add('show')}
+                if(win>=STATE.bet*8){sfx.jackpot();toast(`💥 JACKPOT x${(win/STATE.bet).toFixed(1)}!`)}else{sfx.win()}
+                const cv=document.getElementById('gameCanvas');if(cv)spawnWinParticles(cv,cv.getContext('2d'),cv.width/2,cv.height/2,70);
+            } else {
+                const wb2=document.getElementById('winBanner');if(wb2){wb2.textContent='🔄 Inténtalo de nuevo';wb2.classList.remove('show')}
+                sfx.lose();
+            }
+            STATE.spinning=false;if(btn)btn.disabled=false;
+            drawGame(id);
+        },1500);
+    }
+
+    function calcWin(game){
+        const r=Math.random(),rtp=game.rtp;
+        if(r<rtp*.30)return Math.floor(STATE.bet*(1+Math.random()*2.2));
+        if(r<rtp*.13)return Math.floor(STATE.bet*(3+Math.random()*7));
+        if(r<rtp*.025)return Math.floor(STATE.bet*(10+Math.random()*45));
+        return 0;
+    }
+
+    // === DRAW GAMES ON CANVAS ===
+    function drawGame(id){
+        const cv=document.getElementById('gameCanvas');if(!cv)return;
+        const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
+        ctx.fillStyle='#0a0a18';ctx.fillRect(0,0,cv.width,cv.height);
+        switch(id){
+            case 'crash':drawCrash(ctx,cv);break;
+            case 'mines':drawMines(ctx,cv);break;
+            case 'plinko':drawPlinko(ctx,cv);break;
+            case 'ruleta':drawRuleta(ctx,cv);break;
+            case 'slot':drawSlot(ctx,cv);break;
+        }
+    }
+
+    function animateGame(id){
+        const cv=document.getElementById('gameCanvas');if(!cv)return;
+        const ctx=cv.getContext('2d');let f=0;
+        function anim(){if(f>=25)return;ctx.fillStyle=`rgba(244,180,26,${.3-f/25*.3})`;ctx.fillRect(0,0,cv.width,cv.height);f++;requestAnimationFrame(anim)}anim()
+    }
+
+    // --- CRASH ---
+    function drawCrash(ctx,cv){
+        const cx=cv.width/2,cy=cv.height/2;
+        // Grid
+        ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+        for(let i=0;i<10;i++){ctx.beginPath();ctx.moveTo(60+i*70,cv.height-60);ctx.lineTo(60+i*70,40);ctx.stroke();ctx.beginPath();ctx.moveTo(60,40+i*42);ctx.lineTo(cv.width-40,40+i*42);ctx.stroke()}
+        // Curve
+        const grd=ctx.createLinearGradient(60,cv.height-60,cv.width-60,60);grd.addColorStop(0,'#ef4444');grd.addColorStop(.5,'#f4b41a');grd.addColorStop(1,'#10b981');
+        ctx.strokeStyle=grd;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(60,cv.height-60);
+        const mult=1+Math.random()*4;
+        for(let x=0;x<cv.width-120;x+=5){const y=(cv.height-60)-(x/(cv.width-120))*(cv.height-120)*Math.pow(x/(cv.width-120),.7);ctx.lineTo(60+x,y)}
+        ctx.stroke();
+        // Multiplier
+        const m=(1+Math.random()*3.5).toFixed(2);
+        ctx.fillStyle='#f4b41a';ctx.font='bold 65px Arial';ctx.textAlign='center';ctx.fillText(m+'x',cx,cy-50);
+        ctx.fillStyle='#fff';ctx.font='18px Arial';ctx.fillText('Retira antes de que explote',cx,cy+10);
+        // Rocket
+        ctx.font='40px Arial';ctx.fillText('🚀',cv.width-100,80);
+    }
+
+    // --- MINES ---
+    function drawMines(ctx,cv){
+        const sz=5,cell=72,offX=(cv.width-sz*cell)/2,offY=(cv.height-sz*cell)/2;
+        for(let r=0;r<sz;r++)for(let c=0;c<sz;c++){
+            ctx.fillStyle='#141428';ctx.strokeStyle='#f4b41a';ctx.lineWidth=2;
+            roundRect(ctx,offX+c*cell+4,offY+r*cell+4,cell-8,cell-8,10);ctx.fill();ctx.stroke();
+            if(Math.random()<.35){ctx.font='32px Arial';ctx.textAlign='center';ctx.fillText(Math.random()<.75?'💎':'💣',offX+c*cell+cell/2,offY+r*cell+cell/2+10)}
+        }
+        ctx.fillStyle='#f4b41a';ctx.font='bold 20px Arial';ctx.textAlign='center';ctx.fillText('Encuentra 💎 Evita 💣',cv.width/2,30);
+    }
+
+    // --- PLINKO ---
+    function drawPlinko(ctx,cv){
+        for(let row=0;row<9;row++){const pegs=row+3;for(let p=0;p<pegs;p++){const x=cv.width/2-(pegs-1)*35+p*70,y=60+row*42;ctx.fillStyle='#f4b41a';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill()}}
+        const mults=['0.2x','0.5x','1x','2x','5x','10x','5x','2x','1x','0.5x','0.2x'];
+        mults.forEach((m,i)=>{ctx.fillStyle=i===5?'#ef4444':i>=3&&i<=7?'#f4b41a':'#10b981';ctx.font='bold 14px Arial';ctx.textAlign='center';ctx.fillText(m,65+i*58,cv.height-20)});
+        // Ball
+        ctx.fillStyle='#ff6b35';ctx.beginPath();ctx.arc(cv.width/2+Math.random()*40-20,50+Math.random()*200,10,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cv.width/2+Math.random()*40-20,50+Math.random()*200,4,0,Math.PI*2);ctx.fill();
+    }
+
+    // --- RULETA ---
+    function drawRuleta(ctx,cv){
+        const cx=cv.width/2,cy=cv.height/2+10;
+        for(let i=0;i<37;i++){ctx.fillStyle=i===0?'#10b981':i%2===0?'#e74c3c':'#1a1a2e';ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,190,(i*Math.PI/18.5),((i+1)*Math.PI/18.5));ctx.closePath();ctx.fill();ctx.strokeStyle='#f4b41a';ctx.lineWidth=1;ctx.stroke()}
+        ctx.fillStyle='#141428';ctx.beginPath();ctx.arc(cx,cy,50,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#f4b41a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx,cy,50,0,Math.PI*2);ctx.stroke();
+        ctx.fillStyle='#f4b41a';ctx.font='bold 24px Arial';ctx.textAlign='center';ctx.fillText('C8L',cx,cy+8);
+        // Arrow
+        ctx.fillStyle='#f4b41a';ctx.beginPath();ctx.moveTo(cx,cy-185);ctx.lineTo(cx-12,cy-210);ctx.lineTo(cx+12,cy-210);ctx.closePath();ctx.fill();
+    }
+
+    // --- SLOT ---
+    function drawSlot(ctx,cv){
+        const syms=['❤️','💎','🦁','⭐','7️⃣','🍒','👑'],reels=5,rw=cv.width/(reels+1);
+        for(let i=0;i<reels;i++){
+            const x=rw*(i+.5);ctx.fillStyle='#141428';ctx.strokeStyle='#ec4899';ctx.lineWidth=3;
+            roundRect(ctx,x-rw*.38,70,rw*.76,310,14);ctx.fill();ctx.stroke();
+            for(let j=0;j<3;j++){ctx.font='44px Arial';ctx.textAlign='center';ctx.fillText(syms[Math.floor(Math.random()*syms.length)],x,160+j*95)}
+        }
+        ctx.strokeStyle='#f4b41a';ctx.lineWidth=3;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(40,240);ctx.lineTo(cv.width-40,240);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='#f4b41a';ctx.font='bold 18px Arial';ctx.textAlign='center';ctx.fillText('CORAZONES LOCOS',cv.width/2,40);
+    }
+
+    // roundRect helper
+    function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
+
+    // ============================================
+    // 🍪 KUKIS CARD GAME - FULL IMPLEMENTATION
+    // ============================================
+
+    // --- KUKIS CARDS DATABASE (24 cards) ---
+    const KUKIS_DB = {
+        personajes: [
+            {id:'p1',name:'Unicornio Detective',emoji:'🦄',type:'Personaje',power:8,ability:'Doble pista'},
+            {id:'p2',name:'Galletita Agente',emoji:'🍪',type:'Personaje',power:6,ability:'Rastrear migas'},
+            {id:'p3',name:'Choco Magnum',emoji:'🍫',type:'Personaje',power:7,ability:'Derretir pistas'},
+            {id:'p4',name:'Nube de Algodón',emoji:'☁️',type:'Personaje',power:5,ability:'Flotar obstáculos'},
+            {id:'p5',name:'Piruleta Forense',emoji:'🍭',type:'Personaje',power:5,ability:'Analizar dulces'},
+            {id:'p6',name:'Muffin Misterioso',emoji:'🧁',type:'Personaje',power:6,ability:'Hornear soluciones'},
+            {id:'p7',name:'Caramelo Ninja',emoji:'🍬',type:'Personaje',power:7,ability:'Sigilo dulce'},
+            {id:'p8',name:'Donut Guardián',emoji:'🍩',type:'Personaje',power:6,ability:'Escudo circular'}
+        ],
+        objetos: [
+            {id:'o1',name:'Lupa de Caramelo',emoji:'🔍',type:'Objeto',power:4,ability:'Amplificar pistas'},
+            {id:'o2',name:'Libro de Recetas',emoji:'📖',type:'Objeto',power:5,ability:'Conocimiento antiguo'},
+            {id:'o3',name:'Poción Arcoíris',emoji:'🌈',type:'Objeto',power:7,ability:'Revelar verdades'},
+            {id:'o4',name:'Caja de Galletas',emoji:'🎁',type:'Objeto',power:3,ability:'Contiene sorpresas'},
+            {id:'o5',name:'Cinta Regaliz',emoji:'🎀',type:'Objeto',power:3,ability:'Asegurar evidencias'},
+            {id:'o6',name:'Cámara Fresa',emoji:'📸',type:'Objeto',power:4,ability:'Capturar momentos'},
+            {id:'o7',name:'Brújula Chocolate',emoji:'🧭',type:'Objeto',power:5,ability:'Hallar camino'},
+            {id:'o8',name:'Red de Algodón',emoji:'🕸️',type:'Objeto',power:4,ability:'Atrapar villanos'}
+        ],
+        eventos: [
+            {id:'e1',name:'Explosión Chocolate',emoji:'💥',type:'Evento',power:9,ability:'Daño masivo'},
+            {id:'e2',name:'Lluvia de Chuches',emoji:'🌧️',type:'Evento',power:6,ability:'Curar aliados'},
+            {id:'e3',name:'Tornado Azúcar',emoji:'🌪️',type:'Evento',power:8,ability:'Desordenar enemigos'},
+            {id:'e4',name:'Escudo Gominola',emoji:'🛡️',type:'Evento',power:5,ability:'Protección dulce'},
+            {id:'e5',name:'Portal Galletas',emoji:'🌀',type:'Evento',power:7,ability:'Teletransporte'},
+            {id:'e6',name:'Furia Unicornio',emoji:'🦄✨',type:'Evento',power:10,ability:'Ataque legendario'},
+            {id:'e7',name:'Terremoto Fondant',emoji:'🫨',type:'Evento',power:8,ability:'Destruir defensas'},
+            {id:'e8',name:'Fiesta Arcoíris',emoji:'🎉',type:'Evento',power:6,ability:'Bonus general'}
+        ]
+    };
+
+    const ALL_KUKIS_CARDS = [...KUKIS_DB.personajes,...KUKIS_DB.objetos,...KUKIS_DB.eventos];
+
+    // --- KUKIS CASES (8 cases) ---
+    const KUKIS_CASES = [
+        {id:1,name:'Las Galletas Desaparecidas',desc:'Las galletas de chocolate han desaparecido de la fábrica. Huellas de migas llevan al bosque de caramelos.',difficulty:3,reward:200,villain:'Ladrón de Migas 🐀'},
+        {id:2,name:'Secuestro en el Reino Dulce',desc:'El príncipe Malvavisco fue secuestrado. Hay azúcar glas por todo el castillo.',difficulty:4,reward:350,villain:'Bruja Regaliz 🧙‍♀️'},
+        {id:3,name:'El Pastel Envenenado',desc:'Alguien puso un ingrediente secreto en el pastel real. Los invitados están en peligro.',difficulty:5,reward:500,villain:'Chef Oscuro 👨‍🍳'},
+        {id:4,name:'Maldición del Unicornio',desc:'Un unicornio de chocolate blanco fue maldecido. Hay que romper el hechizo.',difficulty:6,reward:750,villain:'Hechicero Amargo 🧙'},
+        {id:5,name:'Robo en Banco de Caramelos',desc:'El banco más dulce fue asaltado. Testigos hablan de una figura de caramelo derretido.',difficulty:7,reward:1000,villain:'Banda Fondant 🎭'},
+        {id:6,name:'El Fantasma de la Fábrica',desc:'Ruidos extraños y chuches que desaparecen. Algo acecha en la fábrica de dulces.',difficulty:5,reward:600,villain:'Fantasma Merengue 👻'},
+        {id:7,name:'Complot del Chocolate Negro',desc:'Una conspiración para convertir todos los dulces en amargos. El tiempo se acaba.',difficulty:8,reward:1200,villain:'Lord Cacao 🍫'},
+        {id:8,name:'La Gran Heladería Perdida',desc:'La heladería legendaria desapareció. Solo un mapa de chicle puede encontrarla.',difficulty:9,reward:1500,villain:'Emperador Hielo 🧊'}
+    ];
+
+    // --- KUKIS STATE ---
+    const KS = {
+        balance: 0, // Uses main STATE.balance
+        hand: [],
+        clues: [],   // Cards placed as clues (max 3)
+        currentCase: null,
+        unicornCharges: 3,
+        casesResolved: 0,
+        selectedIdx: -1
+    };
+
+    // --- BUILD KUKIS UI ---
+    function buildKukisUI(){
+        return `<div class="kukis-modal" id="kukisGame">
+            <div class="kukis-case" id="kukisCasePanel">
+                <div class="kukis-case-title">📋 Caso #<span id="kCaseNum">1</span>: <span id="kCaseName">...</span></div>
+                <div class="kukis-case-desc" id="kCaseDesc">Cargando caso...</div>
+                <div style="margin-top:8px;font-size:.85em">
+                    <span style="color:var(--red)">⚔️ Villano: <span id="kVillain">???</span></span> |
+                    <span style="color:var(--gold)">⭐ Dificultad: <span id="kDiff">?</span></span> |
+                    <span style="color:var(--green)">💰 Recompensa: <span id="kReward">???</span> chips</span>
+                </div>
+            </div>
+            <div style="text-align:center;margin:8px 0;font-size:.85em;color:#aaa">
+                Selecciona una carta y luego haz clic en un slot para colocarla como pista
+            </div>
+            <h3 style="color:#FFB6C1;font-size:1em;text-align:center;margin:10px 0">🃏 Tu Mano (6 cartas)</h3>
+            <div class="kukis-hand" id="kukisHand"></div>
+            <h3 style="color:var(--gold);font-size:1em;text-align:center;margin:10px 0">🔎 Pistas Colocadas (3 slots)</h3>
+            <div class="kukis-slots" id="kukisSlots">
+                <div class="kukis-slot" onclick="placeClue(0)">Pista 1</div>
+                <div class="kukis-slot" onclick="placeClue(1)">Pista 2</div>
+                <div class="kukis-slot" onclick="placeClue(2)">Pista 3</div>
+            </div>
+            <div class="kukis-info" id="kukisInfo">
+                <span>🦄 Unicornio: <span id="kUniCharges">3</span> cargas</span>
+                <span>📋 Casos resueltos: <span id="kCasesWon">0</span></span>
+                <span>💰 Coste: 50 chips</span>
+            </div>
+            <div class="kukis-combat" id="kukisCombat">⚔️ Zona de combate</div>
+            <div class="kukis-result" id="kukisResult"></div>
+            <div style="text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+                <button class="btn-kukis" id="btnInvestigate" onclick="kukisInvestigate()">🔍 INVESTIGAR (50 chips)</button>
+                <button class="btn-kukis" style="background:linear-gradient(135deg,#9B59B6,#6d28d9)" onclick="kukisUnicorn()">🦄 Poder Unicornio</button>
+                <button class="btn-kukis" style="background:linear-gradient(135deg,#f4b41a,#e8900c);color:#000" onclick="kukisNewCase()">📋 Nuevo Caso</button>
+            </div>
+        </div>`;
+    }
+
+    // --- KUKIS INIT ---
+    function kukisInit(){
+        KS.hand=[];KS.clues=[];KS.selectedIdx=-1;KS.unicornCharges=3;
+        kukisNewCase();
+        kukisDeal(6);
+    }
+
+    function kukisNewCase(){
+        KS.currentCase=KUKIS_CASES[Math.floor(Math.random()*KUKIS_CASES.length)];
+        KS.clues=[];KS.selectedIdx=-1;
+        kukisDeal(6);
+        kukisRenderCase();
+        kukisRenderSlots();
+        const r=document.getElementById('kukisResult');if(r)r.textContent='';
+        const c=document.getElementById('kukisCombat');if(c)c.innerHTML='⚔️ Zona de combate';
+    }
+
+    function kukisDeal(n){
+        const shuffled=[...ALL_KUKIS_CARDS].sort(()=>Math.random()-.5);
+        KS.hand=shuffled.slice(0,n).map((c,i)=>({...c,uid:c.id+'_'+Date.now()+'_'+i}));
+        KS.selectedIdx=-1;
+        kukisRenderHand();
+    }
+
+    function kukisRenderCase(){
+        const c=KS.currentCase;if(!c)return;
+        const el=id=>document.getElementById(id);
+        if(el('kCaseNum'))el('kCaseNum').textContent=c.id;
+        if(el('kCaseName'))el('kCaseName').textContent=c.name;
+        if(el('kCaseDesc'))el('kCaseDesc').textContent=c.desc;
+        if(el('kVillain'))el('kVillain').textContent=c.villain;
+        if(el('kDiff'))el('kDiff').textContent=c.difficulty;
+        if(el('kReward'))el('kReward').textContent=c.reward;
+        if(el('kUniCharges'))el('kUniCharges').textContent=KS.unicornCharges;
+        if(el('kCasesWon'))el('kCasesWon').textContent=KS.casesResolved;
+    }
+
+    function kukisRenderHand(){
+        const h=document.getElementById('kukisHand');if(!h)return;
+        h.innerHTML=KS.hand.map((c,i)=>`
+            <div class="kukis-card ${KS.selectedIdx===i?'selected':''}" onclick="kukisSelect(${i})" style="position:relative">
+                <span class="k-type" style="position:absolute;top:5px;right:5px;background:${c.type==='Personaje'?'#9B59B6':c.type==='Objeto'?'#00f0ff':'#ef4444'};color:#fff;padding:2px 6px;border-radius:8px;font-size:.55em;font-weight:700">${c.type}</span>
+                <div class="k-emoji">${c.emoji}</div>
+                <div class="k-name">${c.name}</div>
+                <div class="k-power">⚡${c.power}</div>
+            </div>`).join('');
+    }
+
+    function kukisRenderSlots(){
+        const s=document.getElementById('kukisSlots');if(!s)return;
+        let html='';
+        for(let i=0;i<3;i++){
+            const card=KS.clues[i];
+            if(card){
+                html+=`<div class="kukis-slot filled" onclick="removeClue(${i})">${card.emoji}<br><span style="font-size:.6em;color:#8B4513">${card.name} ⚡${card.power}</span></div>`;
+            } else {
+                html+=`<div class="kukis-slot" onclick="placeClue(${i})">Pista ${i+1}</div>`;
+            }
+        }
+        s.innerHTML=html;
+    }
+
+    function kukisSelect(idx){
+        sfx.click();
+        KS.selectedIdx=KS.selectedIdx===idx?-1:idx;
+        kukisRenderHand();
+    }
+
+    function placeClue(slotIdx){
+        if(KS.selectedIdx<0)return;
+        if(KS.clues[slotIdx]){toast('⚠️ Slot ocupado. Haz clic para quitar.');return}
+        if(KS.clues.filter(Boolean).length>=3){toast('⚠️ Ya tienes 3 pistas');return}
+        sfx.click();
+        const card=KS.hand[KS.selectedIdx];
+        KS.clues[slotIdx]=card;
+        KS.hand.splice(KS.selectedIdx,1);
+        KS.selectedIdx=-1;
+        kukisRenderHand();kukisRenderSlots();
+    }
+
+    function removeClue(slotIdx){
+        if(!KS.clues[slotIdx])return;
+        sfx.click();
+        KS.hand.push(KS.clues[slotIdx]);
+        KS.clues[slotIdx]=null;
+        kukisRenderHand();kukisRenderSlots();
+    }
+
+    // --- KUKIS INVESTIGATE ---
+    function kukisInvestigate(){
+        const placed=KS.clues.filter(Boolean);
+        const res=document.getElementById('kukisResult');
+        const combat=document.getElementById('kukisCombat');
+        if(placed.length<3){if(res)res.innerHTML='<span style="color:var(--red)">🔍 Necesitas colocar 3 pistas</span>';return}
+        if(STATE.balance<50){if(res)res.innerHTML='<span style="color:var(--red)">❌ Necesitas 50 chips para investigar</span>';return}
+
+        sfx.spin();
+        updateBal(-50);addWager(50);
+
+        const totalPower=placed.reduce((s,c)=>s+c.power,0);
+        const cas=KS.currentCase;
+        const diff=cas.difficulty;
+        const needed=diff*3;
+
+        // Synergy bonus: 1 Personaje + 1 Objeto + 1 Evento = +3
+        const hasP=placed.some(c=>c.type==='Personaje');
+        const hasO=placed.some(c=>c.type==='Objeto');
+        const hasE=placed.some(c=>c.type==='Evento');
+        const synergy=(hasP&&hasO&&hasE)?3:0;
+        const finalPower=totalPower+synergy;
+
+        let synergyMsg=synergy>0?'<br>🌟 ¡SINERGIA ACTIVADA! (+3 poder)':'';
+
+        if(finalPower>=needed){
+            // CASE SOLVED!
+            const reward=cas.reward;
+            updateBal(reward);
+            KS.casesResolved++;
+            sfx.jackpot();
+            if(res)res.innerHTML=`<span style="color:var(--gold)">🎉 ¡CASO RESUELTO! +${reward} chips${synergyMsg}</span>`;
+            if(combat)combat.innerHTML=`<span style="color:var(--green)">🏆 ¡${cas.villain} derrotado! Poder: ${finalPower} vs ${needed}</span>`;
+            toast(`🍪 Caso resuelto! +${reward} chips`);
+            kukisWinFX();
+        } else {
+            // COMBAT - probability based
+            if(combat)combat.innerHTML=`<span style="color:var(--orange)">⚔️ ¡COMBATE! Poder ${finalPower} vs Dificultad ${needed}${synergyMsg}</span>`;
+            kukisCombat(finalPower,needed,cas);
+        }
+        kukisRenderCase();
+    }
+
+    function kukisCombat(playerPow,needed,cas){
+        const res=document.getElementById('kukisResult');
+        const combat=document.getElementById('kukisCombat');
+        // Probability: higher power = better chance
+        const ratio=playerPow/needed;
+        const winChance=Math.min(ratio*0.6,0.85); // Max 85% chance
+        const roll=Math.random();
+
+        setTimeout(()=>{
+            if(roll<winChance){
+                // Combat win - reduced reward
+                const reward=Math.floor(cas.reward*0.6);
+                updateBal(reward);
+                KS.casesResolved++;
+                sfx.win();
+                if(res)res.innerHTML=`<span style="color:var(--green)">⚔️ ¡Victoria en combate! +${reward} chips</span>`;
+                if(combat)combat.innerHTML=`<span style="color:var(--green)">🏆 ${cas.villain} derrotado por combate (${Math.floor(winChance*100)}% prob)</span>`;
+                toast(`⚔️ Combate ganado! +${reward} chips`);
+                kukisWinFX();
+            } else {
+                // Combat loss
+                sfx.lose();
+                if(res)res.innerHTML=`<span style="color:var(--red)">💔 Derrota... ${cas.villain} escapó</span>`;
+                if(combat)combat.innerHTML=`<span style="color:var(--red)">😢 Poder insuficiente. Prob: ${Math.floor(winChance*100)}% — Mala suerte</span>`;
+                toast('💔 Caso perdido...');
+            }
+            kukisRenderCase();
+        },800);
+    }
+
+    function kukisWinFX(){
+        const emojis=['🍪','🍫','🍬','🍭','🦄','🌈','⭐','💎','🎉','✨'];
+        for(let i=0;i<20;i++){
+            const p=document.createElement('span');
+            p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+            p.style.cssText=`position:fixed;font-size:${20+Math.random()*35}px;left:${20+Math.random()*60}%;top:${20+Math.random()*50}%;pointer-events:none;z-index:9999;animation:cookieFly ${1+Math.random()*1.5}s ease-out forwards;`;
+            document.body.appendChild(p);
+            setTimeout(()=>p.remove(),2500);
+        }
+    }
+
+    // --- KUKIS UNICORN POWER ---
+    function kukisUnicorn(){
+        if(KS.unicornCharges<=0){toast('🦄 Sin cargas. Resuelve casos para recargar.');return}
+        sfx.win();
+        KS.unicornCharges--;
+        // Draw 2 extra cards
+        const shuffled=[...ALL_KUKIS_CARDS].sort(()=>Math.random()-.5);
+        const extra=shuffled.slice(0,2).map((c,i)=>({...c,uid:c.id+'_uni_'+Date.now()+'_'+i}));
+        KS.hand.push(...extra);
+        kukisRenderHand();
+        kukisRenderCase();
+        toast('🦄 ¡Poder Unicornio! +2 cartas');
+        const res=document.getElementById('kukisResult');
+        if(res)res.innerHTML='<span style="color:var(--purple)">🦄 ¡Poder Unicornio activado! +2 cartas extra</span>';
+    }
+
+    // === INIT ===
+    function init(){
+        new ParticleBG();
+        renderGrid();
+        updatePrestige();
+        document.getElementById('balDisplay').textContent=STATE.balance.toLocaleString();
+        document.addEventListener('click',()=>sfx.init(),{once:true});
+        // Add cookieFly animation
+        const st=document.createElement('style');
+        st.textContent='@keyframes cookieFly{0%{opacity:1;transform:translateY(0) rotate(0deg) scale(1)}100%{opacity:0;transform:translateY(-250px) rotate(720deg) scale(.3)}}';
+        document.head.appendChild(st);
+        console.log('🦁 C8L CASINO initialized — Domain: c8lcasino.ai');
+        console.log('🎮 6 Games: Crash, Mines, Plinko, Ruleta, Slot, KUKIS');
+        console.log('🍪 KUKIS: 24 cards, 8 cases, synergy system, combat, unicorn power');
+    }
+    init();
+    </script>
+</body>
+</html>
