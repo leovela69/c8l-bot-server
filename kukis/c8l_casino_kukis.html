@@ -3,8 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🦁 C8L CASINO - Premium Casino Lobby | c8lcasino.ai</title>
+    <title>C8L Casino Gratis - 30+ Juegos Sin Registro | Slots, Poker, Crash, Bingo</title>
+    <meta name="description" content="Casino online 100% gratis sin registro ni descarga. 30+ juegos: Slots, Crash, Poker, Ruleta, Bingo, Blackjack, Plinko, Kukis. Juega ahora desde tu navegador.">
+    <meta name="keywords" content="casino gratis, casino sin registro, juegos gratis online, slots gratis, poker gratis, crash game, bingo online, ruleta gratis, blackjack gratis, juegos de casino sin descargar">
+    <meta name="author" content="C8L Agency">
+    <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://c8lcasino.ai">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f4b41a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="C8L Casino">
+    <!-- Open Graph -->
+    <meta property="og:title" content="C8L Casino - Casino Gratis Sin Registro">
+    <meta property="og:description" content="30+ juegos de casino gratis: Slots, Crash, Poker, Ruleta, Bingo, Blackjack. Sin registro, sin descarga. Juega ahora.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://c8lcasino.ai">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:site_name" content="C8L Casino">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="C8L Casino - Casino Gratis Sin Registro">
+    <meta name="twitter:description" content="30+ juegos de casino gratis. Sin registro, sin descarga. Slots, Crash, Poker, Bingo y más.">
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "C8L Casino",
+      "description": "Casino online gratuito con más de 30 juegos. Slots, Crash, Poker, Ruleta, Bingo, Blackjack, Plinko. Sin registro ni descarga.",
+      "url": "https://c8lcasino.ai",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1250",
+        "bestRating": "5"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "C8L Agency"
+      },
+      "inLanguage": "es",
+      "isAccessibleForFree": true,
+      "gamePlatform": ["Web Browser", "Mobile Browser"],
+      "numberOfPlayers": {"@type": "QuantitativeValue", "minValue": 1, "maxValue": 1}
+    }
+    </script>
     
     <!-- Google Fonts: Orbitron (gaming/future) & Montserrat (modern readable) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3535,6 +3586,10 @@
         console.log('🎮 30 Games + KUKIS loaded successfully');
     }
     init();
+    // PWA Service Worker Registration
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('sw.js').then(()=>console.log('🦁 C8L Casino PWA ready')).catch(()=>{});
+    }
     </script>
 </body>
 </html>

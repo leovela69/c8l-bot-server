@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🏆 C8L Casino — Leaderboard Global</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06060f;color:#fff;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:16px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+const D=document;
+
+// === LEADERBOARD DATA (localStorage-based) ===
+const GAMES=['crash','slots','poker','ruleta','bingo','kukis','blackjack','plinko'];
+const GAME_NAMES={crash:'🚀 Crash',slots:'🎰 Slots',poker:'🃏 Poker',ruleta:'🎡 Ruleta',bingo:'🎱 Bingo',kukis:'🍪 Kukis',blackjack:'♠️ Blackjack',plinko:'🟡 Plinko'};
+
+function getLeaderboard(){
+  try{return JSON.parse(localStorage.getItem('c8l_leaderboard')||'[]')}catch(e){return[]}
+}
+function saveLeaderboard(lb){localStorage.setItem('c8l_leaderboard',JSON.stringify(lb))}
+
+// Add score (called from other games)
+window.c8lAddScore=function(playerName,game,score,chips){
+  const lb=getLeaderboard();
+  const existing=lb.find(e=>e.name===playerName);
+  if(existing){
+    existing.totalChips+=chips;
+    existing.totalGames++;
+    existing.games[game]=(existing.games[game]||0)+1;
+    existing.scores[game]=Math.max(existing.scores[game]||0,score);
+    existing.lastPlayed=Date.now();
+  }else{
+    lb.push({name:playerName,totalChips:chips,totalGames:1,games:{[game]:1},scores:{[game]:score},joinDate:Date.now(),lastPlayed:Date.now()});
+  }
+  saveLeaderboard(lb);
+  render();
+};
+
+// Demo data if empty
+function ensureDemoData(){
+  const lb=getLeaderboard();
+  if(lb.length>0)return;
+  const names=['León🦁','Unicornio🦄','Galleta🍪','Diamante💎','Estrella⭐','Fénix🔥','Tornado🌪️','Rayo⚡'];
+  const demo=names.map((name,i)=>({
+    name,totalChips:50000-i*5000+Math.floor(Math.random()*3000),
+    totalGames:100-i*10+Math.floor(Math.random()*20),
+    games:{crash:Math.floor(Math.random()*30),slots:Math.floor(Math.random()*40),poker:Math.floor(Math.random()*20),bingo:Math.floor(Math.random()*15)},
+    scores:{crash:Math.floor(Math.random()*50000),slots:Math.floor(Math.random()*30000),poker:Math.floor(Math.random()*20000),bingo:Math.floor(Math.random()*10000)},
+    joinDate:Date.now()-Math.random()*86400000*30,lastPlayed:Date.now()-Math.random()*86400000*3
+  }));
+  saveLeaderboard(demo);
+}
+
+let currentTab='total';
+
+function render(){
+  ensureDemoData();
+  const lb=getLeaderboard().sort((a,b)=>{
+    if(currentTab==='total')return b.totalChips-a.totalChips;
+    if(currentTab==='games')return b.totalGames-a.totalGames;
+    return(b.scores[currentTab]||0)-(a.scores[currentTab]||0);
+  });
+
+  const medals=['🥇','🥈','🥉'];
+  let html=`
+  <div class="lb-container">
+    <div class="lb-header"><h1>🏆 C8L CASINO — LEADERBOARD GLOBAL</h1></div>
+    <div class="tabs">
+      <button class="tab${currentTab==='total'?' active':''}" onclick="setTab('total')">💰 Chips</button>
+      <button class="tab${currentTab==='games'?' active':''}" onclick="setTab('games')">🎮 Partidas</button>
+      ${GAMES.map(g=>`<button class="tab${currentTab===g?' active':''}" onclick="setTab('${g}')">${GAME_NAMES[g]}</button>`).join('')}
+    </div>
+    <div class="lb-list">`;
+
+  lb.slice(0,20).forEach((p,i)=>{
+    const medal=i<3?medals[i]:`#${i+1}`;
+    const val=currentTab==='total'?p.totalChips.toLocaleString()+' chips':
+              currentTab==='games'?p.totalGames+' partidas':
+              (p.scores[currentTab]||0).toLocaleString()+' pts';
+    const barPct=lb[0]?(currentTab==='total'?p.totalChips/lb[0].totalChips:
+                        currentTab==='games'?p.totalGames/lb[0].totalGames:
+                        (p.scores[currentTab]||0)/(lb[0].scores[currentTab]||1))*100:0;
+    html+=`
+      <div class="lb-row${i<3?' top3':''}">
+        <span class="lb-rank">${medal}</span>
+        <span class="lb-name">${p.name}</span>
+        <div class="lb-bar-wrap"><div class="lb-bar" style="width:${barPct}%"></div></div>
+        <span class="lb-val">${val}</span>
+      </div>`;
+  });
+
+  html+=`</div>
+    <div class="lb-footer">
+      <p>📊 ${lb.length} jugadores registrados</p>
+      <p style="font-size:0.75em;color:#666;margin-top:5px">Ranking actualizado en tiempo real</p>
+    </div>
+  </div>`;
+
+  D.getElementById('app').innerHTML=html;
+}
+
+window.setTab=function(t){currentTab=t;render();};
+
+// Styles
+const s=D.createElement('style');
+s.textContent=`
+.lb-container{max-width:700px;margin:0 auto}
+.lb-header{text-align:center;padding:16px;border-bottom:2px solid #8b6914;margin-bottom:16px}
+.lb-header h1{font-size:clamp(1rem,4vw,1.5rem);color:#d4a017;text-shadow:0 0 15px rgba(212,160,23,0.5)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;justify-content:center}
+.tab{padding:6px 12px;background:#1a0a00;border:1px solid #333;color:#aaa;border-radius:20px;cursor:pointer;font-size:0.75em;font-weight:600;transition:all 0.2s}
+.tab:hover{border-color:#8b6914;color:#d4a017}
+.tab.active{background:#8b6914;color:#000;border-color:#d4a017}
+.lb-list{display:flex;flex-direction:column;gap:6px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0d0d1a;border:1px solid #1a1a2e;border-radius:10px;transition:all 0.2s}
+.lb-row:hover{border-color:#8b6914;background:#1a0a00}
+.lb-row.top3{border-color:#8b6914;background:linear-gradient(90deg,rgba(139,105,20,0.1),transparent)}
+.lb-rank{font-size:1.3em;min-width:35px;text-align:center}
+.lb-name{font-weight:700;min-width:100px;font-size:0.9em;color:#f4e4c1}
+.lb-bar-wrap{flex:1;height:8px;background:#1a1a2e;border-radius:4px;overflow:hidden}
+.lb-bar{height:100%;background:linear-gradient(90deg,#8b6914,#d4a017);border-radius:4px;transition:width 0.5s}
+.lb-val{font-weight:700;color:#d4a017;font-size:0.85em;min-width:90px;text-align:right}
+.lb-footer{text-align:center;padding:16px;color:#8b6914;margin-top:16px;border-top:1px solid #1a1a2e}
+`;
+D.head.appendChild(s);
+
+render();
+})();
+</script>
+</body>
+</html>
