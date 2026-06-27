@@ -835,6 +835,15 @@
             background: rgba(0, 0, 0, 0.4);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .ctrls-buttons-row {
+            display: flex;
             gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
@@ -915,6 +924,43 @@
             color: #000;
             box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
             transform: translateY(-2px);
+        }
+
+        /* Casino Chip selectors row */
+        .chip-selectors-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            width: 100%;
+            margin-top: 6px;
+        }
+
+        .chip-select-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 3px dashed #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-title);
+            font-size: 0.65rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            color: #fff;
+        }
+        .chip-100 { background: #990000; }
+        .chip-500 { background: #3b3131; }
+        .chip-1k { background: #0b69a3; }
+        .chip-5k { background: #b56e07; }
+        .chip-10k { background: #6b21a8; }
+        
+        .chip-select-btn:hover, .chip-select-btn.active-chip {
+            transform: scale(1.15) translateY(-3px);
+            border-style: solid;
+            box-shadow: 0 0 15px rgba(255,255,255,0.65);
         }
 
         .win-banner {
@@ -1205,38 +1251,91 @@
         }
 
         /* ==========================================================================
-           🎡 RULETA C8L HIGH FIDELITY LAYOUT
+           🎡 RULETA C8L HIGH FIDELITY LAYOUT (GREEN FELT & WOOD WHEEL)
            ========================================================================== */
         .ruleta-container {
             width: 100%;
-            max-width: 720px;
+            max-width: 760px;
+            display: grid;
+            grid-template-columns: 80px 1.2fr 1.2fr;
+            gap: 16px;
+            background: radial-gradient(circle at 50% 30%, #06261a 0%, #020d09 100%); /* Green felt gradient */
+            border-radius: 20px;
+            border: 6px solid #3d200f; /* Wood outer frame */
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7),
+                        inset 0 0 40px rgba(0,0,0,0.8);
+            padding: 20px;
+            align-items: center;
+        }
+        
+        /* History panel on the left */
+        .ruleta-history-panel {
             display: flex;
-            gap: 20px;
-            background: radial-gradient(circle at 50% 30%, #150909 0%, #060303 100%);
-            border-radius: 16px;
-            border: 1px solid rgba(231, 76, 60, 0.2);
+            flex-direction: column;
+            gap: 4px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 10px 4px;
+            border-radius: 10px;
+            align-items: center;
+            height: 100%;
+            min-height: 240px;
+        }
+        
+        .ruleta-history-title {
+            font-family: var(--font-title);
+            font-size: 0.55rem;
+            color: #888;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .ruleta-history-strip {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow-y: auto;
+            width: 100%;
+            align-items: center;
+        }
+
+        .ruleta-history-item {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
             align-items: center;
             justify-content: center;
-            flex-wrap: wrap;
-            padding: 16px;
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
         }
+
+        /* Roulette wheel style */
         .ruleta-wheel-box {
             position: relative;
-            width: 240px;
-            height: 240px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
-            border: 8px solid #2e1d0f;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8),
-                        0 0 20px rgba(244,180,26,0.1);
+            border: 10px solid #281408; /* Wood ring */
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6),
+                        0 0 15px rgba(244,180,26,0.25);
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #0d0603;
+            align-self: center;
+            justify-self: center;
         }
         .ruleta-wheel-svg {
             width: 100%;
             height: 100%;
-            transition: transform 3s cubic-bezier(0.1, 0.8, 0.1, 1);
+            transition: transform 3.2s cubic-bezier(0.1, 0.8, 0.1, 1);
         }
         .ruleta-wheel-pointer {
             position: absolute;
@@ -1263,55 +1362,161 @@
             font-weight: 800;
             color: var(--gold);
         }
+
+        /* Roulette table cells */
         .ruleta-betting-table {
-            flex: 1;
-            min-width: 300px;
             display: grid;
             grid-template-columns: repeat(12, 1fr);
-            gap: 4px;
-            background: rgba(4, 4, 10, 0.8);
-            padding: 12px;
-            border-radius: 12px;
+            gap: 3px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.05);
+            min-height: 200px;
+            align-self: center;
         }
+
         .ruleta-table-cell {
-            padding: 10px 2px;
+            padding: 8px 1px;
             text-align: center;
             font-family: var(--font-title);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 800;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
-            border: 1px solid rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .ruleta-cell-red { background: #e74c3c; color: #fff; }
-        .ruleta-cell-black { background: #0e0e1a; color: #fff; border-color: rgba(255,255,255,0.05); }
-        .ruleta-cell-green { background: #10b981; color: #fff; grid-row: span 2; display: flex; align-items: center; justify-content: center; }
+        .ruleta-cell-red { background: linear-gradient(135deg, #ef4444, #991b1b); color: #fff; }
+        .ruleta-cell-black { background: linear-gradient(135deg, #111, #000); color: #fff; border-color: rgba(255,255,255,0.08); }
+        .ruleta-cell-green { background: linear-gradient(135deg, #10b981, #064e3b); color: #fff; grid-row: span 3; }
+        
         .ruleta-table-cell:hover, .ruleta-table-cell.selected-bet {
             transform: scale(1.08);
             filter: brightness(1.25);
             box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
         }
-        .ruleta-history-strip {
-            display: flex;
-            gap: 6px;
+
+        /* ==========================================================================
+           🃏 UNIVERSAL PREMIUM TABLE CARD GAME (BLACKJACK, BACCARAT, POKER)
+           ========================================================================== */
+        .blackjack-container {
             width: 100%;
-            justify-content: center;
-            margin-top: 14px;
+            max-width: 760px;
+            background: radial-gradient(circle at 50% 30%, #0a1829 0%, #03080e 100%); /* Blue felt gradient */
+            border-radius: 20px;
+            border: 6px solid #3d200f; /* Wood outer frame */
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7),
+                        inset 0 0 40px rgba(0,0,0,0.8);
+            padding: 20px;
+            position: relative;
         }
-        .ruleta-history-item {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
+        
+        .blackjack-container.red-felt {
+            background: radial-gradient(circle at 50% 30%, #290a0d 0%, #0e0304 100%); /* Red felt for Baccarat */
+        }
+        
+        .table-branding {
+            text-align: center;
+            margin-bottom: 12px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
+            gap: 4px;
+        }
+        
+        .table-logo-img {
+            width: 50px;
+            height: 24px;
+            object-fit: contain;
+            opacity: 0.75;
+        }
+        
+        .table-title {
             font-family: var(--font-title);
-            font-size: 0.75rem;
+            font-size: 1.35rem;
             font-weight: 800;
-            color: #fff;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            color: var(--gold);
+            text-shadow: 0 0 12px var(--gold-glow);
+            letter-spacing: 1px;
+        }
+        
+        .table-rules-text {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.45);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .blackjack-table {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: rgba(0,0,0,0.35);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .bj-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            min-height: 110px;
+        }
+        
+        .bj-zone-title {
+            font-family: var(--font-title);
+            font-size: 0.8rem;
+            color: #8888a5;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        
+        .score-badge {
+            background: rgba(0,0,0,0.4);
+            color: var(--gold);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-family: var(--font-title);
+        }
+        
+        .bj-cards {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 80px;
+        }
+        
+        .bj-card {
+            width: 60px;
+            height: 88px;
+            background: #fff;
+            color: #000;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6px;
+            font-family: var(--font-title);
+            font-weight: 800;
+            font-size: 0.95rem;
+            animation: dealCard 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+        .bj-card.red-suit {
+            color: var(--red);
+        }
+        @keyframes dealCard {
+            from { transform: translateY(-50px) rotate(15deg); opacity: 0; }
+            to { transform: translateY(0) rotate(0); opacity: 1; }
         }
 
         /* ==========================================
@@ -1481,78 +1686,6 @@
             transform: scale(1.08);
             border-color: var(--gold);
             box-shadow: 0 0 10px var(--gold-glow);
-        }
-
-        /* ==========================================
-           🃏 BLACKJACK VIP HIGH FIDELITY LAYOUT
-           ========================================== */
-        .blackjack-container {
-            width: 100%;
-            max-width: 720px;
-            background: radial-gradient(circle at 50% 30%, #0d2319 0%, #030a07 100%);
-            border-radius: 16px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 20px;
-        }
-        .blackjack-table {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .bj-zone {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-height: 110px;
-        }
-        .bj-zone-title {
-            font-family: var(--font-title);
-            font-size: 0.8rem;
-            color: #8888a5;
-            letter-spacing: 1px;
-            font-weight: 700;
-        }
-        .score-badge {
-            background: rgba(0,0,0,0.4);
-            color: var(--gold);
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: 8px;
-            font-family: var(--font-title);
-        }
-        .bj-cards {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            min-height: 80px;
-        }
-        .bj-card {
-            width: 60px;
-            height: 88px;
-            background: #fff;
-            color: #000;
-            border-radius: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 6px;
-            font-family: var(--font-title);
-            font-weight: 800;
-            font-size: 0.95rem;
-            animation: dealCard 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-        }
-        .bj-card.red-suit {
-            color: var(--red);
-        }
-        @keyframes dealCard {
-            from { transform: translateY(-50px) rotate(15deg); opacity: 0; }
-            to { transform: translateY(0) rotate(0); opacity: 1; }
         }
 
         /* ==========================================
@@ -2163,7 +2296,7 @@
     // ============================================
     // 🦁 C8L CASINO - COMPLETE ENGINE
     // Domain: c8lcasino.ai
-    // 6 Games: Crash, Mines, Plinko, Ruleta, Corazones Locos Slot, KUKIS
+    // 30 Games: Crash, Mines, Plinko, Ruleta, Slots, Card Games, Bingo
     // ============================================
 
     // === GLOBAL STATE ===
@@ -2171,7 +2304,7 @@
         balance: 50000,
         bet: 100,
         minBet: 10,
-        maxBet: 5000,
+        maxBet: 10000,
         wagered: 7500,
         currentGame: null,
         spinning: false,
@@ -2312,7 +2445,19 @@
     // === BALANCE ===
     function updateBal(amt){STATE.balance+=amt;if(STATE.balance<0)STATE.balance=0;document.getElementById('balDisplay').textContent=STATE.balance.toLocaleString();actualizarSaldoServidor(STATE.balance)}
     function addWager(amt){STATE.wagered+=amt;updatePrestige()}
-    function changeBet(d){if(STATE.spinning)return;const n=STATE.bet+d*50;if(n>=STATE.minBet&&n<=STATE.maxBet&&n<=STATE.balance){STATE.bet=n;document.getElementById('betDisp').textContent=STATE.bet;sfx.click()}}
+    
+    // Choose chip bet value directly
+    function selectChipValue(val){
+        if(STATE.spinning)return;
+        sfx.click();
+        STATE.bet = Math.min(val, STATE.balance);
+        document.getElementById('betDisp').textContent=STATE.bet.toLocaleString();
+        document.querySelectorAll('.chip-select-btn').forEach(b=>b.classList.remove('active-chip'));
+        const activeChipBtn = document.querySelector(`.chip-${val>=1000 ? (val/1000)+'k' : val}`);
+        if(activeChipBtn) activeChipBtn.classList.add('active-chip');
+    }
+
+    function changeBet(d){if(STATE.spinning)return;const n=STATE.bet+d*50;if(n>=10&&n<=STATE.maxBet&&n<=STATE.balance){STATE.bet=n;document.getElementById('betDisp').textContent=STATE.bet;sfx.click()}}
 
     // === HOOKS ===
     function actualizarSaldoServidor(s){console.log('[C8L HOOK] Balance:',s)}
@@ -2411,6 +2556,13 @@
             } else if(engineId==='ruleta'){
                 gameHTML = `<div class="canvas-wrap">
                     <div class="ruleta-container">
+                        <!-- History Panel on Left -->
+                        <div class="ruleta-history-panel">
+                            <div class="ruleta-history-title">ÚLTIMOS</div>
+                            <div class="ruleta-history-strip" id="ruletaHistory"></div>
+                        </div>
+                        
+                        <!-- Realistic Wooden/Gold Wheel -->
                         <div class="ruleta-wheel-box">
                             <div class="ruleta-wheel-pointer">▼</div>
                             <svg class="ruleta-wheel-svg" id="ruletaWheel" viewBox="0 0 200 200">
@@ -2419,25 +2571,88 @@
                             </svg>
                             <div class="ruleta-wheel-center" id="ruletaNumberDisplay">C8L</div>
                         </div>
+                        
+                        <!-- Roulette Green Felt Betting Table -->
                         <div class="ruleta-betting-table">
                             ${buildRuletaTable()}
                         </div>
                     </div>
-                    <div class="ruleta-history-strip" id="ruletaHistory"></div>
                 </div>`;
             } else if(engineId==='blackjack'){
-                gameHTML = `<div class="canvas-wrap">
-                    <div class="blackjack-container">
-                        <div class="blackjack-table">
+                let isRedFelt = id === 'baccarat' || id === 'baccarat_facciones';
+                let isHoldem = id.includes('poker') || id.includes('holdem') || id === 'dados';
+                
+                let title = 'BLACKJACK VIP';
+                let rules = 'PAGA 3 A 2 · EL SEGURO PAGA 2 A 1';
+                if(id==='baccarat'||id==='baccarat_facciones') {
+                    title = 'BACCARAT DE LAS FACCIONES';
+                    rules = 'EMPATE PAGA 8 A 1';
+                } else if(isHoldem) {
+                    title = "CASINO HOLD'EM";
+                    rules = "LÍMITE DE APUESTA: 1K / 2K";
+                }
+
+                let subLayoutHTML = '';
+                if(id==='baccarat'||id==='baccarat_facciones') {
+                    // Baccarat board layout
+                    subLayoutHTML = `
+                    <div style="display:flex;gap:12px;width:100%;justify-content:center;margin-bottom:12px;">
+                        <div class="ruleta-table-cell" style="flex:1;background:rgba(59,130,246,0.15);border:2px solid #3b82f6;color:#fff;border-radius:12px;padding:12px;font-family:var(--font-title);font-weight:900;" onclick="selectBaccaratBet('jugador')">JUGADOR<br><span style="font-size:0.65rem;opacity:0.6;">1 A 1</span></div>
+                        <div class="ruleta-table-cell" style="flex:1;background:rgba(16,185,129,0.15);border:2px solid #10b981;color:#fff;border-radius:12px;padding:12px;font-family:var(--font-title);font-weight:900;" onclick="selectBaccaratBet('empate')">EMPATE<br><span style="font-size:0.65rem;opacity:0.6;">8 A 1</span></div>
+                        <div class="ruleta-table-cell" style="flex:1;background:rgba(239,68,68,0.15);border:2px solid #ef4444;color:#fff;border-radius:12px;padding:12px;font-family:var(--font-title);font-weight:900;" onclick="selectBaccaratBet('banca')">BANCA<br><span style="font-size:0.65rem;opacity:0.6;">0.95 A 1</span></div>
+                    </div>
+                    <div class="blackjack-table">
+                        <div class="bj-zone crupier">
+                            <div class="bj-zone-title">BANCA <span id="bjCrupierScore" class="score-badge"></span></div>
+                            <div class="bj-cards" id="bjCrupierCards"></div>
+                        </div>
+                        <div class="bj-zone jugador">
+                            <div class="bj-zone-title">JUGADOR <span id="bjJugadorScore" class="score-badge"></span></div>
+                            <div class="bj-cards" id="bjJugadorCards"></div>
+                        </div>
+                    </div>`;
+                } else if(isHoldem) {
+                    // Poker / Hold'em board layout
+                    subLayoutHTML = `
+                    <div class="blackjack-table">
+                        <div class="bj-zone crupier" style="min-height:90px;">
+                            <div class="bj-zone-title" style="margin-bottom:4px;">CARTAS COMUNITARIAS</div>
+                            <div class="bj-cards" id="bjCommunityCards" style="gap:6px;"></div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                             <div class="bj-zone crupier">
-                                <div class="bj-zone-title">CRUPIER <span id="bjCrupierScore" class="score-badge"></span></div>
+                                <div class="bj-zone-title">RIVAL (KukiMaster) <span id="bjCrupierScore" class="score-badge"></span></div>
                                 <div class="bj-cards" id="bjCrupierCards"></div>
                             </div>
                             <div class="bj-zone jugador">
-                                <div class="bj-zone-title">JUGADOR <span id="bjJugadorScore" class="score-badge"></span></div>
+                                <div class="bj-zone-title">JUGADOR (Tú) <span id="bjJugadorScore" class="score-badge"></span></div>
                                 <div class="bj-cards" id="bjJugadorCards"></div>
                             </div>
                         </div>
+                    </div>`;
+                } else {
+                    // Default Blackjack layout
+                    subLayoutHTML = `
+                    <div class="blackjack-table">
+                        <div class="bj-zone crupier">
+                            <div class="bj-zone-title">CRUPIER <span id="bjCrupierScore" class="score-badge"></span></div>
+                            <div class="bj-cards" id="bjCrupierCards"></div>
+                        </div>
+                        <div class="bj-zone jugador">
+                            <div class="bj-zone-title">JUGADOR <span id="bjJugadorScore" class="score-badge"></span></div>
+                            <div class="bj-cards" id="bjJugadorCards"></div>
+                        </div>
+                    </div>`;
+                }
+
+                gameHTML = `<div class="canvas-wrap">
+                    <div class="blackjack-container ${isRedFelt?'red-felt':''}">
+                        <div class="table-branding">
+                            <img src="public/logo.png" onerror="this.src='https://raw.githubusercontent.com/leovela69/c8l-bot-server/main/public/logo.png'" class="table-logo-img">
+                            <div class="table-title">${title}</div>
+                            <div class="table-rules-text">${rules}</div>
+                        </div>
+                        ${subLayoutHTML}
                     </div>
                 </div>`;
             } else if(engineId==='slot'){
@@ -2473,19 +2688,52 @@
                 </div>`;
             }
 
+            // Custom buttons row based on playing table game
+            let actionButtonsHTML = '';
+            if(id === 'blackjack') {
+                actionButtonsHTML = `
+                    <button class="btn-spin" id="btnMain" onclick="playGame()" style="background:linear-gradient(135deg, #10b981, #059669);box-shadow:0 0 15px var(--green-glow);">PEDIR</button>
+                    <button class="btn-spin" style="background:linear-gradient(135deg, #ef4444, #b91c1c);box-shadow:0 0 15px rgba(239,68,68,0.3);" onclick="blackjackStand()">PLANTARSE</button>
+                `;
+            } else if(id.includes('poker') || id.includes('holdem')) {
+                actionButtonsHTML = `
+                    <button class="btn-spin" style="background:linear-gradient(135deg, #ef4444, #b91c1c);padding:12px 24px;font-size:0.9rem;" onclick="playGame()">RETIRARSE</button>
+                    <button class="btn-spin" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);padding:12px 24px;font-size:0.9rem;" onclick="playGame()">IGUALAR</button>
+                    <button class="btn-spin" id="btnMain" style="background:linear-gradient(135deg, #10b981, #059669);padding:12px 24px;font-size:0.9rem;" onclick="playGame()">SUBIR</button>
+                `;
+            } else if(id === 'ruleta') {
+                actionButtonsHTML = `
+                    <button class="btn-spin" id="btnMain" onclick="playGame()" style="background:linear-gradient(135deg, #10b981, #059669);box-shadow:0 0 15px var(--green-glow);">GIRAR</button>
+                `;
+            } else {
+                actionButtonsHTML = `<button class="btn-spin" id="btnMain" onclick="playGame()">🎲 JUGAR</button>`;
+            }
+
             document.getElementById('modalContent').innerHTML = `
                 ${gameHTML}
                 <div class="game-ctrls" id="gameCtrls">
-                    <button class="btn-spin" id="btnMain" onclick="playGame()">🎲 JUGAR</button>
-                    <button class="btn-bet-adj" onclick="changeBet(-1)">➖</button>
-                    <div class="bet-screen">
-                        <span id="betDisp">${STATE.bet}</span>
+                    <!-- Buttons Action Bar -->
+                    <div class="ctrls-buttons-row">
+                        ${actionButtonsHTML}
+                        <button class="btn-bet-adj" onclick="changeBet(-50)">➖</button>
+                        <div class="bet-screen">
+                            <span id="betDisp">${STATE.bet}</span>
+                        </div>
+                        <button class="btn-bet-adj" onclick="changeBet(50)">➕</button>
                     </div>
-                    <button class="btn-bet-adj" onclick="changeBet(1)">➕</button>
+                    
+                    <!-- Real stacks chip selectors row -->
+                    <div class="chip-selectors-row">
+                        <div class="chip-select-btn chip-100 ${STATE.bet===100?'active-chip':''}" onclick="selectChipValue(100)">100</div>
+                        <div class="chip-select-btn chip-500 ${STATE.bet===500?'active-chip':''}" onclick="selectChipValue(500)">500</div>
+                        <div class="chip-select-btn chip-1k ${STATE.bet===1000?'active-chip':''}" onclick="selectChipValue(1000)">1K</div>
+                        <div class="chip-select-btn chip-5k ${STATE.bet===5000?'active-chip':''}" onclick="selectChipValue(5000)">5K</div>
+                        <div class="chip-select-btn chip-10k ${STATE.bet===10000?'active-chip':''}" onclick="selectChipValue(10000)">10K</div>
+                    </div>
                 </div>`;
             
             const btn = document.getElementById('btnMain');
-            if(btn){btn.textContent=getLabel(id);btn.disabled=false}
+            if(btn && id !== 'blackjack' && !id.includes('poker') && !id.includes('holdem') && id !== 'ruleta'){btn.textContent=getLabel(id);btn.disabled=false}
             
             // Set up static game displays
             drawGame(engineId);
@@ -2541,6 +2789,13 @@
         toast(`🎯 Apuesta colocada en: ${num}`);
     }
 
+    let baccaratSelectedBet = 'jugador';
+    function selectBaccaratBet(type) {
+        baccaratSelectedBet = type;
+        toast(`🛡️ Apuesta Baccarat: ${type.toUpperCase()}`);
+        sfx.click();
+    }
+
     function getLabel(id){return{crash:'🚀 CASH OUT',mines:'💎 DESTAPAR',plinko:'🟡 SOLTAR',ruleta:'🎡 GIRAR',slot:'❤️ GIRAR'}[id]||'🎲 JUGAR'}
     function closeGame(){document.getElementById('modalOverlay').classList.remove('active');STATE.currentGame=null;sfx.click()}
     document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeGame()});
@@ -2586,6 +2841,13 @@
         });
     }
 
+    // Default stand action for Blackjack VIP
+    function blackjackStand() {
+        if(!STATE.spinning) return;
+        toast('✋ Te plantas. Revelando cartas del crupier...');
+        sfx.click();
+    }
+
     // === STATIC GAME STATE DRAWING ===
     function drawGame(id){
         if(id === 'crash') {
@@ -2622,11 +2884,32 @@
             }
         } else if(id === 'ruleta') {
             selectRuletaBet(selectedRuletaBetVal);
+            
+            // Draw list of numbers inside history panel vertically
+            const hist = document.getElementById('ruletaHistory');
+            if(hist && hist.childNodes.length === 0) {
+                const numbers = [12, 29, 7, 28, 35, 3, 26, 0, 32, 15];
+                hist.innerHTML = numbers.map(num => {
+                    const cls = num===0 ? 'ruleta-cell-green' : [3,9,12,18,21,27,30,36,5,14,23,32,1,7,16,19,25,34].includes(num)?'ruleta-cell-red':'ruleta-cell-black';
+                    return `<div class="ruleta-history-item ${cls}" style="margin:2px 0;">${num}</div>`;
+                }).join('');
+            }
         } else if(id === 'blackjack') {
             document.getElementById('bjJugadorScore').textContent = '0';
             document.getElementById('bjCrupierScore').textContent = '0';
             document.getElementById('bjJugadorCards').innerHTML = `<div style="font-size:2.5rem;opacity:0.15;align-self:center">♠️</div>`;
             document.getElementById('bjCrupierCards').innerHTML = `<div style="font-size:2.5rem;opacity:0.15;align-self:center">♦️</div>`;
+            
+            const comm = document.getElementById('bjCommunityCards');
+            if(comm) {
+                comm.innerHTML = `
+                    <div style="width:48px;height:70px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);border-radius:4px;"></div>
+                    <div style="width:48px;height:70px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);border-radius:4px;"></div>
+                    <div style="width:48px;height:70px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);border-radius:4px;"></div>
+                    <div style="width:48px;height:70px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);border-radius:4px;"></div>
+                    <div style="width:48px;height:70px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.15);border-radius:4px;"></div>
+                `;
+            }
         }
     }
 
@@ -2744,12 +3027,13 @@
                     const item = document.createElement('div');
                     item.className = `ruleta-history-item ${winningNum===0?'ruleta-cell-green':[3,9,12,18,21,27,30,36,5,14,23,32,1,7,16,19,25,34].includes(winningNum)?'ruleta-cell-red':'ruleta-cell-black'}`;
                     item.textContent = winningNum;
+                    item.style.margin = '2px 0';
                     hist.insertBefore(item, hist.firstChild);
                     if(hist.childNodes.length > 10) hist.removeChild(hist.lastChild);
                 }
                 
                 callback();
-            }, 3050);
+            }, 3250);
         }
         else if(id === 'blackjack') {
             const playerZone = document.getElementById('bjJugadorCards');
@@ -2757,6 +3041,9 @@
             playerZone.innerHTML = '';
             crupierZone.innerHTML = '';
             
+            const isHoldem = STATE.currentGame.id.includes('poker') || STATE.currentGame.id.includes('holdem');
+            const isBaccarat = STATE.currentGame.id === 'baccarat' || STATE.currentGame.id === 'baccarat_facciones';
+
             const cardValues = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
             const cardSuits = ['♥','♦','♣','♠'];
             
@@ -2781,19 +3068,44 @@
                 sfx.win();
             };
 
-            setTimeout(() => deal(playerZone, 'bjJugadorScore', false), 200);
-            setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 400);
-            setTimeout(() => deal(playerZone, 'bjJugadorScore', false), 600);
+            // Animate community cards if poker/holdem!
+            if(isHoldem) {
+                const comm = document.getElementById('bjCommunityCards');
+                comm.innerHTML = '';
+                
+                const dealComm = () => {
+                    const val = cardValues[Math.floor(Math.random() * cardValues.length)];
+                    const suit = cardSuits[Math.floor(Math.random() * cardSuits.length)];
+                    const isRed = ['♥','♦'].includes(suit);
+                    
+                    const card = document.createElement('div');
+                    card.className = `bj-card ${isRed ? 'red-suit' : ''}`;
+                    card.style.width = '48px'; card.style.height = '70px'; card.style.fontSize = '0.75rem';
+                    card.innerHTML = `<div>${val}</div><div style="font-size:1rem;align-self:center">${suit}</div><div style="align-self:flex-end">${val}</div>`;
+                    comm.appendChild(card);
+                    sfx.win();
+                };
+
+                setTimeout(dealComm, 200);
+                setTimeout(dealComm, 400);
+                setTimeout(dealComm, 600);
+                setTimeout(dealComm, 800);
+                setTimeout(dealComm, 1000);
+            }
+
+            setTimeout(() => deal(playerZone, 'bjJugadorScore', false), 400);
+            setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 700);
+            setTimeout(() => deal(playerZone, 'bjJugadorScore', false), 1000);
             
             setTimeout(() => {
                 if(win > 0) {
-                    setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 200);
-                    setTimeout(callback, 800);
+                    setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 300);
+                    setTimeout(callback, 900);
                 } else {
-                    setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 200);
-                    setTimeout(callback, 800);
+                    setTimeout(() => deal(crupierZone, 'bjCrupierScore', true), 300);
+                    setTimeout(callback, 900);
                 }
-            }, 1000);
+            }, 1400);
         }
         else if(id === 'slot') {
             const syms = ['❤️','💎','🦁','⭐','7️⃣','🍒','👑'];
