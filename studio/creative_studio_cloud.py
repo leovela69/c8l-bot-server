@@ -8,6 +8,10 @@ import base64
 import subprocess
 import logging
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Cargar .env ANTES de leer variables
+load_dotenv()
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
