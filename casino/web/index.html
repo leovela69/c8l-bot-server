@@ -128,29 +128,45 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 }
 #bonus-overlay.show{display:flex}
 .bonus-card{
-  text-align:center;animation:bonusIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  text-align:center;animation:bonusIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
   background:linear-gradient(135deg,#1a0f00,#2a1800,#1a0f00);
   border:3px solid #d4a017;border-radius:20px;padding:30px 50px;
-  box-shadow:0 0 60px rgba(212,160,23,0.5),0 0 120px rgba(212,160,23,0.2),inset 0 0 30px rgba(212,160,23,0.1)
+  box-shadow:0 0 60px rgba(212,160,23,0.5),0 0 120px rgba(212,160,23,0.2),inset 0 0 30px rgba(212,160,23,0.1);
+  position:relative;overflow:visible
 }
-.bonus-title{font-family:Georgia,serif;font-size:42px;font-weight:bold;color:#f5d061;text-shadow:0 0 20px rgba(245,208,97,0.6);letter-spacing:4px}
-.bonus-mult{font-size:28px;color:#ff6600;font-weight:bold;margin:10px 0;text-shadow:0 0 15px rgba(255,102,0,0.5)}
-.bonus-amount{font-family:Georgia,serif;font-size:36px;color:#4caf50;font-weight:bold;text-shadow:0 0 15px rgba(76,175,80,0.5)}
+.bonus-lion{
+  font-size:60px;animation:lionBounce 0.8s ease-in-out infinite;
+  text-shadow:0 0 30px rgba(212,160,23,0.6)
+}
+@keyframes lionBounce{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.15) rotate(3deg)}}
+.bonus-title{font-family:Georgia,serif;font-size:36px;font-weight:bold;color:#f5d061;text-shadow:0 0 20px rgba(245,208,97,0.6);letter-spacing:4px;margin-top:8px}
+.bonus-mult{font-size:28px;color:#ff6600;font-weight:bold;margin:8px 0;text-shadow:0 0 15px rgba(255,102,0,0.5);animation:pulseMult 0.5s ease infinite}
+@keyframes pulseMult{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.bonus-amount{font-family:Georgia,serif;font-size:40px;color:#4caf50;font-weight:bold;text-shadow:0 0 15px rgba(76,175,80,0.5);animation:countUp 0.5s ease-out}
+@keyframes countUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 .bonus-sub{font-size:14px;color:#8b6914;margin-top:8px;letter-spacing:2px}
-@keyframes bonusIn{from{transform:scale(0.3) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.bonus-sparks{position:absolute;inset:-20px;pointer-events:none;overflow:hidden}
+.bonus-sparks::before,.bonus-sparks::after{
+  content:'✦';position:absolute;font-size:20px;color:#f5d061;
+  animation:sparkFloat 1.5s ease-in-out infinite
+}
+.bonus-sparks::before{top:10%;left:10%;animation-delay:0s}
+.bonus-sparks::after{top:20%;right:15%;animation-delay:0.5s}
+@keyframes sparkFloat{0%,100%{opacity:0.3;transform:translateY(0) scale(0.8)}50%{opacity:1;transform:translateY(-10px) scale(1.2)}}
+@keyframes bonusIn{from{transform:scale(0) rotate(-15deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
 @keyframes screenShake{
   0%,100%{transform:translate(0)}
-  10%{transform:translate(-4px,2px)}
-  20%{transform:translate(4px,-2px)}
-  30%{transform:translate(-3px,3px)}
-  40%{transform:translate(3px,-3px)}
-  50%{transform:translate(-2px,1px)}
-  60%{transform:translate(2px,-1px)}
-  70%{transform:translate(-1px,2px)}
-  80%{transform:translate(1px,-2px)}
-  90%{transform:translate(-1px,1px)}
+  10%{transform:translate(-8px,4px)}
+  20%{transform:translate(8px,-4px)}
+  30%{transform:translate(-6px,6px)}
+  40%{transform:translate(6px,-6px)}
+  50%{transform:translate(-5px,3px)}
+  60%{transform:translate(5px,-3px)}
+  70%{transform:translate(-3px,5px)}
+  80%{transform:translate(3px,-5px)}
+  90%{transform:translate(-2px,2px)}
 }
-.shaking{animation:screenShake 0.5s ease-in-out}
+.shaking{animation:screenShake 0.6s ease-in-out}
 
 /* Loading overlay */
 #loading{
@@ -232,6 +248,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 
 <div id="bonus-overlay">
   <div class="bonus-card">
+    <div class="bonus-sparks"></div>
+    <div class="bonus-lion" id="bonus-lion">🦁</div>
     <div class="bonus-title" id="bonus-title">🎰 BONUS 🎰</div>
     <div class="bonus-mult" id="bonus-mult">x5</div>
     <div class="bonus-amount" id="bonus-amount">+125.000</div>
@@ -390,16 +408,23 @@ function showBonus(amount, mult, type){
   // Set content based on type
   if(type==='scatter'){
     bonusTitle.textContent='🌟 GIROS GRATIS 🌟';
-    bonusMult.textContent='x'+mult+' GIROS';
+    bonusMult.textContent=mult+' GIROS';
   } else if(type==='rugido'){
     bonusTitle.textContent='🦁 MODO RUGIDO 🦁';
     bonusMult.textContent='x'+mult;
   } else if(type==='jackpot'){
     bonusTitle.textContent='👑 JACKPOT 👑';
     bonusMult.textContent='¡¡¡MÁXIMO!!!';
-  } else {
+  } else if(type==='bigwin'){
+    bonusTitle.textContent='🦁 SUPER BONUS 🦁';
+    bonusMult.textContent='x'+mult;
+  } else if(type==='bonus'){
     bonusTitle.textContent='🎰 BONUS 🎰';
-    bonusMult.textContent=mult>1?'x'+mult:'¡PREMIO!';
+    bonusMult.textContent='x'+mult;
+  } else {
+    // Normal win
+    bonusTitle.textContent='🦁 ¡PREMIO! 🦁';
+    bonusMult.textContent='¡ENHORABUENA!';
   }
   bonusAmount.textContent='+'+fmt(amount);
   bonusOverlay.classList.add('show');
@@ -408,13 +433,13 @@ function showBonus(amount, mult, type){
   vibrateDevice([100,50,100,50,200]);
   // Shake screen
   shakeScreen();
-  // Play win music
-  playWinMusic();
+  // Play win music (already called in most cases, but ensure it plays)
 
-  // Auto-hide after 3 seconds
+  // Auto-hide after 2.5 seconds (faster for normal wins)
+  const duration = (type==='win') ? 2000 : 3000;
   setTimeout(()=>{
     bonusOverlay.classList.remove('show');
-  },3000);
+  },duration);
 }
 // Click to dismiss bonus
 bonusOverlay.addEventListener('click',()=>bonusOverlay.classList.remove('show'));
@@ -760,25 +785,32 @@ function initSlot(assets){
         credits+=totalWin;
         lastWin=totalWin;
         addChat('✅ Ganaste: +'+fmt(totalWin),'win');
+        
+        // ALWAYS shake + show bonus on ANY win
+        shakeScreen();
+        playWinMusic();
+        
         if(totalWin>=totalBet()*10){
+          // MEGA WIN
           botSay('¡INCREÍBLE! 🔥🔥🔥');
           sfxBig();
           showWinEffect(totalWin,true);
           showBonus(totalWin, Math.round(totalWin/totalBet()), 'bigwin');
           vibrateDevice([200,100,200,100,300]);
-          shakeScreen();
         } else if(totalWin>=totalBet()*3){
+          // BIG WIN
           botSay('¡GENIAL! +'+fmt(totalWin)+'! 🎉');
-          sfxWin();
-          showWinEffect(totalWin,false);
-          playWinMusic();
-          vibrateDevice([100,50,100]);
-          shakeScreen();
+          sfxBig();
+          showWinEffect(totalWin,true);
+          showBonus(totalWin, Math.round(totalWin/bet()), 'bonus');
+          vibrateDevice([100,50,100,50,200]);
         } else {
-          botSay('¡GENIAL! +'+fmt(totalWin)+'! 🎉');
+          // NORMAL WIN - also show bonus card!
+          botSay('¡Premio! +'+fmt(totalWin)+' 🎉');
           sfxWin();
           showWinEffect(totalWin,false);
-          vibrateDevice([50]);
+          showBonus(totalWin, 0, 'win');
+          vibrateDevice([100,50,100]);
         }
       } else {
         addChat('❌ Sin premio','loss');
