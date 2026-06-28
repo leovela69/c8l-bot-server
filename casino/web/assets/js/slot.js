@@ -23,39 +23,71 @@ const CONFIG = {
 
 
 // ============================================================
-// SYMBOLS — Flat Vector Arcade Style (Pollinations AI)
+// SYMBOLS — Generated with PixiJS Graphics (Flat Vector Arcade)
+// No external images needed - instant load, no CORS
 // ============================================================
-const P = 'https://image.pollinations.ai/prompt/';
-const SP = '?width=256&height=256&nologo=true&seed=';
-const STYLE = '%2C%20flat%20vector%20design%2C%20bold%20black%20outlines%2C%20vibrant%20colors%2C%20arcade%20video%20game%20style%2C%20clean%20solid%20black%20background%2C%20isolated%20element%2C%20centered%2C%20no%20text%2C%20symmetrical';
-
 const SYMBOLS_DEF = [
-    { id: 'leon', name: 'León Dorado', tier: 'premium', weight: 3 },
-    { id: 'wild', name: 'Wild', tier: 'special', weight: 2 },
-    { id: 'scatter', name: 'Scatter', tier: 'special', weight: 2 },
-    { id: 'bot', name: 'Bot C8L', tier: 'high', weight: 4 },
-    { id: 'villano', name: 'León Villano', tier: 'high', weight: 3 },
-    { id: 'c8l', name: 'C8L Logo', tier: 'high', weight: 3 },
-    { id: 'corazon', name: 'Corazón Dorado', tier: 'medium', weight: 6 },
-    { id: 'micro', name: 'Micrófono', tier: 'medium', weight: 6 },
-    { id: 'corona', name: 'Corona', tier: 'medium', weight: 7 },
-    { id: 'estrella', name: 'Estrella', tier: 'low', weight: 8 },
-    { id: 'nota', name: 'Nota Musical', tier: 'low', weight: 9 },
+    { id: 'leon', name: 'León Dorado', tier: 'premium', weight: 3, color: 0xd4a017, icon: '🦁' },
+    { id: 'wild', name: 'Wild', tier: 'special', weight: 2, color: 0xc0392b, icon: '❤️‍🔥' },
+    { id: 'scatter', name: 'Scatter', tier: 'special', weight: 2, color: 0x9b59b6, icon: '👑' },
+    { id: 'bot', name: 'Bot C8L', tier: 'high', weight: 4, color: 0x2980b9, icon: '🤖' },
+    { id: 'villano', name: 'León Villano', tier: 'high', weight: 3, color: 0x922b21, icon: '😈' },
+    { id: 'c8l', name: 'C8L Logo', tier: 'high', weight: 3, color: 0xb7950b, icon: '🎰' },
+    { id: 'corazon', name: 'Corazón', tier: 'medium', weight: 6, color: 0xe74c3c, icon: '💛' },
+    { id: 'micro', name: 'Micrófono', tier: 'medium', weight: 6, color: 0x7f8c8d, icon: '🎤' },
+    { id: 'corona', name: 'Corona', tier: 'medium', weight: 7, color: 0xf39c12, icon: '👑' },
+    { id: 'estrella', name: 'Estrella', tier: 'low', weight: 8, color: 0xf1c40f, icon: '⭐' },
+    { id: 'nota', name: 'Nota Musical', tier: 'low', weight: 9, color: 0x8e44ad, icon: '🎵' },
 ];
 
-const SYMBOL_URLS = {
-    leon: P+'golden%20lion%20head%20mascot%2C%20majestic%20golden%20mane%2C%20fierce%20eyes'+STYLE+SP+'800',
-    wild: P+'red%20heart%20with%20golden%20angel%20wings%20and%20fire%2C%20wild%20symbol'+STYLE+SP+'801',
-    scatter: P+'golden%20lion%20king%20wearing%20jeweled%20crown%2C%20scatter%20symbol'+STYLE+SP+'802',
-    bot: P+'cute%20blue%20robot%20chatbot%20mascot%2C%20glowing%20LED%20eyes%2C%20blue%20metallic%20with%20gold'+STYLE+SP+'803',
-    villano: P+'evil%20dark%20lion%20head%2C%20red%20glowing%20eyes%2C%20dark%20mane%2C%20villain'+STYLE+SP+'804',
-    c8l: P+'golden%20shield%20emblem%20with%20text%20C8L%2C%20crown%20on%20top%2C%20baroque%20gold'+STYLE+SP+'805',
-    corazon: P+'golden%20heart%20with%20small%20angel%20wings%2C%20glowing%20gold%20and%20red'+STYLE+SP+'806',
-    micro: P+'retro%20studio%20microphone%2C%20chrome%20silver%20and%20gold%20vintage%20style'+STYLE+SP+'807',
-    corona: P+'shining%20golden%20crown%20with%20jewels%2C%20rubies%20emeralds%20diamonds'+STYLE+SP+'808',
-    estrella: P+'golden%20star%20with%20sparkles%2C%20five%20pointed%20shining%20star'+STYLE+SP+'809',
-    nota: P+'neon%20purple%20musical%20note%2C%20glowing%20treble%20clef%2C%20music%20symbol'+STYLE+SP+'810',
-};
+function generateSymbolTextures() {
+    const size = 120;
+    for (const sym of SYMBOLS_DEF) {
+        const container = new PIXI.Container();
+
+        // Background rounded rect with gradient-like effect
+        const bg = new PIXI.Graphics();
+        bg.beginFill(0x0a0800);
+        bg.drawRoundedRect(0, 0, size, size, 14);
+        bg.endFill();
+        // Inner colored border
+        bg.lineStyle(3, sym.color, 0.8);
+        bg.drawRoundedRect(4, 4, size-8, size-8, 12);
+        // Subtle inner glow
+        bg.beginFill(sym.color, 0.1);
+        bg.drawRoundedRect(6, 6, size-12, size-12, 10);
+        bg.endFill();
+        container.addChild(bg);
+
+        // Icon (emoji as text - renders great in PixiJS)
+        const icon = new PIXI.Text(sym.icon, {
+            fontSize: size * 0.5,
+            align: 'center',
+        });
+        icon.anchor.set(0.5);
+        icon.x = size / 2;
+        icon.y = size * 0.45;
+        container.addChild(icon);
+
+        // Label text (small, below icon)
+        if (sym.id === 'wild' || sym.id === 'scatter') {
+            const label = new PIXI.Text(sym.id.toUpperCase(), {
+                fontFamily: 'monospace',
+                fontSize: 11,
+                fill: sym.color,
+                fontWeight: '900',
+                letterSpacing: 2,
+            });
+            label.anchor.set(0.5);
+            label.x = size / 2;
+            label.y = size * 0.82;
+            container.addChild(label);
+        }
+
+        symbolTextures[sym.id] = app.renderer.generateTexture(container);
+        container.destroy(true);
+    }
+}
 
 
 // ============================================================
@@ -107,36 +139,14 @@ async function init() {
         resolution: Math.min(window.devicePixelRatio || 1, 2),
         autoDensity: true,
     });
-    await loadTextures();
+    // Generate symbol textures locally (no external images needed)
+    generateSymbolTextures();
     buildScene();
     app.ticker.add(gameLoop);
-    window.addEventListener('resize', () => { buildScene(); });
+    window.addEventListener('resize', () => { generateSymbolTextures(); buildScene(); });
 }
 
-async function loadTextures() {
-    const ids = Object.keys(SYMBOL_URLS);
-    const promises = ids.map(async id => {
-        try {
-            const tex = await PIXI.Assets.load(SYMBOL_URLS[id]);
-            symbolTextures[id] = tex;
-        } catch(e) {
-            symbolTextures[id] = makeFallback(id);
-        }
-    });
-    await Promise.allSettled(promises);
-}
-
-function makeFallback(id) {
-    const colors = {leon:0xd4a017,wild:0xc0392b,scatter:0x9b59b6,bot:0x2980b9,villano:0x2c3e50,c8l:0xd4a017,corazon:0xe74c3c,micro:0x95a5a6,corona:0xf39c12,estrella:0xf1c40f,nota:0x8e44ad};
-    const g = new PIXI.Graphics();
-    g.beginFill(colors[id]||0x333);
-    g.drawRoundedRect(0,0,100,100,16);
-    g.endFill();
-    // Add text
-    const t = new PIXI.Text(id.substring(0,3).toUpperCase(), {fontSize:24,fill:0xffffff,fontWeight:'900'});
-    t.anchor.set(0.5); t.x=50; t.y=50; g.addChild(t);
-    return app.renderer.generateTexture(g);
-}
+// No external texture loading needed anymore
 
 
 // ============================================================
