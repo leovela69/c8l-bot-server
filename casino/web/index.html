@@ -1188,9 +1188,10 @@ function initSlot(assets){
       showBonus(0, fsAward, 'scatter');
       botSay('¡BONUS ROUND! 🌟🌟🌟');
       addChat('🌟 ¡¡¡BONUS ROUND!!! '+fsAward+' giros x'+bonusMult,'freespin');
-      // Launch bonus round after overlay disappears
+      // Open bonus slot in new window/tab after overlay disappears
       setTimeout(()=>{
-        startBonusRound(fsAward, bonusMult);
+        const bonusUrl='bonus_slot.html?spins='+fsAward+'&mult='+bonusMult+'&bet='+totalBet();
+        window.open(bonusUrl,'_blank');
       },3200);
     }
 
@@ -1669,6 +1670,23 @@ function initSlot(assets){
   setInterval(()=>{
     addChat('🦁 Jackpot: '+fmt(jackpot),'community');
   },30000+Math.random()*30000);
+
+  // Listen for bonus round results (from bonus_slot.html)
+  window.addEventListener('message',(e)=>{
+    if(e.data && e.data.type==='bonus_result'){
+      const bonusTotal=e.data.total||0;
+      if(bonusTotal>0){
+        credits+=bonusTotal;
+        lastWin=bonusTotal;
+        addChat('🌟 BONUS COBRADO: +'+fmt(bonusTotal),'win');
+        botSay('¡'+fmt(bonusTotal)+' del BONUS! 🔥🔥🔥');
+        updateUI();
+        shakeScreen();
+        playWinMusic();
+        showBonus(bonusTotal, e.data.multiplier||2, 'bigwin');
+      }
+    }
+  });
 
   updateUI();
   console.log('🦁 C8L Casino — El León Dorado v6.0 loaded (6 improvements applied)');
