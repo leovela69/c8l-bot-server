@@ -713,37 +713,38 @@ function initSlot(assets){
         }
       }
 
-      // === WIN EVALUATION ===
+      // === WIN EVALUATION (FUN MODE: generous payouts) ===
       let totalWin=0;
 
-      // Payline wins (bet per line)
-      for(let li=0;li<LINES;li++){
-        const line=PAYLINES[li].map((row,c)=>grid[c][row]);
-        // Find first non-wild, non-scatter symbol
-        let targetSym=null;
-        for(const s of line){
-          if(s.id!=='wild'&&s.id!=='scatter'){targetSym=s.id;break;}
-        }
-        // All wilds case
-        if(!targetSym){
-          if(line.every(s=>s.id==='wild')) targetSym='wild';
-          else continue;
-        }
-        // Count consecutive from left (wild substitutes for anything except scatter)
-        let cnt=0;
-        for(const s of line){
-          if(s.id===targetSym||s.id==='wild') cnt++;
-          else break;
-        }
-        if(cnt>=3){
-          const symDef=SYMBOLS.find(s=>s.id===targetSym);
-          if(symDef&&symDef.pay[cnt]){
-            totalWin+=symDef.pay[cnt]*bet(); // multiply by BET PER LINE
-          }
-        }
+      // Determine if this spin wins and how much (fun distribution)
+      const roll=Math.random();
+      let winMultiplier=0; // 0 = no win
+
+      if(roll < 0.40){
+        // 40% — No prize
+        winMultiplier=0;
+      } else if(roll < 0.70){
+        // 30% — Win 1.15x to 1.5x total bet
+        winMultiplier = 1.15 + Math.random()*0.35;
+      } else if(roll < 0.88){
+        // 18% — Win 1.5x to 2x total bet
+        winMultiplier = 1.5 + Math.random()*0.5;
+      } else if(roll < 0.96){
+        // 8% — Win 2x to 3x total bet
+        winMultiplier = 2 + Math.random();
+      } else if(roll < 0.99){
+        // 3% — Win 3x to 5x total bet
+        winMultiplier = 3 + Math.random()*2;
+      } else {
+        // 1% — Win 5x to 10x total bet (MEGA)
+        winMultiplier = 5 + Math.random()*5;
       }
 
-      // Scatter wins (total bet, count anywhere)
+      if(winMultiplier > 0){
+        totalWin = Math.round(totalBet() * winMultiplier);
+      }
+
+      // Still check scatters for free spins (independent of main win)
       let scatterCount=0;
       for(let c=0;c<REELS;c++){
         for(let r=0;r<ROWS;r++){
@@ -751,15 +752,15 @@ function initSlot(assets){
         }
       }
       if(scatterCount>=3){
-        const scatterPay={3:5,4:20,5:100};
-        totalWin+=scatterPay[Math.min(scatterCount,5)]*totalBet(); // multiply by TOTAL bet
+        const scatterBonus={3:2,4:5,5:15};
+        totalWin+=Math.round(totalBet()*scatterBonus[Math.min(scatterCount,5)]);
         // Award free spins
         const fsAward=scatterCount>=5?25:scatterCount>=4?15:10;
         freeSpins+=fsAward;
         multiplier=2;
         botSay('¡GIROS GRATIS! 🌟');
         addChat('🌟 ¡GIROS GRATIS x'+fsAward+' activados!','freespin');
-        showBonus(scatterPay[Math.min(scatterCount,5)]*totalBet(), fsAward, 'scatter');
+        showBonus(totalWin, fsAward, 'scatter');
       }
 
       // Modo Rugido (rare multiplier)
