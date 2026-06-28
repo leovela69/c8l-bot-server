@@ -877,10 +877,10 @@ function initSlot(assets){
   bgOverlay.beginFill(0x000000,0.35);bgOverlay.drawRect(0,0,W,H);bgOverlay.endFill();
   app.stage.addChild(bgOverlay);
 
-  // Frame around reels
+  // Frame around reels (SOLID dark background to hide white JPEG backgrounds)
   const frame=new PIXI.Graphics();
   frame.lineStyle(3,0xd4a017,0.9);
-  frame.beginFill(0x030200,0.92);
+  frame.beginFill(0x0a0800,1.0);
   frame.drawRoundedRect(GX-12,GY-12,GW+24,GH+24,10);
   frame.endFill();
   frame.lineStyle(1.5,0xf5d061,0.3);
@@ -945,17 +945,11 @@ function initSlot(assets){
     const strips=[];
     for(let i=0;i<STRIP;i++){
       const sym=rSym();
-      // Background rect behind each symbol (fixes white bg on Q/J/K JPEGs)
-      const cellBg=new PIXI.Graphics();
-      cellBg.beginFill(0x0a0800);cellBg.drawRoundedRect(0,0,SYM,SYM,4);cellBg.endFill();
-      cellBg.x=GX+col*CELL;cellBg.y=GY+(i-1)*CELL;
-      reelContainer.addChild(cellBg);
       const sp=new PIXI.Sprite(texMap[sym.id]);
       sp.width=SYM;sp.height=SYM;
       sp.x=GX+col*CELL;
       sp.y=GY+(i-1)*CELL;
       sp.symData=sym;
-      sp.cellBg=cellBg; // reference to move together
       reelContainer.addChild(sp);
       strips.push(sp);
     }
@@ -1509,10 +1503,8 @@ function initSlot(assets){
         rl.speed=Math.min(rl.speed+8*delta,60);
         for(const sp of rl.strips){
           sp.y+=rl.speed*delta;
-          if(sp.cellBg) sp.cellBg.y=sp.y;
           if(sp.y>GY+GH+CELL){
             sp.y-=STRIP*CELL;
-            if(sp.cellBg) sp.cellBg.y=sp.y;
             const ns=rSym();
             sp.texture=texMap[ns.id];
             sp.symData=ns;
@@ -1555,10 +1547,8 @@ function initSlot(assets){
         } else {
           for(const sp of rl.strips){
             sp.y+=rl.speed*delta;
-            if(sp.cellBg) sp.cellBg.y=sp.y;
             if(sp.y>GY+GH+CELL){
               sp.y-=STRIP*CELL;
-              if(sp.cellBg) sp.cellBg.y=sp.y;
               const ns=rSym();
               sp.texture=texMap[ns.id];
               sp.symData=ns;
