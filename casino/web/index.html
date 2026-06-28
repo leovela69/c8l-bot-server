@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0a0a0a">
     <title>C8L Casino — El León Dorado</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,141 +12,111 @@
     <link rel="stylesheet" href="assets/css/casino.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦁</text></svg>">
 </head>
-<body>
-    <div id="app" class="casino-app" onclick="enterFullscreen()">
-        <!-- Animated Background: Temple of the Golden Lion -->
-        <div class="temple-bg">
-            <div class="torch torch-left"><div class="flame"></div></div>
-            <div class="torch torch-right"><div class="flame"></div></div>
-            <div class="floating-particles" id="bgParticles"></div>
+<body onclick="enterFullscreen()">
+    <div id="app" class="casino-app">
+
+        <!-- Background: Machine Frame Image -->
+        <div class="machine-bg">
+            <img src="assets/img/machine_frame.jpg" alt="" class="machine-bg-img">
         </div>
 
-        <!-- Header -->
-        <header class="casino-header">
-            <button class="menu-btn" id="menuBtn">☰</button>
-            <div class="logo-container">
+        <!-- TOP: Logo C8L + Jackpot -->
+        <div class="top-section">
+            <div class="logo-area">
                 <div class="logo-badge">C8L</div>
-                <div class="logo-text">
-                    <h1>C8L LEGENDS</h1>
-                    <span class="subtitle">EL LEÓN DORADO</span>
+                <div class="logo-titles">
+                    <span class="logo-main">C8L LEGENDS</span>
+                    <span class="logo-sub">EL LEÓN DORADO</span>
                 </div>
+                <button class="sound-btn" id="soundBtn">🔊</button>
             </div>
-            <button class="sound-btn" id="soundBtn">🔊</button>
-        </header>
-
-        <!-- Jackpot Display -->
-        <div class="jackpot-bar">
-            <div class="jackpot-label">JACKPOT GLOBAL</div>
-            <div class="jackpot-amount" id="jackpotDisplay">48,532,120</div>
+            <div class="jackpot-bar">
+                <span class="jp-label">JACKPOT GLOBAL</span>
+                <span class="jp-amount" id="jackpotDisplay">48,532,120</span>
+            </div>
         </div>
 
-        <!-- 3D SLOT MACHINE -->
-        <div class="machine-wrapper">
-            <div class="slot-machine-3d">
-                <!-- Machine Top Ornament -->
-                <div class="machine-top">
-                    <div class="top-lights">
-                        <span class="light"></span><span class="light"></span><span class="light"></span>
-                        <span class="light"></span><span class="light"></span><span class="light"></span>
-                        <span class="light"></span><span class="light"></span><span class="light"></span>
-                    </div>
+        <!-- CENTER: Reels inside the machine frame -->
+        <div class="reels-section">
+            <!-- Multiplier (left) -->
+            <div class="side-info left-info">
+                <div class="side-box">
+                    <span class="sb-label">MULTIPLICADOR</span>
+                    <span class="sb-value" id="multiplierDisplay">X1</span>
+                    <span class="sb-sub" id="modoLabel">NORMAL</span>
                 </div>
+            </div>
 
-                <!-- Side Panels -->
-                <div class="machine-side left-side">
-                    <div class="side-display multiplier-box">
-                        <span class="sd-label">MULTI</span>
-                        <span class="sd-value" id="multiplierDisplay">X1</span>
-                        <span class="sd-sublabel" id="modoLabel">NORMAL</span>
-                    </div>
+            <!-- THE REELS -->
+            <div class="reels-area">
+                <div class="reels-grid" id="reelsContainer">
+                    <div class="reel" id="reel0"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
+                    <div class="reel" id="reel1"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
+                    <div class="reel" id="reel2"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
+                    <div class="reel" id="reel3"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
+                    <div class="reel" id="reel4"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
                 </div>
-
-                <div class="machine-side right-side">
-                    <div class="side-display freespins-box">
-                        <span class="sd-label">GIROS</span>
-                        <span class="sd-value" id="freeSpinsDisplay">0</span>
-                        <span class="sd-sublabel" id="freeSpinsLabel">—</span>
-                    </div>
+                <!-- Win overlay -->
+                <div class="win-overlay" id="winOverlay" style="display:none;">
+                    <div class="win-amount" id="winAmount">0</div>
                 </div>
+            </div>
 
-                <!-- REELS AREA (3D Cylinder Effect) -->
-                <div class="reels-viewport">
-                    <div class="reels-frame">
-                        <div class="reel-container" id="reel0">
-                            <div class="reel-cylinder">
-                                <div class="symbol" data-row="0"></div>
-                                <div class="symbol" data-row="1"></div>
-                                <div class="symbol" data-row="2"></div>
-                            </div>
-                        </div>
-                        <div class="reel-separator"></div>
-                        <div class="reel-container" id="reel1">
-                            <div class="reel-cylinder">
-                                <div class="symbol" data-row="0"></div>
-                                <div class="symbol" data-row="1"></div>
-                                <div class="symbol" data-row="2"></div>
-                            </div>
-                        </div>
-                        <div class="reel-separator"></div>
-                        <div class="reel-container" id="reel2">
-                            <div class="reel-cylinder">
-                                <div class="symbol" data-row="0"></div>
-                                <div class="symbol" data-row="1"></div>
-                                <div class="symbol" data-row="2"></div>
-                            </div>
-                        </div>
-                        <div class="reel-separator"></div>
-                        <div class="reel-container" id="reel3">
-                            <div class="reel-cylinder">
-                                <div class="symbol" data-row="0"></div>
-                                <div class="symbol" data-row="1"></div>
-                                <div class="symbol" data-row="2"></div>
-                            </div>
-                        </div>
-                        <div class="reel-separator"></div>
-                        <div class="reel-container" id="reel4">
-                            <div class="reel-cylinder">
-                                <div class="symbol" data-row="0"></div>
-                                <div class="symbol" data-row="1"></div>
-                                <div class="symbol" data-row="2"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Center line indicator -->
-                    <div class="payline-indicator"></div>
-                    <!-- Win overlay -->
-                    <div class="win-flash" id="winOverlay" style="display:none;">
-                        <div class="win-amount" id="winAmount">0</div>
-                    </div>
-                </div>
-
-                <!-- Machine Bottom Panel -->
-                <div class="machine-bottom-panel">
-                    <div class="info-cell"><span class="ic-label">LÍNEAS</span><span class="ic-value" id="linesDisplay">20</span></div>
-                    <div class="info-cell"><span class="ic-label">APUESTA</span><span class="ic-value" id="betDisplay">250</span></div>
-                    <div class="info-cell"><span class="ic-label">TOTAL</span><span class="ic-value" id="totalBetDisplay">5,000</span></div>
-                    <div class="info-cell win-cell"><span class="ic-label">GANANCIA</span><span class="ic-value" id="winDisplay">0</span></div>
+            <!-- Free Spins (right) -->
+            <div class="side-info right-info">
+                <div class="side-box">
+                    <span class="sb-label">GIROS GRATIS</span>
+                    <span class="sb-value" id="freeSpinsDisplay">0</span>
+                    <span class="sb-sub" id="freeSpinsLabel">INACTIVO</span>
                 </div>
             </div>
         </div>
 
-        <!-- Controls -->
-        <div class="controls-area">
-            <button class="ctrl-btn bet-btn" id="betDown">−</button>
-            <button class="spin-button" id="spinBtn">
-                <div class="spin-inner">
-                    <svg class="spin-icon" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" fill="currentColor"/></svg>
-                    <span class="spin-label">GIRAR</span>
+        <!-- BOTTOM: Controls + Spin Button -->
+        <div class="bottom-section">
+            <div class="controls-row">
+                <div class="ctrl-group">
+                    <span class="cg-label">LÍNEAS</span>
+                    <span class="cg-value" id="linesDisplay">20</span>
                 </div>
-            </button>
-            <button class="ctrl-btn bet-btn" id="betUp">+</button>
+                <div class="ctrl-group">
+                    <span class="cg-label">APUESTA</span>
+                    <div class="cg-adjust">
+                        <button class="adj-btn" id="betDown">−</button>
+                        <span class="cg-value" id="betDisplay">250</span>
+                        <button class="adj-btn" id="betUp">+</button>
+                    </div>
+                </div>
+                <div class="ctrl-group">
+                    <span class="cg-label">APUESTA TOTAL</span>
+                    <span class="cg-value" id="totalBetDisplay">5,000</span>
+                </div>
+
+                <!-- SPIN -->
+                <button class="spin-button" id="spinBtn">
+                    <span class="spin-text">GIRAR</span>
+                    <span class="spin-sub">Mantener Auto</span>
+                </button>
+
+                <div class="ctrl-group win-group">
+                    <span class="cg-label">GANANCIA</span>
+                    <span class="cg-value cg-win" id="winDisplay">0</span>
+                </div>
+            </div>
         </div>
 
-        <!-- Status Bar -->
+        <!-- STATUS: Credits / VIP -->
         <div class="status-bar">
-            <div class="stat-item"><span class="stat-icon">🪙</span><span class="stat-val" id="creditsDisplay">152,450,000</span></div>
-            <div class="stat-item"><span class="stat-icon">💎</span><span class="stat-val" id="chipsDisplay">8,250</span></div>
-            <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-val" id="vipDisplay">VIP 10</span></div>
+            <div class="st-item">
+                <span class="st-icon">🪙</span>
+                <span class="st-label">CRÉDITOS</span>
+                <span class="st-value" id="creditsDisplay">152,450,000</span>
+            </div>
+            <div class="st-item">
+                <span class="st-icon">⭐</span>
+                <span class="st-label">NIVEL</span>
+                <span class="st-value" id="vipDisplay">VIP 10</span>
+            </div>
         </div>
 
         <!-- Particles -->
@@ -159,37 +128,24 @@
                 <div class="lion-character" id="lionCharacter">
                     <svg viewBox="0 0 200 200" class="lion-svg">
                         <g class="lion-body">
-                            <!-- Mane -->
                             <ellipse cx="100" cy="95" rx="65" ry="60" fill="#b8860b" class="mane"/>
                             <ellipse cx="100" cy="95" rx="55" ry="50" fill="#daa520"/>
-                            <!-- Face -->
                             <ellipse cx="100" cy="100" rx="40" ry="38" fill="#f5d061"/>
-                            <!-- Eyes -->
                             <ellipse cx="85" cy="92" rx="8" ry="9" fill="#fff"/>
                             <ellipse cx="115" cy="92" rx="8" ry="9" fill="#fff"/>
                             <circle cx="87" cy="94" r="5" fill="#1a1a1a"/>
                             <circle cx="117" cy="94" r="5" fill="#1a1a1a"/>
                             <circle cx="89" cy="92" r="2" fill="#fff"/>
                             <circle cx="119" cy="92" r="2" fill="#fff"/>
-                            <!-- Nose -->
                             <ellipse cx="100" cy="108" rx="6" ry="4" fill="#8b4513"/>
-                            <!-- Mouth (roar) -->
                             <path d="M 82 115 Q 100 135 118 115" fill="#c0392b" class="lion-mouth"/>
-                            <!-- Teeth -->
                             <path d="M 88 115 L 90 120 L 92 115" fill="#fff"/>
                             <path d="M 108 115 L 110 120 L 112 115" fill="#fff"/>
-                            <!-- Eyebrows -->
-                            <path d="M 76 82 Q 85 76 94 82" stroke="#8b4513" stroke-width="3" fill="none"/>
-                            <path d="M 106 82 Q 115 76 124 82" stroke="#8b4513" stroke-width="3" fill="none"/>
                         </g>
-                        <!-- Scratch marks -->
                         <g class="scratch-marks" opacity="0">
                             <path d="M 30 50 L 60 90" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
                             <path d="M 40 45 L 70 85" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
                             <path d="M 50 40 L 80 80" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
-                            <path d="M 140 50 L 170 90" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
-                            <path d="M 130 45 L 160 85" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
-                            <path d="M 120 40 L 150 80" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
                         </g>
                     </svg>
                 </div>
@@ -222,13 +178,6 @@
     <script src="assets/js/sound.js"></script>
     <script src="assets/js/animations.js"></script>
     <script src="assets/js/game.js"></script>
-    <script>
-        function enterFullscreen() {
-            const el = document.documentElement;
-            if (!document.fullscreenElement && el.requestFullscreen) {
-                el.requestFullscreen().catch(()=>{});
-            }
-        }
-    </script>
+    <script>function enterFullscreen(){const e=document.documentElement;!document.fullscreenElement&&e.requestFullscreen&&e.requestFullscreen().catch(()=>{});}</script>
 </body>
 </html>
