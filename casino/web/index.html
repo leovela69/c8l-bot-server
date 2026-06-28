@@ -316,21 +316,22 @@ document.addEventListener('pointerdown',()=>initAudio(),{once:true});
 
 // ===== MUSIC SYSTEM (bg1/bg2 normal, win1/win2 on prize) =====
 let bgMusic=null, winMusic=null, musicStarted=false;
+let currentBgTrack=0, currentWinTrack=0;
 const BG_TRACKS=['assets/audio/bg1.mp3','assets/audio/bg2.mp3'];
 const WIN_TRACKS=['assets/audio/win1.mp3','assets/audio/win2.mp3'];
 
 function startBgMusic(){
-  if(!soundOn||musicStarted) return;
+  if(!soundOn) return;
   musicStarted=true;
-  const src=BG_TRACKS[Math.floor(Math.random()*BG_TRACKS.length)];
+  const src=BG_TRACKS[currentBgTrack];
   bgMusic=new Audio(src);
-  bgMusic.loop=true;
+  bgMusic.loop=false; // NO loop — al terminar cambia a la otra
   bgMusic.volume=0.25;
   bgMusic.play().catch(()=>{});
-  // When bg track ends, switch to the other one
+  // When track ends, switch to the OTHER track
   bgMusic.addEventListener('ended',()=>{
-    const next=BG_TRACKS[Math.floor(Math.random()*BG_TRACKS.length)];
-    bgMusic.src=next;
+    currentBgTrack=(currentBgTrack+1)%BG_TRACKS.length;
+    bgMusic.src=BG_TRACKS[currentBgTrack];
     bgMusic.play().catch(()=>{});
   });
 }
@@ -339,7 +340,8 @@ function playWinMusic(){
   if(!soundOn) return;
   // Fade out bg music temporarily
   if(bgMusic){bgMusic.volume=0.08;}
-  const src=WIN_TRACKS[Math.floor(Math.random()*WIN_TRACKS.length)];
+  const src=WIN_TRACKS[currentWinTrack];
+  currentWinTrack=(currentWinTrack+1)%WIN_TRACKS.length; // Alternate next time
   winMusic=new Audio(src);
   winMusic.volume=0.5;
   winMusic.play().catch(()=>{});
@@ -356,8 +358,8 @@ function stopWinMusic(){
 }
 
 // Start bg music on first interaction
-document.addEventListener('pointerdown',()=>{startBgMusic();},{once:true});
-document.addEventListener('keydown',()=>{startBgMusic();},{once:true});
+document.addEventListener('pointerdown',()=>{if(!musicStarted)startBgMusic();},{once:true});
+document.addEventListener('keydown',()=>{if(!musicStarted)startBgMusic();},{once:true});
 
 // ===== VIBRATION + SCREEN SHAKE =====
 function vibrateDevice(pattern){
