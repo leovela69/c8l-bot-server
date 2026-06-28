@@ -15,10 +15,15 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
 .table-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:120px;height:120px;opacity:0.25;pointer-events:none;border-radius:50%;object-fit:contain}
 .community{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);display:flex;gap:5px;align-items:center;z-index:5}
 .pot-display{position:absolute;top:58%;left:50%;transform:translateX(-50%);background:rgba(10,8,4,0.8);border:1px solid rgba(184,134,11,0.5);border-radius:20px;padding:4px 14px;font-size:0.85em;color:#d4a017;font-weight:700;white-space:nowrap;z-index:5}
-.dealer-area{position:absolute;top:-10px;left:50%;transform:translateX(-50%);z-index:10;text-align:center}
-.dealer-img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center center;border:3px solid #42a5f5;box-shadow:0 0 15px rgba(66,165,245,0.7);transition:transform 0.4s;background:#0d47a1}
+.dealer-area{display:none}
+.dealer-img{display:none}
 .dealer-img.dealing{animation:dealAnim 0.7s ease-in-out}
-.dealer-label{font-size:0.6em;color:#d4a017;margin-top:2px;text-shadow:0 0 4px rgba(212,160,23,0.3)}
+.dealer-label{display:none}
+.bot-bubble{position:fixed;top:10px;right:55px;width:52px;height:52px;border-radius:50%;cursor:pointer;z-index:100;transition:all 0.3s;animation:botFloat 3s ease-in-out infinite}
+.bot-bubble:hover{transform:scale(1.15);box-shadow:0 0 25px rgba(66,165,245,0.8)}
+.bot-bubble img{width:100%;height:100%;border-radius:50%;border:3px solid #42a5f5;box-shadow:0 0 15px rgba(66,165,245,0.6)}
+.bot-bubble .bot-badge{position:absolute;bottom:-2px;right:-2px;background:#4caf50;color:#fff;font-size:0.45em;padding:2px 5px;border-radius:8px;font-weight:700}
+@keyframes botFloat{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
 @keyframes dealAnim{0%{transform:scale(1) rotate(0)}25%{transform:scale(1.15) rotate(-8deg)}50%{transform:scale(1.1) rotate(8deg)}75%{transform:scale(1.05) rotate(-3deg)}100%{transform:scale(1) rotate(0)}}
 .seat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.4s;z-index:6}
 .seat.folded{opacity:0.3;filter:grayscale(0.7)}
@@ -122,6 +127,10 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
 </style>
 </head>
 <body>
+<div class="bot-bubble" id="botBubble" onclick="toggleBotChat()" title="C8L Bot - Click para hablar">
+  <img src="public/avatars/c8l-bot.svg" alt="C8L Bot">
+  <span class="bot-badge">ON</span>
+</div>
 <div class="history-btn" onclick="toggleHistory()">📋</div>
 <div class="game-chat-toggle" onclick="toggleChat()">💬</div>
 <div class="history-panel" id="histPanel">
@@ -141,10 +150,6 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
         <div class="pot-display" id="potDisp">Bote: 0</div>
         <div class="community" id="commCards"></div>
       </div>
-    </div>
-    <div class="dealer-area" id="dealerArea">
-      <img class="dealer-img" id="dealerImg" src="public/avatars/c8l-bot.svg" alt="C8L Bot">
-      <div class="dealer-label">C8L BOT</div>
     </div>
   </div>
   <div class="bottom-panel">
@@ -463,10 +468,12 @@ function animateChipsToWinner(winnerIdx, loserIdxs, amount){
 
 // === DEALER ANIMATION ===
 function animateDealer(){
-  const img=document.getElementById('dealerImg');
-  img.classList.remove('dealing');
-  void img.offsetWidth;
-  img.classList.add('dealing');
+  var bot=document.getElementById('botBubble');
+  if(bot){
+    bot.style.animation='none';
+    void bot.offsetWidth;
+    bot.style.animation='dealAnim 0.7s ease-in-out, botFloat 3s ease-in-out infinite';
+  }
   sndDeal();
 }
 
@@ -750,6 +757,15 @@ function eval5(cards){
 }
 
 // === GAME CHAT ===
+function toggleBotChat(){
+  var chat=document.getElementById('gameChat');
+  if(chat.style.display==='none'||!chat.style.display){
+    chat.style.display='flex';
+    addChatMsg('C8L Bot','Hola! Soy tu asistente. Buena suerte en la mesa!',false);
+  }else{
+    chat.style.display='none';
+  }
+}
 function addChatMsg(name,text,isSystem){
   var container=document.getElementById('chatMessages');
   var div=document.createElement('div');
