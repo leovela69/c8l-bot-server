@@ -7,21 +7,18 @@
 <title>C8L Poker - 9 Jugadores</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0f;font-family:Georgia,'Times New Roman',serif;color:#f0e6d0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-x:hidden;padding:10px 0;position:relative}
-body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:radial-gradient(ellipse at 50% 40%,rgba(0,150,136,0.06) 0%,transparent 50%),radial-gradient(circle at 10% 50%,rgba(200,30,30,0.08) 0%,transparent 40%),radial-gradient(circle at 90% 50%,rgba(200,30,30,0.08) 0%,transparent 40%),radial-gradient(circle at 50% 10%,rgba(0,188,212,0.05) 0%,transparent 30%),linear-gradient(180deg,#0a0a0f 0%,#0d0808 50%,#0a0a0f 100%)}
-body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(0,0,0,0.6) 100%)}
-.bg-glow-left{position:fixed;top:20%;left:0;width:8px;height:60%;background:linear-gradient(180deg,transparent,#c62828,#ff5252,#c62828,transparent);border-radius:0 4px 4px 0;z-index:-1;box-shadow:0 0 30px rgba(198,40,40,0.4),0 0 60px rgba(198,40,40,0.2)}
-.bg-glow-right{position:fixed;top:20%;right:0;width:8px;height:60%;background:linear-gradient(180deg,transparent,#c62828,#ff5252,#c62828,transparent);border-radius:4px 0 0 4px;z-index:-1;box-shadow:0 0 30px rgba(198,40,40,0.4),0 0 60px rgba(198,40,40,0.2)}
-.bg-glow-top{position:fixed;top:0;left:50%;transform:translateX(-50%);width:200px;height:6px;background:linear-gradient(90deg,transparent,#00bcd4,#26c6da,#00bcd4,transparent);border-radius:0 0 4px 4px;z-index:-1;box-shadow:0 0 40px rgba(0,188,212,0.5),0 0 80px rgba(0,188,212,0.2)}
+body{background:#1a120a;font-family:Georgia,'Times New Roman',serif;color:#f0e6d0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-x:hidden;padding:10px 0;position:relative}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:radial-gradient(ellipse at 50% 30%,#2a1a0c 0%,#1a120a 40%,#0d0906 70%,#050302 100%)}
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 30%,rgba(0,0,0,0.5) 100%)}
 .poker-wrap{position:relative;width:min(1000px,98vw)}
 .table-area{position:relative;width:100%;height:min(580px,65vh);margin:0 auto}
-.table-outer{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70%;height:75%;border-radius:50%/44%;background:linear-gradient(180deg,#222 0%,#151515 30%,#0a0a0a 60%,#151515 100%);padding:14px;box-shadow:0 0 0 3px #333,0 0 0 6px #1a1a1a,0 0 40px rgba(0,188,212,0.2),0 0 80px rgba(0,188,212,0.1),0 25px 80px rgba(0,0,0,0.9),0 50px 120px rgba(0,0,0,0.6),inset 0 1px 3px rgba(255,255,255,0.08)}
-.table-felt{width:100%;height:100%;border-radius:50%/44%;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#1f7878 0%,#176565 20%,#115555 40%,#0c4545 60%,#083838 80%,#052d2d 100%);box-shadow:inset 0 0 40px rgba(0,0,0,0.4),inset 0 0 100px rgba(0,0,0,0.3),inset 0 -20px 40px rgba(0,0,0,0.2)}
-.table-felt::before{content:'';position:absolute;top:0;left:20%;right:20%;height:40%;border-radius:0 0 50% 50%;background:radial-gradient(ellipse at 50% 0%,rgba(0,220,220,0.08) 0%,transparent 70%);pointer-events:none}
-.table-felt::after{content:'';position:absolute;top:15%;left:12%;right:12%;bottom:15%;border-radius:50%/45%;border:1.5px solid rgba(0,188,212,0.1);pointer-events:none}
-.table-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100px;height:100px;opacity:0.12;pointer-events:none;border-radius:50%;object-fit:contain}
+.table-outer{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:72%;height:78%;border-radius:50%/44%;background:linear-gradient(160deg,#4a3020 0%,#3a2215 20%,#2a1810 40%,#1f1008 60%,#2a1810 80%,#3a2215 100%);padding:12px;box-shadow:0 0 0 3px #8b6914,0 0 0 5px #5c4510,0 0 0 8px #3a2215,0 0 0 12px rgba(139,105,20,0.3),0 20px 60px rgba(0,0,0,0.8),0 40px 100px rgba(0,0,0,0.6),inset 0 2px 4px rgba(255,220,120,0.15),inset 0 -2px 4px rgba(0,0,0,0.5)}
+.table-felt{width:100%;height:100%;border-radius:50%/44%;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#1a6b3a 0%,#156030 20%,#105528 40%,#0c4a22 60%,#083d1a 80%,#053014 100%);box-shadow:inset 0 0 50px rgba(0,0,0,0.4),inset 0 0 100px rgba(0,0,0,0.2),inset 0 4px 8px rgba(0,0,0,0.3)}
+.table-felt::before{content:'';position:absolute;top:0;left:15%;right:15%;height:45%;border-radius:0 0 50% 50%;background:radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04) 0%,transparent 70%);pointer-events:none}
+.table-felt::after{content:'';position:absolute;top:12%;left:10%;right:10%;bottom:12%;border-radius:50%/45%;border:2px solid rgba(139,105,20,0.2);pointer-events:none}
+.table-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100px;height:100px;opacity:0.1;pointer-events:none;border-radius:50%;object-fit:contain}
 .community{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);display:flex;gap:5px;align-items:center;z-index:5}
-.pot-display{position:absolute;top:58%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);border:1px solid rgba(0,188,212,0.4);border-radius:20px;padding:4px 14px;font-size:0.85em;color:#26c6da;font-weight:700;white-space:nowrap;z-index:5;box-shadow:0 0 10px rgba(0,188,212,0.15)}
+.pot-display{position:absolute;top:60%;left:50%;transform:translateX(-50%);background:rgba(10,6,3,0.85);border:1px solid rgba(139,105,20,0.6);border-radius:20px;padding:5px 16px;font-size:0.85em;color:#d4a017;font-weight:700;white-space:nowrap;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,220,120,0.1)}
 .dealer-area{display:none}
 .dealer-img{display:none}
 .dealer-img.dealing{animation:dealAnim 0.7s ease-in-out}
@@ -76,34 +73,34 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-inde
 .chip-anim{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #fff;z-index:15;pointer-events:none;animation:chipMove 0.6s ease-out forwards;background:radial-gradient(circle,#f5c842,#8b6914)}
 @keyframes chipMove{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(0.5) translateY(-10px)}}
 .chip-fly{position:absolute;width:22px;height:22px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle,#ffd700 30%,#b8860b);z-index:25;pointer-events:none;box-shadow:0 2px 8px rgba(255,215,0,0.6),0 0 4px rgba(0,0,0,0.3);transform:translate(-50%,-50%)}
-.bottom-panel{width:min(1000px,98vw);margin-top:10px;background:linear-gradient(180deg,#141414,#0a0a0a);border:1px solid #222;border-radius:12px;padding:10px 16px;box-shadow:0 -4px 20px rgba(0,0,0,0.5),0 0 1px rgba(0,188,212,0.2);display:flex;flex-direction:column;gap:8px}
+.bottom-panel{width:min(1000px,98vw);margin-top:10px;background:linear-gradient(180deg,#1f150c,#150e08);border:2px solid #5c4510;border-radius:12px;padding:10px 16px;box-shadow:0 -4px 20px rgba(0,0,0,0.5),inset 0 1px 0 rgba(139,105,20,0.2);display:flex;flex-direction:column;gap:8px}
 .player-hand-area{display:flex;align-items:center;justify-content:center;gap:16px;padding:6px 0}
 .player-cards-display{display:flex;gap:4px;align-items:center}
 .player-info-inline{display:flex;align-items:center;gap:12px}
-.player-info-inline .chip-count{font-size:1.1em;color:#26c6da;font-weight:700}
+.player-info-inline .chip-count{font-size:1.1em;color:#d4a017;font-weight:700}
 .player-info-inline .hand-name{font-size:0.85em;color:#4caf50;font-style:italic}
-.player-info-inline .round-info{font-size:0.7em;color:#666}
+.player-info-inline .round-info{font-size:0.7em;color:#8b6914}
 .msg{text-align:center;font-size:0.85em;color:#d4a017;min-height:20px;font-style:italic}
 .actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;align-items:center}
-.btn{padding:8px 16px;border:none;border-radius:6px;font-size:0.85em;font-weight:700;cursor:pointer;font-family:Georgia,serif;letter-spacing:0.5px;transition:all 0.2s;box-shadow:0 3px 8px rgba(0,0,0,0.4)}
+.btn{padding:8px 16px;border:none;border-radius:6px;font-size:0.85em;font-weight:700;cursor:pointer;font-family:Georgia,serif;letter-spacing:0.5px;transition:all 0.2s;box-shadow:0 3px 8px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.1)}
 .btn:active{transform:scale(0.95)}
 .btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
-.btn-gold{background:linear-gradient(180deg,#c9a227,#8b6914);color:#0a0700;border:1px solid #d4a017}
-.btn-gold:hover:not(:disabled){background:linear-gradient(180deg,#d4b030,#a07a18);box-shadow:0 0 12px rgba(201,162,39,0.4)}
+.btn-gold{background:linear-gradient(180deg,#2e7d32,#1b5e20,#145218);color:#fff;border:2px solid #4caf50}
+.btn-gold:hover:not(:disabled){background:linear-gradient(180deg,#388e3c,#2e7d32);box-shadow:0 0 15px rgba(76,175,80,0.5),0 3px 8px rgba(0,0,0,0.5)}
 .btn-green{background:linear-gradient(180deg,#2e7d32,#1b5e20);color:#fff;border:1px solid #4caf50}
 .btn-green:hover:not(:disabled){box-shadow:0 0 12px rgba(76,175,80,0.4)}
-.btn-blue{background:linear-gradient(180deg,#1565c0,#0d47a1);color:#fff;border:1px solid #42a5f5}
-.btn-blue:hover:not(:disabled){box-shadow:0 0 12px rgba(66,165,245,0.4)}
+.btn-blue{background:linear-gradient(180deg,#1a1a1a,#111);color:#d4a017;border:1px solid #5c4510}
+.btn-blue:hover:not(:disabled){box-shadow:0 0 12px rgba(139,105,20,0.4);border-color:#8b6914}
 .btn-red{background:linear-gradient(180deg,#c62828,#8e0000);color:#fff;border:1px solid #ef5350}
 .btn-red:hover:not(:disabled){box-shadow:0 0 12px rgba(239,83,80,0.4)}
-.btn-purple{background:linear-gradient(180deg,#6a1b9a,#4a148c);color:#fff;border:1px solid #ab47bc}
-.btn-purple:hover:not(:disabled){box-shadow:0 0 12px rgba(171,71,188,0.4)}
+.btn-purple{background:linear-gradient(180deg,#1a1a1a,#111);color:#ff8f00;border:1px solid #ff8f00}
+.btn-purple:hover:not(:disabled){box-shadow:0 0 12px rgba(255,143,0,0.4)}
 .raise-controls{display:flex;align-items:center;gap:6px}
 .raise-slider{width:100px;accent-color:#d4a017}
 .raise-val{font-size:0.75em;color:#d4a017;min-width:50px;text-align:center}
 .history-btn{position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.7);border:1px solid #d4a017;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1em;z-index:100;transition:all 0.2s}
 .history-btn:hover{background:rgba(212,160,23,0.2);transform:scale(1.1)}
-.game-chat{position:fixed;top:0;right:0;width:260px;height:100vh;background:rgba(10,8,4,0.95);border-left:1px solid #5c4510;display:flex;flex-direction:column;z-index:90}
+.game-chat{position:fixed;top:0;right:0;width:260px;height:100vh;background:rgba(15,10,6,0.95);border-left:2px solid #5c4510;display:flex;flex-direction:column;z-index:90}
 .game-chat-header{padding:10px 12px;border-bottom:1px solid #3d2810;display:flex;align-items:center;justify-content:space-between}
 .game-chat-header h4{color:#d4a017;font-size:0.8em;margin:0}
 .game-chat-toggle{position:fixed;top:50px;right:10px;background:rgba(0,0,0,0.7);border:1px solid #4caf50;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1em;z-index:100;transition:all 0.2s}
@@ -134,9 +131,6 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-inde
 </style>
 </head>
 <body>
-<div class="bg-glow-left"></div>
-<div class="bg-glow-right"></div>
-<div class="bg-glow-top"></div>
 <div class="bot-bubble" id="botBubble" onclick="toggleBotChat()" title="C8L Bot - Click para hablar">
   <img src="public/avatars/c8l-bot.svg" alt="C8L Bot">
   <span class="bot-badge">ON</span>
