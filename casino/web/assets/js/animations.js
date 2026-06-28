@@ -1,337 +1,160 @@
 /**
- * 🎰 C8L CASINO — Sistema de Animaciones
- * Animaciones de carretes, partículas, efectos de ganancia
+ * 🎰 C8L CASINO — Animaciones 3D
+ * Carretes cilindro, león bonus, partículas, efectos
  */
-
 class AnimationEngine {
-    constructor() {
-        this.particlesContainer = null;
-        this.isAnimating = false;
-    }
-
+    constructor() { this.particlesContainer = null; this.isAnimating = false; }
     init() {
         this.particlesContainer = document.getElementById('particlesContainer');
+        this._startBgParticles();
+        this._initReels();
     }
-
-    // ================================================================
-    // ANIMACIÓN DE CARRETES
-    // ================================================================
-
-    /**
-     * Anima el giro de todos los carretes
-     * @param {Array} finalGrid - Grid final 5×3 con IDs de símbolos
-     * @param {Function} onComplete - Callback cuando termina
-     */
+    _initReels() {
+        const syms = Object.keys(SYMBOLS);
+        for (let r = 0; r < 5; r++) {
+            const reel = document.getElementById(`reel${r}`);
+            const cells = reel.querySelectorAll('.symbol');
+            cells.forEach(cell => {
+                const rand = syms[Math.floor(Math.random() * syms.length)];
+                cell.innerHTML = getSymbolHTML(rand);
+            });
+        }
+    }
+    _startBgParticles() {
+        const cont = document.getElementById('bgParticles');
+        if (!cont) return;
+        setInterval(() => {
+            const p = document.createElement('div');
+            p.style.cssText = `position:absolute;font-size:${8+Math.random()*10}px;left:${Math.random()*100}%;top:-10px;opacity:${0.1+Math.random()*0.2};animation:particleFall ${4+Math.random()*4}s linear forwards;pointer-events:none;`;
+            p.textContent = ['✨','🪙','⭐'][Math.floor(Math.random()*3)];
+            cont.appendChild(p);
+            setTimeout(() => p.remove(), 8000);
+        }, 800);
+    }
     async spinReels(finalGrid, onComplete) {
         this.isAnimating = true;
-        const reels = document.querySelectorAll('.reel');
-        
-        // Iniciar todos los carretes girando
-        reels.forEach(reel => {
-            reel.classList.add('spinning');
-            reel.classList.remove('stopping');
-        });
-
-        // Parar carretes secuencialmente (efecto cascada)
+        const reels = [];
+        for (let i = 0; i < 5; i++) reels.push(document.getElementById(`reel${i}`));
+        reels.forEach(r => r.classList.add('spinning'));
         for (let i = 0; i < 5; i++) {
-            await this._delay(300 + i * 200); // Cada carrete para 200ms después
+            await this._delay(250 + i * 180);
             await this._stopReel(i, finalGrid[i]);
         }
-
-        await this._delay(200);
+        await this._delay(150);
         this.isAnimating = false;
         if (onComplete) onComplete();
     }
-
-    async _stopReel(reelIndex, symbols) {
-        const reel = document.getElementById(`reel${reelIndex}`);
-        const strip = reel.querySelector('.reel-strip');
-        
+    async _stopReel(idx, symbols) {
+        const reel = document.getElementById(`reel${idx}`);
         reel.classList.remove('spinning');
         reel.classList.add('stopping');
-        
-        // Actualizar símbolos
-        const symbolElements = strip.querySelectorAll('.symbol');
-        symbols.forEach((symId, row) => {
-            symbolElements[row].innerHTML = getSymbolEmoji(symId);
-            symbolElements[row].dataset.symbol = symId;
-        });
-
-        sound.reelStop(reelIndex);
-        
-        // Esperar a que termine la animación de parada
-        await this._delay(300);
+        const cells = reel.querySelectorAll('.symbol');
+        symbols.forEach((s, i) => { if (cells[i]) cells[i].innerHTML = getSymbolHTML(s); });
+        sound.reelStop(idx);
+        await this._delay(400);
         reel.classList.remove('stopping');
     }
-
-    /**
-     * Genera símbolos aleatorios durante el giro (efecto visual)
-     */
-    startReelAnimation(reelIndex) {
-        const reel = document.getElementById(`reel${reelIndex}`);
-        const strip = reel.querySelector('.reel-strip');
-        const symbolElements = strip.querySelectorAll('.symbol');
-        
-        const allSymbols = Object.keys(SYMBOLS);
-        
-        const interval = setInterval(() => {
-            if (!reel.classList.contains('spinning')) {
-                clearInterval(interval);
-                return;
-            }
-            symbolElements.forEach(el => {
-                const randomSym = allSymbols[Math.floor(Math.random() * allSymbols.length)];
-                el.innerHTML = getSymbolEmoji(randomSym);
-            });
-        }, 80);
-        
-        return interval;
+    startReelAnimation(idx) {
+        const reel = document.getElementById(`reel${idx}`);
+        const cells = reel.querySelectorAll('.symbol');
+        const syms = Object.keys(SYMBOLS);
+        const iv = setInterval(() => {
+            if (!reel.classList.contains('spinning')) { clearInterval(iv); return; }
+            cells.forEach(c => { c.innerHTML = getSymbolHTML(syms[Math.floor(Math.random()*syms.length)]); });
+        }, 90);
+        return iv;
     }
-
-    // ================================================================
-    // ANIMACIÓN DE GANANCIAS
-    // ================================================================
-
-    /**
-     * Anima los símbolos ganadores
-     */
     animateWinningSymbols(wins) {
-        // Limpiar animaciones previas
-        document.querySelectorAll('.symbol.winning').forEach(el => {
-            el.classList.remove('winning');
-        });
-
-        wins.forEach(win => {
-            if (win.positions) {
-                win.positions.forEach(([reel, row]) => {
-                    const reelEl = document.getElementById(`reel${reel}`);
-                    const symbols = reelEl.querySelectorAll('.symbol');
-                    if (symbols[row]) {
-                        symbols[row].classList.add('winning');
-                        
-                        // Wild glow
-                        if (win.wild_positions && win.wild_positions.some(([wr, wrow]) => wr === reel && wrow === row)) {
-                            symbols[row].classList.add('wild-glow');
-                        }
-                    }
-                });
-            }
+        document.querySelectorAll('.symbol.winning').forEach(e => e.classList.remove('winning'));
+        wins.forEach(w => {
+            if (w.positions) w.positions.forEach(([r, row]) => {
+                const reel = document.getElementById(`reel${r}`);
+                const syms = reel.querySelectorAll('.symbol');
+                if (syms[row]) syms[row].classList.add('winning');
+            });
         });
     }
-
-    /**
-     * Muestra el overlay de ganancia
-     */
-    showWinOverlay(amount, duration = 2000) {
-        const overlay = document.getElementById('winOverlay');
-        const amountEl = document.getElementById('winAmount');
-        
-        amountEl.textContent = this.formatNumber(amount);
-        overlay.style.display = 'flex';
-        
-        setTimeout(() => {
-            overlay.style.display = 'none';
-        }, duration);
+    showWinOverlay(amount, dur = 1500) {
+        const ov = document.getElementById('winOverlay');
+        const am = document.getElementById('winAmount');
+        am.textContent = amount.toLocaleString('es-ES');
+        ov.style.display = 'flex';
+        setTimeout(() => { ov.style.display = 'none'; }, dur);
     }
-
-    /**
-     * Big Win popup con contador animado
-     */
     async showBigWin(amount, level = 'big') {
         const popup = document.getElementById('bigWinPopup');
-        const titleEl = document.getElementById('bigWinTitle');
-        const amountEl = document.getElementById('bigWinAmount');
-        
-        const titles = {
-            big: '¡GRAN GANANCIA!',
-            mega: '¡¡MEGA GANANCIA!!',
-            epic: '🔥 ¡¡¡GANANCIA ÉPICA!!! 🔥'
-        };
-        
-        titleEl.textContent = titles[level] || titles.big;
+        const title = document.getElementById('bigWinTitle');
+        const amEl = document.getElementById('bigWinAmount');
+        const titles = { big: '¡GRAN GANANCIA!', mega: '¡¡MEGA GANANCIA!!', epic: '🔥 ¡ÉPICA! 🔥' };
+        title.textContent = titles[level] || titles.big;
         popup.style.display = 'flex';
-        
-        // Sonido
-        if (level === 'big') sound.winBig();
-        else sound.winMega();
-        
-        // Contador animado
-        await this._countUp(amountEl, 0, amount, 2000);
-        
-        // Partículas
+        if (level === 'epic') sound.winMega(); else sound.winBig();
+        await this._countUp(amEl, 0, amount, 2000);
         this.spawnCoins(30);
-        
+        await this._delay(2500);
+        popup.style.display = 'none';
+    }
+    async showLionBonus(amount) {
+        const popup = document.getElementById('lionBonusPopup');
+        const amEl = document.getElementById('bonusAmount');
+        popup.style.display = 'flex';
+        sound.modoRugido();
+        document.getElementById('app').classList.add('screen-shake');
+        await this._delay(600);
+        document.getElementById('app').classList.remove('screen-shake');
+        await this._countUp(amEl, 0, amount, 1500);
+        this.spawnCoins(40);
         await this._delay(3000);
         popup.style.display = 'none';
     }
-
-    /**
-     * Jackpot animation
-     */
-    async showJackpot(amount) {
-        const popup = document.getElementById('jackpotPopup');
-        const amountEl = document.getElementById('jackpotWinAmount');
-        
-        popup.style.display = 'flex';
-        sound.jackpot();
-        
-        // Screen shake
-        document.getElementById('app').classList.add('screen-shake');
-        
-        // Contador
-        await this._countUp(amountEl, 0, amount, 4000);
-        
-        // Muchas partículas
-        this.spawnCoins(100);
-        
-        await this._delay(6000);
-        popup.style.display = 'none';
-        document.getElementById('app').classList.remove('screen-shake');
-    }
-
-    /**
-     * Free Spins triggered animation
-     */
     async showFreeSpinsIntro(count) {
         const popup = document.getElementById('freeSpinsPopup');
-        const amountEl = document.getElementById('freeSpinsAwarded');
-        
-        amountEl.textContent = count;
+        document.getElementById('freeSpinsAwarded').textContent = count;
         popup.style.display = 'flex';
         sound.freeSpins();
-        
         return new Promise(resolve => {
-            document.getElementById('freeSpinsStartBtn').onclick = () => {
-                popup.style.display = 'none';
-                resolve();
-            };
+            document.getElementById('freeSpinsStartBtn').onclick = () => { popup.style.display = 'none'; resolve(); };
         });
     }
-
-    /**
-     * Modo Rugido activation
-     */
-    modoRugidoActivate(multiplier) {
-        const multiplierBox = document.querySelector('.multiplier-box');
-        const multiplierDisplay = document.getElementById('multiplierDisplay');
-        const modoLabel = document.getElementById('modoLabel');
-        
-        multiplierBox.classList.add('active');
-        multiplierDisplay.textContent = `X${multiplier}`;
-        modoLabel.textContent = 'MODO RUGIDO';
-        
+    modoRugidoActivate(mult) {
+        const box = document.querySelector('.multiplier-box');
+        document.getElementById('multiplierDisplay').textContent = `X${mult}`;
+        document.getElementById('modoLabel').textContent = 'RUGIDO';
+        box.classList.add('active');
         sound.modoRugido();
         document.getElementById('app').classList.add('screen-shake');
-        
-        setTimeout(() => {
-            document.getElementById('app').classList.remove('screen-shake');
-        }, 500);
+        setTimeout(() => document.getElementById('app').classList.remove('screen-shake'), 500);
     }
-
     modoRugidoDeactivate() {
-        const multiplierBox = document.querySelector('.multiplier-box');
-        const multiplierDisplay = document.getElementById('multiplierDisplay');
-        const modoLabel = document.getElementById('modoLabel');
-        
-        multiplierBox.classList.remove('active');
-        multiplierDisplay.textContent = 'X1';
-        modoLabel.textContent = 'NORMAL';
+        document.querySelector('.multiplier-box').classList.remove('active');
+        document.getElementById('multiplierDisplay').textContent = 'X1';
+        document.getElementById('modoLabel').textContent = 'NORMAL';
     }
-
-    // ================================================================
-    // PARTÍCULAS
-    // ================================================================
-
-    /**
-     * Genera monedas cayendo
-     */
     spawnCoins(count = 20) {
-        const coins = ['🪙', '💰', '✨', '⭐', '💎'];
-        
+        const coins = ['🪙','💰','✨','⭐','💎'];
         for (let i = 0; i < count; i++) {
             setTimeout(() => {
-                const particle = document.createElement('div');
-                particle.className = 'particle coin-particle';
-                particle.textContent = coins[Math.floor(Math.random() * coins.length)];
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
-                particle.style.animationDelay = Math.random() * 0.5 + 's';
-                particle.style.fontSize = (16 + Math.random() * 16) + 'px';
-                
-                this.particlesContainer.appendChild(particle);
-                
-                setTimeout(() => particle.remove(), 3000);
-            }, i * 50);
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.textContent = coins[Math.floor(Math.random()*coins.length)];
+                p.style.cssText = `left:${Math.random()*100}%;font-size:${16+Math.random()*16}px;animation:particleFall ${1.5+Math.random()*1.5}s linear forwards;`;
+                this.particlesContainer.appendChild(p);
+                setTimeout(() => p.remove(), 3000);
+            }, i * 40);
         }
     }
-
-    /**
-     * Efecto de explosión dorada en una posición
-     */
-    burstAt(x, y, count = 10) {
-        for (let i = 0; i < count; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.textContent = '✨';
-            particle.style.left = x + 'px';
-            particle.style.top = y + 'px';
-            particle.style.fontSize = '16px';
-            
-            const angle = (Math.PI * 2 * i) / count;
-            const distance = 50 + Math.random() * 50;
-            const tx = Math.cos(angle) * distance;
-            const ty = Math.sin(angle) * distance;
-            
-            particle.style.transition = 'all 0.6s ease-out';
-            this.particlesContainer.appendChild(particle);
-            
-            requestAnimationFrame(() => {
-                particle.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
-                particle.style.opacity = '0';
-            });
-            
-            setTimeout(() => particle.remove(), 700);
-        }
-    }
-
-    // ================================================================
-    // HELPERS
-    // ================================================================
-
-    async _countUp(element, from, to, duration) {
+    async _countUp(el, from, to, dur) {
         const start = performance.now();
-        
         return new Promise(resolve => {
-            const animate = (now) => {
-                const elapsed = now - start;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                // Easing: ease-out
-                const eased = 1 - Math.pow(1 - progress, 3);
-                const current = Math.floor(from + (to - from) * eased);
-                
-                element.textContent = this.formatNumber(current);
-                
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    element.textContent = this.formatNumber(to);
-                    resolve();
-                }
+            const tick = (now) => {
+                const p = Math.min((now - start) / dur, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.floor(from + (to - from) * eased).toLocaleString('es-ES');
+                if (p < 1) requestAnimationFrame(tick); else { el.textContent = to.toLocaleString('es-ES'); resolve(); }
             };
-            
-            requestAnimationFrame(animate);
+            requestAnimationFrame(tick);
         });
     }
-
-    formatNumber(num) {
-        return num.toLocaleString('es-ES');
-    }
-
-    _delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    _delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 }
-
-// Instancia global
 const animations = new AnimationEngine();
