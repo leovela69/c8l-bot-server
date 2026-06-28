@@ -713,35 +713,72 @@ function initSlot(assets){
         }
       }
 
-      // === WIN EVALUATION (FUN MODE: generous payouts) ===
+      // === WIN EVALUATION — PATRÓN DE PREMIACIÓN DIVERTIDO ===
+      // Regla: cuando hay premio, SIEMPRE ganas MÁS de lo que apostaste.
+      // La emoción viene de los momentos sin premio (tensión) seguidos de premios generosos.
       let totalWin=0;
 
-      // Determine if this spin wins and how much (fun distribution)
-      const roll=Math.random();
-      let winMultiplier=0; // 0 = no win
+      // Streak system: después de varias pérdidas seguidas, aumenta probabilidad de premio
+      if(typeof window._lossStreak==='undefined') window._lossStreak=0;
+      if(typeof window._spinCount==='undefined') window._spinCount=0;
+      window._spinCount++;
 
-      if(roll < 0.40){
-        // 40% — No prize
-        winMultiplier=0;
-      } else if(roll < 0.70){
-        // 30% — Win 1.15x to 1.5x total bet
-        winMultiplier = 1.15 + Math.random()*0.35;
-      } else if(roll < 0.88){
-        // 18% — Win 1.5x to 2x total bet
-        winMultiplier = 1.5 + Math.random()*0.5;
-      } else if(roll < 0.96){
-        // 8% — Win 2x to 3x total bet
-        winMultiplier = 2 + Math.random();
-      } else if(roll < 0.99){
-        // 3% — Win 3x to 5x total bet
-        winMultiplier = 3 + Math.random()*2;
+      // Probabilidad base ajustada por racha de pérdidas (pity system)
+      let winChance = 0.62; // 62% base de ganar algo
+      if(window._lossStreak >= 3) winChance = 0.72; // 72% después de 3 pérdidas
+      if(window._lossStreak >= 5) winChance = 0.85; // 85% después de 5 pérdidas
+      if(window._lossStreak >= 7) winChance = 0.95; // 95% después de 7 pérdidas (casi garantizado)
+
+      const roll = Math.random();
+
+      if(roll >= winChance){
+        // === SIN PREMIO ===
+        totalWin = 0;
+        window._lossStreak++;
       } else {
-        // 1% — Win 5x to 10x total bet (MEGA)
-        winMultiplier = 5 + Math.random()*5;
-      }
+        // === ¡HAY PREMIO! — Siempre más de lo apostado ===
+        window._lossStreak = 0; // Reset racha
 
-      if(winMultiplier > 0){
-        totalWin = Math.round(totalBet() * winMultiplier);
+        // Determinar NIVEL del premio
+        const prizeRoll = Math.random();
+        let prizeMultiplier;
+
+        if(prizeRoll < 0.38){
+          // 38% de las veces que ganas → +15% a +25% sobre apuesta total
+          // Ejemplo: apuestas 5000, ganas 5750 a 6250
+          prizeMultiplier = 1.15 + Math.random() * 0.10;
+        } else if(prizeRoll < 0.68){
+          // 30% de las veces que ganas → +33% a +50% sobre apuesta total
+          // Ejemplo: apuestas 5000, ganas 6650 a 7500
+          prizeMultiplier = 1.33 + Math.random() * 0.17;
+        } else if(prizeRoll < 0.85){
+          // 17% de las veces que ganas → +60% a +100% sobre apuesta total
+          // Ejemplo: apuestas 5000, ganas 8000 a 10000
+          prizeMultiplier = 1.60 + Math.random() * 0.40;
+        } else if(prizeRoll < 0.94){
+          // 9% de las veces que ganas → +100% a +200% (duplicas o triplicas)
+          // Ejemplo: apuestas 5000, ganas 10000 a 15000
+          prizeMultiplier = 2.0 + Math.random() * 1.0;
+        } else if(prizeRoll < 0.985){
+          // 4.5% de las veces que ganas → +200% a +500% (MEGA)
+          // Ejemplo: apuestas 5000, ganas 15000 a 30000
+          prizeMultiplier = 3.0 + Math.random() * 3.0;
+        } else {
+          // 1.5% de las veces que ganas → +500% a +1000% (ULTRA RARO)
+          // Ejemplo: apuestas 5000, ganas 30000 a 55000
+          prizeMultiplier = 6.0 + Math.random() * 5.0;
+        }
+
+        // Bonus por cada 10 giros (engagement reward)
+        if(window._spinCount % 10 === 0){
+          prizeMultiplier *= 1.25; // +25% extra cada 10 giros
+        }
+        // Bonus en giros gratis: x2 multiplicador
+        if(freeSpins > 0){
+          prizeMultiplier *= 1.5;
+        }
+
+        totalWin = Math.round(totalBet() * prizeMultiplier);
       }
 
       // Still check scatters for free spins (independent of main win)
