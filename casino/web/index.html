@@ -8,441 +8,154 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Orbitron:wght@400;700;900&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/casino.css">
-    <link rel="stylesheet" href="assets/css/lobby.css">
-    <link rel="stylesheet" href="assets/css/roulette.css">
-    <link rel="stylesheet" href="assets/css/blackjack.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦁</text></svg>">
 </head>
 <body>
     <div id="app" class="casino-app">
-
-        <!-- ============ LOBBY / LOGIN SCREEN ============ -->
-        <div id="lobbyScreen" class="screen active">
-            <div class="lobby-bg">
-                <div class="lobby-particles" id="lobbyParticles"></div>
+        <!-- Header -->
+        <header class="casino-header">
+            <button class="menu-btn" id="menuBtn">☰</button>
+            <div class="logo-container">
+                <div class="logo-badge">C8L</div>
+                <div class="logo-text">
+                    <h1>C8L LEGENDS</h1>
+                    <span class="subtitle">EL LEÓN DORADO</span>
+                </div>
             </div>
-            <div class="lobby-content">
-                <!-- Logo -->
-                <div class="lobby-logo">
-                    <div class="lobby-badge">C8L</div>
-                    <h1 class="lobby-title">CASINO</h1>
-                    <p class="lobby-subtitle">EL LEÓN DORADO</p>
+            <div class="header-controls">
+                <button class="sound-btn" id="soundBtn">🔊</button>
+            </div>
+        </header>
+
+        <!-- Jackpot Display -->
+        <div class="jackpot-container">
+            <div class="jackpot-label">JACKPOT GLOBAL</div>
+            <div class="jackpot-amount" id="jackpotDisplay">48,532,120</div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="game-container">
+            <!-- Left Panel - Multiplier -->
+            <div class="side-panel left-panel">
+                <div class="panel-box multiplier-box">
+                    <span class="panel-label">MULTIPLICADOR</span>
+                    <span class="panel-value" id="multiplierDisplay">X1</span>
+                    <span class="panel-sublabel" id="modoLabel">NORMAL</span>
                 </div>
+            </div>
 
-                <!-- Login -->
-                <div class="lobby-login" id="loginSection">
-                    <input type="text" id="playerName" placeholder="Tu nombre de jugador" class="lobby-input" maxlength="20">
-                    <button class="lobby-btn primary" id="loginBtn">ENTRAR AL CASINO</button>
-                    <button class="lobby-btn telegram" id="telegramLoginBtn">
-                        <span>📱</span> Conectar con Telegram
-                    </button>
+            <!-- Slot Machine -->
+            <div class="slot-machine">
+                <div class="slot-frame">
+                    <div class="reels-container" id="reelsContainer">
+                        <div class="reel" id="reel0"><div class="reel-strip"><div class="symbol" data-row="0">🦁</div><div class="symbol" data-row="1">❤️‍🔥</div><div class="symbol" data-row="2">👑</div></div></div>
+                        <div class="reel" id="reel1"><div class="reel-strip"><div class="symbol" data-row="0">🅰️</div><div class="symbol" data-row="1">🦁</div><div class="symbol" data-row="2">🃏</div></div></div>
+                        <div class="reel" id="reel2"><div class="reel-strip"><div class="symbol" data-row="0">❤️‍🔥</div><div class="symbol" data-row="1">❤️‍🔥</div><div class="symbol" data-row="2">👸</div></div></div>
+                        <div class="reel" id="reel3"><div class="reel-strip"><div class="symbol" data-row="0">👸</div><div class="symbol" data-row="1">👑</div><div class="symbol" data-row="2">🦁</div></div></div>
+                        <div class="reel" id="reel4"><div class="reel-strip"><div class="symbol" data-row="0">🃏</div><div class="symbol" data-row="1">🅰️</div><div class="symbol" data-row="2">🔟</div></div></div>
+                    </div>
+                    <!-- Win overlay -->
+                    <div class="win-overlay" id="winOverlay" style="display:none;">
+                        <div class="win-amount" id="winAmount">0</div>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Game Selection (after login) -->
-                <div class="lobby-games" id="gamesSection" style="display:none;">
-                    <div class="lobby-welcome" id="welcomeMsg">Bienvenido, Jugador</div>
-                    <div class="lobby-balance-bar">
-                        <div class="lb-item">🪙 <span id="lobbyCredits">152,450,000</span></div>
-                        <div class="lb-item">💎 <span id="lobbyChips">8,250</span></div>
-                        <div class="lb-item">⭐ <span id="lobbyVip">VIP 10</span></div>
-                    </div>
-
-                    <h2 class="games-title">ELIGE TU JUEGO</h2>
-                    <div class="games-grid">
-                        <div class="game-card" data-game="slots">
-                            <div class="game-card-icon">🎰</div>
-                            <div class="game-card-name">TRAGAPERRAS</div>
-                            <div class="game-card-desc">El León Dorado</div>
-                            <div class="game-card-badge hot">HOT</div>
-                        </div>
-                        <div class="game-card" data-game="roulette">
-                            <div class="game-card-icon">🎡</div>
-                            <div class="game-card-name">RULETA</div>
-                            <div class="game-card-desc">Ruleta Europea</div>
-                            <div class="game-card-badge new">NEW</div>
-                        </div>
-                        <div class="game-card" data-game="blackjack">
-                            <div class="game-card-icon">🃏</div>
-                            <div class="game-card-name">BLACKJACK</div>
-                            <div class="game-card-desc">21 Clásico</div>
-                            <div class="game-card-badge new">NEW</div>
-                        </div>
-                        <div class="game-card" data-game="store">
-                            <div class="game-card-icon">🏪</div>
-                            <div class="game-card-name">TIENDA</div>
-                            <div class="game-card-desc">Comprar Chips</div>
-                        </div>
-                        <div class="game-card" data-game="leaderboard">
-                            <div class="game-card-icon">🏆</div>
-                            <div class="game-card-name">RANKING</div>
-                            <div class="game-card-desc">Top Jugadores</div>
-                        </div>
-                    </div>
-
-                    <!-- Jackpot ticker -->
-                    <div class="lobby-jackpot">
-                        <span class="lj-label">JACKPOT GLOBAL</span>
-                        <span class="lj-amount" id="lobbyJackpot">48,532,120</span>
-                    </div>
+            <!-- Right Panel - Free Spins -->
+            <div class="side-panel right-panel">
+                <div class="panel-box freespins-box">
+                    <span class="panel-label">GIROS GRATIS</span>
+                    <span class="panel-value" id="freeSpinsDisplay">0</span>
+                    <span class="panel-sublabel" id="freeSpinsLabel">INACTIVO</span>
                 </div>
             </div>
         </div>
 
-        <!-- ============ SLOT GAME SCREEN ============ -->
-        <div id="slotsScreen" class="screen">
-            <!-- Header -->
-            <header class="casino-header">
-                <button class="back-btn" id="slotsBackBtn">◀ LOBBY</button>
-                <div class="logo-container">
-                    <div class="logo-badge">C8L</div>
-                    <div class="logo-text">
-                        <h1>C8L LEGENDS</h1>
-                        <span class="subtitle">EL LEÓN DORADO</span>
-                    </div>
-                </div>
-                <div class="header-controls">
-                    <button class="sound-btn" id="soundBtn">🔊</button>
-                </div>
-            </header>
-
-            <!-- Jackpot Display -->
-            <div class="jackpot-container">
-                <div class="jackpot-label">JACKPOT GLOBAL</div>
-                <div class="jackpot-amount" id="jackpotDisplay">48,532,120</div>
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="control-group">
+                <span class="control-label">LÍNEAS</span>
+                <span class="control-value" id="linesDisplay">20</span>
             </div>
-
-            <!-- Main Game Area -->
-            <div class="game-container">
-                <div class="side-panel left-panel">
-                    <div class="panel-box multiplier-box">
-                        <span class="panel-label">MULTIPLICADOR</span>
-                        <span class="panel-value" id="multiplierDisplay">X1</span>
-                        <span class="panel-sublabel" id="modoLabel">NORMAL</span>
-                    </div>
-                </div>
-
-                <div class="slot-machine">
-                    <div class="slot-frame">
-                        <div class="reels-container" id="reelsContainer">
-                            <div class="reel" id="reel0"><div class="reel-strip"><div class="symbol" data-row="0">🦁</div><div class="symbol" data-row="1">❤️‍🔥</div><div class="symbol" data-row="2">👑</div></div></div>
-                            <div class="reel" id="reel1"><div class="reel-strip"><div class="symbol" data-row="0">🅰️</div><div class="symbol" data-row="1">🦁</div><div class="symbol" data-row="2">🃏</div></div></div>
-                            <div class="reel" id="reel2"><div class="reel-strip"><div class="symbol" data-row="0">❤️‍🔥</div><div class="symbol" data-row="1">❤️‍🔥</div><div class="symbol" data-row="2">👸</div></div></div>
-                            <div class="reel" id="reel3"><div class="reel-strip"><div class="symbol" data-row="0">👸</div><div class="symbol" data-row="1">👑</div><div class="symbol" data-row="2">🦁</div></div></div>
-                            <div class="reel" id="reel4"><div class="reel-strip"><div class="symbol" data-row="0">🃏</div><div class="symbol" data-row="1">🅰️</div><div class="symbol" data-row="2">🔟</div></div></div>
-                        </div>
-                        <div class="win-overlay" id="winOverlay" style="display:none;">
-                            <div class="win-amount" id="winAmount">0</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="side-panel right-panel">
-                    <div class="panel-box freespins-box">
-                        <span class="panel-label">GIROS GRATIS</span>
-                        <span class="panel-value" id="freeSpinsDisplay">0</span>
-                        <span class="panel-sublabel" id="freeSpinsLabel">INACTIVO</span>
-                    </div>
+            <div class="control-group">
+                <span class="control-label">APUESTA</span>
+                <div class="control-adjust">
+                    <button class="adjust-btn" id="betDown">−</button>
+                    <span class="control-value" id="betDisplay">250</span>
+                    <button class="adjust-btn" id="betUp">+</button>
                 </div>
             </div>
-
-            <!-- Controls -->
-            <div class="controls-bar">
-                <div class="control-group">
-                    <span class="control-label">LÍNEAS</span>
-                    <span class="control-value" id="linesDisplay">20</span>
-                </div>
-                <div class="control-group">
-                    <span class="control-label">APUESTA</span>
-                    <div class="control-adjust">
-                        <button class="adjust-btn" id="betDown">−</button>
-                        <span class="control-value" id="betDisplay">250</span>
-                        <button class="adjust-btn" id="betUp">+</button>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <span class="control-label">APUESTA TOTAL</span>
-                    <span class="control-value" id="totalBetDisplay">5,000</span>
-                </div>
-                <button class="spin-btn" id="spinBtn">
-                    <span class="spin-text">GIRAR</span>
-                    <span class="spin-sub">Mantener para Auto</span>
-                </button>
-                <div class="control-group">
-                    <span class="control-label">GANANCIA</span>
-                    <span class="control-value win-value" id="winDisplay">0</span>
-                </div>
+            <div class="control-group">
+                <span class="control-label">APUESTA TOTAL</span>
+                <span class="control-value" id="totalBetDisplay">5,000</span>
             </div>
 
-            <!-- Status Bar -->
-            <div class="status-bar">
-                <div class="status-item"><span class="status-icon">🪙</span><span class="status-label">CRÉDITOS</span><span class="status-value" id="creditsDisplay">152,450,000</span></div>
-                <div class="status-item"><span class="status-icon">💎</span><span class="status-label">CHIPS</span><span class="status-value" id="chipsDisplay">8,250</span></div>
-                <div class="status-item"><span class="status-icon">⭐</span><span class="status-label">NIVEL</span><span class="status-value" id="vipDisplay">VIP 10</span></div>
-            </div>
+            <!-- SPIN BUTTON -->
+            <button class="spin-btn" id="spinBtn">
+                <span class="spin-text">GIRAR</span>
+                <span class="spin-sub">Mantener para Auto</span>
+            </button>
 
-            <!-- Popups -->
-            <div class="particles-container" id="particlesContainer"></div>
-            <div class="bigwin-popup" id="bigWinPopup" style="display:none;"><div class="bigwin-content"><div class="bigwin-title" id="bigWinTitle">¡GRAN GANANCIA!</div><div class="bigwin-amount" id="bigWinAmount">0</div><div class="bigwin-coins">🪙🪙🪙</div></div></div>
-            <div class="jackpot-popup" id="jackpotPopup" style="display:none;"><div class="jackpot-content"><div class="jackpot-title">🦁 ¡¡¡JACKPOT!!! 🦁</div><div class="jackpot-win-amount" id="jackpotWinAmount">0</div><div class="jackpot-subtitle">¡EL LEÓN DORADO TE BENDICE!</div></div></div>
-            <div class="freespins-popup" id="freeSpinsPopup" style="display:none;"><div class="freespins-content"><div class="freespins-title">🌟 GIROS GRATIS 🌟</div><div class="freespins-amount" id="freeSpinsAwarded">10</div><div class="freespins-subtitle">¡GIROS ACTIVADOS!</div><button class="freespins-start-btn" id="freeSpinsStartBtn">¡COMENZAR!</button></div></div>
-        </div>
-
-        <!-- ============ ROULETTE SCREEN ============ -->
-        <div id="rouletteScreen" class="screen">
-            <header class="casino-header">
-                <button class="back-btn" id="rouletteBackBtn">◀ LOBBY</button>
-                <div class="logo-container">
-                    <div class="logo-badge">C8L</div>
-                    <div class="logo-text"><h1>RULETA</h1><span class="subtitle">EUROPEA</span></div>
-                </div>
-                <div class="header-controls"><button class="sound-btn" id="soundBtnR">🔊</button></div>
-            </header>
-
-            <div class="roulette-game">
-                <!-- Wheel -->
-                <div class="roulette-wheel-container">
-                    <div class="roulette-wheel" id="rouletteWheel">
-                        <div class="wheel-inner" id="wheelInner">
-                            <div class="wheel-ball" id="wheelBall"></div>
-                        </div>
-                    </div>
-                    <div class="roulette-result" id="rouletteResult" style="display:none;">
-                        <span class="result-number" id="resultNumber">0</span>
-                    </div>
-                </div>
-
-                <!-- Betting Table -->
-                <div class="roulette-table" id="rouletteTable">
-                    <div class="bet-area zero">
-                        <button class="bet-cell green" data-bet="0" data-type="number">0</button>
-                    </div>
-                    <div class="bet-area numbers" id="numbersGrid"></div>
-                    <div class="bet-area outside">
-                        <button class="bet-cell outside-btn" data-bet="1-12" data-type="dozen">1-12</button>
-                        <button class="bet-cell outside-btn" data-bet="13-24" data-type="dozen">13-24</button>
-                        <button class="bet-cell outside-btn" data-bet="25-36" data-type="dozen">25-36</button>
-                    </div>
-                    <div class="bet-area bottom-bets">
-                        <button class="bet-cell bottom-btn red-btn" data-bet="red" data-type="color">🔴 ROJO</button>
-                        <button class="bet-cell bottom-btn black-btn" data-bet="black" data-type="color">⚫ NEGRO</button>
-                        <button class="bet-cell bottom-btn" data-bet="odd" data-type="parity">IMPAR</button>
-                        <button class="bet-cell bottom-btn" data-bet="even" data-type="parity">PAR</button>
-                        <button class="bet-cell bottom-btn" data-bet="1-18" data-type="half">1-18</button>
-                        <button class="bet-cell bottom-btn" data-bet="19-36" data-type="half">19-36</button>
-                    </div>
-                </div>
-
-                <!-- Roulette Controls -->
-                <div class="roulette-controls">
-                    <div class="roulette-chips-select">
-                        <button class="chip-select active" data-value="100">100</button>
-                        <button class="chip-select" data-value="500">500</button>
-                        <button class="chip-select" data-value="1000">1K</button>
-                        <button class="chip-select" data-value="5000">5K</button>
-                        <button class="chip-select" data-value="25000">25K</button>
-                    </div>
-                    <div class="roulette-actions">
-                        <button class="roulette-btn clear" id="clearBetsBtn">LIMPIAR</button>
-                        <button class="roulette-btn spin" id="rouletteSpinBtn">GIRAR RULETA</button>
-                        <div class="roulette-total">Apuesta: <span id="rouletteTotalBet">0</span></div>
-                    </div>
-                </div>
-
-                <!-- Roulette Status -->
-                <div class="status-bar">
-                    <div class="status-item"><span class="status-icon">🪙</span><span class="status-label">CRÉDITOS</span><span class="status-value" id="rCredits">152,450,000</span></div>
-                    <div class="status-item"><span class="status-icon">🎯</span><span class="status-label">ÚLTIMO</span><span class="status-value" id="rLastNumber">—</span></div>
-                    <div class="status-item"><span class="status-icon">📊</span><span class="status-label">HISTORIAL</span><span class="status-value" id="rHistory">—</span></div>
-                </div>
+            <div class="control-group">
+                <span class="control-label">GANANCIA</span>
+                <span class="control-value win-value" id="winDisplay">0</span>
             </div>
         </div>
 
-        <!-- ============ BLACKJACK SCREEN ============ -->
-        <div id="blackjackScreen" class="screen">
-            <header class="casino-header">
-                <button class="back-btn" id="blackjackBackBtn">◀ LOBBY</button>
-                <div class="logo-container">
-                    <div class="logo-badge">C8L</div>
-                    <div class="logo-text"><h1>BLACKJACK</h1><span class="subtitle">21 CLÁSICO</span></div>
-                </div>
-                <div class="header-controls"><button class="sound-btn" id="soundBtnBJ">🔊</button></div>
-            </header>
-
-            <div class="blackjack-game">
-                <!-- Dealer -->
-                <div class="bj-dealer">
-                    <div class="bj-label">BANCA <span id="dealerScore">—</span></div>
-                    <div class="bj-cards" id="dealerCards"></div>
-                </div>
-
-                <!-- Result message -->
-                <div class="bj-result" id="bjResult" style="display:none;">
-                    <span id="bjResultText"></span>
-                </div>
-
-                <!-- Player -->
-                <div class="bj-player">
-                    <div class="bj-label">TÚ <span id="playerScore">—</span></div>
-                    <div class="bj-cards" id="playerCards"></div>
-                </div>
-
-                <!-- Actions -->
-                <div class="bj-actions">
-                    <div class="bj-bet-section" id="bjBetSection">
-                        <span class="bj-bet-label">APUESTA:</span>
-                        <div class="bj-bet-chips">
-                            <button class="bj-chip" data-value="500">500</button>
-                            <button class="bj-chip" data-value="1000">1K</button>
-                            <button class="bj-chip" data-value="5000">5K</button>
-                            <button class="bj-chip" data-value="10000">10K</button>
-                            <button class="bj-chip" data-value="50000">50K</button>
-                        </div>
-                        <div class="bj-current-bet">Apuesta: <span id="bjCurrentBet">0</span></div>
-                        <button class="bj-deal-btn" id="bjDealBtn">REPARTIR</button>
-                    </div>
-                    <div class="bj-play-actions" id="bjPlayActions" style="display:none;">
-                        <button class="bj-action-btn hit" id="bjHitBtn">PEDIR</button>
-                        <button class="bj-action-btn stand" id="bjStandBtn">PLANTARSE</button>
-                        <button class="bj-action-btn double" id="bjDoubleBtn">DOBLAR</button>
-                    </div>
-                    <button class="bj-action-btn new-game" id="bjNewGameBtn" style="display:none;">NUEVA MANO</button>
-                </div>
-
-                <!-- BJ Status -->
-                <div class="status-bar">
-                    <div class="status-item"><span class="status-icon">🪙</span><span class="status-label">CRÉDITOS</span><span class="status-value" id="bjCredits">152,450,000</span></div>
-                    <div class="status-item"><span class="status-icon">✅</span><span class="status-label">GANADAS</span><span class="status-value" id="bjWins">0</span></div>
-                    <div class="status-item"><span class="status-icon">❌</span><span class="status-label">PERDIDAS</span><span class="status-value" id="bjLosses">0</span></div>
-                </div>
+        <!-- Bottom Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-icon">🪙</span>
+                <span class="status-label">CRÉDITOS</span>
+                <span class="status-value" id="creditsDisplay">152,450,000</span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">💎</span>
+                <span class="status-label">CHIPS</span>
+                <span class="status-value" id="chipsDisplay">8,250</span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">⭐</span>
+                <span class="status-label">NIVEL</span>
+                <span class="status-value" id="vipDisplay">VIP 10</span>
             </div>
         </div>
 
-        <!-- ============ STORE SCREEN ============ -->
-        <div id="storeScreen" class="screen">
-            <header class="casino-header">
-                <button class="back-btn" id="storeBackBtn">◀ LOBBY</button>
-                <div class="logo-container">
-                    <div class="logo-badge">C8L</div>
-                    <div class="logo-text"><h1>TIENDA</h1><span class="subtitle">CHIPS & VIP</span></div>
-                </div>
-                <div class="header-controls"></div>
-            </header>
+        <!-- Particles container for win effects -->
+        <div class="particles-container" id="particlesContainer"></div>
 
-            <div class="store-content">
-                <div class="store-balance">
-                    <div class="store-balance-item"><span>🪙 Créditos:</span><span id="storeCredits">152,450,000</span></div>
-                    <div class="store-balance-item"><span>💎 Chips:</span><span id="storeChips">8,250</span></div>
-                </div>
-
-                <h2 class="store-section-title">💎 PAQUETES DE CHIPS</h2>
-                <div class="store-packs">
-                    <div class="store-pack" data-pack="starter">
-                        <div class="pack-icon">💎</div>
-                        <div class="pack-name">Starter</div>
-                        <div class="pack-amount">1,000 Chips</div>
-                        <div class="pack-price">10,000 🪙</div>
-                        <button class="pack-buy-btn" data-cost="10000" data-chips="1000">COMPRAR</button>
-                    </div>
-                    <div class="store-pack popular" data-pack="popular">
-                        <div class="pack-badge">POPULAR</div>
-                        <div class="pack-icon">💎💎</div>
-                        <div class="pack-name">Pro</div>
-                        <div class="pack-amount">5,000 Chips</div>
-                        <div class="pack-bonus">+500 BONUS</div>
-                        <div class="pack-price">45,000 🪙</div>
-                        <button class="pack-buy-btn" data-cost="45000" data-chips="5500">COMPRAR</button>
-                    </div>
-                    <div class="store-pack premium" data-pack="premium">
-                        <div class="pack-badge">MEJOR VALOR</div>
-                        <div class="pack-icon">💎💎💎</div>
-                        <div class="pack-name">VIP</div>
-                        <div class="pack-amount">15,000 Chips</div>
-                        <div class="pack-bonus">+3,000 BONUS</div>
-                        <div class="pack-price">100,000 🪙</div>
-                        <button class="pack-buy-btn" data-cost="100000" data-chips="18000">COMPRAR</button>
-                    </div>
-                    <div class="store-pack legendary" data-pack="legendary">
-                        <div class="pack-badge">LEGENDARIO</div>
-                        <div class="pack-icon">👑</div>
-                        <div class="pack-name">León Dorado</div>
-                        <div class="pack-amount">50,000 Chips</div>
-                        <div class="pack-bonus">+15,000 BONUS</div>
-                        <div class="pack-price">300,000 🪙</div>
-                        <button class="pack-buy-btn" data-cost="300000" data-chips="65000">COMPRAR</button>
-                    </div>
-                </div>
-
-                <h2 class="store-section-title">🎁 BONO DIARIO</h2>
-                <div class="daily-bonus-section">
-                    <button class="daily-bonus-btn" id="dailyBonusBtn">
-                        <span class="db-icon">🎁</span>
-                        <span class="db-text">RECLAMAR BONO DIARIO</span>
-                        <span class="db-amount">+50,000 🪙</span>
-                    </button>
-                </div>
+        <!-- Big Win Popup -->
+        <div class="bigwin-popup" id="bigWinPopup" style="display:none;">
+            <div class="bigwin-content">
+                <div class="bigwin-title" id="bigWinTitle">¡GRAN GANANCIA!</div>
+                <div class="bigwin-amount" id="bigWinAmount">0</div>
+                <div class="bigwin-coins">🪙🪙🪙</div>
             </div>
         </div>
 
-        <!-- ============ LEADERBOARD SCREEN ============ -->
-        <div id="leaderboardScreen" class="screen">
-            <header class="casino-header">
-                <button class="back-btn" id="leaderboardBackBtn">◀ LOBBY</button>
-                <div class="logo-container">
-                    <div class="logo-badge">C8L</div>
-                    <div class="logo-text"><h1>RANKING</h1><span class="subtitle">TOP JUGADORES</span></div>
-                </div>
-                <div class="header-controls"></div>
-            </header>
-
-            <div class="leaderboard-content">
-                <div class="lb-tabs">
-                    <button class="lb-tab active" data-tab="earnings">💰 GANANCIAS</button>
-                    <button class="lb-tab" data-tab="wins">🏆 VICTORIAS</button>
-                    <button class="lb-tab" data-tab="jackpots">👑 JACKPOTS</button>
-                </div>
-
-                <div class="lb-podium">
-                    <div class="podium-item second">
-                        <div class="podium-avatar">🥈</div>
-                        <div class="podium-name">DarkLion</div>
-                        <div class="podium-score">89,450,000</div>
-                    </div>
-                    <div class="podium-item first">
-                        <div class="podium-avatar">🥇</div>
-                        <div class="podium-name">GoldenKing</div>
-                        <div class="podium-score">245,780,000</div>
-                    </div>
-                    <div class="podium-item third">
-                        <div class="podium-avatar">🥉</div>
-                        <div class="podium-name">LuckyAce</div>
-                        <div class="podium-score">67,230,000</div>
-                    </div>
-                </div>
-
-                <div class="lb-list" id="leaderboardList">
-                    <!-- Generated by JS -->
-                </div>
-
-                <div class="lb-your-rank">
-                    <span class="yr-label">TU POSICIÓN:</span>
-                    <span class="yr-rank" id="yourRank">#42</span>
-                    <span class="yr-score" id="yourScore">152,450,000</span>
-                </div>
+        <!-- Jackpot Popup -->
+        <div class="jackpot-popup" id="jackpotPopup" style="display:none;">
+            <div class="jackpot-content">
+                <div class="jackpot-title">🦁 ¡¡¡JACKPOT!!! 🦁</div>
+                <div class="jackpot-win-amount" id="jackpotWinAmount">0</div>
+                <div class="jackpot-subtitle">¡EL LEÓN DORADO TE BENDICE!</div>
             </div>
         </div>
 
+        <!-- Free Spins Intro -->
+        <div class="freespins-popup" id="freeSpinsPopup" style="display:none;">
+            <div class="freespins-content">
+                <div class="freespins-title">🌟 GIROS GRATIS 🌟</div>
+                <div class="freespins-amount" id="freeSpinsAwarded">10</div>
+                <div class="freespins-subtitle">¡GIROS ACTIVADOS!</div>
+                <button class="freespins-start-btn" id="freeSpinsStartBtn">¡COMENZAR!</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Scripts -->
     <script src="assets/js/symbols.js"></script>
     <script src="assets/js/animations.js"></script>
     <script src="assets/js/sound.js"></script>
-    <script src="assets/js/router.js"></script>
     <script src="assets/js/game.js"></script>
-    <script src="assets/js/roulette.js"></script>
-    <script src="assets/js/blackjack.js"></script>
-    <script src="assets/js/store.js"></script>
-    <script src="assets/js/leaderboard.js"></script>
-    <script src="assets/js/app.js"></script>
 </body>
 </html>
