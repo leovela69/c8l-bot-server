@@ -16,7 +16,7 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
 .community{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);display:flex;gap:5px;align-items:center;z-index:5}
 .pot-display{position:absolute;top:25%;left:50%;transform:translateX(-50%);background:rgba(10,8,4,0.8);border:1px solid rgba(184,134,11,0.5);border-radius:20px;padding:4px 14px;font-size:0.85em;color:#d4a017;font-weight:700;white-space:nowrap;z-index:5}
 .dealer-area{position:absolute;top:6%;left:50%;transform:translateX(-50%);z-index:10;text-align:center}
-.dealer-img{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #d4a017;box-shadow:0 0 12px rgba(212,160,23,0.4);transition:transform 0.4s}
+.dealer-img{width:60px;height:60px;border-radius:50%;object-fit:cover;object-position:center;border:2px solid #42a5f5;box-shadow:0 0 12px rgba(66,165,245,0.6);transition:transform 0.4s;background:#0d47a1}
 .dealer-img.dealing{animation:dealAnim 0.7s ease-in-out}
 .dealer-label{font-size:0.6em;color:#d4a017;margin-top:2px;text-shadow:0 0 4px rgba(212,160,23,0.3)}
 @keyframes dealAnim{0%{transform:scale(1) rotate(0)}25%{transform:scale(1.15) rotate(-8deg)}50%{transform:scale(1.1) rotate(8deg)}75%{transform:scale(1.05) rotate(-3deg)}100%{transform:scale(1) rotate(0)}}
@@ -139,7 +139,7 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
       <div class="table-felt" id="felt">
         <img class="table-logo" src="public/assets/c8l_logo_gold_2d.jpg" alt="C8L" onerror="this.style.display='none'">
         <div class="dealer-area" id="dealerArea">
-          <img class="dealer-img" id="dealerImg" src="public/ai-bot.png" alt="C8L Bot" onerror="this.src='https://api.dicebear.com/9.x/bottts/svg?seed=C8LBot&primaryColor=d4a017'">
+          <img class="dealer-img" id="dealerImg" src="public/avatars/c8l-bot.png" alt="C8L Bot">
           <div class="dealer-label">C8L BOT</div>
         </div>
         <div class="pot-display" id="potDisp">Bote: 0</div>
