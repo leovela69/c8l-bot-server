@@ -52,9 +52,9 @@ body{
   box-shadow:0 1px 2px rgba(0,0,0,0.15),0 4px 8px rgba(0,0,0,0.2),inset 0 0 0 2px #fff,inset 0 0 0 3px rgba(0,0,0,0.05);
   display:flex;flex-direction:column;padding:3px 5px;font-family:'Times New Roman',serif;
 }
-.card-front .rank-top{font-size:0.7em;font-weight:700;line-height:1}
-.card-front .suit-center{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.5em}
-.card-front .rank-bot{font-size:0.7em;font-weight:700;line-height:1;align-self:flex-end;transform:rotate(180deg)}
+.card-front .rank-top{font-size:0.55em;font-weight:700;line-height:1.1}
+.card-front .suit-center{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.6em;font-weight:900}
+.card-front .rank-bot{font-size:0.55em;font-weight:700;line-height:1.1;align-self:flex-end;transform:rotate(180deg)}
 .card-front.red{color:#b71c1c}
 .card-front.black{color:#1a1a1a}
 .card-back-face{
@@ -174,9 +174,9 @@ function cardHTML(c,faceDown){
   var red=(c.s==='\u2665'||c.s==='\u2666');
   var cls=red?'red':'black';
   var html='<div class="card"><div class="card-inner"><div class="card-face card-front '+cls+'">';
-  html+='<span class="rank-top">'+c.r+c.s+'</span>';
-  html+='<span class="suit-center">'+c.s+'</span>';
-  html+='<span class="rank-bot">'+c.r+c.s+'</span>';
+  html+='<span class="rank-top">'+c.r+'<br>'+c.s+'</span>';
+  html+='<span class="suit-center">'+c.r+'</span>';
+  html+='<span class="rank-bot">'+c.r+'<br>'+c.s+'</span>';
   html+='</div><div class="card-face card-back-face"><span class="back-emblem">&#9824;</span></div></div></div>';
   return html;
 }

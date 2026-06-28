@@ -40,15 +40,15 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
 .seat-emotion{position:absolute;top:-15px;font-size:1.2em;opacity:0;transition:opacity 0.3s;pointer-events:none}
 .seat-emotion.show{opacity:1;animation:emotionFloat 1.5s ease-out forwards}
 @keyframes emotionFloat{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-20px);opacity:0}}
-.card{width:44px;height:62px;border-radius:4px;position:relative;display:inline-flex;flex-shrink:0;transition:transform 0.3s,box-shadow 0.3s;perspective:600px}
+.card{width:52px;height:72px;border-radius:5px;position:relative;display:inline-flex;flex-shrink:0;transition:transform 0.3s,box-shadow 0.3s;perspective:600px}
 .card:hover{transform:translateY(-2px) scale(1.03)}
 .card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s}
 .card.face-down .card-inner{transform:rotateY(180deg)}
-.card-face{position:absolute;top:0;left:0;width:100%;height:100%;backface-visibility:hidden;border-radius:4px}
-.card-front{background:linear-gradient(160deg,#fffef9 0%,#f5f0e6 50%,#ebe4d4 100%);border:1px solid #bbb;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;flex-direction:column;padding:3px 4px;font-family:'Times New Roman',serif}
-.card-front .rank-top{font-size:0.5em;font-weight:700;line-height:1.1;text-align:left}
-.card-front .suit-center{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.3em;font-weight:700}
-.card-front .rank-bot{font-size:0.5em;font-weight:700;line-height:1.1;align-self:flex-end;text-align:right;transform:rotate(180deg)}
+.card-face{position:absolute;top:0;left:0;width:100%;height:100%;backface-visibility:hidden;border-radius:5px}
+.card-front{background:linear-gradient(160deg,#fffef9 0%,#f5f0e6 50%,#ebe4d4 100%);border:1px solid #bbb;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;flex-direction:column;padding:4px 5px;font-family:'Times New Roman',serif}
+.card-front .rank-top{font-size:0.55em;font-weight:700;line-height:1.1;text-align:left}
+.card-front .suit-center{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.6em;font-weight:900}
+.card-front .rank-bot{font-size:0.55em;font-weight:700;line-height:1.1;align-self:flex-end;text-align:right;transform:rotate(180deg)}
 .card-front.red{color:#b71c1c}
 .card-front.black{color:#1a1a1a}
 .card-back-face{transform:rotateY(180deg);background:repeating-conic-gradient(#1a2744 0% 25%,#1e3050 25% 50%) 50%/6px 6px,linear-gradient(135deg,#162540 0%,#0d1a30 50%,#162540 100%);border:2px solid #b8860b;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center}
@@ -92,8 +92,8 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
 .history-item .hi-winner{color:#4caf50}
 .history-close{position:absolute;top:10px;right:10px;cursor:pointer;color:#d4a017;font-size:1.2em}
 @media(max-width:600px){
-  .card{width:36px;height:50px}
-  .card-front .suit-center{font-size:1em}
+  .card{width:42px;height:58px}
+  .card-front .suit-center{font-size:1.2em}
   .btn{padding:6px 10px;font-size:0.75em}
   .table-area{height:min(400px,55vh)}
   .seat-avatar{width:38px;height:38px;font-size:1.2em}
