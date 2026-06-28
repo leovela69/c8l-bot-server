@@ -120,6 +120,38 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 }
 .chat-input button:hover{background:#f5d061}
 
+/* BONUS OVERLAY */
+#bonus-overlay{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  z-index:9998;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);
+  flex-direction:column;gap:10px
+}
+#bonus-overlay.show{display:flex}
+.bonus-card{
+  text-align:center;animation:bonusIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  background:linear-gradient(135deg,#1a0f00,#2a1800,#1a0f00);
+  border:3px solid #d4a017;border-radius:20px;padding:30px 50px;
+  box-shadow:0 0 60px rgba(212,160,23,0.5),0 0 120px rgba(212,160,23,0.2),inset 0 0 30px rgba(212,160,23,0.1)
+}
+.bonus-title{font-family:Georgia,serif;font-size:42px;font-weight:bold;color:#f5d061;text-shadow:0 0 20px rgba(245,208,97,0.6);letter-spacing:4px}
+.bonus-mult{font-size:28px;color:#ff6600;font-weight:bold;margin:10px 0;text-shadow:0 0 15px rgba(255,102,0,0.5)}
+.bonus-amount{font-family:Georgia,serif;font-size:36px;color:#4caf50;font-weight:bold;text-shadow:0 0 15px rgba(76,175,80,0.5)}
+.bonus-sub{font-size:14px;color:#8b6914;margin-top:8px;letter-spacing:2px}
+@keyframes bonusIn{from{transform:scale(0.3) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes screenShake{
+  0%,100%{transform:translate(0)}
+  10%{transform:translate(-4px,2px)}
+  20%{transform:translate(4px,-2px)}
+  30%{transform:translate(-3px,3px)}
+  40%{transform:translate(3px,-3px)}
+  50%{transform:translate(-2px,1px)}
+  60%{transform:translate(2px,-1px)}
+  70%{transform:translate(-1px,2px)}
+  80%{transform:translate(1px,-2px)}
+  90%{transform:translate(-1px,1px)}
+}
+.shaking{animation:screenShake 0.5s ease-in-out}
+
 /* Loading overlay */
 #loading{
   position:fixed;inset:0;background:#050505;display:flex;flex-direction:column;
@@ -198,6 +230,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
   </div>
 </div>
 
+<div id="bonus-overlay">
+  <div class="bonus-card">
+    <div class="bonus-title" id="bonus-title">🎰 BONUS 🎰</div>
+    <div class="bonus-mult" id="bonus-mult">x5</div>
+    <div class="bonus-amount" id="bonus-amount">+125.000</div>
+    <div class="bonus-sub">¡FELICIDADES!</div>
+  </div>
+</div>
+
 <script src="https://pixijs.download/v7.3.2/pixi.min.js"></script>
 <script>
 (function(){
@@ -256,7 +297,7 @@ const chatSend=document.getElementById('chat-send');
 const loadbar=document.getElementById('loadbar');
 const loadingEl=document.getElementById('loading');
 
-// ===== AUDIO (Web Audio API - synthetic) =====
+// ===== AUDIO (Web Audio API - synthetic + MP3 music) =====
 let audioCtx=null;
 function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
 function tone(f,dur,type,vol){
@@ -272,6 +313,99 @@ function sfxStop(i){tone(350+i*100,0.12,'triangle',0.1);}
 function sfxWin(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.2,'sine',0.12),i*80));}
 function sfxBig(){[523,659,784,1047,1318].forEach((f,i)=>setTimeout(()=>tone(f,0.3,'sine',0.15),i*70));}
 document.addEventListener('pointerdown',()=>initAudio(),{once:true});
+
+// ===== MUSIC SYSTEM (bg1/bg2 normal, win1/win2 on prize) =====
+let bgMusic=null, winMusic=null, musicStarted=false;
+const BG_TRACKS=['assets/audio/bg1.mp3','assets/audio/bg2.mp3'];
+const WIN_TRACKS=['assets/audio/win1.mp3','assets/audio/win2.mp3'];
+
+function startBgMusic(){
+  if(!soundOn||musicStarted) return;
+  musicStarted=true;
+  const src=BG_TRACKS[Math.floor(Math.random()*BG_TRACKS.length)];
+  bgMusic=new Audio(src);
+  bgMusic.loop=true;
+  bgMusic.volume=0.25;
+  bgMusic.play().catch(()=>{});
+  // When bg track ends, switch to the other one
+  bgMusic.addEventListener('ended',()=>{
+    const next=BG_TRACKS[Math.floor(Math.random()*BG_TRACKS.length)];
+    bgMusic.src=next;
+    bgMusic.play().catch(()=>{});
+  });
+}
+
+function playWinMusic(){
+  if(!soundOn) return;
+  // Fade out bg music temporarily
+  if(bgMusic){bgMusic.volume=0.08;}
+  const src=WIN_TRACKS[Math.floor(Math.random()*WIN_TRACKS.length)];
+  winMusic=new Audio(src);
+  winMusic.volume=0.5;
+  winMusic.play().catch(()=>{});
+  winMusic.addEventListener('ended',()=>{
+    // Restore bg music volume
+    if(bgMusic){bgMusic.volume=0.25;}
+    winMusic=null;
+  });
+}
+
+function stopWinMusic(){
+  if(winMusic){winMusic.pause();winMusic=null;}
+  if(bgMusic){bgMusic.volume=0.25;}
+}
+
+// Start bg music on first interaction
+document.addEventListener('pointerdown',()=>{startBgMusic();},{once:true});
+document.addEventListener('keydown',()=>{startBgMusic();},{once:true});
+
+// ===== VIBRATION + SCREEN SHAKE =====
+function vibrateDevice(pattern){
+  if(navigator.vibrate) navigator.vibrate(pattern);
+}
+function shakeScreen(){
+  document.getElementById('app').classList.add('shaking');
+  setTimeout(()=>document.getElementById('app').classList.remove('shaking'),500);
+}
+
+// ===== BONUS OVERLAY =====
+const bonusOverlay=document.getElementById('bonus-overlay');
+const bonusTitle=document.getElementById('bonus-title');
+const bonusMult=document.getElementById('bonus-mult');
+const bonusAmount=document.getElementById('bonus-amount');
+
+function showBonus(amount, mult, type){
+  // Set content based on type
+  if(type==='scatter'){
+    bonusTitle.textContent='🌟 GIROS GRATIS 🌟';
+    bonusMult.textContent='x'+mult+' GIROS';
+  } else if(type==='rugido'){
+    bonusTitle.textContent='🦁 MODO RUGIDO 🦁';
+    bonusMult.textContent='x'+mult;
+  } else if(type==='jackpot'){
+    bonusTitle.textContent='👑 JACKPOT 👑';
+    bonusMult.textContent='¡¡¡MÁXIMO!!!';
+  } else {
+    bonusTitle.textContent='🎰 BONUS 🎰';
+    bonusMult.textContent=mult>1?'x'+mult:'¡PREMIO!';
+  }
+  bonusAmount.textContent='+'+fmt(amount);
+  bonusOverlay.classList.add('show');
+
+  // Vibrate phone
+  vibrateDevice([100,50,100,50,200]);
+  // Shake screen
+  shakeScreen();
+  // Play win music
+  playWinMusic();
+
+  // Auto-hide after 3 seconds
+  setTimeout(()=>{
+    bonusOverlay.classList.remove('show');
+  },3000);
+}
+// Click to dismiss bonus
+bonusOverlay.addEventListener('click',()=>bonusOverlay.classList.remove('show'));
 
 // ===== CHAT =====
 function addChat(text,cls){
@@ -588,6 +722,7 @@ function initSlot(assets){
         multiplier=2;
         botSay('¡GIROS GRATIS! 🌟');
         addChat('🌟 ¡GIROS GRATIS x'+fsAward+' activados!','freespin');
+        showBonus(scatterPay[Math.min(scatterCount,5)]*totalBet(), fsAward, 'scatter');
       }
 
       // Modo Rugido (rare multiplier)
@@ -596,12 +731,14 @@ function initSlot(assets){
         totalWin*=rm;
         multiplier=rm;
         mVal.text='X'+multiplier;
+        showBonus(totalWin, rm, 'rugido');
       }
 
       // Progressive jackpot (very rare)
       if(Math.random()<0.0001&&freeSpins<=0){
         totalWin+=jackpot;
         addChat('🦁 ¡¡¡JACKPOT!!! '+fmt(jackpot),'win');
+        showBonus(jackpot, 0, 'jackpot');
         jackpot=1000000;
         sfxBig();
       }
@@ -615,10 +752,21 @@ function initSlot(assets){
           botSay('¡INCREÍBLE! 🔥🔥🔥');
           sfxBig();
           showWinEffect(totalWin,true);
+          showBonus(totalWin, Math.round(totalWin/totalBet()), 'bigwin');
+          vibrateDevice([200,100,200,100,300]);
+          shakeScreen();
+        } else if(totalWin>=totalBet()*3){
+          botSay('¡GENIAL! +'+fmt(totalWin)+'! 🎉');
+          sfxWin();
+          showWinEffect(totalWin,false);
+          playWinMusic();
+          vibrateDevice([100,50,100]);
+          shakeScreen();
         } else {
           botSay('¡GENIAL! +'+fmt(totalWin)+'! 🎉');
           sfxWin();
           showWinEffect(totalWin,false);
+          vibrateDevice([50]);
         }
       } else {
         addChat('❌ Sin premio','loss');
