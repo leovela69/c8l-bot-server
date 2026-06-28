@@ -92,6 +92,36 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 .btn-sound:hover{background:#2a2000;border-color:#d4a017}
 .btn-sound.muted{color:#555;border-color:#333}
 
+/* SOUND PANEL */
+#sound-panel{
+  position:fixed;bottom:80px;left:15px;z-index:9000;
+  background:rgba(10,8,5,0.95);border:1px solid rgba(212,160,23,0.4);
+  border-radius:12px;padding:16px 18px;min-width:200px;
+  display:none;flex-direction:column;gap:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6);backdrop-filter:blur(8px)
+}
+#sound-panel.show{display:flex}
+#sound-panel h3{font-size:12px;color:#d4a017;letter-spacing:2px;text-align:center;margin-bottom:4px}
+.sound-row{display:flex;align-items:center;gap:10px}
+.sound-row label{font-size:11px;color:#a0a0a0;min-width:55px}
+.sound-row input[type=range]{
+  flex:1;height:4px;-webkit-appearance:none;appearance:none;
+  background:linear-gradient(90deg,#d4a017,#8b6914);border-radius:2px;outline:none;cursor:pointer
+}
+.sound-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:#f5d061;border:2px solid #d4a017;cursor:pointer
+}
+.sound-row input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;
+  background:#f5d061;border:2px solid #d4a017;cursor:pointer
+}
+.sound-row .mute-btn{
+  width:28px;height:28px;border-radius:6px;border:1px solid #555;background:#1a1200;
+  color:#f5d061;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center
+}
+.sound-row .mute-btn.muted{color:#555;background:#0a0800}
+
 .footer-bar{
   display:flex;justify-content:space-around;width:100%;padding:8px 0;
   border-top:1px solid rgba(212,160,23,0.15);background:rgba(0,0,0,0.3)
@@ -262,6 +292,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
   </div>
 </div>
 
+<div id="sound-panel">
+  <h3>🔊 SONIDO</h3>
+  <div class="sound-row">
+    <label>Música</label>
+    <input type="range" id="vol-music" min="0" max="100" value="25">
+    <button class="mute-btn" id="mute-music">🎵</button>
+  </div>
+  <div class="sound-row">
+    <label>Efectos</label>
+    <input type="range" id="vol-effects" min="0" max="100" value="50">
+    <button class="mute-btn" id="mute-effects">🔔</button>
+  </div>
+</div>
+
 <div id="bonus-overlay">
   <div class="bonus-card">
     <div class="bonus-sparks"></div>
@@ -303,6 +347,8 @@ const SYMBOLS=[
 let credits=152450000, chips=8250, betIdx=4;
 let lastWin=0, jackpot=48532120, spinning=false;
 let multiplier=1, freeSpins=0, soundOn=true;
+let musicMuted=false, effectsMuted=false;
+let musicVolume=0.25, effectsVolume=0.50;
 
 function bet(){ return BET_LEVELS[betIdx]; }
 function totalBet(){ return bet()*LINES; }
@@ -340,11 +386,12 @@ function initAudio(){
   if(audioCtx.state==='suspended') audioCtx.resume();
 }
 function tone(f,dur,type,vol){
-  if(!audioCtx||!soundOn)return;
+  if(!audioCtx||!soundOn||effectsMuted)return;
   try{
     const o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type=type||'sine';o.frequency.value=f;
-    g.gain.setValueAtTime(vol||0.1,audioCtx.currentTime);
+    const v=(vol||0.1)*effectsVolume*2;
+    g.gain.setValueAtTime(v,audioCtx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
     o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);
   }catch(e){}
@@ -368,9 +415,9 @@ function startBgMusic(){
 
 function playNextBg(){
   if(bgMusic){bgMusic.pause();bgMusic=null;}
-  if(!soundOn) return;
+  if(!soundOn||musicMuted) return;
   bgMusic=new Audio(BG_TRACKS[currentBgTrack]);
-  bgMusic.volume=0.25;
+  bgMusic.volume=musicVolume;
   bgMusic.loop=false;
   bgMusic.play().catch(()=>{});
   bgMusic.onended=()=>{
@@ -380,17 +427,17 @@ function playNextBg(){
 }
 
 function playWinMusic(){
-  if(!soundOn) return;
-  // Pause bg music
-  if(bgMusic){bgMusic.volume=0.05;}
+  if(!soundOn||musicMuted) return;
+  // Bajar volumen bg
+  if(bgMusic){bgMusic.volume=musicVolume*0.2;}
   // Stop previous win music if still playing
   if(winMusic){try{winMusic.pause();}catch(e){}}
   winMusic=new Audio(WIN_TRACKS[currentWinTrack]);
   currentWinTrack=(currentWinTrack+1)%WIN_TRACKS.length;
-  winMusic.volume=0.6;
+  winMusic.volume=musicVolume*2.4;
   winMusic.play().catch(()=>{});
   winMusic.onended=()=>{
-    if(bgMusic){bgMusic.volume=0.25;}
+    if(bgMusic){bgMusic.volume=musicVolume;}
     winMusic=null;
   };
 }
@@ -523,24 +570,64 @@ function updateUI(){
 btnMinus.addEventListener('click',()=>{if(betIdx>0&&!spinning){betIdx--;updateUI();}});
 btnPlus.addEventListener('click',()=>{if(betIdx<BET_LEVELS.length-1&&!spinning){betIdx++;updateUI();}});
 
-// ===== SOUND TOGGLE =====
+// ===== SOUND PANEL =====
+const soundPanel=document.getElementById('sound-panel');
+const volMusic=document.getElementById('vol-music');
+const volEffects=document.getElementById('vol-effects');
+const muteMusic=document.getElementById('mute-music');
+const muteEffects=document.getElementById('mute-effects');
+
+// Toggle panel open/close
 btnSound.addEventListener('click',()=>{
-  soundOn=!soundOn;
-  if(soundOn){
-    btnSound.textContent='🔊';
-    btnSound.classList.remove('muted');
-    // Reanudar música de fondo
-    if(bgMusic){
-      bgMusic.volume=0.25;
-      bgMusic.play().catch(()=>{});
-    } else if(musicStarted){
-      playNextBg();
-    }
+  soundPanel.classList.toggle('show');
+});
+
+// Close panel when clicking outside
+document.addEventListener('click',(e)=>{
+  if(!soundPanel.contains(e.target) && e.target!==btnSound && soundPanel.classList.contains('show')){
+    soundPanel.classList.remove('show');
+  }
+});
+
+// Music volume slider
+volMusic.addEventListener('input',()=>{
+  musicVolume=volMusic.value/100;
+  if(bgMusic && !musicMuted) bgMusic.volume=musicVolume;
+  if(musicVolume===0){musicMuted=true;muteMusic.classList.add('muted');muteMusic.textContent='🚫';}
+  else if(musicMuted){musicMuted=false;muteMusic.classList.remove('muted');muteMusic.textContent='🎵';}
+});
+
+// Effects volume slider
+volEffects.addEventListener('input',()=>{
+  effectsVolume=volEffects.value/100;
+  if(effectsVolume===0){effectsMuted=true;muteEffects.classList.add('muted');muteEffects.textContent='🚫';}
+  else if(effectsMuted){effectsMuted=false;muteEffects.classList.remove('muted');muteEffects.textContent='🔔';}
+});
+
+// Mute music button
+muteMusic.addEventListener('click',()=>{
+  musicMuted=!musicMuted;
+  if(musicMuted){
+    muteMusic.classList.add('muted');
+    muteMusic.textContent='🚫';
+    if(bgMusic) bgMusic.volume=0;
+    if(winMusic) winMusic.volume=0;
   } else {
-    btnSound.textContent='🔇';
-    btnSound.classList.add('muted');
-    if(bgMusic){bgMusic.pause();}
-    if(winMusic){try{winMusic.pause();}catch(e){}}
+    muteMusic.classList.remove('muted');
+    muteMusic.textContent='🎵';
+    if(bgMusic) bgMusic.volume=musicVolume;
+  }
+});
+
+// Mute effects button
+muteEffects.addEventListener('click',()=>{
+  effectsMuted=!effectsMuted;
+  if(effectsMuted){
+    muteEffects.classList.add('muted');
+    muteEffects.textContent='🚫';
+  } else {
+    muteEffects.classList.remove('muted');
+    muteEffects.textContent='🔔';
   }
 });
 
@@ -607,10 +694,11 @@ function initSlot(assets){
     }
   });
 
-  // Background
-  const bg=new PIXI.Graphics();
-  bg.beginFill(0x050505);bg.drawRect(0,0,W,H);bg.endFill();
-  app.stage.addChild(bg);
+  // Background — usar la imagen bg_main.png
+  const bgSprite=new PIXI.Sprite(assets.bg);
+  bgSprite.width=W;
+  bgSprite.height=H;
+  app.stage.addChild(bgSprite);
 
   // Frame
   const frame=new PIXI.Graphics();
