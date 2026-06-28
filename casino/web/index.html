@@ -10,9 +10,19 @@
         *{margin:0;padding:0;box-sizing:border-box}
         html,body{width:100%;height:100%;overflow:hidden;background:#050505;touch-action:manipulation}
         canvas{width:100%!important;height:100%!important;display:block}
+        #loading{position:fixed;inset:0;background:#050505;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;color:#d4a017;font-family:Georgia,serif}
+        #loading h1{font-size:24px;margin-bottom:10px}
+        #loading p{font-size:12px;color:#8b6914}
+        .bar{width:200px;height:4px;background:#1a1200;border-radius:2px;margin-top:15px;overflow:hidden}
+        .bar-fill{height:100%;background:#d4a017;width:0%;transition:width 0.3s}
     </style>
 </head>
 <body>
+<div id="loading">
+    <h1>🦁 C8L CASINO</h1>
+    <p>Cargando El León Dorado...</p>
+    <div class="bar"><div class="bar-fill" id="loadbar"></div></div>
+</div>
 <script src="https://pixijs.download/v7.3.2/pixi.min.js"></script>
 <script src="assets/js/slot.js"></script>
 </body>
