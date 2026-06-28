@@ -7,20 +7,21 @@
 <title>C8L Poker - 9 Jugadores</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#050403;font-family:Georgia,'Times New Roman',serif;color:#f0e6d0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-x:hidden;padding:10px 0;position:relative}
-body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:radial-gradient(ellipse at 50% 0%,#1a1208 0%,#0c0a06 30%,#050403 60%),repeating-linear-gradient(0deg,transparent,transparent 50px,rgba(139,105,20,0.02) 50px,rgba(139,105,20,0.02) 51px),repeating-linear-gradient(90deg,transparent,transparent 50px,rgba(139,105,20,0.02) 50px,rgba(139,105,20,0.02) 51px)}
-body::after{content:'\2660 \00a0\00a0 C\0038L AGENCY CASINO \00a0\00a0 \2665 \00a0\00a0 C\0038L AGENCY CASINO \00a0\00a0 \2666 \00a0\00a0 C\0038L AGENCY CASINO \00a0\00a0 \2663';position:fixed;bottom:0;left:0;width:100%;padding:8px 0;font-size:0.65em;color:rgba(212,160,23,0.3);text-align:center;letter-spacing:3px;z-index:-1;border-top:1px solid rgba(139,105,20,0.15);background:linear-gradient(0deg,rgba(5,4,3,0.9),transparent)}
-.bg-particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;overflow:hidden}
-.bg-particle{position:absolute;border-radius:50%;opacity:0;animation:particleFloat linear infinite}
-@keyframes particleFloat{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:1}90%{opacity:0.6}100%{transform:translateY(-20px) scale(1);opacity:0}}
+body{background:#0a0a0f;font-family:Georgia,'Times New Roman',serif;color:#f0e6d0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-x:hidden;padding:10px 0;position:relative}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:radial-gradient(ellipse at 50% 40%,rgba(0,150,136,0.06) 0%,transparent 50%),radial-gradient(circle at 10% 50%,rgba(200,30,30,0.08) 0%,transparent 40%),radial-gradient(circle at 90% 50%,rgba(200,30,30,0.08) 0%,transparent 40%),radial-gradient(circle at 50% 10%,rgba(0,188,212,0.05) 0%,transparent 30%),linear-gradient(180deg,#0a0a0f 0%,#0d0808 50%,#0a0a0f 100%)}
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(0,0,0,0.6) 100%)}
+.bg-glow-left{position:fixed;top:20%;left:0;width:8px;height:60%;background:linear-gradient(180deg,transparent,#c62828,#ff5252,#c62828,transparent);border-radius:0 4px 4px 0;z-index:-1;box-shadow:0 0 30px rgba(198,40,40,0.4),0 0 60px rgba(198,40,40,0.2)}
+.bg-glow-right{position:fixed;top:20%;right:0;width:8px;height:60%;background:linear-gradient(180deg,transparent,#c62828,#ff5252,#c62828,transparent);border-radius:4px 0 0 4px;z-index:-1;box-shadow:0 0 30px rgba(198,40,40,0.4),0 0 60px rgba(198,40,40,0.2)}
+.bg-glow-top{position:fixed;top:0;left:50%;transform:translateX(-50%);width:200px;height:6px;background:linear-gradient(90deg,transparent,#00bcd4,#26c6da,#00bcd4,transparent);border-radius:0 0 4px 4px;z-index:-1;box-shadow:0 0 40px rgba(0,188,212,0.5),0 0 80px rgba(0,188,212,0.2)}
 .poker-wrap{position:relative;width:min(1000px,98vw)}
 .table-area{position:relative;width:100%;height:min(580px,65vh);margin:0 auto}
-.table-outer{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70%;height:75%;border-radius:50%/44%;background:repeating-linear-gradient(92deg,rgba(80,50,20,0.15) 0px,transparent 2px,transparent 8px),linear-gradient(180deg,#3d2810 0%,#261808 30%,#1a1004 60%,#261808 100%);padding:16px;box-shadow:0 0 0 3px #0a0700,0 0 0 6px #8b6914,0 0 0 8px #5c4510,0 0 0 12px #0a0700,0 30px 80px rgba(0,0,0,0.8),inset 0 2px 4px rgba(200,160,60,0.2)}
-.table-felt{width:100%;height:100%;border-radius:50%/44%;position:relative;overflow:hidden;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.02) 0px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,rgba(0,0,0,0.02) 0px,transparent 1px,transparent 3px),radial-gradient(ellipse at 50% 40%,#1d7a3c 0%,#166b30 25%,#105a26 50%,#0b4a1e 75%,#083d18 100%);box-shadow:inset 0 0 60px rgba(0,0,0,0.5),inset 0 0 120px rgba(0,0,0,0.3)}
-.table-felt::before{content:'';position:absolute;top:15%;left:12%;right:12%;bottom:15%;border-radius:50%/45%;border:1.5px solid rgba(201,162,39,0.15);pointer-events:none}
-.table-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:120px;height:120px;opacity:0.25;pointer-events:none;border-radius:50%;object-fit:contain}
+.table-outer{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70%;height:75%;border-radius:50%/44%;background:linear-gradient(180deg,#222 0%,#151515 30%,#0a0a0a 60%,#151515 100%);padding:14px;box-shadow:0 0 0 3px #333,0 0 0 6px #1a1a1a,0 0 40px rgba(0,188,212,0.2),0 0 80px rgba(0,188,212,0.1),0 25px 80px rgba(0,0,0,0.9),0 50px 120px rgba(0,0,0,0.6),inset 0 1px 3px rgba(255,255,255,0.08)}
+.table-felt{width:100%;height:100%;border-radius:50%/44%;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#1f7878 0%,#176565 20%,#115555 40%,#0c4545 60%,#083838 80%,#052d2d 100%);box-shadow:inset 0 0 40px rgba(0,0,0,0.4),inset 0 0 100px rgba(0,0,0,0.3),inset 0 -20px 40px rgba(0,0,0,0.2)}
+.table-felt::before{content:'';position:absolute;top:0;left:20%;right:20%;height:40%;border-radius:0 0 50% 50%;background:radial-gradient(ellipse at 50% 0%,rgba(0,220,220,0.08) 0%,transparent 70%);pointer-events:none}
+.table-felt::after{content:'';position:absolute;top:15%;left:12%;right:12%;bottom:15%;border-radius:50%/45%;border:1.5px solid rgba(0,188,212,0.1);pointer-events:none}
+.table-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100px;height:100px;opacity:0.12;pointer-events:none;border-radius:50%;object-fit:contain}
 .community{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);display:flex;gap:5px;align-items:center;z-index:5}
-.pot-display{position:absolute;top:58%;left:50%;transform:translateX(-50%);background:rgba(10,8,4,0.8);border:1px solid rgba(184,134,11,0.5);border-radius:20px;padding:4px 14px;font-size:0.85em;color:#d4a017;font-weight:700;white-space:nowrap;z-index:5}
+.pot-display{position:absolute;top:58%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);border:1px solid rgba(0,188,212,0.4);border-radius:20px;padding:4px 14px;font-size:0.85em;color:#26c6da;font-weight:700;white-space:nowrap;z-index:5;box-shadow:0 0 10px rgba(0,188,212,0.15)}
 .dealer-area{display:none}
 .dealer-img{display:none}
 .dealer-img.dealing{animation:dealAnim 0.7s ease-in-out}
@@ -75,13 +76,13 @@ body::after{content:'\2660 \00a0\00a0 C\0038L AGENCY CASINO \00a0\00a0 \2665 \00
 .chip-anim{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #fff;z-index:15;pointer-events:none;animation:chipMove 0.6s ease-out forwards;background:radial-gradient(circle,#f5c842,#8b6914)}
 @keyframes chipMove{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(0.5) translateY(-10px)}}
 .chip-fly{position:absolute;width:22px;height:22px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle,#ffd700 30%,#b8860b);z-index:25;pointer-events:none;box-shadow:0 2px 8px rgba(255,215,0,0.6),0 0 4px rgba(0,0,0,0.3);transform:translate(-50%,-50%)}
-.bottom-panel{width:min(1000px,98vw);margin-top:10px;background:linear-gradient(180deg,#1a1508,#0d0b06);border:1px solid #5c4510;border-radius:12px;padding:10px 16px;box-shadow:0 -4px 20px rgba(0,0,0,0.5);display:flex;flex-direction:column;gap:8px}
+.bottom-panel{width:min(1000px,98vw);margin-top:10px;background:linear-gradient(180deg,#141414,#0a0a0a);border:1px solid #222;border-radius:12px;padding:10px 16px;box-shadow:0 -4px 20px rgba(0,0,0,0.5),0 0 1px rgba(0,188,212,0.2);display:flex;flex-direction:column;gap:8px}
 .player-hand-area{display:flex;align-items:center;justify-content:center;gap:16px;padding:6px 0}
 .player-cards-display{display:flex;gap:4px;align-items:center}
 .player-info-inline{display:flex;align-items:center;gap:12px}
-.player-info-inline .chip-count{font-size:1.1em;color:#d4a017;font-weight:700}
+.player-info-inline .chip-count{font-size:1.1em;color:#26c6da;font-weight:700}
 .player-info-inline .hand-name{font-size:0.85em;color:#4caf50;font-style:italic}
-.player-info-inline .round-info{font-size:0.7em;color:#8b6914}
+.player-info-inline .round-info{font-size:0.7em;color:#666}
 .msg{text-align:center;font-size:0.85em;color:#d4a017;min-height:20px;font-style:italic}
 .actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;align-items:center}
 .btn{padding:8px 16px;border:none;border-radius:6px;font-size:0.85em;font-weight:700;cursor:pointer;font-family:Georgia,serif;letter-spacing:0.5px;transition:all 0.2s;box-shadow:0 3px 8px rgba(0,0,0,0.4)}
@@ -133,7 +134,9 @@ body::after{content:'\2660 \00a0\00a0 C\0038L AGENCY CASINO \00a0\00a0 \2665 \00
 </style>
 </head>
 <body>
-<div class="bg-particles" id="bgParticles"></div>
+<div class="bg-glow-left"></div>
+<div class="bg-glow-right"></div>
+<div class="bg-glow-top"></div>
 <div class="bot-bubble" id="botBubble" onclick="toggleBotChat()" title="C8L Bot - Click para hablar">
   <img src="public/avatars/c8l-bot.svg" alt="C8L Bot">
   <span class="bot-badge">ON</span>
@@ -802,24 +805,6 @@ function renderHistory(){
   }).join('');
 }
 function toggleHistory(){document.getElementById('histPanel').classList.toggle('open')}
-
-// === BACKGROUND PARTICLES ===
-(function(){
-  var container=document.getElementById('bgParticles');
-  var colors=['#ffd700','#d4a017','#42a5f5','#ffffff','#8b6914'];
-  for(var i=0;i<20;i++){
-    var p=document.createElement('div');
-    p.className='bg-particle';
-    p.style.width=(2+Math.random()*4)+'px';
-    p.style.height=p.style.width;
-    p.style.left=(Math.random()*100)+'%';
-    p.style.background=colors[Math.floor(Math.random()*colors.length)];
-    p.style.boxShadow='0 0 6px '+p.style.background;
-    p.style.animationDuration=(8+Math.random()*12)+'s';
-    p.style.animationDelay=(Math.random()*10)+'s';
-    container.appendChild(p);
-  }
-})();
 
 // === INIT ===
 addChatMsg('','Bienvenido a la mesa de poker C8L. Pulsa REPARTIR para jugar.',true);
