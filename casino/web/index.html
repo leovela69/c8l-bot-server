@@ -1,29 +1,769 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0a0a0a">
-    <title>C8L Casino — El León Dorado</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        html,body{width:100%;height:100%;overflow:hidden;background:#050505;touch-action:manipulation}
-        canvas{width:100%!important;height:100%!important;display:block}
-        #loading{position:fixed;inset:0;background:#050505;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;color:#d4a017;font-family:Georgia,serif}
-        #loading h1{font-size:24px;margin-bottom:10px}
-        #loading p{font-size:12px;color:#8b6914}
-        .bar{width:200px;height:4px;background:#1a1200;border-radius:2px;margin-top:15px;overflow:hidden}
-        .bar-fill{height:100%;background:#d4a017;width:0%;transition:width 0.3s}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#050505">
+<title>C8L Casino — El León Dorado</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:'Segoe UI',Arial,sans-serif;color:#f5f0e8}
+#app{display:flex;width:100%;height:100%;min-width:1200px}
+
+/* LEFT PANEL - Bot Leito 15% */
+#left-panel{
+  width:15%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#020812 0%,#051020 50%,#020812 100%);
+  border-right:1px solid #0a2a4a;position:relative;overflow:hidden
+}
+#left-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(0,150,255,0.05) 0%,transparent 70%);pointer-events:none}
+.bot-container{display:flex;flex-direction:column;align-items:center;gap:18px}
+.orb-wrapper{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center}
+.orb{
+  width:90px;height:90px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#4de8ff,#0088cc 40%,#003366 80%,#001133);
+  box-shadow:0 0 30px rgba(0,150,255,0.6),0 0 60px rgba(0,150,255,0.3),inset 0 -10px 20px rgba(0,0,0,0.4);
+  animation:orbPulse 3s ease-in-out infinite
+}
+@keyframes orbPulse{
+  0%,100%{transform:scale(1);box-shadow:0 0 30px rgba(0,150,255,0.6),0 0 60px rgba(0,150,255,0.3)}
+  50%{transform:scale(1.05);box-shadow:0 0 40px rgba(0,200,255,0.8),0 0 80px rgba(0,150,255,0.4)}
+}
+.orb-eyes{position:absolute;top:33%;left:50%;transform:translateX(-50%);display:flex;gap:14px}
+.eye{width:16px;height:16px;background:white;border-radius:50%;position:relative;box-shadow:0 0 5px rgba(255,255,255,0.5)}
+.pupil{width:7px;height:7px;background:#001133;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:lookAround 4s ease-in-out infinite}
+@keyframes lookAround{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-20%,-50%)}50%{transform:translate(-50%,-80%)}75%{transform:translate(-80%,-50%)}}
+.orb-mouth{position:absolute;top:58%;left:50%;transform:translateX(-50%);width:18px;height:8px;border-radius:0 0 10px 10px;background:rgba(255,255,255,0.85);animation:mouthMove 3s ease-in-out infinite}
+@keyframes mouthMove{0%,100%{height:8px;width:18px}30%{height:12px;width:22px}60%{height:5px;width:14px}}
+.bot-name{color:#4de8ff;font-size:14px;font-weight:bold;text-shadow:0 0 10px rgba(0,150,255,0.5);letter-spacing:2px}
+.bot-bubble{
+  background:rgba(0,50,100,0.4);border:1px solid rgba(0,150,255,0.3);border-radius:10px;
+  padding:10px 14px;max-width:90%;text-align:center;font-size:12px;color:#a0d8f0;
+  min-height:44px;display:flex;align-items:center;justify-content:center;transition:all 0.3s
+}
+
+/* CENTER PANEL 55% */
+#center-panel{
+  width:55%;height:100%;display:flex;flex-direction:column;align-items:center;
+  background:#050505;position:relative;overflow:hidden
+}
+#center-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(212,160,23,0.03) 0%,transparent 60%);pointer-events:none}
+.slot-header{text-align:center;padding:8px 0 4px}
+.slot-header h1{font-family:Georgia,serif;font-size:20px;color:#d4a017;letter-spacing:3px}
+.slot-header p{font-size:10px;color:#8b6914;letter-spacing:2px}
+.jackpot-display{text-align:center;margin:4px 0 8px}
+.jackpot-display .label{font-size:9px;color:#8b6914;letter-spacing:2px}
+.jackpot-display .value{font-family:Georgia,serif;font-size:26px;color:#f5d061;font-weight:bold}
+#pixi-container{width:100%;flex:1;position:relative;display:flex;align-items:center;justify-content:center}
+#pixi-container canvas{display:block}
+
+.info-bar{
+  display:flex;justify-content:space-around;width:90%;padding:8px 0;
+  border-top:1px solid rgba(212,160,23,0.2);margin-top:4px
+}
+.info-item{text-align:center}
+.info-item .lbl{font-size:8px;color:#8b6914;letter-spacing:1px}
+.info-item .val{font-size:14px;color:#f5f0e8;font-weight:bold;font-family:monospace}
+
+.controls{display:flex;align-items:center;gap:15px;padding:10px 0}
+.btn-bet{
+  width:40px;height:40px;border-radius:8px;border:2px solid #8b6914;background:#1a1200;
+  color:#f5d061;font-size:22px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center
+}
+.btn-bet:hover{background:#2a2000;border-color:#d4a017}
+.btn-spin{
+  width:100px;height:48px;border-radius:10px;border:2px solid #f5d061;background:linear-gradient(180deg,#d4a017,#8b6914);
+  color:#0a0800;font-family:Georgia,serif;font-size:16px;font-weight:bold;cursor:pointer;letter-spacing:1px
+}
+.btn-spin:hover{background:linear-gradient(180deg,#f5d061,#d4a017)}
+.btn-spin:disabled{opacity:0.5;cursor:not-allowed}
+
+.footer-bar{
+  display:flex;justify-content:space-around;width:100%;padding:8px 0;
+  border-top:1px solid rgba(212,160,23,0.15);background:rgba(0,0,0,0.3)
+}
+.footer-item{text-align:center}
+.footer-item .lbl{font-size:8px;color:#8b6914;letter-spacing:1px}
+.footer-item .val{font-size:13px;color:#f5f0e8;font-weight:bold;font-family:monospace}
+
+/* RIGHT PANEL - Chat 30% */
+#right-panel{
+  width:30%;height:100%;display:flex;flex-direction:column;
+  background:rgba(10,8,5,0.95);border-left:1px solid rgba(212,160,23,0.15)
+}
+.chat-header{padding:12px 15px;border-bottom:1px solid rgba(212,160,23,0.2);text-align:center}
+.chat-header h2{font-size:14px;color:#d4a017;letter-spacing:2px}
+.chat-header p{font-size:10px;color:#8b6914}
+#chat-log{
+  flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:6px;
+  scrollbar-width:thin;scrollbar-color:#333 #111
+}
+#chat-log::-webkit-scrollbar{width:5px}
+#chat-log::-webkit-scrollbar-track{background:#111}
+#chat-log::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+.chat-msg{font-size:11px;padding:4px 8px;border-radius:6px;line-height:1.4;word-wrap:break-word}
+.chat-msg.system{color:#8b6914;background:rgba(212,160,23,0.05)}
+.chat-msg.win{color:#4caf50;background:rgba(76,175,80,0.08)}
+.chat-msg.loss{color:#e57373;background:rgba(229,115,115,0.08)}
+.chat-msg.community{color:#90caf9;background:rgba(144,202,249,0.06)}
+.chat-msg.freespin{color:#ffd700;background:rgba(255,215,0,0.08)}
+.chat-msg.user{color:#ce93d8;background:rgba(206,147,216,0.08)}
+.chat-input{display:flex;padding:10px;gap:8px;border-top:1px solid rgba(212,160,23,0.15)}
+.chat-input input{
+  flex:1;background:#111;border:1px solid #333;border-radius:6px;padding:8px 12px;
+  color:#f5f0e8;font-size:12px;outline:none
+}
+.chat-input input:focus{border-color:#d4a017}
+.chat-input button{
+  background:#d4a017;border:none;border-radius:6px;padding:8px 14px;
+  color:#0a0800;font-weight:bold;font-size:12px;cursor:pointer
+}
+.chat-input button:hover{background:#f5d061}
+
+/* Loading overlay */
+#loading{
+  position:fixed;inset:0;background:#050505;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:9999;color:#d4a017;font-family:Georgia,serif
+}
+#loading h1{font-size:28px;margin-bottom:8px}
+#loading p{font-size:12px;color:#8b6914}
+.bar{width:220px;height:4px;background:#1a1200;border-radius:2px;margin-top:15px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#8b6914,#d4a017,#f5d061);width:0%;transition:width 0.3s}
+</style>
 </head>
 <body>
 <div id="loading">
-    <h1>🦁 C8L CASINO</h1>
-    <p>Cargando El León Dorado...</p>
-    <div class="bar"><div class="bar-fill" id="loadbar"></div></div>
+  <h1>🦁 C8L CASINO</h1>
+  <p>Cargando El León Dorado...</p>
+  <div class="bar"><div class="bar-fill" id="loadbar"></div></div>
 </div>
+
+<div id="app">
+  <!-- LEFT: Bot Leito -->
+  <div id="left-panel">
+    <div class="bot-container">
+      <div class="orb-wrapper">
+        <div class="orb"></div>
+        <div class="orb-eyes">
+          <div class="eye"><div class="pupil"></div></div>
+          <div class="eye"><div class="pupil"></div></div>
+        </div>
+        <div class="orb-mouth"></div>
+      </div>
+      <div class="bot-name">LEITO</div>
+      <div class="bot-bubble" id="bot-msg">Bienvenido al León Dorado 🦁</div>
+    </div>
+  </div>
+
+  <!-- CENTER: Slot Machine -->
+  <div id="center-panel">
+    <div class="slot-header">
+      <h1>C8L LEGENDS</h1>
+      <p>EL LEÓN DORADO</p>
+    </div>
+    <div class="jackpot-display">
+      <div class="label">JACKPOT GLOBAL</div>
+      <div class="value" id="jackpot-val">48.532.120</div>
+    </div>
+    <div id="pixi-container"></div>
+    <div class="info-bar">
+      <div class="info-item"><div class="lbl">LÍNEAS</div><div class="val" id="info-lines">20</div></div>
+      <div class="info-item"><div class="lbl">APUESTA</div><div class="val" id="info-bet">250</div></div>
+      <div class="info-item"><div class="lbl">APUESTA TOTAL</div><div class="val" id="info-total">5.000</div></div>
+      <div class="info-item"><div class="lbl">GANANCIA</div><div class="val" id="info-win">0</div></div>
+    </div>
+    <div class="controls">
+      <button class="btn-bet" id="btn-minus">−</button>
+      <button class="btn-spin" id="btn-spin">GIRAR</button>
+      <button class="btn-bet" id="btn-plus">+</button>
+    </div>
+    <div class="footer-bar">
+      <div class="footer-item"><div class="lbl">CRÉDITOS</div><div class="val" id="footer-credits">152.450.000</div></div>
+      <div class="footer-item"><div class="lbl">CHIPS</div><div class="val" id="footer-chips">8.250</div></div>
+      <div class="footer-item"><div class="lbl">NIVEL</div><div class="val">VIP 10</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Chat Panel -->
+  <div id="right-panel">
+    <div class="chat-header">
+      <h2>💬 CHAT C8L</h2>
+      <p>Comunidad · Eventos · Log</p>
+    </div>
+    <div id="chat-log"></div>
+    <div class="chat-input">
+      <input type="text" id="chat-in" placeholder="Escribe un mensaje...">
+      <button id="chat-send">Enviar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://pixijs.download/v7.3.2/pixi.min.js"></script>
-<script src="assets/js/slot.js"></script>
+<script>
+(function(){
+'use strict';
+
+// ===== CONSTANTS =====
+const REELS=5, ROWS=3, LINES=20;
+const BET_LEVELS=[10,25,50,100,250,500,1000,2500,5000];
+const PAYLINES=[
+  [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
+  [0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,0],
+  [2,1,1,1,2],[1,0,1,2,1],[1,2,1,0,1],[0,0,1,0,0],[2,2,1,2,2],
+  [0,1,0,1,0],[2,1,2,1,2],[1,0,1,0,1],[1,2,1,2,1],[0,1,2,2,1]
+];
+
+const SYMBOLS=[
+  {id:'leon',   img:'sym_leon.png',    w:3, pay:{5:500,4:100,3:25}},
+  {id:'wild',   img:'sym_wild.png',    w:2, pay:{5:1000,4:200,3:50}},
+  {id:'scatter',img:'sym_scatter.png', w:2, pay:{5:100,4:20,3:5}},
+  {id:'A',      img:'sym_A.png',       w:5, pay:{5:50,4:15,3:5}},
+  {id:'K',      img:'sym_K.jpeg',      w:6, pay:{5:40,4:12,3:4}},
+  {id:'Q',      img:'sym_Q.jpeg',      w:7, pay:{5:30,4:10,3:3}},
+  {id:'J',      img:'sym_J.jpeg',      w:8, pay:{5:20,4:8,3:2}},
+  {id:'10',     img:'sym_10.jpeg',     w:9, pay:{5:15,4:5,3:2}}
+];
+
+// ===== STATE =====
+let credits=152450000, chips=8250, betIdx=4;
+let lastWin=0, jackpot=48532120, spinning=false;
+let multiplier=1, freeSpins=0, soundOn=true;
+
+function bet(){ return BET_LEVELS[betIdx]; }
+function totalBet(){ return bet()*LINES; }
+function fmt(n){ return n.toLocaleString('es-ES'); }
+function rSym(){
+  const t=SYMBOLS.reduce((s,d)=>s+d.w,0);
+  let r=Math.random()*t;
+  for(const d of SYMBOLS){r-=d.w; if(r<=0) return d;}
+  return SYMBOLS[SYMBOLS.length-1];
+}
+
+// ===== DOM REFS =====
+const botMsg=document.getElementById('bot-msg');
+const chatLog=document.getElementById('chat-log');
+const jpValEl=document.getElementById('jackpot-val');
+const infoBet=document.getElementById('info-bet');
+const infoTotal=document.getElementById('info-total');
+const infoWin=document.getElementById('info-win');
+const footerCredits=document.getElementById('footer-credits');
+const footerChips=document.getElementById('footer-chips');
+const btnSpin=document.getElementById('btn-spin');
+const btnMinus=document.getElementById('btn-minus');
+const btnPlus=document.getElementById('btn-plus');
+const chatIn=document.getElementById('chat-in');
+const chatSend=document.getElementById('chat-send');
+const loadbar=document.getElementById('loadbar');
+const loadingEl=document.getElementById('loading');
+
+// ===== AUDIO (Web Audio API - synthetic) =====
+let audioCtx=null;
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function tone(f,dur,type,vol){
+  if(!audioCtx||!soundOn)return;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type||'sine';o.frequency.value=f;
+  g.gain.setValueAtTime(vol||0.1,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+  o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);
+}
+function sfxSpin(){tone(180,0.08,'square',0.06);tone(220,0.06,'square',0.04);}
+function sfxStop(i){tone(350+i*100,0.12,'triangle',0.1);}
+function sfxWin(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.2,'sine',0.12),i*80));}
+function sfxBig(){[523,659,784,1047,1318].forEach((f,i)=>setTimeout(()=>tone(f,0.3,'sine',0.15),i*70));}
+document.addEventListener('pointerdown',()=>initAudio(),{once:true});
+
+// ===== CHAT =====
+function addChat(text,cls){
+  const d=document.createElement('div');
+  d.className='chat-msg '+(cls||'system');
+  d.textContent=text;
+  chatLog.appendChild(d);
+  chatLog.scrollTop=chatLog.scrollHeight;
+  if(chatLog.children.length>100)chatLog.removeChild(chatLog.firstChild);
+}
+addChat('🦁 Bienvenido al C8L Casino','system');
+addChat('🎰 El León Dorado te espera...','system');
+
+// Chat input
+chatSend.addEventListener('click',sendUserMsg);
+chatIn.addEventListener('keydown',(e)=>{if(e.key==='Enter')sendUserMsg();});
+function sendUserMsg(){
+  const t=chatIn.value.trim();
+  if(!t)return;
+  addChat('Tú: '+t,'user');
+  chatIn.value='';
+}
+
+// Fake community messages
+const communityMsgs=[
+  '🦁 León_VIP ganó 250,000!','⭐ Jugador88 activó Modo Rugido x5',
+  '🎰 Kukis99 consiguió 3 Scatters','💰 DarkWolf obtuvo 500,000!',
+  '🌟 Estrella22 ganó Giros Gratis!','🎉 ElRey_C8L acumuló 1,000,000',
+  '⚡ Rayo55 activó x8 Multiplicador','🦁 TigreDorado ganó el Mini Jackpot',
+  '🎰 Lucky777 consiguió 4 Wilds','💎 DiamondKing subió a VIP 12'
+];
+setInterval(()=>{
+  addChat(communityMsgs[Math.floor(Math.random()*communityMsgs.length)],'community');
+},15000+Math.random()*15000);
+
+// ===== BOT LEITO =====
+const idleTips=[
+  'El León paga x500 🦁','3 Scatters = Giros Gratis ⭐',
+  'Wild sustituye todo 🃏','Modo Rugido multiplica ganancias ⚡',
+  '20 líneas activas siempre 📊','¡Apuesta más para ganar más! 💰',
+  'El Jackpot crece con cada giro 🎰','VIP 10 = Beneficios exclusivos 👑'
+];
+function botSay(msg){botMsg.textContent=msg;}
+setInterval(()=>{
+  if(!spinning) botSay(idleTips[Math.floor(Math.random()*idleTips.length)]);
+},10000);
+
+// ===== UPDATE UI =====
+function updateUI(){
+  infoBet.textContent=fmt(bet());
+  infoTotal.textContent=fmt(totalBet());
+  infoWin.textContent=fmt(lastWin);
+  footerCredits.textContent=fmt(credits);
+  footerChips.textContent=fmt(chips);
+  jpValEl.textContent=fmt(jackpot);
+}
+
+// ===== BET CONTROLS =====
+btnMinus.addEventListener('click',()=>{if(betIdx>0&&!spinning){betIdx--;updateUI();}});
+btnPlus.addEventListener('click',()=>{if(betIdx<BET_LEVELS.length-1&&!spinning){betIdx++;updateUI();}});
+
+// ===== PIXI SETUP =====
+const container=document.getElementById('pixi-container');
+const CW=Math.min(container.clientWidth||700,800);
+const CH=Math.min(container.clientHeight||400,450);
+const IMG_PATH='assets/img/';
+
+PIXI.Assets.addBundle('slot',{
+  bg:     IMG_PATH+'bg_main.png',
+  leon:   IMG_PATH+'sym_leon.png',
+  wild:   IMG_PATH+'sym_wild.png',
+  scatter:IMG_PATH+'sym_scatter.png',
+  A:      IMG_PATH+'sym_A.png',
+  K:      IMG_PATH+'sym_K.jpeg',
+  Q:      IMG_PATH+'sym_Q.jpeg',
+  J:      IMG_PATH+'sym_J.jpeg',
+  ten:    IMG_PATH+'sym_10.jpeg'
+});
+
+PIXI.Assets.loadBundle('slot',(p)=>{
+  if(loadbar)loadbar.style.width=Math.round(p*100)+'%';
+}).then((assets)=>{
+  loadingEl.style.display='none';
+  initSlot(assets);
+});
+
+function initSlot(assets){
+  const app=new PIXI.Application({
+    width:CW, height:CH, backgroundColor:0x050505,
+    antialias:true, resolution:window.devicePixelRatio||1, autoDensity:true
+  });
+  container.appendChild(app.view);
+  app.view.style.borderRadius='8px';
+
+  const W=app.screen.width, H=app.screen.height;
+
+  // Symbol dimensions
+  const SYM=Math.min(Math.floor((W*0.82)/REELS),Math.floor((H*0.70)/ROWS));
+  const GAP=4;
+  const CELL=SYM+GAP;
+  const GW=REELS*CELL-GAP, GH=ROWS*CELL-GAP;
+  const GX=(W-GW)/2, GY=(H-GH)/2;
+
+  // Textures
+  const texMap={};
+  const texKeys={leon:'leon',wild:'wild',scatter:'scatter',A:'A',K:'K',Q:'Q',J:'J','10':'ten'};
+  SYMBOLS.forEach(sym=>{
+    const key=texKeys[sym.id];
+    if(assets[key]) texMap[sym.id]=assets[key];
+  });
+  // Fallbacks
+  SYMBOLS.forEach(sym=>{
+    if(!texMap[sym.id]){
+      const g=new PIXI.Graphics();
+      g.beginFill(0x1a1200);g.lineStyle(2,0xd4a017);
+      g.drawRoundedRect(0,0,100,100,8);g.endFill();
+      const t=new PIXI.Text(sym.id,{fontSize:30,fill:0xf5d061,fontWeight:'bold'});
+      t.anchor.set(0.5);t.x=50;t.y=50;
+      const c=new PIXI.Container();c.addChild(g);c.addChild(t);
+      texMap[sym.id]=app.renderer.generateTexture(c);
+      c.destroy({children:true});
+    }
+  });
+
+  // Background
+  const bg=new PIXI.Graphics();
+  bg.beginFill(0x050505);bg.drawRect(0,0,W,H);bg.endFill();
+  app.stage.addChild(bg);
+
+  // Frame
+  const frame=new PIXI.Graphics();
+  frame.lineStyle(3,0xd4a017,0.9);
+  frame.beginFill(0x030200,0.92);
+  frame.drawRoundedRect(GX-12,GY-12,GW+24,GH+24,10);
+  frame.endFill();
+  frame.lineStyle(1.5,0xf5d061,0.3);
+  frame.drawRoundedRect(GX-16,GY-16,GW+32,GH+32,13);
+  app.stage.addChild(frame);
+
+  // Reel container with mask
+  const reelContainer=new PIXI.Container();
+  app.stage.addChild(reelContainer);
+  const reelMask=new PIXI.Graphics();
+  reelMask.beginFill(0xffffff);
+  reelMask.drawRect(GX,GY,GW,GH);
+  reelMask.endFill();
+  app.stage.addChild(reelMask);
+  reelContainer.mask=reelMask;
+
+  // Create reels
+  const STRIP=ROWS+2;
+  const reels=[];
+  for(let col=0;col<REELS;col++){
+    const strips=[];
+    for(let i=0;i<STRIP;i++){
+      const sym=rSym();
+      const sp=new PIXI.Sprite(texMap[sym.id]);
+      sp.width=SYM;sp.height=SYM;
+      sp.x=GX+col*CELL;
+      sp.y=GY+(i-1)*CELL;
+      sp.symData=sym;
+      reelContainer.addChild(sp);
+      strips.push(sp);
+    }
+    reels.push({strips,speed:0,spinning:false,stopping:false,target:null,stopped:false});
+  }
+
+  // Center payline indicator
+  const plY=GY+Math.floor(ROWS/2)*CELL+SYM/2;
+  const pl=new PIXI.Graphics();
+  pl.lineStyle(2,0xf5a623,0.35);
+  pl.moveTo(GX-4,plY);pl.lineTo(GX+GW+4,plY);
+  app.stage.addChild(pl);
+
+  // Multiplier box (left side of canvas)
+  const mBox=new PIXI.Graphics();
+  mBox.lineStyle(1.5,0x8b6914);mBox.beginFill(0x0a0800,0.8);
+  mBox.drawRoundedRect(0,0,44,50,5);mBox.endFill();
+  mBox.x=GX-56;mBox.y=GY+GH/2-25;app.stage.addChild(mBox);
+  const mLbl=new PIXI.Text('MULTI',{fontFamily:'monospace',fontSize:7,fill:0x8b6914});
+  mLbl.anchor.set(0.5);mLbl.x=mBox.x+22;mLbl.y=mBox.y+10;app.stage.addChild(mLbl);
+  const mVal=new PIXI.Text('X1',{fontFamily:'Georgia,serif',fontSize:14,fill:0xf5d061,fontWeight:'bold'});
+  mVal.anchor.set(0.5);mVal.x=mBox.x+22;mVal.y=mBox.y+28;app.stage.addChild(mVal);
+
+  // Free spins box (right side of canvas)
+  const gBox=new PIXI.Graphics();
+  gBox.lineStyle(1.5,0x8b6914);gBox.beginFill(0x0a0800,0.8);
+  gBox.drawRoundedRect(0,0,44,50,5);gBox.endFill();
+  gBox.x=GX+GW+12;gBox.y=GY+GH/2-25;app.stage.addChild(gBox);
+  const gLbl=new PIXI.Text('GIROS',{fontFamily:'monospace',fontSize:7,fill:0x8b6914});
+  gLbl.anchor.set(0.5);gLbl.x=gBox.x+22;gLbl.y=gBox.y+10;app.stage.addChild(gLbl);
+  const gVal=new PIXI.Text('0',{fontFamily:'Georgia,serif',fontSize:14,fill:0xf5d061,fontWeight:'bold'});
+  gVal.anchor.set(0.5);gVal.x=gBox.x+22;gVal.y=gBox.y+28;app.stage.addChild(gVal);
+
+  // ===== SPIN LOGIC =====
+  function doSpin(){
+    if(spinning) return;
+    if(credits<totalBet()&&freeSpins<=0) return;
+    initAudio();
+    spinning=true;
+    lastWin=0;
+    btnSpin.disabled=true;
+
+    if(freeSpins>0){
+      freeSpins--;
+    } else {
+      credits-=totalBet();
+      jackpot+=Math.floor(totalBet()*0.01);
+    }
+    updateUI();
+    sfxSpin();
+    botSay('¡Vamos! 🎰');
+    addChat('🎰 Apuesta: '+fmt(totalBet()),'system');
+
+    // Generate target grid
+    const grid=[];
+    for(let c=0;c<REELS;c++){
+      const col=[];
+      for(let r=0;r<ROWS;r++) col.push(rSym());
+      grid.push(col);
+    }
+
+    // Start spinning each reel
+    reels.forEach((rl,i)=>{
+      rl.spinning=true;
+      rl.stopping=false;
+      rl.stopped=false;
+      rl.speed=0;
+      rl.target=grid[i];
+    });
+
+    // Stop reels sequentially
+    reels.forEach((rl,i)=>{
+      setTimeout(()=>{
+        rl.stopping=true;
+      },400+i*180);
+    });
+
+    // Evaluate after all reels stopped
+    const evalTime=400+(REELS-1)*180+500;
+    setTimeout(()=>{
+      // Snap all reels to final positions
+      for(let col=0;col<REELS;col++){
+        const rl=reels[col];
+        rl.spinning=false;
+        rl.stopping=false;
+        rl.stopped=true;
+        rl.speed=0;
+        for(let row=0;row<ROWS;row++){
+          const sp=rl.strips[row+1];
+          sp.texture=texMap[rl.target[row].id];
+          sp.symData=rl.target[row];
+          sp.x=GX+col*CELL;
+          sp.y=GY+row*CELL;
+          sp.width=SYM;
+          sp.height=SYM;
+        }
+        // Reset buffer sprites
+        rl.strips[0].y=GY-CELL;
+        rl.strips[0].x=GX+col*CELL;
+        rl.strips[0].width=SYM;
+        rl.strips[0].height=SYM;
+        if(rl.strips[ROWS+1]){
+          rl.strips[ROWS+1].y=GY+ROWS*CELL;
+          rl.strips[ROWS+1].x=GX+col*CELL;
+          rl.strips[ROWS+1].width=SYM;
+          rl.strips[ROWS+1].height=SYM;
+        }
+      }
+
+      // === WIN EVALUATION ===
+      let totalWin=0;
+
+      // Payline wins (bet per line)
+      for(let li=0;li<LINES;li++){
+        const line=PAYLINES[li].map((row,c)=>grid[c][row]);
+        // Find first non-wild, non-scatter symbol
+        let targetSym=null;
+        for(const s of line){
+          if(s.id!=='wild'&&s.id!=='scatter'){targetSym=s.id;break;}
+        }
+        // All wilds case
+        if(!targetSym){
+          if(line.every(s=>s.id==='wild')) targetSym='wild';
+          else continue;
+        }
+        // Count consecutive from left (wild substitutes for anything except scatter)
+        let cnt=0;
+        for(const s of line){
+          if(s.id===targetSym||s.id==='wild') cnt++;
+          else break;
+        }
+        if(cnt>=3){
+          const symDef=SYMBOLS.find(s=>s.id===targetSym);
+          if(symDef&&symDef.pay[cnt]){
+            totalWin+=symDef.pay[cnt]*bet(); // multiply by BET PER LINE
+          }
+        }
+      }
+
+      // Scatter wins (total bet, count anywhere)
+      let scatterCount=0;
+      for(let c=0;c<REELS;c++){
+        for(let r=0;r<ROWS;r++){
+          if(grid[c][r].id==='scatter') scatterCount++;
+        }
+      }
+      if(scatterCount>=3){
+        const scatterPay={3:5,4:20,5:100};
+        totalWin+=scatterPay[Math.min(scatterCount,5)]*totalBet(); // multiply by TOTAL bet
+        // Award free spins
+        const fsAward=scatterCount>=5?25:scatterCount>=4?15:10;
+        freeSpins+=fsAward;
+        multiplier=2;
+        botSay('¡GIROS GRATIS! 🌟');
+        addChat('🌟 ¡GIROS GRATIS x'+fsAward+' activados!','freespin');
+      }
+
+      // Modo Rugido (rare multiplier)
+      if(totalWin>0&&Math.random()<0.05){
+        const rm=[2,3,5,8,10][Math.floor(Math.random()*5)];
+        totalWin*=rm;
+        multiplier=rm;
+        mVal.text='X'+multiplier;
+      }
+
+      // Progressive jackpot (very rare)
+      if(Math.random()<0.0001&&freeSpins<=0){
+        totalWin+=jackpot;
+        addChat('🦁 ¡¡¡JACKPOT!!! '+fmt(jackpot),'win');
+        jackpot=1000000;
+        sfxBig();
+      }
+
+      // Apply win
+      if(totalWin>0){
+        credits+=totalWin;
+        lastWin=totalWin;
+        addChat('✅ Ganaste: +'+fmt(totalWin),'win');
+        if(totalWin>=totalBet()*10){
+          botSay('¡INCREÍBLE! 🔥🔥🔥');
+          sfxBig();
+          showWinEffect(totalWin,true);
+        } else {
+          botSay('¡GENIAL! +'+fmt(totalWin)+'! 🎉');
+          sfxWin();
+          showWinEffect(totalWin,false);
+        }
+      } else {
+        addChat('❌ Sin premio','loss');
+        botSay('La próxima va... 💪');
+      }
+
+      updateUI();
+      gVal.text=freeSpins>0?String(freeSpins):'0';
+      mVal.text='X'+multiplier;
+
+      spinning=false;
+      btnSpin.disabled=false;
+
+      // Auto-spin free spins
+      if(freeSpins>0){
+        btnSpin.textContent='GRATIS';
+        setTimeout(doSpin,1200);
+      } else {
+        multiplier=1;
+        mVal.text='X1';
+        btnSpin.textContent='GIRAR';
+      }
+    },evalTime);
+  }
+
+  // ===== WIN EFFECT =====
+  function showWinEffect(amt,big){
+    const wt=new PIXI.Text('+'+fmt(amt),{
+      fontFamily:'Georgia,serif',fontSize:big?28:22,fill:big?0xff6600:0xf5d061,
+      fontWeight:'bold',stroke:0x000000,strokeThickness:3
+    });
+    wt.anchor.set(0.5);wt.x=W/2;wt.y=H*0.45;
+    app.stage.addChild(wt);
+    let elapsed=0;
+    const anim=()=>{
+      elapsed+=app.ticker.deltaMS;
+      wt.y-=0.6;
+      wt.alpha=1-elapsed/2500;
+      if(elapsed>2500){app.stage.removeChild(wt);app.ticker.remove(anim);wt.destroy();}
+    };
+    app.ticker.add(anim);
+
+    // Coin particles
+    const emojis=['🪙','💰','⭐','🦁'];
+    const count=big?16:8;
+    for(let i=0;i<count;i++){
+      setTimeout(()=>{
+        const c=new PIXI.Text(emojis[Math.floor(Math.random()*emojis.length)],{fontSize:12+Math.random()*8});
+        c.x=GX+Math.random()*GW;c.y=GY-10;
+        app.stage.addChild(c);
+        const spd=1.5+Math.random()*2.5;
+        const drift=(Math.random()-0.5)*0.5;
+        const pAnim=()=>{
+          c.y+=spd;c.x+=drift;c.rotation+=0.03;
+          if(c.y>H+20){app.stage.removeChild(c);app.ticker.remove(pAnim);c.destroy();}
+        };
+        app.ticker.add(pAnim);
+      },i*50);
+    }
+  }
+
+  // ===== ANIMATION TICKER =====
+  app.ticker.add((delta)=>{
+    // Jackpot ticks up slowly
+    if(Math.random()<0.003){
+      jackpot+=Math.floor(Math.random()*50)+5;
+      jpValEl.textContent=fmt(jackpot);
+    }
+
+    for(let col=0;col<REELS;col++){
+      const rl=reels[col];
+      if(!rl.spinning&&!rl.stopping) continue;
+
+      if(rl.spinning&&!rl.stopping){
+        // Accelerating phase
+        rl.speed=Math.min(rl.speed+2*delta,26);
+        for(const sp of rl.strips){
+          sp.y+=rl.speed*delta;
+          if(sp.y>GY+GH+CELL){
+            sp.y-=STRIP*CELL;
+            const ns=rSym();
+            sp.texture=texMap[ns.id];
+            sp.symData=ns;
+          }
+        }
+      } else if(rl.stopping){
+        // Decelerating phase
+        rl.speed*=0.80;
+        if(rl.speed<0.4){
+          // Snap to final position
+          rl.spinning=false;
+          rl.stopping=false;
+          rl.stopped=true;
+          rl.speed=0;
+          for(let row=0;row<ROWS;row++){
+            const sp=rl.strips[row+1];
+            sp.texture=texMap[rl.target[row].id];
+            sp.symData=rl.target[row];
+            sp.x=GX+col*CELL;
+            sp.y=GY+row*CELL;
+            sp.width=SYM;
+            sp.height=SYM;
+          }
+          rl.strips[0].y=GY-CELL;
+          rl.strips[0].x=GX+col*CELL;
+          rl.strips[0].width=SYM;
+          rl.strips[0].height=SYM;
+          if(rl.strips[ROWS+1]){
+            rl.strips[ROWS+1].y=GY+ROWS*CELL;
+            rl.strips[ROWS+1].x=GX+col*CELL;
+            rl.strips[ROWS+1].width=SYM;
+            rl.strips[ROWS+1].height=SYM;
+          }
+          sfxStop(col);
+        } else {
+          for(const sp of rl.strips){
+            sp.y+=rl.speed*delta;
+            if(sp.y>GY+GH+CELL){
+              sp.y-=STRIP*CELL;
+              const ns=rSym();
+              sp.texture=texMap[ns.id];
+              sp.symData=ns;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // ===== CONTROLS =====
+  btnSpin.addEventListener('click',doSpin);
+  document.addEventListener('keydown',(e)=>{
+    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();doSpin();}
+  });
+
+  // Periodic jackpot chat message
+  setInterval(()=>{
+    addChat('🦁 Jackpot: '+fmt(jackpot),'community');
+  },30000+Math.random()*30000);
+
+  updateUI();
+  console.log('🦁 C8L Casino — El León Dorado v5.0 loaded (self-contained)');
+} // end initSlot
+
+})();
+</script>
 </body>
 </html>
