@@ -1,0 +1,130 @@
+/* ============================================================
+   C8L CASINO — BLACKJACK
+   ============================================================ */
+
+.blackjack-game {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: space-between; padding: 12px;
+}
+
+/* Cards area */
+.bj-dealer, .bj-player {
+    text-align: center; padding: 12px 0;
+}
+
+.bj-label {
+    font-family: var(--font-tech); font-size: 11px;
+    color: var(--gold); letter-spacing: 2px; margin-bottom: 8px;
+}
+.bj-label span {
+    font-size: 16px; color: var(--gold-light); margin-left: 8px;
+}
+
+.bj-cards {
+    display: flex; justify-content: center; gap: 8px;
+    min-height: 100px; flex-wrap: wrap;
+}
+
+.bj-card {
+    width: 60px; height: 85px;
+    background: #fff; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    animation: cardDeal 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative; border: 2px solid #ddd;
+}
+
+.bj-card.red { color: #c0392b; }
+.bj-card.black { color: #1a1a1a; }
+
+.bj-card.hidden {
+    background: linear-gradient(135deg, #1a1200 0%, var(--gold-dark) 50%, #1a1200 100%);
+    border-color: var(--gold);
+}
+.bj-card.hidden::after { content: 'C8L'; color: var(--gold-light); font-family: var(--font-display); font-size: 12px; }
+
+.bj-card .card-value {
+    position: absolute; top: 4px; left: 6px;
+    font-size: 12px; font-weight: 900;
+}
+.bj-card .card-suit {
+    font-size: 28px;
+}
+.bj-card .card-value-bottom {
+    position: absolute; bottom: 4px; right: 6px;
+    font-size: 12px; font-weight: 900; transform: rotate(180deg);
+}
+
+@keyframes cardDeal {
+    0% { transform: translateY(-50px) rotate(-10deg); opacity: 0; }
+    100% { transform: translateY(0) rotate(0); opacity: 1; }
+}
+
+/* Result */
+.bj-result {
+    text-align: center; padding: 16px;
+    animation: resultPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.bj-result span {
+    font-family: var(--font-tech); font-size: 20px; font-weight: 900;
+    padding: 10px 24px; border-radius: 12px;
+}
+.bj-result .win { background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+.bj-result .lose { background: rgba(231,76,60,0.2); color: #e74c3c; border: 1px solid #e74c3c; }
+.bj-result .push { background: rgba(212,160,23,0.2); color: var(--gold-light); border: 1px solid var(--gold); }
+.bj-result .blackjack { background: rgba(212,160,23,0.2); color: var(--gold-light); border: 2px solid var(--gold-light); box-shadow: 0 0 20px var(--gold-glow); }
+
+/* Actions */
+.bj-actions { text-align: center; padding: 12px 0; }
+
+.bj-bet-section { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.bj-bet-label { font-family: var(--font-tech); font-size: 10px; color: var(--gold); letter-spacing: 2px; }
+
+.bj-bet-chips { display: flex; gap: 8px; }
+.bj-chip {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border: 2px solid var(--gold-dark); color: var(--black);
+    font-family: var(--font-tech); font-size: 9px; font-weight: 900;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+}
+.bj-chip:hover { transform: scale(1.1); border-color: var(--gold-light); }
+.bj-chip:active { transform: scale(0.95); }
+.bj-chip.selected { border-color: var(--gold-light); box-shadow: 0 0 15px var(--gold-glow); transform: scale(1.15); }
+
+.bj-current-bet {
+    font-family: var(--font-tech); font-size: 14px; color: var(--gold-light);
+}
+
+.bj-deal-btn {
+    padding: 14px 40px;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border: 2px solid var(--gold-light); border-radius: 12px;
+    color: var(--black); font-family: var(--font-tech);
+    font-size: 14px; font-weight: 900; cursor: pointer;
+    transition: all 0.3s; letter-spacing: 2px;
+}
+.bj-deal-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--gold-glow); }
+.bj-deal-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+.bj-play-actions { display: flex; gap: 10px; justify-content: center; }
+
+.bj-action-btn {
+    padding: 12px 24px; border-radius: 12px;
+    font-family: var(--font-tech); font-size: 12px; font-weight: 700;
+    cursor: pointer; border: 2px solid; transition: all 0.3s;
+    letter-spacing: 1px;
+}
+.bj-action-btn.hit { background: rgba(39,174,96,0.1); border-color: #2ecc71; color: #2ecc71; }
+.bj-action-btn.hit:hover { background: rgba(39,174,96,0.2); }
+.bj-action-btn.stand { background: rgba(231,76,60,0.1); border-color: #e74c3c; color: #e74c3c; }
+.bj-action-btn.stand:hover { background: rgba(231,76,60,0.2); }
+.bj-action-btn.double { background: rgba(212,160,23,0.1); border-color: var(--gold); color: var(--gold); }
+.bj-action-btn.double:hover { background: rgba(212,160,23,0.2); }
+.bj-action-btn.new-game {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border-color: var(--gold-light); color: var(--black);
+    padding: 14px 30px;
+}

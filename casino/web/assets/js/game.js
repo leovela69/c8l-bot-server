@@ -5,11 +5,15 @@
 
 class SlotGame {
     constructor() {
-        // Estado del juego
+        // Estado del juego (usa estado global de app.js)
         this.state = {
-            credits: 152_450_000,
-            chips: 8_250,
-            vipLevel: 10,
+            get credits() { return window.casinoState ? window.casinoState.credits : 152450000; },
+            set credits(v) { if (window.casinoState) window.casinoState.credits = v; },
+            get chips() { return window.casinoState ? window.casinoState.chips : 8250; },
+            set chips(v) { if (window.casinoState) window.casinoState.chips = v; },
+            get vipLevel() { return window.casinoState ? window.casinoState.vipLevel : 10; },
+            get jackpot() { return window.casinoState ? window.casinoState.jackpot : 48532120; },
+            set jackpot(v) { if (window.casinoState) window.casinoState.jackpot = v; },
             betPerLine: 250,
             numLines: 20,
             totalBet: 5000,
@@ -21,9 +25,8 @@ class SlotGame {
             isSpinning: false,
             autoSpin: false,
             autoSpinCount: 0,
-            jackpot: 48_532_120,
-            currency: 'credits', // 'credits' o 'chips'
-            userId: this._generateUserId(),
+            currency: 'credits',
+            userId: (window.casinoState && window.casinoState.userId) || 'user_default',
         };
 
         // Niveles de apuesta
@@ -583,11 +586,7 @@ class SlotGame {
     }
 
     _startJackpotAnimation() {
-        // Incrementar jackpot visualmente
-        setInterval(() => {
-            this.state.jackpot += Math.floor(Math.random() * 100) + 10;
-            document.getElementById('jackpotDisplay').textContent = this.state.jackpot.toLocaleString('es-ES');
-        }, 3000);
+        // Jackpot animation is handled by app.js globally
     }
 
     async _loadBalance() {
