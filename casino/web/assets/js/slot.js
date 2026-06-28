@@ -101,11 +101,29 @@ function startGame(assets){
   const GX=(W-GW)/2, GY=H*0.30;
 
   // ===== SYMBOL TEXTURES (from loaded assets) =====
+  // Map symbol IDs to their loaded textures (NEVER include bg/logo here)
   const texMap={};
   const texKeys={leon:'leon',wild:'wild',scatter:'scatter',A:'A',K:'K',Q:'Q',J:'J','10':'ten'};
   SYMBOLS.forEach(sym=>{
     const key=texKeys[sym.id];
-    if(assets[key]){texMap[sym.id]=assets[key];}
+    if(assets[key]){
+      texMap[sym.id]=assets[key];
+    }
+  });
+  // Verify all symbols have textures
+  SYMBOLS.forEach(sym=>{
+    if(!texMap[sym.id]){
+      console.warn('Missing texture for symbol:', sym.id);
+      // Create fallback colored rectangle
+      const g=new PIXI.Graphics();
+      g.beginFill(0x1a1200);g.lineStyle(2,0xd4a017);
+      g.drawRoundedRect(0,0,100,100,8);g.endFill();
+      const t=new PIXI.Text(sym.id,{fontSize:30,fill:0xf5d061,fontWeight:'bold'});
+      t.anchor.set(0.5);t.x=50;t.y=50;
+      const c=new PIXI.Container();c.addChild(g);c.addChild(t);
+      texMap[sym.id]=app.renderer.generateTexture(c);
+      c.destroy({children:true});
+    }
   });
 
 
