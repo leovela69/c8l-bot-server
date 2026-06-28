@@ -29,9 +29,11 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
 @keyframes winPulse{0%{box-shadow:0 0 18px 6px #ffd700}100%{box-shadow:0 0 28px 10px #ffec80}}
 .turn-indicator{display:none;position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-size:0.45em;font-weight:900;padding:2px 8px;border-radius:8px;white-space:nowrap;animation:turnBlink 0.8s infinite alternate;letter-spacing:0.5px}
 @keyframes turnBlink{0%{opacity:1}100%{opacity:0.6}}
-.seat-avatar{width:52px;height:52px;border-radius:50%;background:rgba(20,15,10,0.9);border:3px solid #555;display:flex;align-items:center;justify-content:center;font-size:1.6em;transition:all 0.3s;position:relative;overflow:hidden}
-.seat-avatar.human{border-color:#d4a017}
+.seat-avatar{width:52px;height:52px;border-radius:50%;background:rgba(20,15,10,0.9);border:3px solid #555;display:flex;align-items:center;justify-content:center;font-size:1.6em;transition:all 0.3s;position:relative;overflow:hidden;animation:avatarIdle 3s ease-in-out infinite}
+.seat-avatar.human{border-color:#d4a017;animation:avatarIdle 3s ease-in-out infinite,humanGlow 2s ease-in-out infinite alternate}
 .seat-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+@keyframes avatarIdle{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
+@keyframes humanGlow{0%{box-shadow:0 0 5px rgba(212,160,23,0.3)}100%{box-shadow:0 0 12px rgba(212,160,23,0.6)}}
 .seat-marker{position:absolute;top:-4px;right:-4px;font-size:0.45em;background:#d4a017;color:#000;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-weight:700}
 .seat-marker.sb{background:#42a5f5}
 .seat-marker.bb{background:#ef5350}
@@ -137,8 +139,8 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
       <div class="table-felt" id="felt">
         <img class="table-logo" src="public/assets/c8l_logo_gold_2d.jpg" alt="C8L" onerror="this.style.display='none'">
         <div class="dealer-area" id="dealerArea">
-          <img class="dealer-img" id="dealerImg" src="public/lion-mascot.png" alt="Crupier" onerror="this.src='https://raw.githubusercontent.com/leovela69/c8l-bot-server/main/kukis/public/lion-mascot.png'">
-          <div class="dealer-label">CRUPIER</div>
+          <img class="dealer-img" id="dealerImg" src="public/ai-bot.png" alt="C8L Bot" onerror="this.src='https://api.dicebear.com/9.x/bottts/svg?seed=C8LBot&primaryColor=d4a017'">
+          <div class="dealer-label">C8L BOT</div>
         </div>
         <div class="pot-display" id="potDisp">Bote: 0</div>
         <div class="community" id="commCards"></div>
@@ -176,15 +178,15 @@ const RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
 const RV={'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
 
 const BOTS=[
-  {id:0,name:'Leon',emoji:'🦁',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Leon&backgroundColor=f4a020&hair=short04&skinColor=ecad80',style:'aggressive',raisePct:0.60,foldPct:0.10},
-  {id:1,name:'Zorro',emoji:'🦊',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Zorro&backgroundColor=ff6b00&hair=short01&skinColor=f2d3b1',style:'balanced',raisePct:0.20,foldPct:0.30},
-  {id:2,name:'Buho',emoji:'🦉',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Buho&backgroundColor=6b4c2a&hair=long13&skinColor=ecad80&glasses=variant01',style:'tight',raisePct:0.15,foldPct:0.60},
-  {id:3,name:'Lobo',emoji:'🐺',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Lobo&backgroundColor=607d8b&hair=short11&skinColor=d08b5b&eyebrows=variant10',style:'aggro-loose',raisePct:0.50,foldPct:0.08},
-  {id:4,name:'TU',emoji:'👤',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Player1&backgroundColor=1a237e&hair=short19&skinColor=f2d3b1',style:'human',raisePct:0,foldPct:0},
-  {id:5,name:'Aguila',emoji:'🦅',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Aguila&backgroundColor=4e342e&hair=short16&skinColor=ae5d29&eyebrows=variant06',style:'tight-aggro',raisePct:0.40,foldPct:0.45},
-  {id:6,name:'Tiburon',emoji:'🦈',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Tiburon&backgroundColor=546e7a&hair=short08&skinColor=ecad80',style:'tricky',raisePct:0.30,foldPct:0.25},
-  {id:7,name:'Cobra',emoji:'🐍',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Cobra&backgroundColor=2e7d32&hair=long01&skinColor=d08b5b',style:'passive',raisePct:0.08,foldPct:0.20},
-  {id:8,name:'Toro',emoji:'🐂',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Toro&backgroundColor=5d4037&hair=short02&skinColor=ae5d29&eyebrows=variant12',style:'maniac',raisePct:0.70,foldPct:0.05}
+  {id:0,name:'Akira',emoji:'⚡',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Akira&hair=short04&hairColor=0a0a0a&skinColor=ecad80&eyebrows=variant10&mouth=variant01',style:'aggressive',raisePct:0.60,foldPct:0.10},
+  {id:1,name:'Kukis',emoji:'🍪',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Kukis&hair=long16&hairColor=c63d2f&skinColor=f2d3b1&eyebrows=variant01&mouth=variant30',style:'balanced',raisePct:0.20,foldPct:0.30},
+  {id:2,name:'Yusleny',emoji:'💎',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Yusleny&hair=long01&hairColor=220f00&skinColor=d08b5b&eyebrows=variant03&mouth=variant20',style:'tight',raisePct:0.15,foldPct:0.60},
+  {id:3,name:'Gema',emoji:'💫',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Gema&hair=long07&hairColor=6c4545&skinColor=ecad80&eyebrows=variant06&mouth=variant05',style:'aggro-loose',raisePct:0.50,foldPct:0.08},
+  {id:4,name:'Leo',emoji:'🦁',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=LeoPlayer&hair=short11&hairColor=0a0a0a&skinColor=ecad80&eyebrows=variant12&mouth=variant01',style:'human',raisePct:0,foldPct:0},
+  {id:5,name:'Lyz',emoji:'🌸',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=LyzFerreira&hair=long19&hairColor=b58143&skinColor=f2d3b1&eyebrows=variant01&mouth=variant10',style:'tight-aggro',raisePct:0.40,foldPct:0.45},
+  {id:6,name:'Artemiss',emoji:'🏹',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Artemiss&hair=long09&hairColor=e8e1e1&skinColor=ecad80&eyebrows=variant08&mouth=variant15',style:'tricky',raisePct:0.30,foldPct:0.25},
+  {id:7,name:'Alexa',emoji:'🔮',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Alexa77&hair=long13&hairColor=3eac2c&skinColor=f2d3b1&eyebrows=variant02&mouth=variant25',style:'passive',raisePct:0.08,foldPct:0.20},
+  {id:8,name:'Casti',emoji:'🔥',avatar:'https://api.dicebear.com/9.x/adventurer/svg?seed=Casti&hair=short02&hairColor=85461e&skinColor=d08b5b&eyebrows=variant11&mouth=variant08',style:'maniac',raisePct:0.70,foldPct:0.05}
 ];
 
 // Seats positioned at the EDGE of the table oval
