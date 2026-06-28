@@ -56,12 +56,14 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
 .card-back-face .back-emblem{font-size:1em;color:#b8860b}
 .chip-anim{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #fff;font-size:0.4em;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;z-index:15;pointer-events:none;animation:chipMove 0.6s ease-out forwards}
 @keyframes chipMove{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(0.5) translateY(-10px)}}
-.bottom-panel{width:min(1000px,98vw);margin-top:10px;background:linear-gradient(180deg,#1a1508,#0d0b06);border:1px solid #5c4510;border-radius:12px;padding:12px 18px;box-shadow:0 -4px 20px rgba(0,0,0,0.5)}
-.msg{text-align:center;font-size:0.9em;color:#d4a017;min-height:22px;margin-bottom:6px;font-style:italic}
-.info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
-.info-box{background:rgba(0,0,0,0.4);border:1px solid #3d2810;border-radius:6px;padding:5px 10px;text-align:center}
-.info-box .lbl{font-size:0.55em;color:#8b6914;text-transform:uppercase;letter-spacing:1px}
-.info-box .val{font-size:0.95em;color:#d4a017;font-weight:700}
+.bottom-panel{width:min(1000px,98vw);margin-top:10px;background:linear-gradient(180deg,#1a1508,#0d0b06);border:1px solid #5c4510;border-radius:12px;padding:10px 16px;box-shadow:0 -4px 20px rgba(0,0,0,0.5);display:flex;flex-direction:column;gap:8px}
+.player-hand-area{display:flex;align-items:center;justify-content:center;gap:16px;padding:6px 0}
+.player-cards-display{display:flex;gap:4px;align-items:center}
+.player-info-inline{display:flex;align-items:center;gap:12px}
+.player-info-inline .chip-count{font-size:1.1em;color:#d4a017;font-weight:700}
+.player-info-inline .hand-name{font-size:0.85em;color:#4caf50;font-style:italic}
+.player-info-inline .round-info{font-size:0.7em;color:#8b6914}
+.msg{text-align:center;font-size:0.85em;color:#d4a017;min-height:20px;font-style:italic}
 .actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;align-items:center}
 .btn{padding:8px 16px;border:none;border-radius:6px;font-size:0.85em;font-weight:700;cursor:pointer;font-family:Georgia,serif;letter-spacing:0.5px;transition:all 0.2s;box-shadow:0 3px 8px rgba(0,0,0,0.4)}
 .btn:active{transform:scale(0.95)}
@@ -122,12 +124,13 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
   </div>
   <div class="bottom-panel">
     <div class="msg" id="msg">Pulsa REPARTIR para jugar</div>
-    <div class="info-row">
-      <div class="info-box"><div class="lbl">Fichas</div><div class="val" id="vBal">10,000</div></div>
-      <div class="info-box"><div class="lbl">Mano</div><div class="val" id="vHand">—</div></div>
-      <div class="info-box"><div class="lbl">Fase</div><div class="val" id="vStage">—</div></div>
-      <div class="info-box"><div class="lbl">Ronda</div><div class="val" id="vRound">0</div></div>
-      <div class="info-box"><div class="lbl">Ciega</div><div class="val" id="vBlind">25/50</div></div>
+    <div class="player-hand-area">
+      <div class="player-cards-display" id="playerCardsDisplay"></div>
+      <div class="player-info-inline">
+        <span class="chip-count">💰 <span id="vBal">10,000</span></span>
+        <span class="hand-name" id="vHand">—</span>
+        <span class="round-info">Ronda <span id="vRound">0</span> | <span id="vStage">—</span> | Ciega <span id="vBlind">25/50</span></span>
+      </div>
     </div>
     <div class="actions" id="actionsBar">
       <button class="btn btn-gold" id="bDeal" onclick="startHand()">REPARTIR</button>
@@ -161,19 +164,18 @@ const BOTS=[
   {id:8,name:'Toro',emoji:'🐂',style:'maniac',raisePct:0.70,foldPct:0.05}
 ];
 
-// Seats positioned OUTSIDE the table oval (close to edge)
-// Table ellipse: center at 50%,50% | width ~72% | height ~82%
-// Seats at the edge of the table border (just outside)
+// Seats positioned at the EDGE of the table oval
+// Table ellipse center: 50%,50% | spans ~15%-85% horiz, ~12%-88% vert
 const SEATS=[
-  {top:15,left:22},  // 0: top-left
-  {top:8,left:50},   // 1: top-center
-  {top:15,left:78},  // 2: top-right
-  {top:48,left:90},  // 3: right
-  {top:78,left:78},  // 4: bottom-right (HUMAN)
-  {top:85,left:50},  // 5: bottom-center
-  {top:78,left:22},  // 6: bottom-left
-  {top:48,left:10},  // 7: left
-  {top:25,left:12}   // 8: upper-left
+  {top:14,left:25},  // 0: Leon - top-left edge
+  {top:8,left:50},   // 1: Zorro - top-center edge
+  {top:14,left:75},  // 2: Buho - top-right edge
+  {top:50,left:92},  // 3: Lobo - right edge
+  {top:82,left:72},  // 4: HUMAN - bottom-right edge
+  {top:88,left:50},  // 5: Aguila - bottom-center edge
+  {top:82,left:28},  // 6: Tiburon - bottom-left edge
+  {top:50,left:8},   // 7: Cobra - left edge
+  {top:28,left:10}   // 8: Toro - upper-left edge
 ];
 // Bet chip positions (near the table edge, between seat and center)
 const BET_POS=[
@@ -321,14 +323,20 @@ function renderCommunity(){
 function renderInfo(){
   document.getElementById('potDisp').textContent='Bote: '+pot.toLocaleString();
   document.getElementById('vBal').textContent=players[HUMAN].chips.toLocaleString();
-  const stNames={idle:'\u2014',preflop:'Pre-Flop',flop:'Flop',turn:'Turn',river:'River',showdown:'Showdown'};
+  var stNames={idle:'\u2014',preflop:'Pre-Flop',flop:'Flop',turn:'Turn',river:'River',showdown:'Showdown'};
   document.getElementById('vStage').textContent=stNames[stage]||'\u2014';
   document.getElementById('vRound').textContent=roundNum;
   document.getElementById('vBlind').textContent=sbAmt+'/'+bbAmt;
-  if(players[HUMAN].hand.length===2){
-    const ev=evaluate([...players[HUMAN].hand,...community]);
+  // Show player cards in bottom panel
+  var pcd=document.getElementById('playerCardsDisplay');
+  if(players[HUMAN].hand.length===2&&!players[HUMAN].folded){
+    pcd.innerHTML=cardHTML(players[HUMAN].hand[0],false)+cardHTML(players[HUMAN].hand[1],false);
+    var ev=evaluate([...players[HUMAN].hand,...community]);
     document.getElementById('vHand').textContent=ev.name;
-  }else{document.getElementById('vHand').textContent='\u2014'}
+  }else{
+    pcd.innerHTML='';
+    document.getElementById('vHand').textContent='\u2014';
+  }
   updateRaiseSlider();
 }
 
