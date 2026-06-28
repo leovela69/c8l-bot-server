@@ -110,9 +110,9 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
   <div class="table-area" id="tableArea">
     <div class="table-outer">
       <div class="table-felt" id="felt">
-        <img class="table-logo" src="public/assets/c8l_logo_gold_2d.png" alt="C8L" onerror="this.style.display='none'">
+        <img class="table-logo" src="public/assets/c8l_logo_gold_2d.jpg" alt="C8L" onerror="this.style.display='none'">
         <div class="dealer-area" id="dealerArea">
-          <img class="dealer-img" id="dealerImg" src="public/lion-mascot.png" alt="Crupier" onerror="this.textContent='🦁'">
+          <img class="dealer-img" id="dealerImg" src="public/lion-mascot.png" alt="Crupier" onerror="this.src='https://raw.githubusercontent.com/leovela69/c8l-bot-server/main/kukis/public/lion-mascot.png'">
           <div class="dealer-label">CRUPIER</div>
         </div>
         <div class="pot-display" id="potDisp">Bote: 0</div>
@@ -161,11 +161,11 @@ const BOTS=[
   {id:8,name:'Toro',emoji:'🐂',style:'maniac',raisePct:0.70,foldPct:0.05}
 ];
 
-// Seats positioned OUTSIDE the table oval
+// Seats positioned OUTSIDE the table oval (close to edge)
 const SEATS=[
-  {top:5,left:28},{top:2,left:50},{top:5,left:72},
-  {top:35,left:95},{top:92,left:72},{top:92,left:50},
-  {top:92,left:28},{top:35,left:5},{top:18,left:12}
+  {top:10,left:24},{top:4,left:50},{top:10,left:76},
+  {top:45,left:93},{top:82,left:76},{top:88,left:50},
+  {top:82,left:24},{top:45,left:7},{top:22,left:10}
 ];
 // Bet chip positions (near the table edge, between seat and center)
 const BET_POS=[
@@ -208,16 +208,26 @@ function sndLose(){playTone(200,0.3,'sawtooth',0.08)}
 // === DECK - FIX: proper deck creation and shuffle ===
 function makeDeck(){
   deck=[];
-  for(let si=0;si<SUITS.length;si++){
-    for(let ri=0;ri<RANKS.length;ri++){
-      deck.push({rank:RANKS[ri],suit:SUITS[si],symbol:SUIT_SYMBOLS[SUITS[si]],value:RV[RANKS[ri]]});
+  var suitList = ['spades','hearts','diamonds','clubs'];
+  var symList = {spades:'\u2660',hearts:'\u2665',diamonds:'\u2666',clubs:'\u2663'};
+  var rankList = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+  var valMap = {'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
+  for(var si=0;si<suitList.length;si++){
+    for(var ri=0;ri<rankList.length;ri++){
+      deck.push({
+        rank: rankList[ri],
+        suit: suitList[si],
+        symbol: symList[suitList[si]],
+        value: valMap[rankList[ri]]
+      });
     }
   }
   // Fisher-Yates shuffle
-  for(let i=deck.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    const tmp=deck[i];deck[i]=deck[j];deck[j]=tmp;
+  for(var i=deck.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=deck[i];deck[i]=deck[j];deck[j]=tmp;
   }
+  console.log('Deck created:',deck.length,'cards. Sample:',deck[0].rank,deck[0].symbol,deck[1].rank,deck[1].symbol,deck[2].rank,deck[2].symbol);
 }
 
 function initPlayers(){
@@ -232,11 +242,18 @@ initPlayers();
 function cardHTML(c,faceDown){
   if(!c)return '';
   if(faceDown){
-    return '<div class="card face-down"><div class="card-inner"><div class="card-face card-front black"></div><div class="card-face card-back-face"><span class="back-emblem">\u2660</span></div></div></div>';
+    return '<div class="card face-down"><div class="card-inner"><div class="card-face card-front black"></div><div class="card-face card-back-face"><span class="back-emblem">&#9824;</span></div></div></div>';
   }
-  const red=(c.suit==='hearts'||c.suit==='diamonds');
-  const colorClass=red?'red':'black';
-  return '<div class="card"><div class="card-inner"><div class="card-face card-front '+colorClass+'"><span class="rank-top">'+c.rank+c.symbol+'</span><span class="suit-center">'+c.symbol+'</span><span class="rank-bot">'+c.rank+c.symbol+'</span></div><div class="card-face card-back-face"><span class="back-emblem">\u2660</span></div></div></div>';
+  var rank = c.rank;
+  var sym = c.symbol;
+  var isRed = (c.suit==='hearts'||c.suit==='diamonds');
+  var colorClass = isRed ? 'red' : 'black';
+  var html = '<div class="card"><div class="card-inner"><div class="card-face card-front ' + colorClass + '">';
+  html += '<span class="rank-top">' + rank + sym + '</span>';
+  html += '<span class="suit-center">' + sym + '</span>';
+  html += '<span class="rank-bot">' + rank + sym + '</span>';
+  html += '</div><div class="card-face card-back-face"><span class="back-emblem">&#9824;</span></div></div></div>';
+  return html;
 }
 
 // === RENDER ===
