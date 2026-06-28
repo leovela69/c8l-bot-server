@@ -12,165 +12,83 @@
     <link rel="stylesheet" href="assets/css/casino.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦁</text></svg>">
 </head>
-<body onclick="enterFullscreen()">
+<body>
     <div id="app" class="casino-app">
-
-        <!-- Background: Machine Frame Image -->
-        <div class="machine-bg">
-            <img src="assets/img/machine_frame.jpg" alt="" class="machine-bg-img">
+        <!-- Full background: the original mockup image -->
+        <div class="slot-bg-wrapper">
+            <img src="assets/img/slot_bg.jpg" alt="" class="slot-bg-img" id="slotBgImg">
         </div>
 
-        <!-- TOP: Logo C8L + Jackpot -->
-        <div class="top-section">
-            <div class="logo-area">
-                <div class="logo-badge">C8L</div>
-                <div class="logo-titles">
-                    <span class="logo-main">C8L LEGENDS</span>
-                    <span class="logo-sub">EL LEÓN DORADO</span>
-                </div>
-                <button class="sound-btn" id="soundBtn">🔊</button>
-            </div>
-            <div class="jackpot-bar">
-                <span class="jp-label">JACKPOT GLOBAL</span>
-                <span class="jp-amount" id="jackpotDisplay">48,532,120</span>
-            </div>
-        </div>
+        <!-- Functional overlay: only the parts that change -->
+        <div class="game-overlay">
+            <!-- Jackpot (positioned over the jackpot area) -->
+            <div class="ov-jackpot" id="jackpotDisplay">48,532,120</div>
 
-        <!-- CENTER: Reels inside the machine frame -->
-        <div class="reels-section">
-            <!-- Multiplier (left) -->
-            <div class="side-info left-info">
-                <div class="side-box">
-                    <span class="sb-label">MULTIPLICADOR</span>
-                    <span class="sb-value" id="multiplierDisplay">X1</span>
-                    <span class="sb-sub" id="modoLabel">NORMAL</span>
-                </div>
+            <!-- Multiplier -->
+            <div class="ov-multiplier">
+                <span class="ov-multi-val" id="multiplierDisplay">X1</span>
+                <span class="ov-multi-label" id="modoLabel">NORMAL</span>
             </div>
 
-            <!-- THE REELS -->
-            <div class="reels-area">
-                <div class="reels-grid" id="reelsContainer">
-                    <div class="reel" id="reel0"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                    <div class="reel" id="reel1"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                    <div class="reel" id="reel2"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                    <div class="reel" id="reel3"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                    <div class="reel" id="reel4"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                </div>
-                <!-- Win overlay -->
-                <div class="win-overlay" id="winOverlay" style="display:none;">
-                    <div class="win-amount" id="winAmount">0</div>
-                </div>
+            <!-- Free Spins -->
+            <div class="ov-freespins">
+                <span class="ov-fs-val" id="freeSpinsDisplay">0</span>
+                <span class="ov-fs-label" id="freeSpinsLabel">INACTIVO</span>
             </div>
 
-            <!-- Free Spins (right) -->
-            <div class="side-info right-info">
-                <div class="side-box">
-                    <span class="sb-label">GIROS GRATIS</span>
-                    <span class="sb-value" id="freeSpinsDisplay">0</span>
-                    <span class="sb-sub" id="freeSpinsLabel">INACTIVO</span>
-                </div>
+            <!-- THE REELS (positioned exactly over the reel area) -->
+            <div class="ov-reels" id="reelsContainer">
+                <div class="reel" id="reel0"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
+                <div class="reel" id="reel1"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
+                <div class="reel" id="reel2"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
+                <div class="reel" id="reel3"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
+                <div class="reel" id="reel4"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
             </div>
-        </div>
 
-        <!-- BOTTOM: Controls + Spin Button -->
-        <div class="bottom-section">
-            <div class="controls-row">
-                <div class="ctrl-group">
-                    <span class="cg-label">LÍNEAS</span>
-                    <span class="cg-value" id="linesDisplay">20</span>
-                </div>
-                <div class="ctrl-group">
-                    <span class="cg-label">APUESTA</span>
-                    <div class="cg-adjust">
-                        <button class="adj-btn" id="betDown">−</button>
-                        <span class="cg-value" id="betDisplay">250</span>
-                        <button class="adj-btn" id="betUp">+</button>
-                    </div>
-                </div>
-                <div class="ctrl-group">
-                    <span class="cg-label">APUESTA TOTAL</span>
-                    <span class="cg-value" id="totalBetDisplay">5,000</span>
-                </div>
-
-                <!-- SPIN -->
-                <button class="spin-button" id="spinBtn">
-                    <span class="spin-text">GIRAR</span>
-                    <span class="spin-sub">Mantener Auto</span>
-                </button>
-
-                <div class="ctrl-group win-group">
-                    <span class="cg-label">GANANCIA</span>
-                    <span class="cg-value cg-win" id="winDisplay">0</span>
-                </div>
+            <!-- Win overlay -->
+            <div class="ov-win" id="winOverlay" style="display:none;">
+                <div class="win-amount" id="winAmount">0</div>
             </div>
-        </div>
 
-        <!-- STATUS: Credits / VIP -->
-        <div class="status-bar">
-            <div class="st-item">
-                <span class="st-icon">🪙</span>
-                <span class="st-label">CRÉDITOS</span>
-                <span class="st-value" id="creditsDisplay">152,450,000</span>
-            </div>
-            <div class="st-item">
-                <span class="st-icon">⭐</span>
-                <span class="st-label">NIVEL</span>
-                <span class="st-value" id="vipDisplay">VIP 10</span>
-            </div>
+            <!-- Controls (positioned over the controls area) -->
+            <div class="ov-lines" id="linesDisplay">20</div>
+            <div class="ov-bet" id="betDisplay">250</div>
+            <div class="ov-total" id="totalBetDisplay">5,000</div>
+            <div class="ov-winval" id="winDisplay">0</div>
+
+            <!-- Spin button area -->
+            <button class="ov-spin" id="spinBtn">
+                <span class="spin-text">GIRAR</span>
+                <span class="spin-sub">Mantener para Auto</span>
+            </button>
+
+            <!-- Bet adjust (invisible touch areas) -->
+            <button class="ov-bet-down" id="betDown"></button>
+            <button class="ov-bet-up" id="betUp"></button>
+
+            <!-- Bottom stats -->
+            <div class="ov-credits" id="creditsDisplay">152,450,000</div>
+            <div class="ov-chips" id="chipsDisplay">8,250</div>
+            <div class="ov-vip" id="vipDisplay">VIP 10</div>
+
+            <!-- Sound toggle -->
+            <button class="ov-sound" id="soundBtn">🔊</button>
         </div>
 
         <!-- Particles -->
         <div class="particles-container" id="particlesContainer"></div>
 
-        <!-- LION BONUS POPUP -->
+        <!-- Popups -->
         <div class="lion-bonus-popup" id="lionBonusPopup" style="display:none;">
             <div class="lion-bonus-content">
-                <div class="lion-character" id="lionCharacter">
-                    <svg viewBox="0 0 200 200" class="lion-svg">
-                        <g class="lion-body">
-                            <ellipse cx="100" cy="95" rx="65" ry="60" fill="#b8860b" class="mane"/>
-                            <ellipse cx="100" cy="95" rx="55" ry="50" fill="#daa520"/>
-                            <ellipse cx="100" cy="100" rx="40" ry="38" fill="#f5d061"/>
-                            <ellipse cx="85" cy="92" rx="8" ry="9" fill="#fff"/>
-                            <ellipse cx="115" cy="92" rx="8" ry="9" fill="#fff"/>
-                            <circle cx="87" cy="94" r="5" fill="#1a1a1a"/>
-                            <circle cx="117" cy="94" r="5" fill="#1a1a1a"/>
-                            <circle cx="89" cy="92" r="2" fill="#fff"/>
-                            <circle cx="119" cy="92" r="2" fill="#fff"/>
-                            <ellipse cx="100" cy="108" rx="6" ry="4" fill="#8b4513"/>
-                            <path d="M 82 115 Q 100 135 118 115" fill="#c0392b" class="lion-mouth"/>
-                            <path d="M 88 115 L 90 120 L 92 115" fill="#fff"/>
-                            <path d="M 108 115 L 110 120 L 112 115" fill="#fff"/>
-                        </g>
-                        <g class="scratch-marks" opacity="0">
-                            <path d="M 30 50 L 60 90" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
-                            <path d="M 40 45 L 70 85" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
-                            <path d="M 50 40 L 80 80" stroke="#f5d061" stroke-width="4" stroke-linecap="round"/>
-                        </g>
-                    </svg>
-                </div>
-                <div class="bonus-banner">
-                    <span class="bonus-text">BONUS</span>
-                    <span class="bonus-amount" id="bonusAmount">0</span>
-                </div>
+                <div class="bonus-banner"><span class="bonus-text">BONUS</span><span class="bonus-amount" id="bonusAmount">0</span></div>
             </div>
         </div>
-
-        <!-- Big Win -->
         <div class="bigwin-popup" id="bigWinPopup" style="display:none;">
-            <div class="bigwin-content">
-                <div class="bigwin-title" id="bigWinTitle">¡GRAN GANANCIA!</div>
-                <div class="bigwin-amount" id="bigWinAmount">0</div>
-            </div>
+            <div class="bigwin-content"><div class="bigwin-title" id="bigWinTitle">¡GRAN GANANCIA!</div><div class="bigwin-amount" id="bigWinAmount">0</div></div>
         </div>
-
-        <!-- Free Spins -->
         <div class="freespins-popup" id="freeSpinsPopup" style="display:none;">
-            <div class="freespins-content">
-                <div class="freespins-title">🌟 GIROS GRATIS 🌟</div>
-                <div class="freespins-amount" id="freeSpinsAwarded">10</div>
-                <button class="freespins-start-btn" id="freeSpinsStartBtn">¡RUGIR!</button>
-            </div>
+            <div class="freespins-content"><div class="freespins-title">🌟 GIROS GRATIS 🌟</div><div class="freespins-amount" id="freeSpinsAwarded">10</div><button class="freespins-start-btn" id="freeSpinsStartBtn">¡RUGIR!</button></div>
         </div>
     </div>
 
@@ -178,6 +96,5 @@
     <script src="assets/js/sound.js"></script>
     <script src="assets/js/animations.js"></script>
     <script src="assets/js/game.js"></script>
-    <script>function enterFullscreen(){const e=document.documentElement;!document.fullscreenElement&&e.requestFullscreen&&e.requestFullscreen().catch(()=>{});}</script>
 </body>
 </html>

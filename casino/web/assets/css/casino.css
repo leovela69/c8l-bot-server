@@ -1,103 +1,120 @@
 /* ============================================================
    C8L CASINO — EL LEÓN DORADO
-   Máquina física con imagen de fondo, estilo casino AAA premium
+   Background image approach: mockup as skin, reels overlaid
    ============================================================ */
 :root {
     --gold: #d4a017; --gold-light: #f5d061; --gold-dark: #8b6914;
     --gold-glow: rgba(212,160,23,0.6);
-    --black: #0a0a0a; --cream: #f5f0e8;
-    --font-display: 'Cinzel Decorative', serif;
     --font-tech: 'Orbitron', sans-serif;
-    --font-body: 'Poppins', sans-serif;
+    --font-display: 'Cinzel Decorative', serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:var(--font-body);color:var(--cream);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 
-/* ============ LAYOUT ============ */
-.casino-app{width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden;background:#080500}
+.casino-app{width:100%;height:100vh;height:100dvh;position:relative;overflow:hidden}
 
-/* Machine background image */
-.machine-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;opacity:0.4}
-.machine-bg-img{width:100%;height:100%;object-fit:cover;filter:brightness(0.6)}
+/* ============ BACKGROUND IMAGE ============ */
+.slot-bg-wrapper{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.slot-bg-img{width:100%;height:100%;object-fit:contain}
 
-/* ============ TOP ============ */
-.top-section{position:relative;z-index:10;padding:6px 12px;background:linear-gradient(180deg,rgba(10,8,0,0.95),rgba(5,3,0,0.7))}
-.logo-area{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
-.logo-badge{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--black);font-family:var(--font-display);font-weight:900;font-size:14px;padding:5px 10px;border-radius:10px;border:2px solid var(--gold-light);box-shadow:0 0 15px var(--gold-glow)}
-.logo-titles{text-align:center}
-.logo-main{display:block;font-family:var(--font-display);font-size:16px;color:var(--gold-light);text-shadow:0 0 10px var(--gold-glow);letter-spacing:3px}
-.logo-sub{display:block;font-family:var(--font-tech);font-size:8px;color:var(--gold);letter-spacing:4px}
-.sound-btn{background:none;border:1px solid var(--gold-dark);color:var(--gold);font-size:18px;padding:5px 8px;border-radius:8px;cursor:pointer}
-.jackpot-bar{text-align:center;padding:4px 0}
-.jp-label{font-family:var(--font-tech);font-size:8px;color:var(--gold);letter-spacing:3px;display:block}
-.jp-amount{font-family:var(--font-tech);font-size:24px;font-weight:900;color:var(--gold-light);text-shadow:0 0 15px var(--gold-glow),0 0 30px rgba(212,160,23,0.3);animation:jpulse 2s ease-in-out infinite}
-@keyframes jpulse{0%,100%{text-shadow:0 0 15px var(--gold-glow)}50%{text-shadow:0 0 30px var(--gold-glow),0 0 50px rgba(212,160,23,0.4)}}
+/* ============ GAME OVERLAY ============ */
+.game-overlay{position:absolute;inset:0;z-index:10}
 
-/* ============ REELS SECTION ============ */
-.reels-section{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 8px;position:relative;z-index:10;min-height:0}
-.side-info{display:flex;flex-direction:column;gap:6px}
-.side-box{background:linear-gradient(180deg,rgba(20,15,5,0.9),rgba(10,8,0,0.9));border:2px solid var(--gold-dark);border-radius:12px;padding:10px 8px;text-align:center;min-width:65px;box-shadow:0 0 15px rgba(0,0,0,0.6),inset 0 0 10px rgba(0,0,0,0.5)}
-.sb-label{display:block;font-family:var(--font-tech);font-size:7px;color:var(--gold);letter-spacing:1px}
-.sb-value{display:block;font-family:var(--font-tech);font-size:20px;font-weight:900;color:var(--gold-light);text-shadow:0 0 8px var(--gold-glow)}
-.sb-sub{display:block;font-family:var(--font-tech);font-size:7px;color:var(--gold);opacity:0.7}
-.side-box.active{border-color:var(--gold-light);box-shadow:0 0 20px var(--gold-glow)}
+/* All overlay elements use % positioning relative to the image */
+/* These positions match the original mockup layout */
+
+/* Jackpot number */
+.ov-jackpot{
+    position:absolute;top:17.5%;left:50%;transform:translateX(-50%);
+    font-family:var(--font-tech);font-size:clamp(14px,3.5vw,28px);font-weight:900;
+    color:var(--gold-light);text-shadow:0 0 15px var(--gold-glow);
+    text-align:center;
+}
+
+/* Multiplier (left panel) */
+.ov-multiplier{
+    position:absolute;top:42%;left:3%;width:10%;text-align:center;
+}
+.ov-multi-val{display:block;font-family:var(--font-tech);font-size:clamp(12px,2.5vw,22px);font-weight:900;color:var(--gold-light);text-shadow:0 0 8px var(--gold-glow)}
+.ov-multi-label{display:block;font-family:var(--font-tech);font-size:clamp(5px,1vw,9px);color:var(--gold);letter-spacing:1px}
+
+/* Free Spins (right panel) */
+.ov-freespins{
+    position:absolute;top:42%;right:3%;width:10%;text-align:center;
+}
+.ov-fs-val{display:block;font-family:var(--font-tech);font-size:clamp(12px,2.5vw,22px);font-weight:900;color:var(--gold-light);text-shadow:0 0 8px var(--gold-glow)}
+.ov-fs-label{display:block;font-family:var(--font-tech);font-size:clamp(5px,1vw,9px);color:var(--gold);letter-spacing:1px}
 
 /* ============ REELS ============ */
-.reels-area{flex:1;max-width:420px;position:relative;background:#030303;border:3px solid var(--gold);border-radius:14px;overflow:hidden;box-shadow:0 0 30px rgba(212,160,23,0.2),inset 0 4px 20px rgba(0,0,0,0.9),inset 0 -4px 20px rgba(0,0,0,0.9)}
-.reels-grid{display:grid;grid-template-columns:repeat(5,1fr);width:100%;height:100%;min-height:220px}
-.reel{overflow:hidden;position:relative;border-right:1px solid rgba(212,160,23,0.15)}
-.reel:last-child{border-right:none}
-.reel-strip{display:flex;flex-direction:column;height:100%;transition:transform 0.1s}
-.symbol{flex:1;display:flex;align-items:center;justify-content:center;padding:3px}
-.symbol-inner{width:100%;height:100%;max-width:72px;max-height:72px;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid rgba(212,160,23,0.2);background:rgba(10,8,2,0.5)}
-.symbol-inner img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+.ov-reels{
+    position:absolute;
+    top:29%;left:14%;
+    width:72%;height:42%;
+    display:grid;grid-template-columns:repeat(5,1fr);
+    gap:1px;
+    overflow:hidden;
+}
+.reel{overflow:hidden;position:relative}
+.reel-strip{display:flex;flex-direction:column;height:100%;transition:transform 0.05s}
+.symbol{flex:1;display:flex;align-items:center;justify-content:center;padding:2%}
+.symbol-inner{width:90%;height:90%;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.symbol-inner img{width:100%;height:100%;object-fit:cover;border-radius:4px}
 
-/* Reel top/bottom shadow for depth */
-.reels-area::before,.reels-area::after{content:'';position:absolute;left:0;right:0;height:20%;z-index:3;pointer-events:none}
-.reels-area::before{top:0;background:linear-gradient(180deg,rgba(3,3,3,0.8),transparent)}
-.reels-area::after{bottom:0;background:linear-gradient(0deg,rgba(3,3,3,0.8),transparent)}
-
-/* Spinning animation */
-.reel.spinning .reel-strip{animation:rspin 0.1s linear infinite}
+/* Spinning */
+.reel.spinning .reel-strip{animation:rspin 0.08s linear infinite}
 @keyframes rspin{0%{transform:translateY(0)}100%{transform:translateY(-33.33%)}}
-.reel.stopping .reel-strip{animation:rstop 0.5s cubic-bezier(0.25,0.46,0.45,0.94) forwards}
-@keyframes rstop{0%{transform:translateY(-10%)}70%{transform:translateY(3%)}100%{transform:translateY(0)}}
+.reel.stopping .reel-strip{animation:rstop 0.6s cubic-bezier(0.15,0.8,0.3,1) forwards}
+@keyframes rstop{0%{transform:translateY(-12%)}75%{transform:translateY(2%)}100%{transform:translateY(0)}}
 
-/* Winning symbols */
-.symbol.winning .symbol-inner{animation:swin 0.5s ease-in-out infinite alternate;border-color:var(--gold-light);box-shadow:0 0 15px var(--gold-glow)}
-@keyframes swin{0%{transform:scale(1)}100%{transform:scale(1.1);filter:brightness(1.4)}}
+/* Winning */
+.symbol.winning .symbol-inner{animation:swin 0.4s ease-in-out infinite alternate;box-shadow:0 0 12px var(--gold-glow)}
+@keyframes swin{0%{transform:scale(1)}100%{transform:scale(1.08);filter:brightness(1.3)}}
 
 /* Win overlay */
-.win-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:10;border-radius:14px}
-.win-amount{font-family:var(--font-tech);font-size:32px;font-weight:900;color:var(--gold-light);text-shadow:0 0 25px var(--gold-glow);animation:wpop 0.5s cubic-bezier(0.68,-0.55,0.265,1.55)}
+.ov-win{
+    position:absolute;top:29%;left:14%;width:72%;height:42%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.7);z-index:20;border-radius:8px;
+}
+.win-amount{font-family:var(--font-tech);font-size:clamp(20px,5vw,36px);font-weight:900;color:var(--gold-light);text-shadow:0 0 20px var(--gold-glow);animation:wpop 0.5s cubic-bezier(0.68,-0.55,0.265,1.55)}
 @keyframes wpop{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
 
-/* ============ BOTTOM CONTROLS ============ */
-.bottom-section{position:relative;z-index:10;padding:8px 10px;background:linear-gradient(180deg,rgba(5,3,0,0.7),rgba(10,8,0,0.95))}
-.controls-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
-.ctrl-group{text-align:center}
-.cg-label{display:block;font-family:var(--font-tech);font-size:7px;color:var(--gold);letter-spacing:1px}
-.cg-value{display:block;font-family:var(--font-tech);font-size:14px;font-weight:700;color:var(--cream)}
-.cg-win{color:var(--gold-light);font-size:16px}
-.cg-adjust{display:flex;align-items:center;gap:6px}
-.adj-btn{width:26px;height:26px;border-radius:50%;background:linear-gradient(180deg,#2a2010,#1a1200);border:1px solid var(--gold-dark);color:var(--gold-light);font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.adj-btn:active{transform:scale(0.9)}
+/* ============ CONTROLS ============ */
+/* Lines display */
+.ov-lines{position:absolute;bottom:21.5%;left:5%;width:9%;text-align:center;font-family:var(--font-tech);font-size:clamp(10px,2vw,16px);font-weight:700;color:#f5f0e8}
+/* Bet display */
+.ov-bet{position:absolute;bottom:21.5%;left:15%;width:9%;text-align:center;font-family:var(--font-tech);font-size:clamp(10px,2vw,16px);font-weight:700;color:#f5f0e8}
+/* Total bet */
+.ov-total{position:absolute;bottom:21.5%;left:25%;width:11%;text-align:center;font-family:var(--font-tech);font-size:clamp(10px,2vw,16px);font-weight:700;color:#f5f0e8}
+/* Win display */
+.ov-winval{position:absolute;bottom:21.5%;right:5%;width:14%;text-align:center;font-family:var(--font-tech);font-size:clamp(10px,2vw,16px);font-weight:700;color:var(--gold-light)}
 
 /* Spin button */
-.spin-button{width:70px;height:50px;border-radius:25px;background:linear-gradient(180deg,var(--gold),var(--gold-dark));border:3px solid var(--gold-light);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(212,160,23,0.4),inset 0 2px 0 rgba(255,255,255,0.2);transition:all 0.2s}
-.spin-button:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(212,160,23,0.6)}
-.spin-button:active{transform:translateY(1px)}
-.spin-button.spinning{opacity:0.5;pointer-events:none}
-.spin-button.free-spin{background:linear-gradient(180deg,#2ecc71,#27ae60);border-color:#2ecc71}
-.spin-text{font-family:var(--font-tech);font-size:12px;font-weight:900;color:var(--black);letter-spacing:2px}
-.spin-sub{font-family:var(--font-body);font-size:6px;color:rgba(0,0,0,0.6)}
+.ov-spin{
+    position:absolute;bottom:19%;left:50%;transform:translateX(-50%);
+    width:clamp(80px,18vw,140px);height:clamp(36px,6vh,52px);
+    background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    border:2px solid var(--gold-light);border-radius:25px;
+    cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 4px 15px rgba(212,160,23,0.4);transition:all 0.2s;
+}
+.ov-spin:active{transform:translateX(-50%) scale(0.95)}
+.ov-spin.spinning{opacity:0.5;pointer-events:none}
+.ov-spin.free-spin{background:linear-gradient(180deg,#2ecc71,#27ae60);border-color:#2ecc71}
+.spin-text{font-family:var(--font-tech);font-size:clamp(10px,2vw,16px);font-weight:900;color:#0a0a0a;letter-spacing:2px}
+.spin-sub{font-family:sans-serif;font-size:clamp(5px,1vw,8px);color:rgba(0,0,0,0.5)}
 
-/* ============ STATUS BAR ============ */
-.status-bar{display:flex;justify-content:space-around;padding:8px 12px;background:rgba(5,3,0,0.98);border-top:1px solid rgba(212,160,23,0.3);position:relative;z-index:10}
-.st-item{display:flex;align-items:center;gap:6px}
-.st-icon{font-size:16px}
-.st-label{font-family:var(--font-tech);font-size:7px;color:var(--gold);letter-spacing:1px}
-.st-value{font-family:var(--font-tech);font-size:13px;font-weight:700;color:var(--cream)}
+/* Bet adjust buttons (invisible, just touch areas) */
+.ov-bet-down{position:absolute;bottom:19%;left:38%;width:5%;height:5%;background:transparent;border:none;cursor:pointer;z-index:15}
+.ov-bet-up{position:absolute;bottom:19%;left:57%;width:5%;height:5%;background:transparent;border:none;cursor:pointer;z-index:15}
+
+/* Bottom stats */
+.ov-credits{position:absolute;bottom:4%;left:8%;font-family:var(--font-tech);font-size:clamp(9px,1.8vw,14px);font-weight:700;color:#f5f0e8}
+.ov-chips{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);font-family:var(--font-tech);font-size:clamp(9px,1.8vw,14px);font-weight:700;color:#f5f0e8}
+.ov-vip{position:absolute;bottom:4%;right:8%;font-family:var(--font-tech);font-size:clamp(9px,1.8vw,14px);font-weight:700;color:#f5f0e8}
+
+/* Sound button */
+.ov-sound{position:absolute;top:2%;right:3%;background:none;border:none;font-size:clamp(16px,3vw,24px);cursor:pointer;z-index:20}
 
 /* ============ PARTICLES ============ */
 .particles-container{position:fixed;inset:0;pointer-events:none;z-index:100;overflow:hidden}
@@ -106,30 +123,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 
 /* ============ POPUPS ============ */
 .lion-bonus-popup,.bigwin-popup,.freespins-popup{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.9);z-index:500}
-.lion-bonus-content,.bigwin-content,.freespins-content{text-align:center;animation:popEntry 0.6s cubic-bezier(0.68,-0.55,0.265,1.55)}
-@keyframes popEntry{0%{transform:scale(0) rotate(-10deg)}100%{transform:scale(1) rotate(0)}}
-.lion-character{width:150px;height:150px;margin:0 auto}
-.lion-svg{width:100%;height:100%}
-.lion-svg .mane{animation:mshake 0.3s ease-in-out infinite;transform-origin:center}
-@keyframes mshake{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
-.lion-svg .lion-mouth{animation:roar 0.4s ease-in-out infinite;transform-origin:center bottom}
-@keyframes roar{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.3)}}
-.lion-svg .scratch-marks{animation:scratcha 0.3s 0.5s forwards}
-@keyframes scratcha{to{opacity:1}}
-.bonus-banner{margin-top:12px;padding:14px 30px;border-radius:12px;background:linear-gradient(180deg,var(--gold),var(--gold-dark));border:3px solid var(--gold-light);box-shadow:0 0 30px var(--gold-glow)}
-.bonus-text{display:block;font-family:var(--font-display);font-size:24px;font-weight:900;color:var(--black);letter-spacing:4px}
-.bonus-amount{display:block;font-family:var(--font-tech);font-size:30px;font-weight:900;color:var(--black)}
-.bigwin-title{font-family:var(--font-display);font-size:24px;color:var(--gold-light);text-shadow:0 0 20px var(--gold-glow);margin-bottom:10px}
-.bigwin-amount{font-family:var(--font-tech);font-size:40px;font-weight:900;color:var(--gold-light);text-shadow:0 0 30px var(--gold-glow)}
-.freespins-title{font-family:var(--font-display);font-size:22px;color:#2ecc71;margin-bottom:10px}
-.freespins-amount{font-family:var(--font-tech);font-size:52px;font-weight:900;color:#2ecc71}
-.freespins-start-btn{margin-top:14px;padding:12px 30px;border-radius:12px;background:linear-gradient(180deg,#2ecc71,#27ae60);border:2px solid #2ecc71;color:#fff;font-family:var(--font-tech);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:2px}
+.lion-bonus-content,.bigwin-content,.freespins-content{text-align:center;animation:popIn 0.6s cubic-bezier(0.68,-0.55,0.265,1.55)}
+@keyframes popIn{0%{transform:scale(0)}100%{transform:scale(1)}}
+.bonus-banner{padding:16px 36px;border-radius:14px;background:linear-gradient(180deg,var(--gold),var(--gold-dark));border:3px solid var(--gold-light);box-shadow:0 0 40px var(--gold-glow)}
+.bonus-text{display:block;font-family:var(--font-display);font-size:clamp(20px,5vw,32px);font-weight:900;color:#0a0a0a;letter-spacing:4px}
+.bonus-amount{display:block;font-family:var(--font-tech);font-size:clamp(24px,6vw,40px);font-weight:900;color:#0a0a0a}
+.bigwin-title{font-family:var(--font-display);font-size:clamp(18px,4vw,28px);color:var(--gold-light);text-shadow:0 0 20px var(--gold-glow);margin-bottom:10px}
+.bigwin-amount{font-family:var(--font-tech);font-size:clamp(28px,7vw,48px);font-weight:900;color:var(--gold-light);text-shadow:0 0 30px var(--gold-glow)}
+.freespins-title{font-family:var(--font-display);font-size:clamp(16px,4vw,24px);color:#2ecc71;margin-bottom:10px}
+.freespins-amount{font-family:var(--font-tech);font-size:clamp(36px,8vw,56px);font-weight:900;color:#2ecc71}
+.freespins-start-btn{margin-top:14px;padding:12px 30px;border-radius:12px;background:linear-gradient(180deg,#2ecc71,#27ae60);border:2px solid #2ecc71;color:#fff;font-family:var(--font-tech);font-size:14px;font-weight:700;cursor:pointer}
 
-/* ============ SCREEN SHAKE ============ */
-.screen-shake{animation:shake 0.5s ease-in-out}
-@keyframes shake{0%,100%{transform:translate(0)}20%{transform:translate(-3px,-2px)}40%{transform:translate(3px,2px)}60%{transform:translate(-2px,3px)}80%{transform:translate(2px,-3px)}}
-
-/* ============ RESPONSIVE ============ */
-@media(max-width:400px){.side-info{display:none}.reels-grid{min-height:180px}.symbol-inner{max-width:60px;max-height:60px}}
-@media(min-width:500px){.reels-grid{min-height:260px}.symbol-inner{max-width:80px;max-height:80px}}
-@media(min-width:768px){.casino-app{max-width:550px;margin:0 auto;border-left:2px solid var(--gold-dark);border-right:2px solid var(--gold-dark)}.reels-grid{min-height:300px}.symbol-inner{max-width:90px;max-height:90px}}
+/* Screen shake */
+.screen-shake{animation:shake 0.5s}
+@keyframes shake{0%,100%{transform:translate(0)}25%{transform:translate(-3px,-2px)}50%{transform:translate(3px,2px)}75%{transform:translate(-2px,3px)}}
