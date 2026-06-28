@@ -126,8 +126,8 @@ body{
 </div>
 <script>
 // === C8L POKER v3 — 9 JUGADORES ===
-const SUITS=['♠','♥','♦','♣'],RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-const RV={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+const SUITS=['S','H','D','C'],SUIT_MAP={S:'\u2660',H:'\u2665',D:'\u2666',C:'\u2663'},RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RV={'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
 const BOTS=[
   {id:0,name:'León🦁',style:'aggressive',raisePct:0.60,foldPct:0.10},
   {id:1,name:'Zorro🦊',style:'balanced',raisePct:0.20,foldPct:0.30},
@@ -160,15 +160,25 @@ initPlayers();
 
 function makeDeck(){
   deck=[];
-  for(const s of SUITS)for(const r of RANKS)deck.push({r,s,v:RV[r]});
-  for(let i=deck.length-1;i>0;i--){const j=0|Math.random()*(i+1);[deck[i],deck[j]]=[deck[j],deck[i]]}
+  for(var si=0;si<SUITS.length;si++){
+    for(var ri=0;ri<RANKS.length;ri++){
+      deck.push({r:RANKS[ri], s:SUIT_MAP[SUITS[si]], v:RV[RANKS[ri]]});
+    }
+  }
+  for(var i=deck.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=deck[i];deck[i]=deck[j];deck[j]=tmp;}
 }
 
 function cardHTML(c,faceDown){
   if(!c)return '';
-  if(faceDown)return '<div class="card face-down"><div class="card-inner"><div class="card-face card-front black"></div><div class="card-face card-back-face"><span class="back-emblem">♠</span></div></div></div>';
-  const red=c.s==='♥'||c.s==='♦';
-  return `<div class="card"><div class="card-inner"><div class="card-face card-front ${red?'red':'black'}"><span class="rank-top">${c.r}${c.s}</span><span class="suit-center">${c.s}</span><span class="rank-bot">${c.r}${c.s}</span></div><div class="card-face card-back-face"><span class="back-emblem">♠</span></div></div></div>`;
+  if(faceDown)return '<div class="card face-down"><div class="card-inner"><div class="card-face card-front black"></div><div class="card-face card-back-face"><span class="back-emblem">&#9824;</span></div></div></div>';
+  var red=(c.s==='\u2665'||c.s==='\u2666');
+  var cls=red?'red':'black';
+  var html='<div class="card"><div class="card-inner"><div class="card-face card-front '+cls+'">';
+  html+='<span class="rank-top">'+c.r+c.s+'</span>';
+  html+='<span class="suit-center">'+c.s+'</span>';
+  html+='<span class="rank-bot">'+c.r+c.s+'</span>';
+  html+='</div><div class="card-face card-back-face"><span class="back-emblem">&#9824;</span></div></div></div>';
+  return html;
 }
 
 function renderSeats(){
