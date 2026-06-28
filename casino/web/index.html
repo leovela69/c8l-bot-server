@@ -243,6 +243,43 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 .shaking{animation:screenShake 0.6s ease-in-out}
 
 
+/* BONUS ROUND OVERLAY */
+#bonus-round{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  z-index:9997;background:rgba(0,0,0,0.92);backdrop-filter:blur(8px);
+  flex-direction:column;gap:12px
+}
+#bonus-round.show{display:flex}
+.br-panel{
+  background:linear-gradient(135deg,#0a0400,#1a0f00,#0a0400);
+  border:3px solid #f5d061;border-radius:20px;padding:20px 30px;
+  box-shadow:0 0 80px rgba(245,208,97,0.4),inset 0 0 40px rgba(212,160,23,0.1);
+  text-align:center;min-width:320px;max-width:90vw;animation:bonusIn 0.5s ease-out
+}
+.br-title{font-family:Georgia,serif;font-size:28px;color:#f5d061;letter-spacing:3px;margin-bottom:8px}
+.br-subtitle{font-size:12px;color:#8b6914;letter-spacing:2px;margin-bottom:16px}
+.br-stats{display:flex;justify-content:space-around;gap:20px;margin:12px 0}
+.br-stat{text-align:center}
+.br-stat .lbl{font-size:9px;color:#8b6914;letter-spacing:1px}
+.br-stat .val{font-size:22px;color:#f5d061;font-weight:bold;font-family:Georgia,serif}
+.br-log{
+  max-height:180px;overflow-y:auto;margin:12px 0;padding:8px;
+  background:rgba(0,0,0,0.4);border-radius:8px;border:1px solid rgba(212,160,23,0.2);
+  text-align:left
+}
+.br-log p{font-size:11px;padding:3px 0;color:#a0a0a0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.br-log p.win{color:#4caf50}
+.br-log p.big{color:#ff6600;font-weight:bold}
+.br-total{font-family:Georgia,serif;font-size:36px;color:#4caf50;font-weight:bold;margin:12px 0;text-shadow:0 0 15px rgba(76,175,80,0.5)}
+.br-btn{
+  margin-top:10px;padding:12px 30px;border-radius:10px;border:2px solid #f5d061;
+  background:linear-gradient(180deg,#d4a017,#8b6914);color:#0a0800;
+  font-family:Georgia,serif;font-size:16px;font-weight:bold;cursor:pointer
+}
+.br-btn:hover{background:linear-gradient(180deg,#f5d061,#d4a017)}
+.br-btn:disabled{opacity:0.5;cursor:not-allowed}
+.br-spin-anim{font-size:18px;color:#f5d061;animation:pulseMult 0.5s ease infinite}
+
 /* Loading overlay */
 #loading{
   position:fixed;inset:0;background:#050505;display:flex;flex-direction:column;
@@ -384,6 +421,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
   </div>
 </div>
 
+<div id="bonus-round">
+  <div class="br-panel">
+    <div class="br-title">🌟 BONUS ROUND 🌟</div>
+    <div class="br-subtitle">GIROS GRATIS — PREMIOS ACUMULATIVOS</div>
+    <div class="br-stats">
+      <div class="br-stat"><div class="lbl">GIROS</div><div class="val" id="br-spins">15</div></div>
+      <div class="br-stat"><div class="lbl">MULTIPLICADOR</div><div class="val" id="br-mult">x2</div></div>
+      <div class="br-stat"><div class="lbl">ACUMULADO</div><div class="val" id="br-acum">0</div></div>
+    </div>
+    <div class="br-log" id="br-log"></div>
+    <div class="br-spin-anim" id="br-status">Preparando...</div>
+    <div class="br-total" id="br-total">+0</div>
+    <button class="br-btn" id="br-btn">GIRAR BONUS</button>
+  </div>
+</div>
+
 <script src="https://pixijs.download/v7.3.2/pixi.min.js"></script>
 <script>
 (function(){
@@ -402,7 +455,7 @@ const PAYLINES=[
 const SYMBOLS=[
   {id:'leon',   img:'sym_leon.png',    w:3, pay:{5:500,4:100,3:25}},
   {id:'wild',   img:'sym_wild.png',    w:2, pay:{5:1000,4:200,3:50}},
-  {id:'scatter',img:'sym_scatter.png', w:2, pay:{5:100,4:20,3:5}},
+  {id:'scatter',img:'sym_scatter.png', w:5, pay:{5:100,4:20,3:5}},
   {id:'A',      img:'sym_A.png',       w:5, pay:{5:50,4:15,3:5}},
   {id:'K',      img:'sym_K.jpeg',      w:6, pay:{5:40,4:12,3:4}},
   {id:'Q',      img:'sym_Q.jpeg',      w:7, pay:{5:30,4:10,3:3}},
@@ -1071,7 +1124,7 @@ function initSlot(assets){
       totalWin = prizeAmount;
     }
 
-    // Scatters for free spins
+    // Scatters for BONUS ROUND
     let scatterCount=0;
     for(let c=0;c<REELS;c++){
       for(let r=0;r<ROWS;r++){
@@ -1079,14 +1132,16 @@ function initSlot(assets){
       }
     }
     if(scatterCount>=3){
-      const scatterBonus={3:2,4:5,5:15};
-      totalWin+=Math.round(totalBet()*scatterBonus[Math.min(scatterCount,5)]);
       const fsAward=scatterCount>=5?25:scatterCount>=4?15:10;
-      freeSpins+=fsAward;
-      multiplier=2;
-      botSay('¡GIROS GRATIS! 🌟');
-      addChat('🌟 ¡GIROS GRATIS x'+fsAward+' activados!','freespin');
-      showBonus(totalWin, fsAward, 'scatter');
+      const bonusMult=scatterCount>=5?5:scatterCount>=4?3:2;
+      // Show bonus card first
+      showBonus(0, fsAward, 'scatter');
+      botSay('¡BONUS ROUND! 🌟🌟🌟');
+      addChat('🌟 ¡¡¡BONUS ROUND!!! '+fsAward+' giros x'+bonusMult,'freespin');
+      // Launch bonus round after overlay disappears
+      setTimeout(()=>{
+        startBonusRound(fsAward, bonusMult);
+      },3200);
     }
 
     // Modo Rugido
@@ -1175,6 +1230,132 @@ function initSlot(assets){
     }
   } // end evaluateSpin
 
+
+  // ===== BONUS ROUND SYSTEM =====
+  const brPanel=document.getElementById('bonus-round');
+  const brSpins=document.getElementById('br-spins');
+  const brMult=document.getElementById('br-mult');
+  const brAcum=document.getElementById('br-acum');
+  const brLog=document.getElementById('br-log');
+  const brStatus=document.getElementById('br-status');
+  const brTotal=document.getElementById('br-total');
+  const brBtn=document.getElementById('br-btn');
+
+  let bonusRoundActive=false;
+  let brSpinsLeft=0;
+  let brMultiplier=2;
+  let brAccumulated=0;
+
+  function startBonusRound(spins, mult){
+    bonusRoundActive=true;
+    brSpinsLeft=spins;
+    brMultiplier=mult;
+    brAccumulated=0;
+    brSpins.textContent=spins;
+    brMult.textContent='x'+mult;
+    brAcum.textContent='0';
+    brTotal.textContent='+0';
+    brLog.innerHTML='';
+    brStatus.textContent='¡'+spins+' giros gratis con x'+mult+'!';
+    brBtn.textContent='GIRAR BONUS';
+    brBtn.disabled=false;
+    brPanel.classList.add('show');
+    playWinMusic();
+    shakeScreen();
+    vibrateDevice([100,50,100,50,100,50,200]);
+  }
+
+  function doBonusSpin(){
+    if(brSpinsLeft<=0) return;
+    brBtn.disabled=true;
+    brSpinsLeft--;
+    brSpins.textContent=brSpinsLeft;
+    brStatus.textContent='🎰 Girando...';
+    sfxSpin();
+
+    // Simular resultado del bonus spin (más generoso que normal)
+    setTimeout(()=>{
+      const roll=Math.random();
+      let spinWin=0;
+
+      if(roll<0.25){
+        // 25% — nada
+        spinWin=0;
+        const p=document.createElement('p');
+        p.textContent='Giro '+(brSpinsLeft+1)+': ❌ Sin premio';
+        brLog.appendChild(p);
+      } else if(roll<0.55){
+        // 30% — premio pequeño (1-2x apuesta × multiplicador)
+        spinWin=Math.round(totalBet()*(1+Math.random())*brMultiplier);
+        const p=document.createElement('p');p.className='win';
+        p.textContent='Giro '+(brSpinsLeft+1)+': ✅ +'+fmt(spinWin);
+        brLog.appendChild(p);
+      } else if(roll<0.80){
+        // 25% — premio medio (2-4x × mult)
+        spinWin=Math.round(totalBet()*(2+Math.random()*2)*brMultiplier);
+        const p=document.createElement('p');p.className='win';
+        p.textContent='Giro '+(brSpinsLeft+1)+': 🔥 +'+fmt(spinWin);
+        brLog.appendChild(p);
+      } else if(roll<0.95){
+        // 15% — premio grande (4-8x × mult)
+        spinWin=Math.round(totalBet()*(4+Math.random()*4)*brMultiplier);
+        const p=document.createElement('p');p.className='big';
+        p.textContent='Giro '+(brSpinsLeft+1)+': 🦁 +'+fmt(spinWin)+'!!!';
+        brLog.appendChild(p);
+      } else {
+        // 5% — MEGA (8-15x × mult)
+        spinWin=Math.round(totalBet()*(8+Math.random()*7)*brMultiplier);
+        const p=document.createElement('p');p.className='big';
+        p.textContent='Giro '+(brSpinsLeft+1)+': 👑 MEGA +'+fmt(spinWin)+'!!!';
+        brLog.appendChild(p);
+        vibrateDevice([200,100,200]);
+      }
+
+      brAccumulated+=spinWin;
+      brAcum.textContent=fmt(brAccumulated);
+      brTotal.textContent='+'+fmt(brAccumulated);
+      brLog.scrollTop=brLog.scrollHeight;
+
+      if(spinWin>0){
+        sfxWin();
+        brStatus.textContent='✅ +'+fmt(spinWin)+' (acumulado: '+fmt(brAccumulated)+')';
+      } else {
+        brStatus.textContent='❌ Sin premio... quedan '+brSpinsLeft;
+      }
+
+      if(brSpinsLeft<=0){
+        // BONUS ROUND TERMINADO
+        brBtn.textContent='COBRAR +'+fmt(brAccumulated);
+        brBtn.disabled=false;
+        brStatus.textContent='🎉 ¡BONUS COMPLETADO!';
+        sfxBig();
+        vibrateDevice([200,100,200,100,300,100,400]);
+      } else {
+        brBtn.textContent='GIRAR ('+ brSpinsLeft+' restantes)';
+        brBtn.disabled=false;
+      }
+    },800);
+  }
+
+  function collectBonusRound(){
+    credits+=brAccumulated;
+    lastWin=brAccumulated;
+    addChat('🌟 BONUS ROUND: +'+fmt(brAccumulated)+' cobrado!','win');
+    botSay('¡'+fmt(brAccumulated)+' del BONUS! 🔥');
+    brPanel.classList.remove('show');
+    bonusRoundActive=false;
+    updateUI();
+    shakeScreen();
+    if(brAccumulated>0) playWinMusic();
+  }
+
+  brBtn.addEventListener('click',()=>{
+    if(brSpinsLeft>0){
+      doBonusSpin();
+    } else {
+      collectBonusRound();
+    }
+  });
 
   // ===== WIN EFFECT =====
   function showWinEffect(amt,big){
