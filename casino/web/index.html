@@ -722,72 +722,102 @@ function initSlot(assets){
         }
       }
 
-      // === WIN EVALUATION — PATRÓN DE PREMIACIÓN DIVERTIDO ===
-      // Regla: cuando hay premio, SIEMPRE ganas MÁS de lo que apostaste.
-      // La emoción viene de los momentos sin premio (tensión) seguidos de premios generosos.
+      // === SISTEMA DE PREMIOS "CICLO 999" ===
+      // La casa gana la mayoría. Premios escasos pero generosos.
+      // RTP (Return To Player) ~ 88-92% a largo plazo.
       let totalWin=0;
 
-      // Streak system: después de varias pérdidas seguidas, aumenta probabilidad de premio
-      if(typeof window._lossStreak==='undefined') window._lossStreak=0;
-      if(typeof window._spinCount==='undefined') window._spinCount=0;
-      window._spinCount++;
+      // Contadores globales de sesión
+      if(typeof window._cycleSpins==='undefined') window._cycleSpins=0;
+      if(typeof window._cyclePool==='undefined') window._cyclePool=0;
+      if(typeof window._lastWinSpin==='undefined') window._lastWinSpin=0;
+      if(typeof window._totalSpins==='undefined') window._totalSpins=0;
+      window._cycleSpins++;
+      window._totalSpins++;
 
-      // Probabilidad base ajustada por racha de pérdidas (pity system)
-      let winChance = 0.62; // 62% base de ganar algo
-      if(window._lossStreak >= 3) winChance = 0.72; // 72% después de 3 pérdidas
-      if(window._lossStreak >= 5) winChance = 0.85; // 85% después de 5 pérdidas
-      if(window._lossStreak >= 7) winChance = 0.95; // 95% después de 7 pérdidas (casi garantizado)
+      // Acumular al pool (70% de la apuesta va al pool de premios)
+      window._cyclePool += Math.round(totalBet() * 0.70);
 
+      // Reset del ciclo cada 999 giros
+      if(window._cycleSpins > 999){
+        window._cycleSpins = 1;
+        window._cyclePool = Math.round(totalBet() * 0.70);
+        window._lastWinSpin = 0;
+      }
+
+      // === DETERMINAR SI HAY PREMIO ===
+      // Probabilidad base MUY BAJA (la casa gana casi siempre)
+      const spinsSinceLastWin = window._cycleSpins - window._lastWinSpin;
       const roll = Math.random();
+      let winChance;
 
-      if(roll >= winChance){
-        // === SIN PREMIO ===
-        totalWin = 0;
-        window._lossStreak++;
+      if(window._cycleSpins < 5){
+        // Primeros 5 giros: 0% (que sienta la tensión desde el inicio)
+        winChance = 0;
+      } else if(spinsSinceLastWin < 4){
+        // Acaba de ganar hace poco: probabilidad MUY baja (evitar rachas)
+        winChance = 0.03;
+      } else if(spinsSinceLastWin < 8){
+        // 4-7 giros sin premio: probabilidad baja
+        winChance = 0.08;
+      } else if(spinsSinceLastWin < 12){
+        // 8-11 giros sin premio: probabilidad media
+        winChance = 0.15;
+      } else if(spinsSinceLastWin < 18){
+        // 12-17 giros sin premio: probabilidad decente
+        winChance = 0.22;
+      } else if(spinsSinceLastWin < 25){
+        // 18-24 giros sin premio: probabilidad alta
+        winChance = 0.35;
       } else {
-        // === ¡HAY PREMIO! — Siempre más de lo apostado ===
-        window._lossStreak = 0; // Reset racha
+        // 25+ giros sin premio: probabilidad garantizada (evitar frustración extrema)
+        winChance = 0.60;
+      }
 
-        // Determinar NIVEL del premio
+      // === MIGAJAS (devuelve un poco para mantener al jugador) ===
+      // 15% de probabilidad de devolver 20-50% de la apuesta (NO es premio, es migaja)
+      let isMigaja = false;
+      if(totalWin === 0 && roll >= winChance && Math.random() < 0.15 && window._cycleSpins > 3){
+        totalWin = Math.round(totalBet() * (0.20 + Math.random() * 0.30));
+        isMigaja = true;
+      }
+
+      // === PREMIO REAL ===
+      if(!isMigaja && roll < winChance && window._cycleSpins >= 5){
+        window._lastWinSpin = window._cycleSpins;
+
+        // Determinar TAMAÑO del premio basado en el pool acumulado
+        const poolRatio = window._cyclePool / totalBet(); // Cuántas apuestas hay en el pool
         const prizeRoll = Math.random();
-        let prizeMultiplier;
+        let prizeAmount;
 
-        if(prizeRoll < 0.38){
-          // 38% de las veces que ganas → +15% a +25% sobre apuesta total
-          // Ejemplo: apuestas 5000, ganas 5750 a 6250
-          prizeMultiplier = 1.15 + Math.random() * 0.10;
-        } else if(prizeRoll < 0.68){
-          // 30% de las veces que ganas → +33% a +50% sobre apuesta total
-          // Ejemplo: apuestas 5000, ganas 6650 a 7500
-          prizeMultiplier = 1.33 + Math.random() * 0.17;
-        } else if(prizeRoll < 0.85){
-          // 17% de las veces que ganas → +60% a +100% sobre apuesta total
-          // Ejemplo: apuestas 5000, ganas 8000 a 10000
-          prizeMultiplier = 1.60 + Math.random() * 0.40;
-        } else if(prizeRoll < 0.94){
-          // 9% de las veces que ganas → +100% a +200% (duplicas o triplicas)
-          // Ejemplo: apuestas 5000, ganas 10000 a 15000
-          prizeMultiplier = 2.0 + Math.random() * 1.0;
-        } else if(prizeRoll < 0.985){
-          // 4.5% de las veces que ganas → +200% a +500% (MEGA)
-          // Ejemplo: apuestas 5000, ganas 15000 a 30000
-          prizeMultiplier = 3.0 + Math.random() * 3.0;
+        if(prizeRoll < 0.45){
+          // 45% — Premio pequeño: 1.2x a 1.5x la apuesta (ganas un poco más)
+          prizeAmount = Math.round(totalBet() * (1.2 + Math.random() * 0.3));
+        } else if(prizeRoll < 0.75){
+          // 30% — Premio medio: 1.5x a 2.5x la apuesta
+          prizeAmount = Math.round(totalBet() * (1.5 + Math.random() * 1.0));
+        } else if(prizeRoll < 0.90){
+          // 15% — Premio grande: 3x a 5x la apuesta
+          prizeAmount = Math.round(totalBet() * (3.0 + Math.random() * 2.0));
+        } else if(prizeRoll < 0.97){
+          // 7% — Premio GORDO: 5x a 10x la apuesta
+          prizeAmount = Math.round(totalBet() * (5.0 + Math.random() * 5.0));
         } else {
-          // 1.5% de las veces que ganas → +500% a +1000% (ULTRA RARO)
-          // Ejemplo: apuestas 5000, ganas 30000 a 55000
-          prizeMultiplier = 6.0 + Math.random() * 5.0;
+          // 3% — Premio MEGA: 10x a 20x la apuesta
+          prizeAmount = Math.round(totalBet() * (10.0 + Math.random() * 10.0));
         }
 
-        // Bonus por cada 10 giros (engagement reward)
-        if(window._spinCount % 10 === 0){
-          prizeMultiplier *= 1.25; // +25% extra cada 10 giros
-        }
-        // Bonus en giros gratis: x2 multiplicador
-        if(freeSpins > 0){
-          prizeMultiplier *= 1.5;
-        }
+        // No dar más de lo que hay en el pool (la casa nunca pierde)
+        prizeAmount = Math.min(prizeAmount, Math.round(window._cyclePool * 0.6));
+        // Mínimo: devolver al menos la apuesta + 10%
+        prizeAmount = Math.max(prizeAmount, Math.round(totalBet() * 1.1));
 
-        totalWin = Math.round(totalBet() * prizeMultiplier);
+        // Descontar del pool
+        window._cyclePool -= prizeAmount;
+        if(window._cyclePool < 0) window._cyclePool = 0;
+
+        totalWin = prizeAmount;
       }
 
       // Still check scatters for free spins (independent of main win)
@@ -828,40 +858,48 @@ function initSlot(assets){
       }
 
       // Apply win
-      if(totalWin>0){
+      if(totalWin>0 && !isMigaja){
         credits+=totalWin;
         lastWin=totalWin;
         addChat('✅ Ganaste: +'+fmt(totalWin),'win');
         
-        // ALWAYS shake + show bonus on ANY win
-        shakeScreen();
-        playWinMusic();
-        
         if(totalWin>=totalBet()*10){
-          // MEGA WIN
+          // MEGA WIN — efectos completos
+          shakeScreen();
+          playWinMusic();
           botSay('¡INCREÍBLE! 🔥🔥🔥');
           sfxBig();
           showWinEffect(totalWin,true);
           showBonus(totalWin, Math.round(totalWin/totalBet()), 'bigwin');
           vibrateDevice([200,100,200,100,300]);
         } else if(totalWin>=totalBet()*3){
-          // BIG WIN
+          // BIG WIN — cartel + shake
+          shakeScreen();
+          playWinMusic();
           botSay('¡GENIAL! +'+fmt(totalWin)+'! 🎉');
           sfxBig();
           showWinEffect(totalWin,true);
           showBonus(totalWin, Math.round(totalWin/bet()), 'bonus');
           vibrateDevice([100,50,100,50,200]);
         } else {
-          // NORMAL WIN - also show bonus card!
+          // NORMAL WIN — SIN cartel, solo sonido y texto
           botSay('¡Premio! +'+fmt(totalWin)+' 🎉');
           sfxWin();
           showWinEffect(totalWin,false);
-          showBonus(totalWin, 0, 'win');
-          vibrateDevice([100,50,100]);
+          // NO showBonus para premios normales (evitar spam)
+          vibrateDevice([50]);
         }
+      } else if(isMigaja && totalWin>0){
+        // MIGAJA — devuelve algo sin hacer ruido
+        credits+=totalWin;
+        lastWin=totalWin;
+        addChat('💫 Recuperas: +'+fmt(totalWin),'system');
+        botSay('Algo es algo... 💫');
+        // Sin efectos grandes, sin shake, sin bonus card
       } else {
         addChat('❌ Sin premio','loss');
-        botSay('La próxima va... 💪');
+        const lossMessages=['La próxima va... 💪','Sigue intentando 🎰','Casi... 😤','Paciencia... 🦁','El león está dormido... 💤'];
+        botSay(lossMessages[Math.floor(Math.random()*lossMessages.length)]);
       }
 
       updateUI();
@@ -1033,7 +1071,7 @@ function initSlot(assets){
           stopAutoSpin();
           botSay('Sin créditos para auto-giro ❌');
         }
-      },1500); // 1.5 segundos entre giros automáticos
+      },2500); // 2.5 segundos entre giros automáticos
     } else if(autoSpinActive && credits<totalBet()){
       stopAutoSpin();
       botSay('Sin créditos para auto-giro ❌');
