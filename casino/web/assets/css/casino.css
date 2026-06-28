@@ -1,7 +1,6 @@
 /* ============================================================
    C8L CASINO — EL LEÓN DORADO — 3D Premium Edition
-   Estilo: Máquina física realista 3D, templo del león
-   Mobile-first, Negro + Dorado
+   Mobile-first, Negro + Dorado, Máquina Física 3D
    ============================================================ */
 :root {
     --gold: #d4a017;
@@ -9,12 +8,9 @@
     --gold-dark: #8b6914;
     --gold-glow: rgba(212, 160, 23, 0.6);
     --black: #0a0a0a;
-    --black-light: #1a1a1a;
     --red: #c0392b;
     --white: #f0e6d3;
     --cream: #f5f0e8;
-    --temple-dark: #1a1200;
-    --temple-stone: #2a2010;
     --font-display: 'Cinzel Decorative', serif;
     --font-tech: 'Orbitron', sans-serif;
     --font-body: 'Poppins', sans-serif;
@@ -27,53 +23,42 @@ html, body {
     touch-action: manipulation;
 }
 
-
-/* ============ APP & TEMPLE BACKGROUND ============ */
+/* ============ APP CONTAINER ============ */
 .casino-app {
     width: 100%; height: 100vh; height: 100dvh;
     display: flex; flex-direction: column;
     position: relative; overflow: hidden;
 }
+
+/* ============ TEMPLE BACKGROUND ============ */
 .temple-bg {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background:
-        radial-gradient(ellipse at 50% 20%, rgba(139, 105, 20, 0.15) 0%, transparent 50%),
-        linear-gradient(180deg, #0d0800 0%, #050300 30%, #080504 60%, #0a0600 100%);
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 20%, rgba(139,105,20,0.12) 0%, transparent 50%),
+                linear-gradient(180deg, #0d0800 0%, #050300 40%, #0a0600 100%);
     z-index: 0;
 }
-.temple-bg::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='60' height='60' fill='none'/%3E%3Crect x='0' y='0' width='30' height='30' fill='rgba(139,105,20,0.03)'/%3E%3Crect x='30' y='30' width='30' height='30' fill='rgba(139,105,20,0.03)'/%3E%3C/svg%3E");
-    opacity: 0.5;
-}
-
-
-/* ============ TORCHES ============ */
-.torch { position: absolute; top: 15%; width: 20px; z-index: 1; }
-.torch-left { left: 5%; }
-.torch-right { right: 5%; }
+.torch { position: absolute; top: 18%; width: 20px; z-index: 1; }
+.torch-left { left: 4%; }
+.torch-right { right: 4%; }
 .flame {
-    width: 16px; height: 30px; margin: 0 auto;
-    background: radial-gradient(ellipse at bottom, #f5d061 0%, #d4a017 40%, rgba(212,160,23,0) 70%);
+    width: 14px; height: 28px; margin: 0 auto;
+    background: radial-gradient(ellipse at bottom, #f5d061, #d4a017 50%, transparent 75%);
     border-radius: 50% 50% 20% 20%;
     animation: flicker 1.5s ease-in-out infinite alternate;
-    box-shadow: 0 0 20px rgba(212,160,23,0.5), 0 0 40px rgba(212,160,23,0.3);
+    box-shadow: 0 0 15px rgba(212,160,23,0.5), 0 0 30px rgba(212,160,23,0.2);
 }
 @keyframes flicker {
-    0% { transform: scaleY(1) scaleX(1); opacity: 1; }
-    25% { transform: scaleY(1.1) scaleX(0.9); }
-    50% { transform: scaleY(0.9) scaleX(1.1); opacity: 0.9; }
-    75% { transform: scaleY(1.05) scaleX(0.95); }
-    100% { transform: scaleY(0.95) scaleX(1.05); opacity: 1; }
+    0% { transform: scaleY(1) scaleX(1); }
+    50% { transform: scaleY(1.1) scaleX(0.9); opacity: 0.9; }
+    100% { transform: scaleY(0.95) scaleX(1.05); }
 }
-.floating-particles { position: absolute; width: 100%; height: 100%; overflow: hidden; }
-
+.floating-particles { position: absolute; inset: 0; overflow: hidden; }
 
 /* ============ HEADER ============ */
 .casino-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 6px 12px; position: relative; z-index: 10;
-    background: linear-gradient(180deg, rgba(15,10,0,0.95) 0%, rgba(5,3,0,0.8) 100%);
+    background: linear-gradient(180deg, rgba(15,10,0,0.95), rgba(5,3,0,0.85));
     border-bottom: 1px solid rgba(212,160,23,0.3);
 }
 .menu-btn, .sound-btn {
@@ -83,78 +68,68 @@ html, body {
 }
 .logo-container { display: flex; align-items: center; gap: 8px; }
 .logo-badge {
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
     color: var(--black); font-family: var(--font-display);
     font-weight: 900; font-size: 12px; padding: 4px 8px;
     border-radius: 8px; border: 2px solid var(--gold-light);
-    box-shadow: 0 0 15px var(--gold-glow);
+    box-shadow: 0 0 12px var(--gold-glow);
 }
 .logo-text h1 { font-family: var(--font-display); font-size: 13px; color: var(--gold-light); text-shadow: 0 0 10px var(--gold-glow); letter-spacing: 2px; }
-.logo-text .subtitle { font-family: var(--font-tech); font-size: 7px; color: var(--gold); letter-spacing: 3px; opacity: 0.8; }
+.logo-text .subtitle { font-family: var(--font-tech); font-size: 7px; color: var(--gold); letter-spacing: 3px; }
 
 /* ============ JACKPOT ============ */
 .jackpot-bar {
     text-align: center; padding: 6px; position: relative; z-index: 5;
-    background: linear-gradient(180deg, rgba(20,15,5,0.8) 0%, transparent 100%);
+    background: linear-gradient(180deg, rgba(20,15,5,0.8), transparent);
 }
 .jackpot-label { font-family: var(--font-tech); font-size: 8px; color: var(--gold); letter-spacing: 3px; }
 .jackpot-amount {
     font-family: var(--font-tech); font-size: 22px; font-weight: 900;
-    color: var(--gold-light); text-shadow: 0 0 15px var(--gold-glow), 0 0 30px rgba(212,160,23,0.3);
-    animation: jackpotPulse 2s ease-in-out infinite;
+    color: var(--gold-light); text-shadow: 0 0 15px var(--gold-glow);
+    animation: jpulse 2s ease-in-out infinite;
 }
-@keyframes jackpotPulse {
+@keyframes jpulse {
     0%,100% { text-shadow: 0 0 15px var(--gold-glow); }
-    50% { text-shadow: 0 0 25px var(--gold-glow), 0 0 50px rgba(212,160,23,0.4); }
+    50% { text-shadow: 0 0 25px var(--gold-glow), 0 0 50px rgba(212,160,23,0.3); }
 }
 
-
-/* ============ 3D SLOT MACHINE ============ */
+/* ============ 3D MACHINE ============ */
 .machine-wrapper {
     flex: 1; display: flex; align-items: center; justify-content: center;
     perspective: 800px; position: relative; z-index: 5;
-    padding: 4px 8px; min-height: 0;
+    padding: 4px 10px; min-height: 0;
 }
 .slot-machine-3d {
     width: 100%; max-width: 380px;
-    background: linear-gradient(180deg, #2a2010 0%, #1a1200 30%, #0d0800 100%);
+    background: linear-gradient(180deg, #2a2010, #1a1200 30%, #0d0800);
     border: 3px solid var(--gold);
-    border-radius: 20px;
-    padding: 8px;
+    border-radius: 18px; padding: 8px;
     position: relative;
-    box-shadow:
-        0 10px 40px rgba(0,0,0,0.8),
-        0 0 30px rgba(212,160,23,0.15),
-        inset 0 2px 0 rgba(212,160,23,0.3),
-        inset 0 -2px 0 rgba(0,0,0,0.5);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px rgba(212,160,23,0.12),
+                inset 0 2px 0 rgba(212,160,23,0.3), inset 0 -2px 0 rgba(0,0,0,0.5);
     transform: rotateX(2deg);
     transform-style: preserve-3d;
 }
-/* Machine top lights */
-.machine-top { text-align: center; padding: 4px 0 6px; }
-.top-lights { display: flex; justify-content: center; gap: 6px; }
+.machine-top { text-align: center; padding: 3px 0 5px; }
+.top-lights { display: flex; justify-content: center; gap: 5px; }
 .light {
-    width: 8px; height: 8px; border-radius: 50%;
+    width: 7px; height: 7px; border-radius: 50%;
     background: var(--gold); box-shadow: 0 0 6px var(--gold-glow);
-    animation: lightBlink 1.2s ease-in-out infinite;
+    animation: blink 1.2s ease-in-out infinite;
 }
 .light:nth-child(2n) { animation-delay: 0.3s; }
 .light:nth-child(3n) { animation-delay: 0.6s; }
-@keyframes lightBlink {
-    0%,100% { opacity: 1; background: var(--gold-light); box-shadow: 0 0 8px var(--gold-glow); }
-    50% { opacity: 0.3; background: var(--gold-dark); box-shadow: none; }
+@keyframes blink {
+    0%,100% { opacity: 1; background: var(--gold-light); }
+    50% { opacity: 0.3; background: var(--gold-dark); }
 }
 
-
-/* ============ SIDE DISPLAYS ============ */
-.machine-side {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    z-index: 6;
-}
-.left-side { left: -50px; }
-.right-side { right: -50px; }
+/* ============ SIDE PANELS ============ */
+.machine-side { position: absolute; top: 50%; transform: translateY(-50%); z-index: 6; }
+.left-side { left: -52px; }
+.right-side { right: -52px; }
 .side-display {
-    background: linear-gradient(180deg, #1a1200 0%, #0a0600 100%);
+    background: linear-gradient(180deg, #1a1200, #0a0600);
     border: 1px solid var(--gold-dark); border-radius: 10px;
     padding: 8px 6px; text-align: center; min-width: 48px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.6);
@@ -162,99 +137,58 @@ html, body {
 .sd-label { display: block; font-family: var(--font-tech); font-size: 6px; color: var(--gold); letter-spacing: 1px; }
 .sd-value { display: block; font-family: var(--font-tech); font-size: 16px; font-weight: 900; color: var(--gold-light); text-shadow: 0 0 8px var(--gold-glow); }
 .sd-sublabel { display: block; font-family: var(--font-tech); font-size: 6px; color: var(--gold); opacity: 0.7; }
-.multiplier-box.active { border-color: var(--gold-light); box-shadow: 0 0 15px var(--gold-glow); animation: rugidoPulse 0.5s infinite; }
-@keyframes rugidoPulse { 0%,100% { box-shadow: 0 0 15px var(--gold-glow); } 50% { box-shadow: 0 0 30px var(--gold-glow); } }
+.multiplier-box.active { border-color: var(--gold-light); box-shadow: 0 0 15px var(--gold-glow); animation: mpulse 0.5s infinite; }
+@keyframes mpulse { 0%,100% { box-shadow: 0 0 15px var(--gold-glow); } 50% { box-shadow: 0 0 30px var(--gold-glow); } }
 .freespins-box.active { border-color: #2ecc71; box-shadow: 0 0 12px rgba(46,204,113,0.5); }
 .freespins-box.active .sd-value { color: #2ecc71; }
+@media (max-width: 440px) { .machine-side { display: none; } }
 
-@media (max-width: 420px) {
-    .machine-side { display: none; }
-}
-
-
-/* ============ REELS — 3D CYLINDER EFFECT ============ */
+/* ============ REELS ============ */
 .reels-viewport {
     position: relative; width: 100%;
-    background: #050505; border-radius: 12px;
-    border: 2px solid var(--gold-dark);
-    overflow: hidden;
-    box-shadow: inset 0 4px 15px rgba(0,0,0,0.8), inset 0 -4px 15px rgba(0,0,0,0.8);
+    background: #030303; border-radius: 12px;
+    border: 2px solid var(--gold-dark); overflow: hidden;
+    box-shadow: inset 0 4px 15px rgba(0,0,0,0.9), inset 0 -4px 15px rgba(0,0,0,0.9);
 }
 .reels-viewport::before, .reels-viewport::after {
-    content: ''; position: absolute; left: 0; right: 0; height: 25%; z-index: 3; pointer-events: none;
+    content: ''; position: absolute; left: 0; right: 0; height: 22%; z-index: 3; pointer-events: none;
 }
-.reels-viewport::before { top: 0; background: linear-gradient(180deg, rgba(5,5,5,0.9) 0%, transparent 100%); }
-.reels-viewport::after { bottom: 0; background: linear-gradient(0deg, rgba(5,5,5,0.9) 0%, transparent 100%); }
-
-.reels-frame {
-    display: flex; width: 100%; height: 180px;
-    perspective: 400px;
-}
-.reel-container {
-    flex: 1; overflow: hidden; position: relative;
-    perspective: 300px;
-}
-.reel-cylinder {
-    display: flex; flex-direction: column; height: 100%;
-    transform-style: preserve-3d;
-    transition: transform 0.1s;
-}
-.reel-separator {
-    width: 2px; background: linear-gradient(180deg, transparent, var(--gold-dark), transparent);
-    flex-shrink: 0;
-}
-.symbol {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    font-size: 36px; position: relative;
-    transform-style: preserve-3d;
-}
+.reels-viewport::before { top: 0; background: linear-gradient(180deg, rgba(3,3,3,0.85), transparent); }
+.reels-viewport::after { bottom: 0; background: linear-gradient(0deg, rgba(3,3,3,0.85), transparent); }
+.reels-frame { display: flex; width: 100%; height: 200px; }
+.reel-container { flex: 1; overflow: hidden; position: relative; }
+.reel-cylinder { display: flex; flex-direction: column; height: 100%; transition: transform 0.1s; }
+.reel-separator { width: 1px; background: linear-gradient(180deg, transparent, var(--gold-dark), transparent); flex-shrink: 0; }
+.symbol { flex: 1; display: flex; align-items: center; justify-content: center; padding: 4px; }
 .symbol-inner {
-    width: 52px; height: 52px; border-radius: 10px;
+    width: 56px; height: 56px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08) 0%, transparent 60%);
-    border: 1px solid rgba(212,160,23,0.15);
-    transition: all 0.3s; overflow: hidden;
+    background: rgba(15,12,5,0.6);
+    border: 1px solid rgba(212,160,23,0.2);
+    overflow: hidden; transition: all 0.3s;
 }
 .symbol-inner img {
     width: 100%; height: 100%; object-fit: cover; border-radius: 8px;
-    image-rendering: auto;
 }
-
-
-/* Reel spinning */
-.reel-container.spinning .reel-cylinder {
-    animation: cylinderSpin 0.15s linear infinite;
-}
-@keyframes cylinderSpin {
-    0% { transform: translateY(0) rotateX(0); }
-    100% { transform: translateY(-33.33%) rotateX(-15deg); }
-}
-.reel-container.stopping .reel-cylinder {
-    animation: cylinderStop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-}
-@keyframes cylinderStop {
-    0% { transform: translateY(-10%) rotateX(-8deg); }
-    60% { transform: translateY(3%) rotateX(3deg); }
-    100% { transform: translateY(0) rotateX(0); }
-}
-/* Win animations */
-.symbol.winning .symbol-inner {
-    animation: symbolBounce 0.6s ease-in-out infinite alternate;
-    border-color: var(--gold-light);
-    box-shadow: 0 0 15px var(--gold-glow), inset 0 0 10px rgba(212,160,23,0.2);
-}
-@keyframes symbolBounce {
-    0% { transform: scale(1) rotateY(0); }
-    100% { transform: scale(1.15) rotateY(10deg); filter: brightness(1.3); }
-}
-/* Payline indicator */
 .payline-indicator {
     position: absolute; top: 50%; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--gold-light), var(--gold), var(--gold-light));
-    transform: translateY(-50%); z-index: 4; opacity: 0.4;
-    box-shadow: 0 0 8px var(--gold-glow);
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    transform: translateY(-50%); z-index: 4; opacity: 0.3;
+    box-shadow: 0 0 6px var(--gold-glow);
 }
-/* Win flash */
+
+/* Spinning */
+.reel-container.spinning .reel-cylinder { animation: cspin 0.12s linear infinite; }
+@keyframes cspin { 0% { transform: translateY(0) rotateX(0); } 100% { transform: translateY(-33%) rotateX(-12deg); } }
+.reel-container.stopping .reel-cylinder { animation: cstop 0.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+@keyframes cstop { 0% { transform: translateY(-8%) rotateX(-6deg); } 60% { transform: translateY(2%) rotateX(2deg); } 100% { transform: translateY(0) rotateX(0); } }
+
+/* Win */
+.symbol.winning .symbol-inner {
+    animation: swin 0.5s ease-in-out infinite alternate;
+    border-color: var(--gold-light); box-shadow: 0 0 12px var(--gold-glow);
+}
+@keyframes swin { 0% { transform: scale(1); } 100% { transform: scale(1.12); filter: brightness(1.3); } }
 .win-flash {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     background: rgba(0,0,0,0.7); z-index: 10; border-radius: 12px;
@@ -262,12 +196,11 @@ html, body {
 .win-amount {
     font-family: var(--font-tech); font-size: 28px; font-weight: 900;
     color: var(--gold-light); text-shadow: 0 0 20px var(--gold-glow);
-    animation: winPop 0.5s cubic-bezier(0.68,-0.55,0.265,1.55);
+    animation: wpop 0.5s cubic-bezier(0.68,-0.55,0.265,1.55);
 }
-@keyframes winPop { 0% { transform: scale(0); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+@keyframes wpop { 0% { transform: scale(0); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
-
-/* ============ MACHINE BOTTOM INFO ============ */
+/* ============ MACHINE BOTTOM ============ */
 .machine-bottom-panel {
     display: flex; justify-content: space-around; padding: 6px 4px 4px;
     border-top: 1px solid rgba(212,160,23,0.2); margin-top: 6px;
@@ -280,35 +213,30 @@ html, body {
 /* ============ CONTROLS ============ */
 .controls-area {
     display: flex; align-items: center; justify-content: center;
-    gap: 16px; padding: 8px 16px; position: relative; z-index: 5;
+    gap: 20px; padding: 10px 16px; position: relative; z-index: 5;
 }
 .ctrl-btn {
-    width: 44px; height: 44px; border-radius: 50%;
-    background: linear-gradient(180deg, #2a2010 0%, #1a1200 100%);
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(180deg, #2a2010, #1a1200);
     border: 2px solid var(--gold-dark); color: var(--gold-light);
-    font-size: 20px; font-weight: 900; cursor: pointer;
+    font-size: 22px; font-weight: 900; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: all 0.2s;
 }
 .ctrl-btn:active { transform: scale(0.9); }
-
-
-/* ============ SPIN BUTTON ============ */
 .spin-button {
     width: 80px; height: 80px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, var(--gold-light) 0%, var(--gold) 40%, var(--gold-dark) 100%);
-    border: 4px solid var(--gold-light);
-    cursor: pointer; position: relative;
+    background: radial-gradient(circle at 35% 35%, var(--gold-light), var(--gold) 40%, var(--gold-dark));
+    border: 4px solid var(--gold-light); cursor: pointer;
     box-shadow: 0 6px 25px rgba(212,160,23,0.5), inset 0 2px 0 rgba(255,255,255,0.3);
     transition: all 0.2s; display: flex; align-items: center; justify-content: center;
 }
 .spin-button:hover { transform: scale(1.05); box-shadow: 0 8px 30px rgba(212,160,23,0.7); }
 .spin-button:active { transform: scale(0.95); }
-.spin-button.spinning { opacity: 0.5; pointer-events: none; animation: spinRotate 1s linear infinite; }
-@keyframes spinRotate { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+.spin-button.spinning { opacity: 0.5; pointer-events: none; animation: srot 1s linear infinite; }
+@keyframes srot { to { transform: rotate(360deg); } }
 .spin-button.free-spin {
-    background: radial-gradient(circle at 35% 35%, #5dde8e 0%, #27ae60 40%, #1e8449 100%);
+    background: radial-gradient(circle at 35% 35%, #5dde8e, #27ae60 40%, #1e8449);
     border-color: #2ecc71;
 }
 .spin-inner { display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -325,59 +253,55 @@ html, body {
 .stat-icon { font-size: 14px; }
 .stat-val { font-family: var(--font-tech); font-size: 11px; font-weight: 700; color: var(--cream); }
 
+/* ============ PARTICLES ============ */
+.particles-container { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
+.particle { position: absolute; pointer-events: none; }
+@keyframes particleFall {
+    0% { transform: translateY(-20px) rotate(0); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
 
 /* ============ LION BONUS POPUP ============ */
 .lion-bonus-popup {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.9); z-index: 500;
+    background: rgba(0,0,0,0.92); z-index: 500;
 }
-.lion-bonus-content { text-align: center; animation: lionEntry 0.6s cubic-bezier(0.68,-0.55,0.265,1.55); }
+.lion-bonus-content { text-align: center; animation: lentry 0.6s cubic-bezier(0.68,-0.55,0.265,1.55); }
 .lion-character { width: 160px; height: 160px; margin: 0 auto; }
 .lion-svg { width: 100%; height: 100%; }
-.lion-svg .mane { animation: maneShake 0.3s ease-in-out infinite; transform-origin: center; }
-@keyframes maneShake { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
-.lion-svg .lion-mouth { animation: roarMouth 0.4s ease-in-out infinite; transform-origin: center bottom; }
-@keyframes roarMouth { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.3); } }
-.lion-svg .scratch-marks { animation: scratchAppear 0.3s 0.5s forwards; }
-@keyframes scratchAppear { to { opacity: 1; } }
-@keyframes lionEntry { 0% { transform: scale(0) rotate(-20deg); } 100% { transform: scale(1) rotate(0); } }
+.lion-svg .mane { animation: mshake 0.3s ease-in-out infinite; transform-origin: center; }
+@keyframes mshake { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+.lion-svg .lion-mouth { animation: roar 0.4s ease-in-out infinite; transform-origin: center bottom; }
+@keyframes roar { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.3); } }
+.lion-svg .scratch-marks { animation: scratch 0.3s 0.5s forwards; }
+@keyframes scratch { to { opacity: 1; } }
+@keyframes lentry { 0% { transform: scale(0) rotate(-20deg); } 100% { transform: scale(1) rotate(0); } }
 .bonus-banner {
     margin-top: 12px; padding: 12px 30px; border-radius: 12px;
-    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    background: linear-gradient(180deg, var(--gold), var(--gold-dark));
     border: 3px solid var(--gold-light);
     box-shadow: 0 0 30px var(--gold-glow);
-    animation: bannerPulse 0.8s ease-in-out infinite alternate;
+    animation: bpulse 0.8s ease-in-out infinite alternate;
 }
-@keyframes bannerPulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); box-shadow: 0 0 50px var(--gold-glow); } }
+@keyframes bpulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
 .bonus-text { display: block; font-family: var(--font-display); font-size: 22px; font-weight: 900; color: var(--black); letter-spacing: 4px; }
 .bonus-amount { display: block; font-family: var(--font-tech); font-size: 28px; font-weight: 900; color: var(--black); }
 
-/* ============ BIG WIN / FREE SPINS POPUPS ============ */
+/* ============ BIG WIN / FREE SPINS ============ */
 .bigwin-popup, .freespins-popup {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.85); z-index: 400;
+    background: rgba(0,0,0,0.88); z-index: 400;
 }
-.bigwin-content, .freespins-content { text-align: center; animation: lionEntry 0.6s cubic-bezier(0.68,-0.55,0.265,1.55); }
+.bigwin-content, .freespins-content { text-align: center; animation: lentry 0.6s cubic-bezier(0.68,-0.55,0.265,1.55); }
 .bigwin-title { font-family: var(--font-display); font-size: 22px; color: var(--gold-light); text-shadow: 0 0 20px var(--gold-glow); margin-bottom: 8px; }
 .bigwin-amount { font-family: var(--font-tech); font-size: 36px; font-weight: 900; color: var(--gold-light); text-shadow: 0 0 30px var(--gold-glow); }
 .freespins-title { font-family: var(--font-display); font-size: 20px; color: #2ecc71; margin-bottom: 8px; }
 .freespins-amount { font-family: var(--font-tech); font-size: 48px; font-weight: 900; color: #2ecc71; }
 .freespins-start-btn {
     margin-top: 12px; padding: 12px 30px; border-radius: 12px;
-    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+    background: linear-gradient(180deg, #2ecc71, #27ae60);
     border: 2px solid #2ecc71; color: #fff; font-family: var(--font-tech);
     font-size: 14px; font-weight: 700; cursor: pointer; letter-spacing: 2px;
-}
-
-
-/* ============ PARTICLES ============ */
-.particles-container {
-    position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden;
-}
-.particle { position: absolute; pointer-events: none; }
-@keyframes particleFall {
-    0% { transform: translateY(-20px) rotate(0); opacity: 1; }
-    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
 /* ============ SCREEN SHAKE ============ */
@@ -393,11 +317,10 @@ html, body {
 /* ============ RESPONSIVE ============ */
 @media (min-width: 500px) {
     .slot-machine-3d { max-width: 440px; }
-    .reels-frame { height: 220px; }
-    .symbol { font-size: 42px; }
-    .symbol-inner { width: 60px; height: 60px; }
+    .reels-frame { height: 240px; }
+    .symbol-inner { width: 64px; height: 64px; }
 }
 @media (min-width: 768px) {
     .casino-app { max-width: 500px; margin: 0 auto; }
-    .machine-side { display: block; }
+    .machine-side { display: block !important; }
 }
