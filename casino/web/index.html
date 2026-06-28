@@ -299,67 +299,77 @@ const loadingEl=document.getElementById('loading');
 
 // ===== AUDIO (Web Audio API - synthetic + MP3 music) =====
 let audioCtx=null;
-function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function initAudio(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+}
 function tone(f,dur,type,vol){
   if(!audioCtx||!soundOn)return;
-  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.type=type||'sine';o.frequency.value=f;
-  g.gain.setValueAtTime(vol||0.1,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
-  o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);
+  try{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    g.gain.setValueAtTime(vol||0.1,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+    o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
 }
 function sfxSpin(){tone(180,0.08,'square',0.06);tone(220,0.06,'square',0.04);}
 function sfxStop(i){tone(350+i*100,0.12,'triangle',0.1);}
 function sfxWin(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.2,'sine',0.12),i*80));}
 function sfxBig(){[523,659,784,1047,1318].forEach((f,i)=>setTimeout(()=>tone(f,0.3,'sine',0.15),i*70));}
-document.addEventListener('pointerdown',()=>initAudio(),{once:true});
 
-// ===== MUSIC SYSTEM (bg1/bg2 normal, win1/win2 on prize) =====
+// ===== MUSIC SYSTEM =====
 let bgMusic=null, winMusic=null, musicStarted=false;
 let currentBgTrack=0, currentWinTrack=0;
 const BG_TRACKS=['assets/audio/bg1.mp3','assets/audio/bg2.mp3'];
 const WIN_TRACKS=['assets/audio/win1.mp3','assets/audio/win2.mp3'];
 
 function startBgMusic(){
-  if(!soundOn) return;
+  if(!soundOn||musicStarted) return;
   musicStarted=true;
-  const src=BG_TRACKS[currentBgTrack];
-  bgMusic=new Audio(src);
-  bgMusic.loop=false; // NO loop — al terminar cambia a la otra
+  playNextBg();
+}
+
+function playNextBg(){
+  if(bgMusic){bgMusic.pause();bgMusic=null;}
+  bgMusic=new Audio(BG_TRACKS[currentBgTrack]);
   bgMusic.volume=0.25;
+  bgMusic.loop=false;
   bgMusic.play().catch(()=>{});
-  // When track ends, switch to the OTHER track
-  bgMusic.addEventListener('ended',()=>{
+  bgMusic.onended=()=>{
     currentBgTrack=(currentBgTrack+1)%BG_TRACKS.length;
-    bgMusic.src=BG_TRACKS[currentBgTrack];
-    bgMusic.play().catch(()=>{});
-  });
+    playNextBg();
+  };
 }
 
 function playWinMusic(){
   if(!soundOn) return;
-  // Fade out bg music temporarily
-  if(bgMusic){bgMusic.volume=0.08;}
-  const src=WIN_TRACKS[currentWinTrack];
-  currentWinTrack=(currentWinTrack+1)%WIN_TRACKS.length; // Alternate next time
-  winMusic=new Audio(src);
-  winMusic.volume=0.5;
+  // Pause bg music
+  if(bgMusic){bgMusic.volume=0.05;}
+  // Stop previous win music if still playing
+  if(winMusic){try{winMusic.pause();}catch(e){}}
+  winMusic=new Audio(WIN_TRACKS[currentWinTrack]);
+  currentWinTrack=(currentWinTrack+1)%WIN_TRACKS.length;
+  winMusic.volume=0.6;
   winMusic.play().catch(()=>{});
-  winMusic.addEventListener('ended',()=>{
-    // Restore bg music volume
+  winMusic.onended=()=>{
     if(bgMusic){bgMusic.volume=0.25;}
     winMusic=null;
-  });
+  };
 }
 
 function stopWinMusic(){
-  if(winMusic){winMusic.pause();winMusic=null;}
+  if(winMusic){try{winMusic.pause();}catch(e){} winMusic=null;}
   if(bgMusic){bgMusic.volume=0.25;}
 }
 
-// Start bg music on first interaction
-document.addEventListener('pointerdown',()=>{if(!musicStarted)startBgMusic();},{once:true});
-document.addEventListener('keydown',()=>{if(!musicStarted)startBgMusic();},{once:true});
+// Init ALL audio on first user interaction
+function initAllAudio(){
+  initAudio();
+  startBgMusic();
+}
+document.addEventListener('pointerdown',initAllAudio,{once:true});
+document.addEventListener('keydown',initAllAudio,{once:true});
 
 // ===== VIBRATION + SCREEN SHAKE =====
 function vibrateDevice(pattern){
