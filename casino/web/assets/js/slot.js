@@ -487,11 +487,13 @@ function processResult(result) {
     if(result.totalWin>0){
         state.credits+=result.totalWin;
         const bm=result.totalWin/state.totalBet;
-        if(bm>=20)showBigWin(result.totalWin);else showSmallWin(result.totalWin);
+        if(bm>=20){showBigWin(result.totalWin);playWinMusic();}
+        else showSmallWin(result.totalWin);
         spawnCoins(Math.min(Math.floor(bm*3),40));
     }
-    if(result.freeSpinsAwarded>0)state.freeSpins+=result.freeSpinsAwarded;
-    if(result.modoRugido)state.multiplier=result.multiplier;else state.multiplier=1;
+    if(result.freeSpinsAwarded>0){state.freeSpins+=result.freeSpinsAwarded;playWinMusic();}
+    if(result.modoRugido){state.multiplier=result.multiplier;playWinMusic();}
+    else state.multiplier=1;
     updateUI();
 }
 
@@ -544,8 +546,57 @@ function updateUI() {
 function fmt(n){return n.toLocaleString('es-ES');}
 
 // ============================================================
+// AUDIO SYSTEM
+// ============================================================
+const AUDIO = {
+    bg: null, // Background music
+    win: null, // Win music
+    bgTracks: ['assets/audio/bg1.mp3', 'assets/audio/bg2.mp3'],
+    winTracks: ['assets/audio/win1.mp3', 'assets/audio/win2.mp3'],
+    currentBg: 0,
+    muted: false,
+    initialized: false,
+};
+
+function initAudio() {
+    if (AUDIO.initialized) return;
+    AUDIO.initialized = true;
+    AUDIO.bg = new Audio(AUDIO.bgTracks[0]);
+    AUDIO.bg.loop = true;
+    AUDIO.bg.volume = 0.3;
+    AUDIO.bg.play().catch(() => {});
+    // When track ends, switch to next
+    AUDIO.bg.addEventListener('ended', () => {
+        AUDIO.currentBg = (AUDIO.currentBg + 1) % AUDIO.bgTracks.length;
+        AUDIO.bg.src = AUDIO.bgTracks[AUDIO.currentBg];
+        AUDIO.bg.play().catch(() => {});
+    });
+}
+
+function playWinMusic() {
+    if (AUDIO.muted) return;
+    const track = AUDIO.winTracks[Math.floor(Math.random() * AUDIO.winTracks.length)];
+    if (AUDIO.win) { AUDIO.win.pause(); AUDIO.win.currentTime = 0; }
+    AUDIO.win = new Audio(track);
+    AUDIO.win.volume = 0.5;
+    AUDIO.win.play().catch(() => {});
+    // Fade bg
+    if (AUDIO.bg) AUDIO.bg.volume = 0.1;
+    AUDIO.win.addEventListener('ended', () => { if (AUDIO.bg) AUDIO.bg.volume = 0.3; });
+}
+
+function toggleMute() {
+    AUDIO.muted = !AUDIO.muted;
+    if (AUDIO.bg) AUDIO.bg.muted = AUDIO.muted;
+    if (AUDIO.win) AUDIO.win.muted = AUDIO.muted;
+}
+
+// ============================================================
 // START
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     init().then(() => console.log('🎰 C8L Casino — PixiJS Engine v2 Loaded'));
+    // Init audio on first user interaction
+    document.addEventListener('pointerdown', initAudio, { once: true });
+    document.addEventListener('touchstart', initAudio, { once: true });
 });
