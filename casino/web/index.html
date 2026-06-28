@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>C8L Casino — El León Dorado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Orbitron:wght@400;700;900&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/casino.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦁</text></svg>">
+</head>
+<body>
+    <div id="app" class="casino-app">
+        <!-- Header -->
+        <header class="casino-header">
+            <button class="menu-btn" id="menuBtn">☰</button>
+            <div class="logo-container">
+                <div class="logo-badge">C8L</div>
+                <div class="logo-text">
+                    <h1>C8L LEGENDS</h1>
+                    <span class="subtitle">EL LEÓN DORADO</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <button class="sound-btn" id="soundBtn">🔊</button>
+            </div>
+        </header>
+
+        <!-- Jackpot Display -->
+        <div class="jackpot-container">
+            <div class="jackpot-label">JACKPOT GLOBAL</div>
+            <div class="jackpot-amount" id="jackpotDisplay">48,532,120</div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="game-container">
+            <!-- Left Panel - Multiplier -->
+            <div class="side-panel left-panel">
+                <div class="panel-box multiplier-box">
+                    <span class="panel-label">MULTIPLICADOR</span>
+                    <span class="panel-value" id="multiplierDisplay">X1</span>
+                    <span class="panel-sublabel" id="modoLabel">NORMAL</span>
+                </div>
+            </div>
+
+            <!-- Slot Machine -->
+            <div class="slot-machine">
+                <div class="slot-frame">
+                    <div class="reels-container" id="reelsContainer">
+                        <!-- 5 Reels × 3 rows -->
+                        <div class="reel" id="reel0">
+                            <div class="reel-strip">
+                                <div class="symbol" data-row="0">🦁</div>
+                                <div class="symbol" data-row="1">❤️‍🔥</div>
+                                <div class="symbol" data-row="2">👑</div>
+                            </div>
+                        </div>
+                        <div class="reel" id="reel1">
+                            <div class="reel-strip">
+                                <div class="symbol" data-row="0">🅰️</div>
+                                <div class="symbol" data-row="1">🦁</div>
+                                <div class="symbol" data-row="2">🃏</div>
+                            </div>
+                        </div>
+                        <div class="reel" id="reel2">
+                            <div class="reel-strip">
+                                <div class="symbol" data-row="0">❤️‍🔥</div>
+                                <div class="symbol" data-row="1">❤️‍🔥</div>
+                                <div class="symbol" data-row="2">👸</div>
+                            </div>
+                        </div>
+                        <div class="reel" id="reel3">
+                            <div class="reel-strip">
+                                <div class="symbol" data-row="0">👸</div>
+                                <div class="symbol" data-row="1">👑</div>
+                                <div class="symbol" data-row="2">🦁</div>
+                            </div>
+                        </div>
+                        <div class="reel" id="reel4">
+                            <div class="reel-strip">
+                                <div class="symbol" data-row="0">🃏</div>
+                                <div class="symbol" data-row="1">🅰️</div>
+                                <div class="symbol" data-row="2">🔟</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Win overlay -->
+                    <div class="win-overlay" id="winOverlay" style="display:none;">
+                        <div class="win-amount" id="winAmount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Free Spins -->
+            <div class="side-panel right-panel">
+                <div class="panel-box freespins-box">
+                    <span class="panel-label">GIROS GRATIS</span>
+                    <span class="panel-value" id="freeSpinsDisplay">0</span>
+                    <span class="panel-sublabel" id="freeSpinsLabel">INACTIVO</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="control-group">
+                <span class="control-label">LÍNEAS</span>
+                <span class="control-value" id="linesDisplay">20</span>
+            </div>
+            <div class="control-group">
+                <span class="control-label">APUESTA</span>
+                <div class="control-adjust">
+                    <button class="adjust-btn" id="betDown">−</button>
+                    <span class="control-value" id="betDisplay">250</span>
+                    <button class="adjust-btn" id="betUp">+</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="control-label">APUESTA TOTAL</span>
+                <span class="control-value" id="totalBetDisplay">5,000</span>
+            </div>
+
+            <!-- SPIN BUTTON -->
+            <button class="spin-btn" id="spinBtn">
+                <span class="spin-text">GIRAR</span>
+                <span class="spin-sub">Mantener para Auto</span>
+            </button>
+
+            <div class="control-group">
+                <span class="control-label">GANANCIA</span>
+                <span class="control-value win-value" id="winDisplay">0</span>
+            </div>
+        </div>
+
+        <!-- Bottom Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-icon">🪙</span>
+                <span class="status-label">CRÉDITOS</span>
+                <span class="status-value" id="creditsDisplay">152,450,000</span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">💎</span>
+                <span class="status-label">CHIPS</span>
+                <span class="status-value" id="chipsDisplay">8,250</span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">⭐</span>
+                <span class="status-label">NIVEL</span>
+                <span class="status-value" id="vipDisplay">VIP 10</span>
+            </div>
+        </div>
+
+        <!-- Particles container for win effects -->
+        <div class="particles-container" id="particlesContainer"></div>
+
+        <!-- Big Win Popup -->
+        <div class="bigwin-popup" id="bigWinPopup" style="display:none;">
+            <div class="bigwin-content">
+                <div class="bigwin-title" id="bigWinTitle">¡GRAN GANANCIA!</div>
+                <div class="bigwin-amount" id="bigWinAmount">0</div>
+                <div class="bigwin-coins">🪙🪙🪙</div>
+            </div>
+        </div>
+
+        <!-- Jackpot Popup -->
+        <div class="jackpot-popup" id="jackpotPopup" style="display:none;">
+            <div class="jackpot-content">
+                <div class="jackpot-title">🦁 ¡¡¡JACKPOT!!! 🦁</div>
+                <div class="jackpot-win-amount" id="jackpotWinAmount">0</div>
+                <div class="jackpot-subtitle">¡EL LEÓN DORADO TE BENDICE!</div>
+            </div>
+        </div>
+
+        <!-- Free Spins Intro -->
+        <div class="freespins-popup" id="freeSpinsPopup" style="display:none;">
+            <div class="freespins-content">
+                <div class="freespins-title">🌟 GIROS GRATIS 🌟</div>
+                <div class="freespins-amount" id="freeSpinsAwarded">10</div>
+                <div class="freespins-subtitle">¡GIROS ACTIVADOS!</div>
+                <button class="freespins-start-btn" id="freeSpinsStartBtn">¡COMENZAR!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/symbols.js"></script>
+    <script src="assets/js/animations.js"></script>
+    <script src="assets/js/sound.js"></script>
+    <script src="assets/js/game.js"></script>
+</body>
+</html>
