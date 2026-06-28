@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gold: #c9a435;
+  --gold-light: #e6c84d;
+  --felt-green: #1a5c2a;
+  --felt-dark: #0f3d1a;
+  --casino-red: #8b1a1a;
+  --casino-black: #1a1a1a;
+}
+
+body {
+  font-family: "Orbitron", sans-serif;
+  background: radial-gradient(ellipse at center, #1a2a1a 0%, #0a0f0a 70%, #000 100%);
+  min-height: 100vh;
+}
+
+/* Felt texture overlay */
+.felt-texture {
+  background: 
+    radial-gradient(ellipse at 50% 30%, rgba(26, 92, 42, 0.8) 0%, rgba(15, 61, 26, 0.9) 50%, rgba(5, 20, 10, 1) 100%);
+  position: relative;
+}
+
+.felt-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23000' opacity='0.05'/%3E%3Ccircle cx='2' cy='2' r='0.5' fill='%23000' opacity='0.08'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Gold border styling */
+.gold-border {
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 10px rgba(201, 164, 53, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.gold-border-thin {
+  border: 1px solid rgba(201, 164, 53, 0.6);
+}
+
+/* Panel glass effect */
+.glass-panel {
+  background: rgba(10, 15, 20, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(201, 164, 53, 0.4);
+  border-radius: 8px;
+}
+
+/* Roulette spin animation */
+@keyframes spin-wheel {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-decelerate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(var(--final-rotation)); }
+}
+
+.spinning {
+  animation: spin-wheel 0.3s linear infinite;
+}
+
+/* Chip styles */
+.chip {
+  border-radius: 50%;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chip:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+/* Button glow effect */
+.btn-glow {
+  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 6px 25px rgba(46, 125, 50, 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-glow:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+}
+
+/* Number cell hover */
+.number-cell {
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.number-cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(201, 164, 53, 0.6);
+  z-index: 10;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border-radius: 2px;
+}
