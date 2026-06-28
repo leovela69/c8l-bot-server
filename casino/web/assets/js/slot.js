@@ -131,19 +131,24 @@ let app, reelContainer, symbolTextures = {}, uiTexts = {};
 let reels = [];
 
 async function init() {
-    app = new PIXI.Application({
-        view: document.getElementById('game-canvas'),
-        resizeTo: window,
-        backgroundColor: 0x080500,
-        antialias: true,
-        resolution: Math.min(window.devicePixelRatio || 1, 2),
-        autoDensity: true,
-    });
-    // Generate symbol textures locally (no external images needed)
-    generateSymbolTextures();
-    buildScene();
-    app.ticker.add(gameLoop);
-    window.addEventListener('resize', () => { generateSymbolTextures(); buildScene(); });
+    try {
+        app = new PIXI.Application({
+            view: document.getElementById('game-canvas'),
+            resizeTo: window,
+            backgroundColor: 0x080500,
+            antialias: true,
+            resolution: Math.min(window.devicePixelRatio || 1, 2),
+            autoDensity: true,
+        });
+        // Generate symbol textures locally (no external images needed)
+        generateSymbolTextures();
+        buildScene();
+        app.ticker.add(gameLoop);
+        window.addEventListener('resize', () => { generateSymbolTextures(); buildScene(); });
+    } catch(e) {
+        console.error('PixiJS init error:', e);
+        document.body.innerHTML = '<div style="color:#f5d061;font-family:monospace;padding:20px;text-align:center"><h1>C8L Casino</h1><p>Error: '+e.message+'</p><p>Try refreshing</p></div>';
+    }
 }
 
 // No external texture loading needed anymore
@@ -605,7 +610,7 @@ function toggleMute() {
 // START
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    init().then(() => console.log('🎰 C8L Casino — PixiJS Engine v2 Loaded'));
+    init().then(() => console.log('🎰 C8L Casino — PixiJS Engine v2 Loaded')).catch(e => console.error('Init failed:', e));
     // Init audio on first user interaction
     document.addEventListener('pointerdown', initAudio, { once: true });
     document.addEventListener('touchstart', initAudio, { once: true });
