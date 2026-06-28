@@ -46,16 +46,17 @@ body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#05040
 .card.face-down .card-inner{transform:rotateY(180deg)}
 .card-face{position:absolute;top:0;left:0;width:100%;height:100%;backface-visibility:hidden;border-radius:4px}
 .card-front{background:linear-gradient(160deg,#fffef9 0%,#f5f0e6 50%,#ebe4d4 100%);border:1px solid #bbb;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;flex-direction:column;padding:3px 4px;font-family:'Times New Roman',serif}
-.card-front .rank-top{font-size:0.65em;font-weight:700;line-height:1}
-.card-front .suit-center{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.4em}
-.card-front .rank-bot{font-size:0.65em;font-weight:700;line-height:1;align-self:flex-end;transform:rotate(180deg)}
+.card-front .rank-top{font-size:0.5em;font-weight:700;line-height:1.1;text-align:left}
+.card-front .suit-center{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.3em;font-weight:700}
+.card-front .rank-bot{font-size:0.5em;font-weight:700;line-height:1.1;align-self:flex-end;text-align:right;transform:rotate(180deg)}
 .card-front.red{color:#b71c1c}
 .card-front.black{color:#1a1a1a}
 .card-back-face{transform:rotateY(180deg);background:repeating-conic-gradient(#1a2744 0% 25%,#1e3050 25% 50%) 50%/6px 6px,linear-gradient(135deg,#162540 0%,#0d1a30 50%,#162540 100%);border:2px solid #b8860b;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center}
 .card-back-face::before{content:'';position:absolute;top:4px;left:4px;right:4px;bottom:4px;border:1px solid rgba(184,134,11,0.4);border-radius:2px}
 .card-back-face .back-emblem{font-size:1em;color:#b8860b}
-.chip-anim{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #fff;font-size:0.4em;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;z-index:15;pointer-events:none;animation:chipMove 0.6s ease-out forwards}
-@keyframes chipMove{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(0.5) translateY(-10px)}}
+.chip-anim{position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #fff;z-index:15;pointer-events:none;animation:chipMove 0.6s ease-out forwards;background:radial-gradient(circle,#f5c842,#8b6914)}
+@keyframes chipMove{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(0.5) translateY(-10px)}}
+.chip-fly{position:absolute;width:22px;height:22px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle,#ffd700 30%,#b8860b);z-index:25;pointer-events:none;box-shadow:0 2px 8px rgba(255,215,0,0.6),0 0 4px rgba(0,0,0,0.3);transform:translate(-50%,-50%)}
 .bottom-panel{width:min(1000px,98vw);margin-top:10px;background:linear-gradient(180deg,#1a1508,#0d0b06);border:1px solid #5c4510;border-radius:12px;padding:10px 16px;box-shadow:0 -4px 20px rgba(0,0,0,0.5);display:flex;flex-direction:column;gap:8px}
 .player-hand-area{display:flex;align-items:center;justify-content:center;gap:16px;padding:6px 0}
 .player-cards-display{display:flex;gap:4px;align-items:center}
@@ -259,9 +260,9 @@ function cardHTML(c,faceDown){
   var isRed = (c.suit==='hearts'||c.suit==='diamonds');
   var colorClass = isRed ? 'red' : 'black';
   var html = '<div class="card"><div class="card-inner"><div class="card-face card-front ' + colorClass + '">';
-  html += '<span class="rank-top">' + rank + sym + '</span>';
-  html += '<span class="suit-center">' + sym + '</span>';
-  html += '<span class="rank-bot">' + rank + sym + '</span>';
+  html += '<span class="rank-top">' + rank + '<br>' + sym + '</span>';
+  html += '<span class="suit-center">' + rank + '</span>';
+  html += '<span class="rank-bot">' + rank + '<br>' + sym + '</span>';
   html += '</div><div class="card-face card-back-face"><span class="back-emblem">&#9824;</span></div></div></div>';
   return html;
 }
@@ -390,15 +391,48 @@ function randomPhrase(arr){return arr[Math.floor(Math.random()*arr.length)]}
 
 // === CHIP ANIMATION ===
 function animateChip(fromIdx){
-  const area=document.getElementById('tableArea');
-  const chip=document.createElement('div');
+  var area=document.getElementById('tableArea');
+  var chip=document.createElement('div');
   chip.className='chip-anim';
   chip.style.background='radial-gradient(circle,#f5c842,#8b6914)';
   chip.style.top=SEATS[fromIdx].top+'%';
   chip.style.left=SEATS[fromIdx].left+'%';
   area.appendChild(chip);
-  setTimeout(()=>chip.remove(),700);
+  setTimeout(function(){chip.remove()},700);
   sndChip();
+}
+
+// Animate chips flying from losers to winner
+function animateChipsToWinner(winnerIdx, loserIdxs, amount){
+  var area=document.getElementById('tableArea');
+  var delay=0;
+  var wLeft=SEATS[winnerIdx].left;
+  var wTop=SEATS[winnerIdx].top;
+  loserIdxs.forEach(function(loserIdx){
+    var startLeft=SEATS[loserIdx].left;
+    var startTop=SEATS[loserIdx].top;
+    for(var c=0;c<3;c++){
+      (function(d,sL,sT){
+        setTimeout(function(){
+          var chip=document.createElement('div');
+          chip.className='chip-fly';
+          chip.style.left=sL+'%';
+          chip.style.top=sT+'%';
+          // Animate to winner position
+          requestAnimationFrame(function(){
+            chip.style.transition='left 0.8s ease-in-out, top 0.8s ease-in-out, opacity 0.8s';
+            chip.style.left=wLeft+'%';
+            chip.style.top=wTop+'%';
+            chip.style.opacity='0';
+          });
+          area.appendChild(chip);
+          sndChip();
+          setTimeout(function(){chip.remove()},1000);
+        },d);
+      })(delay+c*100, startLeft, startTop);
+    }
+    delay+=150;
+  });
 }
 
 // === DEALER ANIMATION ===
@@ -593,10 +627,10 @@ function advanceStage(){
 
 function showdown(){
   stage='showdown';
-  const contenders=players.filter(p=>!p.folded);
-  let bestEval={rank:0,high:0},winners=[];
-  contenders.forEach(p=>{
-    const ev=evaluate([...p.hand,...community]);
+  var contenders=players.filter(function(p){return !p.folded});
+  var bestEval={rank:0,high:0},winners=[];
+  contenders.forEach(function(p){
+    var ev=evaluate([...p.hand,...community]);
     p.evalResult=ev;
     if(ev.rank>bestEval.rank||(ev.rank===bestEval.rank&&ev.high>bestEval.high)){
       bestEval=ev;winners=[p];
@@ -604,19 +638,23 @@ function showdown(){
       winners.push(p);
     }
   });
-  const share=Math.floor(pot/winners.length);
-  winners.forEach(w=>{w.chips+=share});
-  const winNames=winners.map(w=>w.emoji+' '+w.name).join(', ');
+  var share=Math.floor(pot/winners.length);
+  winners.forEach(function(w){w.chips+=share});
+  var winNames=winners.map(function(w){return w.emoji+' '+w.name}).join(', ');
   setMsg('\uD83C\uDFC6 '+winNames+' gana con '+bestEval.name+' \u2014 +'+share.toLocaleString());
   sndWin();
   render();
+  // Animate chips flying from losers to winners
+  var losers=contenders.filter(function(p){return !winners.includes(p)});
+  var loserIds=losers.map(function(p){return p.id});
+  winners.forEach(function(w){animateChipsToWinner(w.id,loserIds,share)});
   // Emotions
-  winners.forEach(w=>{showEmotion(w.id,'\uD83C\uDF89');showBubble(w.id,randomPhrase(PHRASES_WIN))});
-  contenders.filter(p=>!winners.includes(p)).forEach(p=>{showEmotion(p.id,'\uD83D\uDE22');showBubble(p.id,randomPhrase(PHRASES_LOSE))});
+  winners.forEach(function(w){showEmotion(w.id,'\uD83C\uDF89');showBubble(w.id,randomPhrase(PHRASES_WIN))});
+  losers.forEach(function(p){showEmotion(p.id,'\uD83D\uDE22');showBubble(p.id,randomPhrase(PHRASES_LOSE))});
   // Highlight winners
-  setTimeout(()=>{
-    winners.forEach(w=>{
-      const seatEl=document.getElementById('seat-'+w.id);
+  setTimeout(function(){
+    winners.forEach(function(w){
+      var seatEl=document.getElementById('seat-'+w.id);
       if(seatEl)seatEl.classList.add('winner');
     });
   },100);
@@ -625,25 +663,28 @@ function showdown(){
   renderHistory();
   setButtons(true,false,false,false,false);
   dealerIdx=(dealerIdx+1)%9;
-  setTimeout(()=>{if(stage==='showdown')startHand()},4500);
+  setTimeout(function(){if(stage==='showdown')startHand()},4500);
 }
 
 function endHand(){
   stage='showdown';
-  const winner=players.find(p=>!p.folded);
+  var winner=players.find(function(p){return !p.folded});
   if(winner){
     winner.chips+=pot;
     setMsg('\uD83C\uDFC6 '+winner.emoji+' '+winner.name+' gana el bote (+'+pot.toLocaleString()+')');
     showEmotion(winner.id,'\uD83C\uDF89');
     showBubble(winner.id,randomPhrase(PHRASES_WIN));
     sndWin();
+    // Animate chips from all folded players to winner
+    var foldedIds=players.filter(function(p){return p.folded&&p.id!==winner.id}).map(function(p){return p.id});
+    animateChipsToWinner(winner.id,foldedIds,pot);
     history.unshift({round:roundNum,winners:winner.emoji+' '+winner.name,hand:'Sin showdown',pot:pot});
     renderHistory();
   }
   render();
   setButtons(true,false,false,false,false);
   dealerIdx=(dealerIdx+1)%9;
-  setTimeout(()=>{if(stage==='showdown')startHand()},3500);
+  setTimeout(function(){if(stage==='showdown')startHand()},3500);
 }
 
 // === HAND EVALUATION ===
