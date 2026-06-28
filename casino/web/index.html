@@ -6,95 +6,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0a0a">
     <title>C8L Casino — El León Dorado</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Orbitron:wght@400;700;900&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/casino.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦁</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #050505; touch-action: manipulation; }
+        #game-canvas { width: 100%; height: 100%; display: block; }
+    </style>
 </head>
 <body>
-    <div id="app" class="casino-app">
-        <!-- Full background: the original mockup image -->
-        <div class="slot-bg-wrapper">
-            <img src="assets/img/slot_bg.jpg" alt="" class="slot-bg-img" id="slotBgImg">
-        </div>
-
-        <!-- Functional overlay: only the parts that change -->
-        <div class="game-overlay">
-            <!-- Jackpot (positioned over the jackpot area) -->
-            <div class="ov-jackpot" id="jackpotDisplay">48,532,120</div>
-
-            <!-- Multiplier -->
-            <div class="ov-multiplier">
-                <span class="ov-multi-val" id="multiplierDisplay">X1</span>
-                <span class="ov-multi-label" id="modoLabel">NORMAL</span>
-            </div>
-
-            <!-- Free Spins -->
-            <div class="ov-freespins">
-                <span class="ov-fs-val" id="freeSpinsDisplay">0</span>
-                <span class="ov-fs-label" id="freeSpinsLabel">INACTIVO</span>
-            </div>
-
-            <!-- THE REELS (positioned exactly over the reel area) -->
-            <div class="ov-reels" id="reelsContainer">
-                <div class="reel" id="reel0"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                <div class="reel" id="reel1"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                <div class="reel" id="reel2"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                <div class="reel" id="reel3"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-                <div class="reel" id="reel4"><div class="reel-strip"><div class="symbol" data-row="0"></div><div class="symbol" data-row="1"></div><div class="symbol" data-row="2"></div></div></div>
-            </div>
-
-            <!-- Win overlay -->
-            <div class="ov-win" id="winOverlay" style="display:none;">
-                <div class="win-amount" id="winAmount">0</div>
-            </div>
-
-            <!-- Controls (positioned over the controls area) -->
-            <div class="ov-lines" id="linesDisplay">20</div>
-            <div class="ov-bet" id="betDisplay">250</div>
-            <div class="ov-total" id="totalBetDisplay">5,000</div>
-            <div class="ov-winval" id="winDisplay">0</div>
-
-            <!-- Spin button area -->
-            <button class="ov-spin" id="spinBtn">
-                <span class="spin-text">GIRAR</span>
-                <span class="spin-sub">Mantener para Auto</span>
-            </button>
-
-            <!-- Bet adjust (invisible touch areas) -->
-            <button class="ov-bet-down" id="betDown"></button>
-            <button class="ov-bet-up" id="betUp"></button>
-
-            <!-- Bottom stats -->
-            <div class="ov-credits" id="creditsDisplay">152,450,000</div>
-            <div class="ov-chips" id="chipsDisplay">8,250</div>
-            <div class="ov-vip" id="vipDisplay">VIP 10</div>
-
-            <!-- Sound toggle -->
-            <button class="ov-sound" id="soundBtn">🔊</button>
-        </div>
-
-        <!-- Particles -->
-        <div class="particles-container" id="particlesContainer"></div>
-
-        <!-- Popups -->
-        <div class="lion-bonus-popup" id="lionBonusPopup" style="display:none;">
-            <div class="lion-bonus-content">
-                <div class="bonus-banner"><span class="bonus-text">BONUS</span><span class="bonus-amount" id="bonusAmount">0</span></div>
-            </div>
-        </div>
-        <div class="bigwin-popup" id="bigWinPopup" style="display:none;">
-            <div class="bigwin-content"><div class="bigwin-title" id="bigWinTitle">¡GRAN GANANCIA!</div><div class="bigwin-amount" id="bigWinAmount">0</div></div>
-        </div>
-        <div class="freespins-popup" id="freeSpinsPopup" style="display:none;">
-            <div class="freespins-content"><div class="freespins-title">🌟 GIROS GRATIS 🌟</div><div class="freespins-amount" id="freeSpinsAwarded">10</div><button class="freespins-start-btn" id="freeSpinsStartBtn">¡RUGIR!</button></div>
-        </div>
-    </div>
-
-    <script src="assets/js/symbols.js"></script>
-    <script src="assets/js/sound.js"></script>
-    <script src="assets/js/animations.js"></script>
-    <script src="assets/js/game.js"></script>
+    <canvas id="game-canvas"></canvas>
+    <!-- PixiJS v7 -->
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+    <!-- Game -->
+    <script src="assets/js/slot.js"></script>
 </body>
 </html>
