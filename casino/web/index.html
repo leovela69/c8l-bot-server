@@ -8,7 +8,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:'Segoe UI',Arial,sans-serif;color:#f5f0e8}
-#app{display:flex;width:100%;height:100%;min-width:1200px;background:url('assets/img/bg_main.png') center center / cover no-repeat fixed;}
+#app{display:flex;width:100%;height:100%;background:url('assets/img/bg_main.png') center center / cover no-repeat fixed;}
 
 /* LEFT PANEL - Bot Leito 15% */
 #left-panel{
@@ -18,7 +18,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 }
 #left-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(0,150,255,0.05) 0%,transparent 70%);pointer-events:none}
 .bot-container{display:flex;flex-direction:column;align-items:center;gap:18px}
-.orb-wrapper{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center}
+.orb-wrapper{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;animation:orbFloat 4s ease-in-out infinite}
+
+@keyframes orbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes orbWiggle{0%{transform:rotate(-10deg)}25%{transform:rotate(10deg)}50%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}100%{transform:rotate(0)}}
+@keyframes orbBounce{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.orb-wrapper.wiggle{animation:orbWiggle 0.3s ease-in-out 3, orbFloat 4s ease-in-out infinite}
+.orb-wrapper.bounce{animation:orbBounce 0.5s ease-in-out, orbFloat 4s ease-in-out infinite}
 .orb{
   width:90px;height:90px;border-radius:50%;
   background:radial-gradient(circle at 35% 35%,#4de8ff,#0088cc 40%,#003366 80%,#001133);
@@ -31,8 +37,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 }
 .orb-eyes{position:absolute;top:33%;left:50%;transform:translateX(-50%);display:flex;gap:14px}
 .eye{width:16px;height:16px;background:white;border-radius:50%;position:relative;box-shadow:0 0 5px rgba(255,255,255,0.5)}
-.pupil{width:7px;height:7px;background:#001133;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:lookAround 4s ease-in-out infinite}
+.pupil{width:7px;height:7px;background:#001133;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);transition:all 0.3s;animation:lookAround 4s ease-in-out infinite}
 @keyframes lookAround{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-20%,-50%)}50%{transform:translate(-50%,-80%)}75%{transform:translate(-80%,-50%)}}
+@keyframes pupilSpin{0%{transform:translate(-50%,-50%) rotate(0deg) translateX(3px)}100%{transform:translate(-50%,-50%) rotate(360deg) translateX(3px)}}
+@keyframes pupilDrop{0%,100%{transform:translate(-50%,80%)}}
+.pupil.spinning{animation:pupilSpin 0.5s linear infinite!important}
+.pupil.hearts{background:#ff3366!important;width:8px!important;height:8px!important;clip-path:polygon(50% 100%,0% 35%,15% 0%,50% 15%,85% 0%,100% 35%)}
+.pupil.sad{animation:none!important;transform:translate(-50%,80%)!important}
 .orb-mouth{position:absolute;top:58%;left:50%;transform:translateX(-50%);width:18px;height:8px;border-radius:0 0 10px 10px;background:rgba(255,255,255,0.85);animation:mouthMove 3s ease-in-out infinite}
 @keyframes mouthMove{0%,100%{height:8px;width:18px}30%{height:12px;width:22px}60%{height:5px;width:14px}}
 .bot-name{color:#4de8ff;font-size:14px;font-weight:bold;text-shadow:0 0 10px rgba(0,150,255,0.5);letter-spacing:2px}
@@ -41,6 +52,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
   padding:10px 14px;max-width:90%;text-align:center;font-size:12px;color:#a0d8f0;
   min-height:44px;display:flex;align-items:center;justify-content:center;transition:all 0.3s
 }
+
 
 /* CENTER PANEL 55% */
 #center-panel{
@@ -54,7 +66,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 .jackpot-display{text-align:center;margin:4px 0 8px}
 .jackpot-display .label{font-size:9px;color:#8b6914;letter-spacing:2px}
 .jackpot-display .value{font-family:Georgia,serif;font-size:26px;color:#f5d061;font-weight:bold}
-#pixi-container{width:100%;flex:1;position:relative;display:flex;align-items:center;justify-content:center}
+#pixi-container{width:100%;flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-width:850px;min-height:500px}
 #pixi-container canvas{display:block}
 
 .info-bar{
@@ -77,10 +89,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 }
 .btn-spin:hover{background:linear-gradient(180deg,#f5d061,#d4a017)}
 .btn-spin:disabled{opacity:0.5;cursor:not-allowed}
+
 .btn-auto{
-  width:50px;height:40px;border-radius:8px;border:2px solid #8b6914;background:#1a1200;
+  width:70px;height:40px;border-radius:8px;border:2px solid #8b6914;background:#1a1200;
   color:#f5d061;font-size:11px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  letter-spacing:0.5px;transition:all 0.3s
+  letter-spacing:0.5px;transition:all 0.3s;position:relative
 }
 .btn-auto:hover{background:#2a2000;border-color:#d4a017}
 .btn-auto.active{background:#d4a017;color:#0a0800;border-color:#f5d061;box-shadow:0 0 12px rgba(212,160,23,0.6)}
@@ -91,6 +104,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 }
 .btn-sound:hover{background:#2a2000;border-color:#d4a017}
 .btn-sound.muted{color:#555;border-color:#333}
+
+/* AUTO-SPIN SELECTOR POPUP */
+#auto-popup{
+  position:absolute;bottom:55px;left:50%;transform:translateX(-50%);
+  background:rgba(10,8,5,0.97);border:2px solid #d4a017;border-radius:10px;
+  padding:10px 8px;display:none;flex-direction:column;gap:6px;z-index:8000;
+  box-shadow:0 4px 20px rgba(0,0,0,0.8),0 0 15px rgba(212,160,23,0.3);min-width:80px;
+  align-items:center
+}
+#auto-popup.show{display:flex}
+#auto-popup button{
+  width:64px;height:32px;border-radius:6px;border:1px solid #8b6914;background:#1a1200;
+  color:#f5d061;font-size:13px;font-weight:bold;cursor:pointer;transition:all 0.2s
+}
+#auto-popup button:hover{background:#d4a017;color:#0a0800;border-color:#f5d061}
 
 /* SOUND PANEL */
 #sound-panel{
@@ -121,6 +149,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
   color:#f5d061;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center
 }
 .sound-row .mute-btn.muted{color:#555;background:#0a0800}
+
 
 .footer-bar{
   display:flex;justify-content:space-around;width:100%;padding:8px 0;
@@ -163,6 +192,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
   color:#0a0800;font-weight:bold;font-size:12px;cursor:pointer
 }
 .chat-input button:hover{background:#f5d061}
+
 
 /* BONUS OVERLAY */
 #bonus-overlay{
@@ -212,6 +242,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 }
 .shaking{animation:screenShake 0.6s ease-in-out}
 
+
 /* Loading overlay */
 #loading{
   position:fixed;inset:0;background:#050505;display:flex;flex-direction:column;
@@ -221,6 +252,33 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 #loading p{font-size:12px;color:#8b6914}
 .bar{width:220px;height:4px;background:#1a1200;border-radius:2px;margin-top:15px;overflow:hidden}
 .bar-fill{height:100%;background:linear-gradient(90deg,#8b6914,#d4a017,#f5d061);width:0%;transition:width 0.3s}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media(max-width:900px){
+  #app{flex-direction:column;overflow-y:auto}
+  #left-panel{display:none!important}
+  #right-panel{display:none!important}
+  #center-panel{width:100%!important;height:100%!important}
+  #pixi-container{min-width:unset!important;min-height:unset!important;width:100%;flex:1}
+  .slot-header h1{font-size:16px}
+  .jackpot-display .value{font-size:20px}
+  .controls{gap:8px;padding:8px 5px;flex-wrap:wrap;justify-content:center}
+  .btn-spin{width:120px;height:52px;font-size:18px;min-height:48px}
+  .btn-bet{width:48px;height:48px;font-size:24px}
+  .btn-auto{width:80px;height:48px;font-size:13px}
+  .btn-sound{width:48px;height:48px;font-size:20px}
+  .info-bar{width:100%;padding:6px 10px}
+  .info-item .val{font-size:12px}
+  .footer-bar{padding:6px 0}
+  .footer-item .val{font-size:11px}
+  #auto-popup{bottom:60px}
+  #sound-panel{bottom:60px;left:5px;right:5px;min-width:unset}
+}
+@media(max-width:500px){
+  .info-bar{flex-wrap:wrap;gap:4px}
+  .info-item{min-width:45%}
+  .controls{gap:6px}
+}
 </style>
 </head>
 <body>
@@ -234,11 +292,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
   <!-- LEFT: Bot Leito -->
   <div id="left-panel">
     <div class="bot-container">
-      <div class="orb-wrapper">
+      <div class="orb-wrapper" id="orb-wrapper">
         <div class="orb"></div>
         <div class="orb-eyes">
-          <div class="eye"><div class="pupil"></div></div>
-          <div class="eye"><div class="pupil"></div></div>
+          <div class="eye"><div class="pupil" id="pupil-l"></div></div>
+          <div class="eye"><div class="pupil" id="pupil-r"></div></div>
         </div>
         <div class="orb-mouth"></div>
       </div>
@@ -246,6 +304,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
       <div class="bot-bubble" id="bot-msg">Bienvenido al León Dorado 🦁</div>
     </div>
   </div>
+
 
   <!-- CENTER: Slot Machine -->
   <div id="center-panel">
@@ -264,10 +323,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
       <div class="info-item"><div class="lbl">APUESTA TOTAL</div><div class="val" id="info-total">5.000</div></div>
       <div class="info-item"><div class="lbl">GANANCIA</div><div class="val" id="info-win">0</div></div>
     </div>
-    <div class="controls">
+    <div class="controls" style="position:relative">
       <button class="btn-sound" id="btn-sound">🔊</button>
       <button class="btn-bet" id="btn-minus">−</button>
       <button class="btn-auto" id="btn-auto">AUTO</button>
+      <div id="auto-popup">
+        <button data-count="10">10</button>
+        <button data-count="20">20</button>
+        <button data-count="50">50</button>
+        <button data-count="100">100</button>
+        <button data-count="Infinity">∞</button>
+      </div>
       <button class="btn-spin" id="btn-spin">GIRAR</button>
       <button class="btn-bet" id="btn-plus">+</button>
     </div>
@@ -291,6 +357,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
     </div>
   </div>
 </div>
+
 
 <div id="sound-panel">
   <h3>🔊 SONIDO</h3>
@@ -343,6 +410,7 @@ const SYMBOLS=[
   {id:'10',     img:'sym_10.jpeg',     w:9, pay:{5:15,4:5,3:2}}
 ];
 
+
 // ===== STATE =====
 let credits=152450000, chips=8250, betIdx=4;
 let lastWin=0, jackpot=48532120, spinning=false;
@@ -378,6 +446,11 @@ const chatIn=document.getElementById('chat-in');
 const chatSend=document.getElementById('chat-send');
 const loadbar=document.getElementById('loadbar');
 const loadingEl=document.getElementById('loading');
+const orbWrapper=document.getElementById('orb-wrapper');
+const pupilL=document.getElementById('pupil-l');
+const pupilR=document.getElementById('pupil-r');
+const autoPopup=document.getElementById('auto-popup');
+
 
 // ===== AUDIO (Web Audio API - synthetic + MP3 music) =====
 let audioCtx=null;
@@ -400,6 +473,9 @@ function sfxSpin(){tone(180,0.08,'square',0.06);tone(220,0.06,'square',0.04);}
 function sfxStop(i){tone(350+i*100,0.12,'triangle',0.1);}
 function sfxWin(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.2,'sine',0.12),i*80));}
 function sfxBig(){[523,659,784,1047,1318].forEach((f,i)=>setTimeout(()=>tone(f,0.3,'sine',0.15),i*70));}
+function sfxSuspense(){
+  [200,180,160,140,120].forEach((f,i)=>setTimeout(()=>tone(f,0.4,'sawtooth',0.08),i*100));
+}
 
 // ===== MUSIC SYSTEM =====
 let bgMusic=null, winMusic=null, musicStarted=false;
@@ -428,9 +504,7 @@ function playNextBg(){
 
 function playWinMusic(){
   if(!soundOn||musicMuted) return;
-  // Bajar volumen bg
   if(bgMusic){bgMusic.volume=musicVolume*0.2;}
-  // Stop previous win music if still playing
   if(winMusic){try{winMusic.pause();}catch(e){}}
   winMusic=new Audio(WIN_TRACKS[currentWinTrack]);
   currentWinTrack=(currentWinTrack+1)%WIN_TRACKS.length;
@@ -444,7 +518,7 @@ function playWinMusic(){
 
 function stopWinMusic(){
   if(winMusic){try{winMusic.pause();}catch(e){} winMusic=null;}
-  if(bgMusic){bgMusic.volume=0.25;}
+  if(bgMusic){bgMusic.volume=musicVolume;}
 }
 
 // Init ALL audio on first user interaction
@@ -455,6 +529,7 @@ function initAllAudio(){
 document.addEventListener('pointerdown',initAllAudio,{once:true});
 document.addEventListener('keydown',initAllAudio,{once:true});
 
+
 // ===== VIBRATION + SCREEN SHAKE =====
 function vibrateDevice(pattern){
   if(navigator.vibrate) navigator.vibrate(pattern);
@@ -464,6 +539,35 @@ function shakeScreen(){
   setTimeout(()=>document.getElementById('app').classList.remove('shaking'),500);
 }
 
+// ===== LEITO PUPIL STATES =====
+function setPupilState(state){
+  pupilL.className='pupil';
+  pupilR.className='pupil';
+  if(state==='spinning'){
+    pupilL.classList.add('spinning');
+    pupilR.classList.add('spinning');
+  } else if(state==='hearts'){
+    pupilL.classList.add('hearts');
+    pupilR.classList.add('hearts');
+    orbWrapper.classList.add('bounce');
+    setTimeout(()=>{
+      pupilL.classList.remove('hearts');
+      pupilR.classList.remove('hearts');
+      orbWrapper.classList.remove('bounce');
+    },1500);
+  } else if(state==='sad'){
+    pupilL.classList.add('sad');
+    pupilR.classList.add('sad');
+    setTimeout(()=>{
+      pupilL.classList.remove('sad');
+      pupilR.classList.remove('sad');
+    },2000);
+  } else if(state==='wiggle'){
+    orbWrapper.classList.add('wiggle');
+    setTimeout(()=>orbWrapper.classList.remove('wiggle'),900);
+  }
+}
+
 // ===== BONUS OVERLAY =====
 const bonusOverlay=document.getElementById('bonus-overlay');
 const bonusTitle=document.getElementById('bonus-title');
@@ -471,7 +575,6 @@ const bonusMult=document.getElementById('bonus-mult');
 const bonusAmount=document.getElementById('bonus-amount');
 
 function showBonus(amount, mult, type){
-  // Set content based on type
   if(type==='scatter'){
     bonusTitle.textContent='🌟 GIROS GRATIS 🌟';
     bonusMult.textContent=mult+' GIROS';
@@ -488,27 +591,18 @@ function showBonus(amount, mult, type){
     bonusTitle.textContent='🎰 BONUS 🎰';
     bonusMult.textContent='x'+mult;
   } else {
-    // Normal win
     bonusTitle.textContent='🦁 ¡PREMIO! 🦁';
     bonusMult.textContent='¡ENHORABUENA!';
   }
   bonusAmount.textContent='+'+fmt(amount);
   bonusOverlay.classList.add('show');
-
-  // Vibrate phone
   vibrateDevice([100,50,100,50,200]);
-  // Shake screen
   shakeScreen();
-  // Play win music (already called in most cases, but ensure it plays)
-
-  // Auto-hide after 2.5 seconds (faster for normal wins)
   const duration = (type==='win') ? 2000 : 3000;
-  setTimeout(()=>{
-    bonusOverlay.classList.remove('show');
-  },duration);
+  setTimeout(()=>{bonusOverlay.classList.remove('show');},duration);
 }
-// Click to dismiss bonus
 bonusOverlay.addEventListener('click',()=>bonusOverlay.classList.remove('show'));
+
 
 // ===== CHAT =====
 function addChat(text,cls){
@@ -522,7 +616,6 @@ function addChat(text,cls){
 addChat('🦁 Bienvenido al C8L Casino','system');
 addChat('🎰 El León Dorado te espera...','system');
 
-// Chat input
 chatSend.addEventListener('click',sendUserMsg);
 chatIn.addEventListener('keydown',(e)=>{if(e.key==='Enter')sendUserMsg();});
 function sendUserMsg(){
@@ -570,6 +663,7 @@ function updateUI(){
 btnMinus.addEventListener('click',()=>{if(betIdx>0&&!spinning){betIdx--;updateUI();}});
 btnPlus.addEventListener('click',()=>{if(betIdx<BET_LEVELS.length-1&&!spinning){betIdx++;updateUI();}});
 
+
 // ===== SOUND PANEL =====
 const soundPanel=document.getElementById('sound-panel');
 const volMusic=document.getElementById('vol-music');
@@ -577,19 +671,13 @@ const volEffects=document.getElementById('vol-effects');
 const muteMusic=document.getElementById('mute-music');
 const muteEffects=document.getElementById('mute-effects');
 
-// Toggle panel open/close
-btnSound.addEventListener('click',()=>{
-  soundPanel.classList.toggle('show');
-});
-
-// Close panel when clicking outside
+btnSound.addEventListener('click',()=>{soundPanel.classList.toggle('show');});
 document.addEventListener('click',(e)=>{
   if(!soundPanel.contains(e.target) && e.target!==btnSound && soundPanel.classList.contains('show')){
     soundPanel.classList.remove('show');
   }
 });
 
-// Music volume slider
 volMusic.addEventListener('input',()=>{
   musicVolume=volMusic.value/100;
   if(bgMusic && !musicMuted) bgMusic.volume=musicVolume;
@@ -597,56 +685,49 @@ volMusic.addEventListener('input',()=>{
   else if(musicMuted){musicMuted=false;muteMusic.classList.remove('muted');muteMusic.textContent='🎵';}
 });
 
-// Effects volume slider
 volEffects.addEventListener('input',()=>{
   effectsVolume=volEffects.value/100;
   if(effectsVolume===0){effectsMuted=true;muteEffects.classList.add('muted');muteEffects.textContent='🚫';}
   else if(effectsMuted){effectsMuted=false;muteEffects.classList.remove('muted');muteEffects.textContent='🔔';}
 });
 
-// Mute music button
 muteMusic.addEventListener('click',()=>{
   musicMuted=!musicMuted;
   if(musicMuted){
-    muteMusic.classList.add('muted');
-    muteMusic.textContent='🚫';
+    muteMusic.classList.add('muted');muteMusic.textContent='🚫';
     if(bgMusic) bgMusic.volume=0;
     if(winMusic) winMusic.volume=0;
   } else {
-    muteMusic.classList.remove('muted');
-    muteMusic.textContent='🎵';
+    muteMusic.classList.remove('muted');muteMusic.textContent='🎵';
     if(bgMusic) bgMusic.volume=musicVolume;
   }
 });
 
-// Mute effects button
 muteEffects.addEventListener('click',()=>{
   effectsMuted=!effectsMuted;
-  if(effectsMuted){
-    muteEffects.classList.add('muted');
-    muteEffects.textContent='🚫';
-  } else {
-    muteEffects.classList.remove('muted');
-    muteEffects.textContent='🔔';
-  }
+  if(effectsMuted){muteEffects.classList.add('muted');muteEffects.textContent='🚫';}
+  else{muteEffects.classList.remove('muted');muteEffects.textContent='🔔';}
 });
+
 
 // ===== PIXI SETUP =====
 const container=document.getElementById('pixi-container');
-const CW=Math.min(container.clientWidth||700,800);
-const CH=Math.min(container.clientHeight||400,450);
+const isMobile=window.innerWidth<900;
+const CW=isMobile?Math.min(container.clientWidth||window.innerWidth,window.innerWidth):Math.max(Math.min(container.clientWidth||850,1000),850);
+const CH=isMobile?Math.min(container.clientHeight||350,400):Math.max(Math.min(container.clientHeight||500,550),500);
 const IMG_PATH='assets/img/';
 
 PIXI.Assets.addBundle('slot',{
-  bg:     IMG_PATH+'bg_main.png',
-  leon:   IMG_PATH+'sym_leon.png',
-  wild:   IMG_PATH+'sym_wild.png',
-  scatter:IMG_PATH+'sym_scatter.png',
-  A:      IMG_PATH+'sym_A.png',
-  K:      IMG_PATH+'sym_K.jpeg',
-  Q:      IMG_PATH+'sym_Q.jpeg',
-  J:      IMG_PATH+'sym_J.jpeg',
-  ten:    IMG_PATH+'sym_10.jpeg'
+  bg:      IMG_PATH+'bg_main.png',
+  leon:    IMG_PATH+'sym_leon.png',
+  wild:    IMG_PATH+'sym_wild.png',
+  scatter: IMG_PATH+'sym_scatter.png',
+  A:       IMG_PATH+'sym_A.png',
+  K:       IMG_PATH+'sym_K.jpeg',
+  Q:       IMG_PATH+'sym_Q.jpeg',
+  J:       IMG_PATH+'sym_J.jpeg',
+  ten:     IMG_PATH+'sym_10.jpeg',
+  marco:   IMG_PATH+'sym_marco.jpeg'
 });
 
 PIXI.Assets.loadBundle('slot',(p)=>{
@@ -655,6 +736,7 @@ PIXI.Assets.loadBundle('slot',(p)=>{
   loadingEl.style.display='none';
   initSlot(assets);
 });
+
 
 function initSlot(assets){
   const app=new PIXI.Application({
@@ -666,8 +748,8 @@ function initSlot(assets){
 
   const W=app.screen.width, H=app.screen.height;
 
-  // Symbol dimensions
-  const SYM=Math.min(Math.floor((W*0.82)/REELS),Math.floor((H*0.70)/ROWS));
+  // IMPROVEMENT 4: Bigger symbols - 85% width, 78% height
+  const SYM=Math.min(Math.floor((W*0.85)/REELS),Math.floor((H*0.78)/ROWS));
   const GAP=4;
   const CELL=SYM+GAP;
   const GW=REELS*CELL-GAP, GH=ROWS*CELL-GAP;
@@ -680,7 +762,6 @@ function initSlot(assets){
     const key=texKeys[sym.id];
     if(assets[key]) texMap[sym.id]=assets[key];
   });
-  // Fallbacks
   SYMBOLS.forEach(sym=>{
     if(!texMap[sym.id]){
       const g=new PIXI.Graphics();
@@ -694,12 +775,12 @@ function initSlot(assets){
     }
   });
 
-  // Background del canvas — transparente para que se vea el fondo CSS
+  // Background overlay (dark) so symbols are readable
   const bgOverlay=new PIXI.Graphics();
-  bgOverlay.beginFill(0x000000,0.4);bgOverlay.drawRect(0,0,W,H);bgOverlay.endFill();
+  bgOverlay.beginFill(0x000000,0.35);bgOverlay.drawRect(0,0,W,H);bgOverlay.endFill();
   app.stage.addChild(bgOverlay);
 
-  // Frame
+  // Frame around reels
   const frame=new PIXI.Graphics();
   frame.lineStyle(3,0xd4a017,0.9);
   frame.beginFill(0x030200,0.92);
@@ -708,6 +789,46 @@ function initSlot(assets){
   frame.lineStyle(1.5,0xf5d061,0.3);
   frame.drawRoundedRect(GX-16,GY-16,GW+32,GH+32,13);
   app.stage.addChild(frame);
+
+
+  // IMPROVEMENT 3: Ornamental frame using sym_marco.jpeg
+  if(assets.marco){
+    const marcoTex=assets.marco;
+    const frameThickness=22;
+    const fPad=20;
+    // Top
+    const marcoTop=new PIXI.Sprite(marcoTex);
+    marcoTop.x=GX-fPad;marcoTop.y=GY-fPad-frameThickness;
+    marcoTop.width=GW+fPad*2;marcoTop.height=frameThickness;
+    marcoTop.alpha=0.85;
+    app.stage.addChild(marcoTop);
+    // Bottom
+    const marcoBot=new PIXI.Sprite(marcoTex);
+    marcoBot.x=GX-fPad;marcoBot.y=GY+GH+fPad;
+    marcoBot.width=GW+fPad*2;marcoBot.height=frameThickness;
+    marcoBot.alpha=0.85;
+    app.stage.addChild(marcoBot);
+    // Left
+    const marcoLeft=new PIXI.Sprite(marcoTex);
+    marcoLeft.x=GX-fPad-frameThickness;marcoLeft.y=GY-fPad;
+    marcoLeft.width=frameThickness;marcoLeft.height=GH+fPad*2;
+    marcoLeft.alpha=0.85;
+    app.stage.addChild(marcoLeft);
+    // Right
+    const marcoRight=new PIXI.Sprite(marcoTex);
+    marcoRight.x=GX+GW+fPad;marcoRight.y=GY-fPad;
+    marcoRight.width=frameThickness;marcoRight.height=GH+fPad*2;
+    marcoRight.alpha=0.85;
+    app.stage.addChild(marcoRight);
+
+    // Golden glow effect around the frame
+    const glowFrame=new PIXI.Graphics();
+    glowFrame.lineStyle(4,0xd4a017,0.25);
+    glowFrame.drawRoundedRect(GX-fPad-frameThickness-3,GY-fPad-frameThickness-3,GW+fPad*2+frameThickness*2+6,GH+fPad*2+frameThickness*2+6,14);
+    glowFrame.lineStyle(2,0xf5d061,0.15);
+    glowFrame.drawRoundedRect(GX-fPad-frameThickness-7,GY-fPad-frameThickness-7,GW+fPad*2+frameThickness*2+14,GH+fPad*2+frameThickness*2+14,16);
+    app.stage.addChild(glowFrame);
+  }
 
   // Reel container with mask
   const reelContainer=new PIXI.Container();
@@ -718,6 +839,7 @@ function initSlot(assets){
   reelMask.endFill();
   app.stage.addChild(reelMask);
   reelContainer.mask=reelMask;
+
 
   // Create reels
   const STRIP=ROWS+2;
@@ -734,7 +856,7 @@ function initSlot(assets){
       reelContainer.addChild(sp);
       strips.push(sp);
     }
-    reels.push({strips,speed:0,spinning:false,stopping:false,target:null,stopped:false});
+    reels.push({strips,speed:0,spinning:false,stopping:false,target:null,stopped:false,suspenseDelay:0,isSuspense:false});
   }
 
   // Center payline indicator
@@ -764,7 +886,12 @@ function initSlot(assets){
   const gVal=new PIXI.Text('0',{fontFamily:'Georgia,serif',fontSize:14,fill:0xf5d061,fontWeight:'bold'});
   gVal.anchor.set(0.5);gVal.x=gBox.x+22;gVal.y=gBox.y+28;app.stage.addChild(gVal);
 
+
   // ===== SPIN LOGIC =====
+  // Track if we expect a big win (for suspense on last reel)
+  let pendingBigWin=false;
+  let pendingTotalWin=0;
+
   function doSpin(){
     if(spinning) return;
     if(credits<totalBet()&&freeSpins<=0) return;
@@ -772,6 +899,7 @@ function initSlot(assets){
     spinning=true;
     lastWin=0;
     btnSpin.disabled=true;
+    setPupilState('spinning');
 
     if(freeSpins>0){
       freeSpins--;
@@ -792,6 +920,11 @@ function initSlot(assets){
       grid.push(col);
     }
 
+    // Pre-calculate win to determine if we should apply suspense on last reel
+    const preCalcWin=preCalculateWin(grid);
+    pendingBigWin=(preCalcWin>=totalBet()*3);
+    pendingTotalWin=preCalcWin;
+
     // Start spinning each reel
     reels.forEach((rl,i)=>{
       rl.spinning=true;
@@ -799,247 +932,249 @@ function initSlot(assets){
       rl.stopped=false;
       rl.speed=0;
       rl.target=grid[i];
+      rl.suspenseDelay=0;
+      rl.isSuspense=false;
     });
+
+    // IMPROVEMENT 2: Suspense - last reel gets extra delay if big win
+    const suspenseExtra=pendingBigWin?400:0;
 
     // Stop reels sequentially
     reels.forEach((rl,i)=>{
+      const delay=300+i*160+(i===REELS-1?suspenseExtra:0);
       setTimeout(()=>{
         rl.stopping=true;
-      },400+i*180);
+        if(i===REELS-1 && pendingBigWin){
+          rl.isSuspense=true;
+          sfxSuspense();
+        }
+      },delay);
     });
 
     // Evaluate after all reels stopped
-    const evalTime=400+(REELS-1)*180+500;
-    setTimeout(()=>{
-      // Snap all reels to final positions
-      for(let col=0;col<REELS;col++){
-        const rl=reels[col];
-        rl.spinning=false;
-        rl.stopping=false;
-        rl.stopped=true;
-        rl.speed=0;
-        for(let row=0;row<ROWS;row++){
-          const sp=rl.strips[row+1];
-          sp.texture=texMap[rl.target[row].id];
-          sp.symData=rl.target[row];
-          sp.x=GX+col*CELL;
-          sp.y=GY+row*CELL;
-          sp.width=SYM;
-          sp.height=SYM;
-        }
-        // Reset buffer sprites
-        rl.strips[0].y=GY-CELL;
-        rl.strips[0].x=GX+col*CELL;
-        rl.strips[0].width=SYM;
-        rl.strips[0].height=SYM;
-        if(rl.strips[ROWS+1]){
-          rl.strips[ROWS+1].y=GY+ROWS*CELL;
-          rl.strips[ROWS+1].x=GX+col*CELL;
-          rl.strips[ROWS+1].width=SYM;
-          rl.strips[ROWS+1].height=SYM;
-        }
-      }
-
-      // === SISTEMA DE PREMIOS "CICLO 999" ===
-      // LA CASA GANA. Premios MUY escasos pero cuando tocan son buenos.
-      // RTP ~ 85% (la casa se queda con 15% de todo lo apostado)
-      let totalWin=0;
-
-      // Contadores globales de sesión
-      if(typeof window._cycleSpins==='undefined') window._cycleSpins=0;
-      if(typeof window._cyclePool==='undefined') window._cyclePool=0;
-      if(typeof window._lastWinSpin==='undefined') window._lastWinSpin=0;
-      if(typeof window._totalSpins==='undefined') window._totalSpins=0;
-      window._cycleSpins++;
-      window._totalSpins++;
-
-      // Acumular al pool (70% de la apuesta va al pool de premios)
-      window._cyclePool += Math.round(totalBet() * 0.70);
-
-      // Reset del ciclo cada 999 giros
-      if(window._cycleSpins > 999){
-        window._cycleSpins = 1;
-        window._cyclePool = Math.round(totalBet() * 0.70);
-        window._lastWinSpin = 0;
-      }
-
-      // === DETERMINAR SI HAY PREMIO ===
-      // Probabilidades MUY BAJAS — la casa domina
-      const spinsSinceLastWin = window._cycleSpins - window._lastWinSpin;
-      const roll = Math.random();
-      let winChance;
-
-      if(window._cycleSpins <= 8){
-        // Primeros 8 giros: 0% — NADA (que sienta la máquina)
-        winChance = 0;
-      } else if(spinsSinceLastWin < 6){
-        // Ganó hace poco: 2% (casi imposible repetir)
-        winChance = 0.02;
-      } else if(spinsSinceLastWin < 10){
-        // 6-9 giros secos: 5%
-        winChance = 0.05;
-      } else if(spinsSinceLastWin < 15){
-        // 10-14 giros secos: 8%
-        winChance = 0.08;
-      } else if(spinsSinceLastWin < 20){
-        // 15-19 giros secos: 12%
-        winChance = 0.12;
-      } else if(spinsSinceLastWin < 30){
-        // 20-29 giros secos: 18%
-        winChance = 0.18;
-      } else if(spinsSinceLastWin < 40){
-        // 30-39 giros secos: 30%
-        winChance = 0.30;
-      } else {
-        // 40+ giros secos: 50% (no dejar que se vaya sin ganar NUNCA)
-        winChance = 0.50;
-      }
-
-      // === NO HAY MIGAJAS FRECUENTES — solo silencio ===
-      // Migaja MUY rara (5% de los giros perdidos, devuelve poco)
-      let isMigaja = false;
-      if(roll >= winChance && Math.random() < 0.05 && window._cycleSpins > 10 && spinsSinceLastWin > 5){
-        totalWin = Math.round(totalBet() * (0.15 + Math.random() * 0.25));
-        isMigaja = true;
-      }
-
-      // === PREMIO REAL — raro pero generoso ===
-      if(!isMigaja && roll < winChance && window._cycleSpins > 8){
-        window._lastWinSpin = window._cycleSpins;
-
-        // Determinar TAMAÑO del premio
-        const prizeRoll = Math.random();
-        let prizeAmount;
-
-        if(prizeRoll < 0.50){
-          // 50% — Premio pequeño: 1.3x a 2x la apuesta
-          prizeAmount = Math.round(totalBet() * (1.3 + Math.random() * 0.7));
-        } else if(prizeRoll < 0.78){
-          // 28% — Premio medio: 2x a 4x la apuesta
-          prizeAmount = Math.round(totalBet() * (2.0 + Math.random() * 2.0));
-        } else if(prizeRoll < 0.92){
-          // 14% — Premio grande: 4x a 8x la apuesta
-          prizeAmount = Math.round(totalBet() * (4.0 + Math.random() * 4.0));
-        } else if(prizeRoll < 0.98){
-          // 6% — Premio GORDO: 8x a 15x la apuesta
-          prizeAmount = Math.round(totalBet() * (8.0 + Math.random() * 7.0));
-        } else {
-          // 2% — Premio MEGA: 15x a 30x la apuesta
-          prizeAmount = Math.round(totalBet() * (15.0 + Math.random() * 15.0));
-        }
-
-        // Limitar al 60% del pool (la casa NUNCA pierde)
-        prizeAmount = Math.min(prizeAmount, Math.round(window._cyclePool * 0.60));
-        // Mínimo: al menos 1.2x la apuesta
-        prizeAmount = Math.max(prizeAmount, Math.round(totalBet() * 1.2));
-
-        // Descontar del pool
-        window._cyclePool = Math.max(0, window._cyclePool - prizeAmount);
-
-        totalWin = prizeAmount;
-      }
-
-      // Still check scatters for free spins (independent of main win)
-      let scatterCount=0;
-      for(let c=0;c<REELS;c++){
-        for(let r=0;r<ROWS;r++){
-          if(grid[c][r].id==='scatter') scatterCount++;
-        }
-      }
-      if(scatterCount>=3){
-        const scatterBonus={3:2,4:5,5:15};
-        totalWin+=Math.round(totalBet()*scatterBonus[Math.min(scatterCount,5)]);
-        // Award free spins
-        const fsAward=scatterCount>=5?25:scatterCount>=4?15:10;
-        freeSpins+=fsAward;
-        multiplier=2;
-        botSay('¡GIROS GRATIS! 🌟');
-        addChat('🌟 ¡GIROS GRATIS x'+fsAward+' activados!','freespin');
-        showBonus(totalWin, fsAward, 'scatter');
-      }
-
-      // Modo Rugido (rare multiplier)
-      if(totalWin>0&&Math.random()<0.05){
-        const rm=[2,3,5,8,10][Math.floor(Math.random()*5)];
-        totalWin*=rm;
-        multiplier=rm;
-        mVal.text='X'+multiplier;
-        showBonus(totalWin, rm, 'rugido');
-      }
-
-      // Progressive jackpot (very rare)
-      if(Math.random()<0.0001&&freeSpins<=0){
-        totalWin+=jackpot;
-        addChat('🦁 ¡¡¡JACKPOT!!! '+fmt(jackpot),'win');
-        showBonus(jackpot, 0, 'jackpot');
-        jackpot=1000000;
-        sfxBig();
-      }
-
-      // Apply win
-      if(totalWin>0 && !isMigaja){
-        credits+=totalWin;
-        lastWin=totalWin;
-        addChat('✅ Ganaste: +'+fmt(totalWin),'win');
-        
-        if(totalWin>=totalBet()*10){
-          // MEGA WIN — efectos completos
-          shakeScreen();
-          playWinMusic();
-          botSay('¡INCREÍBLE! 🔥🔥🔥');
-          sfxBig();
-          showWinEffect(totalWin,true);
-          showBonus(totalWin, Math.round(totalWin/totalBet()), 'bigwin');
-          vibrateDevice([200,100,200,100,300]);
-        } else if(totalWin>=totalBet()*3){
-          // BIG WIN — cartel + shake
-          shakeScreen();
-          playWinMusic();
-          botSay('¡GENIAL! +'+fmt(totalWin)+'! 🎉');
-          sfxBig();
-          showWinEffect(totalWin,true);
-          showBonus(totalWin, Math.round(totalWin/bet()), 'bonus');
-          vibrateDevice([100,50,100,50,200]);
-        } else {
-          // NORMAL WIN — SIN cartel, solo sonido y texto
-          botSay('¡Premio! +'+fmt(totalWin)+' 🎉');
-          sfxWin();
-          showWinEffect(totalWin,false);
-          // NO showBonus para premios normales (evitar spam)
-          vibrateDevice([50]);
-        }
-      } else if(isMigaja && totalWin>0){
-        // MIGAJA — devuelve algo sin hacer ruido
-        credits+=totalWin;
-        lastWin=totalWin;
-        addChat('💫 Recuperas: +'+fmt(totalWin),'system');
-        botSay('Algo es algo... 💫');
-        // Sin efectos grandes, sin shake, sin bonus card
-      } else {
-        addChat('❌ Sin premio','loss');
-        const lossMessages=['La próxima va... 💪','Sigue intentando 🎰','Casi... 😤','Paciencia... 🦁','El león está dormido... 💤'];
-        botSay(lossMessages[Math.floor(Math.random()*lossMessages.length)]);
-      }
-
-      updateUI();
-      gVal.text=freeSpins>0?String(freeSpins):'0';
-      mVal.text='X'+multiplier;
-
-      spinning=false;
-      btnSpin.disabled=false;
-
-      // Giros gratis o auto-spin: programar siguiente giro
-      if(freeSpins>0){
-        btnSpin.textContent='GRATIS';
-        // Solo continuar si auto está activo O son giros gratis ganados
-        setTimeout(()=>{ if(!spinning) doSpin(); },1200);
-      } else {
-        multiplier=1;
-        mVal.text='X1';
-        btnSpin.textContent='GIRAR';
-      }
-    },evalTime);
+    const evalTime=300+(REELS-1)*160+suspenseExtra+600;
+    setTimeout(()=>evaluateSpin(grid),evalTime);
   }
+
+
+  // Pre-calculate expected win (for suspense detection)
+  function preCalculateWin(grid){
+    // Simple estimation using the reward system logic
+    // We'll just use the same cycle logic here to see if it would produce a win
+    if(typeof window._cycleSpins==='undefined') return 0;
+    const spinsSinceLastWin=(window._cycleSpins+1)-(window._lastWinSpin||0);
+    if(spinsSinceLastWin<6) return 0;
+    if(spinsSinceLastWin>=20) return totalBet()*4; // likely a decent win
+    if(spinsSinceLastWin>=15) return totalBet()*2;
+    return 0;
+  }
+
+  function evaluateSpin(grid){
+    // Snap all reels to final positions
+    for(let col=0;col<REELS;col++){
+      const rl=reels[col];
+      rl.spinning=false;
+      rl.stopping=false;
+      rl.stopped=true;
+      rl.speed=0;
+      rl.isSuspense=false;
+      for(let row=0;row<ROWS;row++){
+        const sp=rl.strips[row+1];
+        sp.texture=texMap[rl.target[row].id];
+        sp.symData=rl.target[row];
+        sp.x=GX+col*CELL;
+        sp.y=GY+row*CELL;
+        sp.width=SYM;
+        sp.height=SYM;
+      }
+      rl.strips[0].y=GY-CELL;
+      rl.strips[0].x=GX+col*CELL;
+      rl.strips[0].width=SYM;
+      rl.strips[0].height=SYM;
+      if(rl.strips[ROWS+1]){
+        rl.strips[ROWS+1].y=GY+ROWS*CELL;
+        rl.strips[ROWS+1].x=GX+col*CELL;
+        rl.strips[ROWS+1].width=SYM;
+        rl.strips[ROWS+1].height=SYM;
+      }
+    }
+
+
+    // === SISTEMA DE PREMIOS "CICLO 999" ===
+    let totalWin=0;
+
+    if(typeof window._cycleSpins==='undefined') window._cycleSpins=0;
+    if(typeof window._cyclePool==='undefined') window._cyclePool=0;
+    if(typeof window._lastWinSpin==='undefined') window._lastWinSpin=0;
+    if(typeof window._totalSpins==='undefined') window._totalSpins=0;
+    window._cycleSpins++;
+    window._totalSpins++;
+
+    window._cyclePool += Math.round(totalBet() * 0.70);
+
+    if(window._cycleSpins > 999){
+      window._cycleSpins = 1;
+      window._cyclePool = Math.round(totalBet() * 0.70);
+      window._lastWinSpin = 0;
+    }
+
+    const spinsSinceLastWin = window._cycleSpins - window._lastWinSpin;
+    const roll = Math.random();
+    let winChance;
+
+    if(window._cycleSpins <= 8){
+      winChance = 0;
+    } else if(spinsSinceLastWin < 6){
+      winChance = 0.02;
+    } else if(spinsSinceLastWin < 10){
+      winChance = 0.05;
+    } else if(spinsSinceLastWin < 15){
+      winChance = 0.08;
+    } else if(spinsSinceLastWin < 20){
+      winChance = 0.12;
+    } else if(spinsSinceLastWin < 30){
+      winChance = 0.18;
+    } else if(spinsSinceLastWin < 40){
+      winChance = 0.30;
+    } else {
+      winChance = 0.50;
+    }
+
+    let isMigaja = false;
+    if(roll >= winChance && Math.random() < 0.05 && window._cycleSpins > 10 && spinsSinceLastWin > 5){
+      totalWin = Math.round(totalBet() * (0.15 + Math.random() * 0.25));
+      isMigaja = true;
+    }
+
+
+    if(!isMigaja && roll < winChance && window._cycleSpins > 8){
+      window._lastWinSpin = window._cycleSpins;
+
+      const prizeRoll = Math.random();
+      let prizeAmount;
+
+      if(prizeRoll < 0.50){
+        prizeAmount = Math.round(totalBet() * (1.3 + Math.random() * 0.7));
+      } else if(prizeRoll < 0.78){
+        prizeAmount = Math.round(totalBet() * (2.0 + Math.random() * 2.0));
+      } else if(prizeRoll < 0.92){
+        prizeAmount = Math.round(totalBet() * (4.0 + Math.random() * 4.0));
+      } else if(prizeRoll < 0.98){
+        prizeAmount = Math.round(totalBet() * (8.0 + Math.random() * 7.0));
+      } else {
+        prizeAmount = Math.round(totalBet() * (15.0 + Math.random() * 15.0));
+      }
+
+      prizeAmount = Math.min(prizeAmount, Math.round(window._cyclePool * 0.60));
+      prizeAmount = Math.max(prizeAmount, Math.round(totalBet() * 1.2));
+      window._cyclePool = Math.max(0, window._cyclePool - prizeAmount);
+      totalWin = prizeAmount;
+    }
+
+    // Scatters for free spins
+    let scatterCount=0;
+    for(let c=0;c<REELS;c++){
+      for(let r=0;r<ROWS;r++){
+        if(grid[c][r].id==='scatter') scatterCount++;
+      }
+    }
+    if(scatterCount>=3){
+      const scatterBonus={3:2,4:5,5:15};
+      totalWin+=Math.round(totalBet()*scatterBonus[Math.min(scatterCount,5)]);
+      const fsAward=scatterCount>=5?25:scatterCount>=4?15:10;
+      freeSpins+=fsAward;
+      multiplier=2;
+      botSay('¡GIROS GRATIS! 🌟');
+      addChat('🌟 ¡GIROS GRATIS x'+fsAward+' activados!','freespin');
+      showBonus(totalWin, fsAward, 'scatter');
+    }
+
+    // Modo Rugido
+    if(totalWin>0&&Math.random()<0.05){
+      const rm=[2,3,5,8,10][Math.floor(Math.random()*5)];
+      totalWin*=rm;
+      multiplier=rm;
+      mVal.text='X'+multiplier;
+      showBonus(totalWin, rm, 'rugido');
+    }
+
+    // Progressive jackpot
+    if(Math.random()<0.0001&&freeSpins<=0){
+      totalWin+=jackpot;
+      addChat('🦁 ¡¡¡JACKPOT!!! '+fmt(jackpot),'win');
+      showBonus(jackpot, 0, 'jackpot');
+      jackpot=1000000;
+      sfxBig();
+    }
+
+
+    // Apply win
+    if(totalWin>0 && !isMigaja){
+      credits+=totalWin;
+      lastWin=totalWin;
+      addChat('✅ Ganaste: +'+fmt(totalWin),'win');
+      setPupilState('hearts');
+      setPupilState('wiggle');
+      
+      if(totalWin>=totalBet()*10){
+        shakeScreen();
+        playWinMusic();
+        botSay('¡INCREÍBLE! 🔥🔥🔥');
+        sfxBig();
+        showWinEffect(totalWin,true);
+        showBonus(totalWin, Math.round(totalWin/totalBet()), 'bigwin');
+        vibrateDevice([200,100,200,100,300]);
+      } else if(totalWin>=totalBet()*3){
+        shakeScreen();
+        playWinMusic();
+        botSay('¡GENIAL! +'+fmt(totalWin)+'! 🎉');
+        sfxBig();
+        showWinEffect(totalWin,true);
+        showBonus(totalWin, Math.round(totalWin/bet()), 'bonus');
+        vibrateDevice([100,50,100,50,200]);
+      } else {
+        botSay('¡Premio! +'+fmt(totalWin)+' 🎉');
+        sfxWin();
+        showWinEffect(totalWin,false);
+        vibrateDevice([50]);
+      }
+    } else if(isMigaja && totalWin>0){
+      credits+=totalWin;
+      lastWin=totalWin;
+      addChat('💫 Recuperas: +'+fmt(totalWin),'system');
+      botSay('Algo es algo... 💫');
+    } else {
+      addChat('❌ Sin premio','loss');
+      const lossMessages=['La próxima va... 💪','Sigue intentando 🎰','Casi... 😤','Paciencia... 🦁','El león está dormido... 💤'];
+      botSay(lossMessages[Math.floor(Math.random()*lossMessages.length)]);
+      setPupilState('sad');
+    }
+
+    updateUI();
+    gVal.text=freeSpins>0?String(freeSpins):'0';
+    mVal.text='X'+multiplier;
+
+    spinning=false;
+    btnSpin.disabled=false;
+    setPupilState('normal');
+
+    // Auto-spin countdown
+    if(autoSpinActive && autoSpinCount!==Infinity){
+      autoSpinCount--;
+      updateAutoBtn();
+      if(autoSpinCount<=0){stopAutoSpin();return;}
+    }
+
+    if(freeSpins>0){
+      btnSpin.textContent='GRATIS';
+      setTimeout(()=>{ if(!spinning) doSpin(); },1200);
+    } else {
+      multiplier=1;
+      mVal.text='X1';
+      btnSpin.textContent='GIRAR';
+    }
+  } // end evaluateSpin
+
 
   // ===== WIN EFFECT =====
   function showWinEffect(amt,big){
@@ -1058,7 +1193,6 @@ function initSlot(assets){
     };
     app.ticker.add(anim);
 
-    // Coin particles
     const emojis=['🪙','💰','⭐','🦁'];
     const count=big?16:8;
     for(let i=0;i<count;i++){
@@ -1077,7 +1211,8 @@ function initSlot(assets){
     }
   }
 
-  // ===== ANIMATION TICKER =====
+
+  // ===== ANIMATION TICKER (IMPROVEMENT 2: Ultra-fast spin + dramatic brake) =====
   app.ticker.add((delta)=>{
     // Jackpot ticks up slowly
     if(Math.random()<0.003){
@@ -1090,8 +1225,8 @@ function initSlot(assets){
       if(!rl.spinning&&!rl.stopping) continue;
 
       if(rl.spinning&&!rl.stopping){
-        // Accelerating phase
-        rl.speed=Math.min(rl.speed+2*delta,26);
+        // IMPROVEMENT 2: Much faster acceleration (8*delta) and max speed 60
+        rl.speed=Math.min(rl.speed+8*delta,60);
         for(const sp of rl.strips){
           sp.y+=rl.speed*delta;
           if(sp.y>GY+GH+CELL){
@@ -1102,14 +1237,19 @@ function initSlot(assets){
           }
         }
       } else if(rl.stopping){
-        // Decelerating phase
-        rl.speed*=0.80;
+        // IMPROVEMENT 2: Dramatic brake for suspense reel
+        if(rl.isSuspense){
+          // Much slower deceleration for last reel on big win
+          rl.speed*=0.60;
+        } else {
+          rl.speed*=0.80;
+        }
         if(rl.speed<0.4){
-          // Snap to final position
           rl.spinning=false;
           rl.stopping=false;
           rl.stopped=true;
           rl.speed=0;
+          rl.isSuspense=false;
           for(let row=0;row<ROWS;row++){
             const sp=rl.strips[row+1];
             sp.texture=texMap[rl.target[row].id];
@@ -1145,52 +1285,62 @@ function initSlot(assets){
     }
   });
 
+
   // ===== CONTROLS =====
   btnSpin.addEventListener('click',doSpin);
 
-  // ===== AUTO-SPIN (ROBUSTO) =====
+  // ===== AUTO-SPIN WITH COUNTER SELECTOR (IMPROVEMENT 6) =====
   let autoSpinActive=false;
+  let autoSpinCount=0;
   let autoSpinTimer=null;
   let autoSpinInterval=null;
 
-  function startAutoSpin(){
+  function updateAutoBtn(){
+    if(autoSpinActive){
+      btnAuto.classList.add('active');
+      if(autoSpinCount===Infinity){
+        btnAuto.textContent='STOP ∞';
+      } else {
+        btnAuto.textContent='AUTO '+autoSpinCount;
+      }
+    } else {
+      btnAuto.classList.remove('active');
+      btnAuto.textContent='AUTO';
+    }
+  }
+
+  function startAutoSpin(count){
     autoSpinActive=true;
-    btnAuto.classList.add('active');
-    btnAuto.textContent='STOP';
-    addChat('🔄 Giro automático activado','system');
+    autoSpinCount=count;
+    updateAutoBtn();
+    addChat('🔄 Auto-giro activado'+(count===Infinity?' (∞)':' ('+count+')'),'system');
     botSay('Auto-giro ON 🔄');
-    // Iniciar el loop
     scheduleNextAutoSpin();
   }
 
   function stopAutoSpin(){
     autoSpinActive=false;
-    btnAuto.classList.remove('active');
-    btnAuto.textContent='AUTO';
-    // LIMPIAR TODO
+    autoSpinCount=0;
+    updateAutoBtn();
     if(autoSpinTimer){clearTimeout(autoSpinTimer);autoSpinTimer=null;}
     if(autoSpinInterval){clearInterval(autoSpinInterval);autoSpinInterval=null;}
-    addChat('⏹️ Giro automático detenido','system');
+    addChat('⏹️ Auto-giro detenido','system');
     botSay('Auto-giro OFF ⏹️');
   }
 
   function scheduleNextAutoSpin(){
-    // Limpiar timer previo por seguridad
     if(autoSpinTimer){clearTimeout(autoSpinTimer);autoSpinTimer=null;}
-    
-    if(!autoSpinActive) return; // SALIR si se desactivó
+    if(!autoSpinActive) return;
     if(credits<totalBet()){stopAutoSpin();return;}
-
     autoSpinTimer=setTimeout(()=>{
       autoSpinTimer=null;
-      if(!autoSpinActive) return; // DOBLE CHECK: salir si se desactivó mientras esperaba
-      if(spinning) return; // Si aún está girando, el interval lo reintentará
+      if(!autoSpinActive) return;
+      if(spinning) return;
       if(credits<totalBet()){stopAutoSpin();return;}
       doSpin();
     },2000);
   }
 
-  // Interval de respaldo: detecta cuando un giro termina y programa el siguiente
   autoSpinInterval=setInterval(()=>{
     if(!autoSpinActive) return;
     if(!spinning && !autoSpinTimer && freeSpins<=0){
@@ -1198,13 +1348,35 @@ function initSlot(assets){
     }
   },400);
 
-  btnAuto.addEventListener('click',()=>{
+  // Auto popup logic
+  btnAuto.addEventListener('click',(e)=>{
+    e.stopPropagation();
     if(autoSpinActive){
       stopAutoSpin();
+      autoPopup.classList.remove('show');
     } else {
-      startAutoSpin();
+      autoPopup.classList.toggle('show');
     }
   });
+
+  // Auto popup buttons
+  autoPopup.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const countStr=btn.getAttribute('data-count');
+      const count=countStr==='Infinity'?Infinity:parseInt(countStr);
+      autoPopup.classList.remove('show');
+      startAutoSpin(count);
+    });
+  });
+
+  // Close popup when clicking outside
+  document.addEventListener('click',(e)=>{
+    if(!autoPopup.contains(e.target) && e.target!==btnAuto){
+      autoPopup.classList.remove('show');
+    }
+  });
+
 
   document.addEventListener('keydown',(e)=>{
     if(e.code==='Space'||e.code==='Enter'){e.preventDefault();doSpin();}
@@ -1216,7 +1388,7 @@ function initSlot(assets){
   },30000+Math.random()*30000);
 
   updateUI();
-  console.log('🦁 C8L Casino — El León Dorado v5.0 loaded (self-contained)');
+  console.log('🦁 C8L Casino — El León Dorado v6.0 loaded (6 improvements applied)');
 } // end initSlot
 
 })();
