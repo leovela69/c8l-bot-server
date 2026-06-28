@@ -1,63 +1,92 @@
 /**
- * 🎰 C8L CASINO — Custom SVG Symbols
- * Símbolos diseñados estilo C8L brand (león dorado, corazón, corona)
+ * 🎰 C8L CASINO — Símbolos con Imágenes Generadas por IA
+ * Cada símbolo usa una imagen de Pollinations AI
  */
+
+const IMG_BASE = 'https://image.pollinations.ai/prompt/';
+const IMG_PARAMS = '?width=256&height=256&nologo=true';
 
 const SYMBOLS = {
     leon: {
         name: 'León Dorado',
-        color: '#d4a017',
         tier: 'premium',
-        svg: `<svg viewBox="0 0 60 60"><circle cx="30" cy="28" r="18" fill="#b8860b"/><circle cx="30" cy="28" r="14" fill="#daa520"/><circle cx="30" cy="30" r="11" fill="#f5d061"/><circle cx="25" cy="27" r="2.5" fill="#1a1a1a"/><circle cx="35" cy="27" r="2.5" fill="#1a1a1a"/><ellipse cx="30" cy="33" rx="2" ry="1.5" fill="#8b4513"/><path d="M 25 36 Q 30 41 35 36" fill="#c0392b"/><path d="M 27 36 L 28 38 L 29 36" fill="#fff"/><path d="M 31 36 L 32 38 L 33 36" fill="#fff"/><text x="30" y="54" text-anchor="middle" font-family="Orbitron" font-size="7" font-weight="900" fill="#d4a017">C8L</text></svg>`
+        img: IMG_BASE + 'majestic%20golden%20lion%20head%20casino%20slot%20symbol%2C%20royal%20golden%20mane%2C%20fierce%20noble%2C%20dark%20background%2C%20game%20asset%2C%20centered%2C%20no%20text' + IMG_PARAMS + '&seed=200'
     },
     wild: {
         name: 'Wild',
-        color: '#e74c3c',
         tier: 'special',
-        svg: `<svg viewBox="0 0 60 60"><defs><linearGradient id="wg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff6b6b"/><stop offset="100%" stop-color="#c0392b"/></linearGradient></defs><path d="M30 12 C30 12 18 20 18 30 C18 37 23 42 30 42 C37 42 42 37 42 30 C42 20 30 12 30 12Z" fill="url(#wg)"/><path d="M20 25 C15 20 8 22 8 28 C8 30 10 30 14 28 L20 25Z" fill="#d4a017"/><path d="M40 25 C45 20 52 22 52 28 C52 30 50 30 46 28 L40 25Z" fill="#d4a017"/><text x="30" y="35" text-anchor="middle" font-family="Orbitron" font-size="8" font-weight="900" fill="#fff">WILD</text></svg>`
+        img: IMG_BASE + 'burning%20heart%20with%20golden%20angel%20wings%2C%20wild%20casino%20slot%20symbol%2C%20red%20fire%2C%20gold%20wings%2C%20dark%20background%2C%20centered%2C%20no%20text' + IMG_PARAMS + '&seed=201'
     },
     scatter: {
         name: 'Scatter',
-        color: '#9b59b6',
         tier: 'special',
-        svg: `<svg viewBox="0 0 60 60"><defs><linearGradient id="sg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d061"/><stop offset="100%" stop-color="#8b6914"/></linearGradient></defs><path d="M30 8 L34 18 L45 18 L36 25 L39 35 L30 29 L21 35 L24 25 L15 18 L26 18 Z" fill="url(#sg)" stroke="#d4a017" stroke-width="1"/><circle cx="30" cy="23" r="6" fill="#d4a017"/><circle cx="30" cy="23" r="4" fill="#f5d061"/><text x="30" y="50" text-anchor="middle" font-family="Orbitron" font-size="6" font-weight="900" fill="#9b59b6">SCATTER</text></svg>`
+        img: IMG_BASE + 'royal%20golden%20crown%20with%20gems%2C%20scatter%20casino%20slot%20symbol%2C%20diamonds%2C%20dark%20background%2C%20centered%2C%20no%20text' + IMG_PARAMS + '&seed=202'
+    },
+    bot: {
+        name: 'Bot Azul',
+        tier: 'high',
+        img: IMG_BASE + 'cute%20blue%20robot%20chatbot%20mascot%2C%20casino%20slot%20symbol%2C%20futuristic%20blue%20with%20gold%20details%2C%20LED%20eyes%2C%20dark%20background%2C%20centered%2C%20no%20text' + IMG_PARAMS + '&seed=42'
+    },
+    villano: {
+        name: 'León Villano',
+        tier: 'high',
+        img: IMG_BASE + 'evil%20dark%20lion%20villain%20head%2C%20red%20glowing%20eyes%2C%20dark%20red%20mane%2C%20menacing%2C%20casino%20slot%20symbol%2C%20dark%20background%2C%20centered%2C%20no%20text' + IMG_PARAMS + '&seed=303'
+    },
+    c8l: {
+        name: 'C8L Casino',
+        tier: 'high',
+        img: IMG_BASE + 'luxury%20gold%20C8L%20casino%20logo%20on%20black%20shield%2C%20golden%20crown%2C%20baroque%20ornate%20frame%2C%20premium%20emblem%2C%20dark%20background%2C%20centered' + IMG_PARAMS + '&seed=204'
     },
     A: {
         name: 'As',
-        color: '#c0392b',
-        tier: 'high',
-        svg: `<svg viewBox="0 0 60 60"><rect x="10" y="8" width="40" height="44" rx="6" fill="#1a1200" stroke="#d4a017" stroke-width="2"/><text x="30" y="40" text-anchor="middle" font-family="Cinzel Decorative" font-size="28" font-weight="900" fill="#c0392b">A</text></svg>`
+        tier: 'medium',
+        img: IMG_BASE + 'letter%20A%20made%20of%20red%20ruby%20gemstone%2C%20casino%20slot%20symbol%2C%20ornate%20precious%20stone%2C%20glowing%2C%20dark%20background%2C%20centered%2C%20no%20other%20text' + IMG_PARAMS + '&seed=305'
     },
     K: {
         name: 'Rey',
-        color: '#2980b9',
         tier: 'medium',
-        svg: `<svg viewBox="0 0 60 60"><rect x="10" y="8" width="40" height="44" rx="6" fill="#1a1200" stroke="#d4a017" stroke-width="2"/><text x="30" y="40" text-anchor="middle" font-family="Cinzel Decorative" font-size="28" font-weight="900" fill="#2980b9">K</text></svg>`
+        img: IMG_BASE + 'letter%20K%20made%20of%20blue%20sapphire%20gemstone%2C%20casino%20slot%20symbol%2C%20ornate%20precious%20stone%2C%20glowing%2C%20dark%20background%2C%20centered%2C%20no%20other%20text' + IMG_PARAMS + '&seed=306'
     },
     Q: {
         name: 'Reina',
-        color: '#8e44ad',
-        tier: 'medium',
-        svg: `<svg viewBox="0 0 60 60"><rect x="10" y="8" width="40" height="44" rx="6" fill="#1a1200" stroke="#d4a017" stroke-width="2"/><text x="30" y="40" text-anchor="middle" font-family="Cinzel Decorative" font-size="28" font-weight="900" fill="#8e44ad">Q</text></svg>`
+        tier: 'low',
+        img: IMG_BASE + 'letter%20Q%20made%20of%20purple%20amethyst%20gemstone%2C%20casino%20slot%20symbol%2C%20ornate%20precious%20stone%2C%20glowing%2C%20dark%20background%2C%20centered%2C%20no%20other%20text' + IMG_PARAMS + '&seed=307'
     },
     J: {
         name: 'Jota',
-        color: '#27ae60',
         tier: 'low',
-        svg: `<svg viewBox="0 0 60 60"><rect x="10" y="8" width="40" height="44" rx="6" fill="#1a1200" stroke="#8b6914" stroke-width="2"/><text x="30" y="40" text-anchor="middle" font-family="Cinzel Decorative" font-size="28" font-weight="900" fill="#27ae60">J</text></svg>`
+        img: IMG_BASE + 'letter%20J%20made%20of%20green%20emerald%20gemstone%2C%20casino%20slot%20symbol%2C%20ornate%20precious%20stone%2C%20glowing%2C%20dark%20background%2C%20centered%2C%20no%20other%20text' + IMG_PARAMS + '&seed=308'
     },
     '10': {
         name: 'Diez',
-        color: '#16a085',
         tier: 'low',
-        svg: `<svg viewBox="0 0 60 60"><rect x="10" y="8" width="40" height="44" rx="6" fill="#1a1200" stroke="#8b6914" stroke-width="2"/><text x="30" y="38" text-anchor="middle" font-family="Cinzel Decorative" font-size="22" font-weight="900" fill="#16a085">10</text></svg>`
+        img: IMG_BASE + 'number%2010%20made%20of%20golden%20topaz%20gemstone%2C%20casino%20slot%20symbol%2C%20ornate%20precious%20stone%2C%20glowing%2C%20dark%20background%2C%20centered%2C%20no%20other%20text' + IMG_PARAMS + '&seed=309'
     }
 };
 
+// Premios especiales
+const PRIZES = {
+    leo: {
+        name: 'Premio Leo Vela',
+        img: IMG_BASE + 'golden%20trophy%20award%20with%20lion%20on%20top%2C%20engraved%20LEO%20VELA%2C%20luxury%20casino%20VIP%20prize%2C%20gold%20and%20black%2C%20glowing%2C%20dark%20background%2C%20centered' + IMG_PARAMS + '&seed=400'
+    },
+    yusleny: {
+        name: 'Premio Yusleny',
+        img: IMG_BASE + 'elegant%20diamond%20crystal%20trophy%20award%2C%20engraved%20YUSLENY%2C%20feminine%20luxury%20casino%20prize%2C%20diamonds%20and%20gold%2C%20glowing%2C%20dark%20background%2C%20centered' + IMG_PARAMS + '&seed=401'
+    },
+    kukis: {
+        name: 'Premio Kukis',
+        img: IMG_BASE + 'rose%20gold%20trophy%20award%2C%20engraved%20KUKIS%2C%20chic%20feminine%20casino%20prize%2C%20pink%20gold%20diamonds%2C%20glowing%2C%20dark%20background%2C%20centered' + IMG_PARAMS + '&seed=402'
+    }
+};
+
+/**
+ * Genera HTML de un símbolo con imagen
+ */
 function getSymbolHTML(symbolId) {
     const sym = SYMBOLS[symbolId];
-    if (!sym) return '<span>?</span>';
-    return `<div class="symbol-inner" style="--sym-color:${sym.color}">${sym.svg}</div>`;
+    if (!sym) return '<div class="symbol-inner">?</div>';
+    return `<div class="symbol-inner"><img src="${sym.img}" alt="${sym.name}" loading="lazy"></div>`;
 }
 
 function getSymbolEmoji(symbolId) {

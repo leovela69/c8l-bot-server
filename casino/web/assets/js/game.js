@@ -184,8 +184,8 @@ class SlotGame {
     }
 
     _localSpin() {
-        const symbols = ['leon', 'wild', 'scatter', 'A', 'K', 'Q', 'J', '10'];
-        const weights = [3, 2, 2, 5, 6, 7, 8, 9];
+        const symbols = ['leon', 'wild', 'scatter', 'bot', 'villano', 'c8l', 'A', 'K', 'Q', 'J', '10'];
+        const weights = [3, 2, 2, 4, 3, 3, 5, 6, 7, 8, 9];
         const totalWeight = weights.reduce((a, b) => a + b, 0);
 
         const pickSymbol = () => {
@@ -256,6 +256,8 @@ class SlotGame {
         ];
         const PAYTABLE = {
             leon: { 5: 500, 4: 100, 3: 25 }, wild: { 5: 1000, 4: 200, 3: 50 },
+            bot: { 5: 80, 4: 20, 3: 8 }, villano: { 5: 60, 4: 18, 3: 6 },
+            c8l: { 5: 150, 4: 40, 3: 12 },
             A: { 5: 50, 4: 15, 3: 5 }, K: { 5: 40, 4: 12, 3: 4 },
             Q: { 5: 30, 4: 10, 3: 3 }, J: { 5: 20, 4: 8, 3: 2 }, '10': { 5: 15, 4: 5, 3: 2 },
         };
@@ -303,7 +305,7 @@ class SlotGame {
         if (result.wins && result.wins.length > 0) {
             animations.animateWinningSymbols(result.wins);
             const betMultiple = totalWin / this.state.totalBet;
-            if (betMultiple >= 50) await animations.showBigWin(totalWin, 'epic');
+            if (betMultiple >= 50) await animations.showLionBonus(totalWin);
             else if (betMultiple >= 20) await animations.showBigWin(totalWin, 'mega');
             else if (betMultiple >= 8) await animations.showBigWin(totalWin, 'big');
             else if (totalWin > 0) { animations.showWinOverlay(totalWin, 1500); sound.winSmall(); animations.spawnCoins(5); }

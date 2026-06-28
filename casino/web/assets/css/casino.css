@@ -213,7 +213,11 @@ html, body {
     display: flex; align-items: center; justify-content: center;
     background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08) 0%, transparent 60%);
     border: 1px solid rgba(212,160,23,0.15);
-    transition: all 0.3s;
+    transition: all 0.3s; overflow: hidden;
+}
+.symbol-inner img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 8px;
+    image-rendering: auto;
 }
 
 
