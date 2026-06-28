@@ -7,9 +7,12 @@
 <title>C8L Poker - 9 Jugadores</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:radial-gradient(ellipse at 50% 30%,#1a1208 0%,#0c0a06 40%,#050403 100%);font-family:Georgia,'Times New Roman',serif;color:#f0e6d0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-x:hidden;padding:10px 0;position:relative}
-body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;opacity:0.15;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='cg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffd700'/%3E%3Cstop offset='50%25' stop-color='%23d4a017'/%3E%3Cstop offset='100%25' stop-color='%238b6914'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cellipse cx='60' cy='60' rx='28' ry='28' fill='url(%23cg)' stroke='%23fff' stroke-width='2'/%3E%3Cellipse cx='60' cy='60' rx='22' ry='22' fill='none' stroke='%23fff' stroke-width='1' stroke-dasharray='4 3'/%3E%3Ctext x='60' y='65' text-anchor='middle' font-size='10' font-weight='bold' fill='%23fff' font-family='Arial'%3EC8L%3C/text%3E%3Cellipse cx='60' cy='62' rx='28' ry='6' fill='rgba(0,0,0,0.3)'/%3E%3C/svg%3E");background-size:120px 120px}
-body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:radial-gradient(ellipse at 50% 50%,transparent 30%,rgba(5,4,3,0.8) 100%);pointer-events:none}
+body{background:#050403;font-family:Georgia,'Times New Roman',serif;color:#f0e6d0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-x:hidden;padding:10px 0;position:relative}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:radial-gradient(ellipse at 50% 0%,#1a1208 0%,#0c0a06 30%,#050403 60%),repeating-linear-gradient(0deg,transparent,transparent 50px,rgba(139,105,20,0.02) 50px,rgba(139,105,20,0.02) 51px),repeating-linear-gradient(90deg,transparent,transparent 50px,rgba(139,105,20,0.02) 50px,rgba(139,105,20,0.02) 51px)}
+body::after{content:'\2660 \00a0\00a0 C\0038L AGENCY CASINO \00a0\00a0 \2665 \00a0\00a0 C\0038L AGENCY CASINO \00a0\00a0 \2666 \00a0\00a0 C\0038L AGENCY CASINO \00a0\00a0 \2663';position:fixed;bottom:0;left:0;width:100%;padding:8px 0;font-size:0.65em;color:rgba(212,160,23,0.3);text-align:center;letter-spacing:3px;z-index:-1;border-top:1px solid rgba(139,105,20,0.15);background:linear-gradient(0deg,rgba(5,4,3,0.9),transparent)}
+.bg-particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;overflow:hidden}
+.bg-particle{position:absolute;border-radius:50%;opacity:0;animation:particleFloat linear infinite}
+@keyframes particleFloat{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:1}90%{opacity:0.6}100%{transform:translateY(-20px) scale(1);opacity:0}}
 .poker-wrap{position:relative;width:min(1000px,98vw)}
 .table-area{position:relative;width:100%;height:min(580px,65vh);margin:0 auto}
 .table-outer{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70%;height:75%;border-radius:50%/44%;background:repeating-linear-gradient(92deg,rgba(80,50,20,0.15) 0px,transparent 2px,transparent 8px),linear-gradient(180deg,#3d2810 0%,#261808 30%,#1a1004 60%,#261808 100%);padding:16px;box-shadow:0 0 0 3px #0a0700,0 0 0 6px #8b6914,0 0 0 8px #5c4510,0 0 0 12px #0a0700,0 30px 80px rgba(0,0,0,0.8),inset 0 2px 4px rgba(200,160,60,0.2)}
@@ -130,6 +133,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;z-inde
 </style>
 </head>
 <body>
+<div class="bg-particles" id="bgParticles"></div>
 <div class="bot-bubble" id="botBubble" onclick="toggleBotChat()" title="C8L Bot - Click para hablar">
   <img src="public/avatars/c8l-bot.svg" alt="C8L Bot">
   <span class="bot-badge">ON</span>
@@ -798,6 +802,24 @@ function renderHistory(){
   }).join('');
 }
 function toggleHistory(){document.getElementById('histPanel').classList.toggle('open')}
+
+// === BACKGROUND PARTICLES ===
+(function(){
+  var container=document.getElementById('bgParticles');
+  var colors=['#ffd700','#d4a017','#42a5f5','#ffffff','#8b6914'];
+  for(var i=0;i<20;i++){
+    var p=document.createElement('div');
+    p.className='bg-particle';
+    p.style.width=(2+Math.random()*4)+'px';
+    p.style.height=p.style.width;
+    p.style.left=(Math.random()*100)+'%';
+    p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    p.style.boxShadow='0 0 6px '+p.style.background;
+    p.style.animationDuration=(8+Math.random()*12)+'s';
+    p.style.animationDelay=(Math.random()*10)+'s';
+    container.appendChild(p);
+  }
+})();
 
 // === INIT ===
 addChatMsg('','Bienvenido a la mesa de poker C8L. Pulsa REPARTIR para jugar.',true);
