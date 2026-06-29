@@ -37,10 +37,11 @@ logger = logging.getLogger("c8l.video_engine")
 
 # Import API keys
 try:
-    from config import POLLINATIONS_API_KEY_P, HUGGINGFACE_TOKEN
+    from config import POLLINATIONS_API_KEY_P, HUGGINGFACE_TOKEN, AGNES_API_KEY
 except ImportError:
     POLLINATIONS_API_KEY_P = ""
     HUGGINGFACE_TOKEN = ""
+    AGNES_API_KEY = ""
 
 # ---------------------------------------------------------------------------
 # CONFIGURACION DE MODELOS
@@ -225,6 +226,25 @@ class VideoEngine:
 
         # 1. Mejorar prompt para generacion de video
         enhanced_prompt = self._enhance_video_prompt(prompt)
+
+        # ============================================================
+        # AGNES AI — Motor PRINCIPAL (gratis, ilimitado, sin censura)
+        # ============================================================
+        logger.info("  🎬 Intentando Agnes AI (gratis, ilimitado)...")
+        agnes_bytes = self._try_agnes(enhanced_prompt, duration)
+        if agnes_bytes:
+            self.generations_count += 1
+            self.last_model_used = "agnes"
+            self.last_generation_time = time.time()
+            return {
+                "video_bytes": agnes_bytes,
+                "model_used": "agnes",
+                "model_name": "Agnes AI v2.0",
+                "duration": duration or 5,
+                "format": "mp4",
+                "has_audio": True,
+                "attempts": 1,
+            }
 
         # 2. Determinar modelo optimo si no se especifico
         if preferred_model and preferred_model in VIDEO_MODELS:
@@ -641,6 +661,96 @@ class VideoEngine:
         except Exception as e:
             logger.warning(f"  GIF fallback error: {e}")
         return None
+
+    # ---------------------------------------------------------------------------
+    # MOTOR 0: AGNES AI (GRATIS, ILIMITADO, SIN CENSURA) — PRIMARIO
+    # ---------------------------------------------------------------------------
+
+    def _try_agnes(self, prompt, duration=None):
+        """
+        Genera video con Agnes AI — GRATIS, ilimitado, sin censura.
+        API asíncrona: submit → poll → download.
+        """
+        if not AGNES_API_KEY:
+            return None
+
+        dur = duration or 5
+        headers = {
+            "Authorization": f"Bearer {AGNES_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        try:
+            # 1. Submit video generation
+            payload = {
+                "model": "agnes-video-v2.0",
+                "prompt": prompt,
+                "duration": min(dur, 15),
+            }
+            r = requests.post("https://apihub.agnes-ai.com/v1/videos",
+                            headers=headers, json=payload, timeout=30)
+
+            if r.status_code not in (200, 201):
+                logger.warning(f"  Agnes submit error: {r.status_code}")
+                return None
+
+            data = r.json()
+            task_id = data.get("task_id") or data.get("id")
+            if not task_id:
+                logger.warning(f"  Agnes: no task_id in response")
+                return None
+
+            logger.info(f"  Agnes: video queued (task={task_id})")
+
+            # 2. Poll for completion (max 90s)
+            for _ in range(18):  # 18 * 5s = 90s
+                time.sleep(5)
+                poll_r = requests.get(
+                    f"https://apihub.agnes-ai.com/v1/videos/{task_id}",
+                    headers=headers, timeout=15
+                )
+                if poll_r.status_code != 200:
+                    continue
+
+                status_data = poll_r.json()
+                status = status_data.get("status", "")
+
+                if status == "completed":
+                    # 3. Download video
+                    video_url = status_data.get("video_url") or status_data.get("url")
+                    if video_url:
+                        video_r = requests.get(video_url, timeout=60)
+                        if video_r.status_code == 200 and len(video_r.content) > 50000:
+                            logger.info(f"  ✅ Agnes video OK: {len(video_r.content)} bytes")
+                            return video_r.content
+                    # Try getting from result field
+                    result = status_data.get("result", {})
+                    if isinstance(result, dict):
+                        video_url = result.get("video_url") or result.get("url")
+                        if video_url:
+                            video_r = requests.get(video_url, timeout=60)
+                            if video_r.status_code == 200 and len(video_r.content) > 50000:
+                                logger.info(f"  ✅ Agnes video OK: {len(video_r.content)} bytes")
+                                return video_r.content
+                    logger.warning("  Agnes: completed but no video URL found")
+                    return None
+
+                elif status == "failed":
+                    error = status_data.get("error", "Unknown")
+                    logger.warning(f"  Agnes failed: {error}")
+                    return None
+
+                # Still processing...
+                progress = status_data.get("progress", 0)
+                if progress > 0:
+                    logger.info(f"  Agnes: {progress}% ...")
+
+            logger.warning("  Agnes: timeout (90s)")
+            return None
+
+        except Exception as e:
+            logger.warning(f"  Agnes error: {str(e)[:100]}")
+            return None
 
     # ---------------------------------------------------------------------------
     # MOTOR 2: HUGGINGFACE (GRATIS, ILIMITADO)
