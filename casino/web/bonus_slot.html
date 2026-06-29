@@ -1031,32 +1031,50 @@
             const overlay = document.getElementById('intro-overlay');
             const introVid = document.getElementById('intro-video');
 
-            // Wait for video to play or timeout after 3s
             const reveal = () => {
+                if (overlay._revealed) return;
+                overlay._revealed = true;
                 overlay.classList.add('fade-out');
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     document.getElementById('main-container').classList.add('visible');
-                }, 1000);
+                }, 800);
             };
 
-            introVid.play().catch(() => {
-                // If video can't play, just reveal
+            // Timeout corto: si el video no carga en 1.5s, revelar de todos modos
+            setTimeout(reveal, 1500);
+
+            introVid.play().then(() => {
+                // Si el video sí se reproduce, esperar a que termine o 3s max
+                setTimeout(reveal, 3000);
+                introVid.addEventListener('ended', reveal, { once: true });
+            }).catch(() => {
+                // Si no puede reproducir, revelar inmediatamente
                 reveal();
             });
-
-            // End after 3 seconds regardless
-            setTimeout(reveal, 3000);
-
-            introVid.addEventListener('ended', reveal, { once: true });
         }
 
         // ========== INIT ==========
         window.addEventListener('DOMContentLoaded', () => {
-            initGrid();
-            updateUI();
-            startIntro();
+            try {
+                initGrid();
+                updateUI();
+                startIntro();
+            } catch(e) {
+                console.error('Error en init:', e);
+                // Fallback: mostrar el juego de todos modos
+                document.getElementById('intro-overlay').style.display = 'none';
+                document.getElementById('main-container').classList.add('visible');
+            }
         });
+        // Fallback extra: si después de 2s no se ha mostrado, forzar
+        setTimeout(() => {
+            const mc = document.getElementById('main-container');
+            if (mc && !mc.classList.contains('visible')) {
+                document.getElementById('intro-overlay').style.display = 'none';
+                mc.classList.add('visible');
+            }
+        }, 2000);
     </script>
 </body>
 </html>
