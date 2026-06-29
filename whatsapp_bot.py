@@ -80,6 +80,15 @@ except Exception as _hf_err:
     _hyperframes_available = False
     _hyperframes_engine = None
 
+# Import SkillScan Security Scanner
+try:
+    from skillscan.telegram_handler import handle_scan_command
+    _skillscan_available = True
+    logger.info("🛡️ SkillScan Security Scanner cargado")
+except Exception as _ss_err:
+    logger.warning(f"⚠️ SkillScan no disponible: {_ss_err}")
+    _skillscan_available = False
+
 # ---------------------------------------------------------------------------
 # Inicializar agentes
 # ---------------------------------------------------------------------------
@@ -2016,6 +2025,41 @@ def main():
                 tg_send(chat_id, f"❌ Error en Hyperframes: {str(e)[:150]}")
 
         threading.Thread(target=_render, daemon=True).start()
+
+    # ---------------------------------------------------------------------------
+    # /scan — SkillScan Security Scanner (Auto-auditoría + escáner externo)
+    # ---------------------------------------------------------------------------
+    @bot.message_handler(commands=["scan", "escanear", "audit"])
+    def cmd_scan(msg):
+        """Escanea el bot o URLs externas en busca de vulnerabilidades."""
+        if not _skillscan_available:
+            bot.reply_to(msg, "⚠️ SkillScan no está disponible en este momento.")
+            return
+
+        text = msg.text
+        chat_id = msg.chat.id
+
+        def _run_scan():
+            try:
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+                result = loop.run_until_complete(
+                    handle_scan_command(
+                        text=text,
+                        chat_id=chat_id,
+                        send_fn=tg_send,
+                        typing_fn=tg_typing
+                    )
+                )
+                loop.close()
+
+            except Exception as e:
+                logger.error(f"Error SkillScan: {e}")
+                tg_send(chat_id, f"❌ Error en escáner: {str(e)[:150]}")
+
+        threading.Thread(target=_run_scan, daemon=True).start()
 
     @bot.message_handler(commands=["crear_imagen"])
     def cmd_imagen(msg):

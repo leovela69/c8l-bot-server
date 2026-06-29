@@ -180,3 +180,13 @@ HYPERFRAMES_MAX_DURATION: int = int(os.environ.get("HYPERFRAMES_MAX_DURATION", "
 HYPERFRAMES_RENDER_TIMEOUT: int = int(os.environ.get("HYPERFRAMES_RENDER_TIMEOUT", "300"))
 VIDEOS_DIR: str = os.path.join(DATA_DIR, "videos")
 os.makedirs(VIDEOS_DIR, exist_ok=True)
+
+
+
+# ---------------------------------------------------------------------------
+# SkillScan — Escáner de Seguridad de Agentes IA
+# ---------------------------------------------------------------------------
+SKILLSCAN_API_KEY: str = os.environ.get("SKILLSCAN_API_KEY", "")
+SKILLSCAN_API_URL: str = os.environ.get("SKILLSCAN_API_URL", "https://skillscan.dev/api/v1")
+SKILLSCAN_AUTO_AUDIT: bool = os.environ.get("SKILLSCAN_AUTO_AUDIT", "true").lower() == "true"
+SKILLSCAN_AUDIT_INTERVAL: int = int(os.environ.get("SKILLSCAN_AUDIT_INTERVAL", "3600"))

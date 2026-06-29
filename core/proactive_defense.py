@@ -5,9 +5,16 @@ Defensa proactiva contra ataques y amenazas.
 
 Escanea el sistema en busca de bruteforce, SQL injection, XSS,
 DDoS y abuso de API. Responde automáticamente según severidad.
+
+Integrado con SkillScan para:
+- Escaneo de código del propio bot (self-audit)
+- Detección de credenciales expuestas
+- Análisis de herramientas MCP externas
+- Cadenas de amenazas en agentes
 """
 
 import asyncio
+import os
 from datetime import datetime
 from typing import Dict, List, Any
 
@@ -25,6 +32,28 @@ class ProactiveDefense:
         self.active_threats = []
         self.defense_log = []
         self.running = True
+        self._skillscan_detector = None
+        self._skillscan_auditor = None
+
+    def _get_detector(self):
+        """Lazy-load del ThreatDetector de SkillScan"""
+        if self._skillscan_detector is None:
+            try:
+                from skillscan.threat_detector import ThreatDetector
+                self._skillscan_detector = ThreatDetector()
+            except ImportError:
+                pass
+        return self._skillscan_detector
+
+    def _get_auditor(self):
+        """Lazy-load del SelfAuditor de SkillScan"""
+        if self._skillscan_auditor is None:
+            try:
+                from skillscan.self_audit import SelfAuditor
+                self._skillscan_auditor = SelfAuditor()
+            except ImportError:
+                pass
+        return self._skillscan_auditor
 
     async def scan_for_threats(self) -> List[Dict]:
         """Escanea el sistema en busca de amenazas"""
@@ -37,11 +66,13 @@ class ProactiveDefense:
         threats.extend(await self._check_ddos())
         threats.extend(await self._check_api_abuse())
 
+        # 2. SkillScan: escaneo de código propio (cada ciclo largo)
+        threats.extend(await self._check_code_integrity())
+
         return threats
 
     async def _check_bruteforce(self) -> List[Dict]:
         """Verifica ataques de fuerza bruta"""
-        # Simulación - en producción, analizar logs reales
         return []
 
     async def _check_sql_injection(self) -> List[Dict]:
@@ -59,6 +90,65 @@ class ProactiveDefense:
     async def _check_api_abuse(self) -> List[Dict]:
         """Verifica abuso de API"""
         return []
+
+    async def _check_code_integrity(self) -> List[Dict]:
+        """
+        SkillScan Integration: escanea archivos críticos del bot
+        buscando inyecciones, credenciales expuestas, etc.
+        """
+        threats = []
+        detector = self._get_detector()
+        if not detector:
+            return threats
+
+        # Archivos críticos a monitorear
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        critical_files = [
+            'whatsapp_bot.py', 'config.py', 'openrouter_client.py',
+            'admin_panel.py', 'stripe_integration.py'
+        ]
+
+        for filename in critical_files:
+            filepath = os.path.join(base_dir, filename)
+            if not os.path.exists(filepath):
+                continue
+
+            result = detector.scan_file(filepath)
+            if result.get('score', 100) < 60:
+                for finding in result.get('findings', []):
+                    if finding.get('severity') in ('CRITICAL', 'HIGH'):
+                        threats.append({
+                            'type': 'code_vulnerability',
+                            'severity': finding['severity'].lower(),
+                            'source': filename,
+                            'description': finding['description'],
+                            'line': finding.get('line', 0),
+                            'category': finding.get('category', 'unknown')
+                        })
+
+        return threats
+
+    async def run_full_security_audit(self) -> Dict:
+        """
+        Ejecuta auditoría completa de seguridad usando SkillScan.
+        Llamado por /scan full o por el cron de seguridad.
+        """
+        auditor = self._get_auditor()
+        if not auditor:
+            return {'status': 'error', 'error': 'SkillScan no disponible'}
+
+        result = await auditor.full_audit()
+
+        # Registrar amenazas críticas
+        summary = result.get('summary', {})
+        if summary.get('critical_issues', 0) > 0:
+            self.active_threats.append({
+                'type': 'audit_critical',
+                'count': summary['critical_issues'],
+                'timestamp': datetime.now().isoformat()
+            })
+
+        return result
 
     async def respond_to_threat(self, threat: Dict) -> Dict:
         """Responde a una amenaza detectada"""
