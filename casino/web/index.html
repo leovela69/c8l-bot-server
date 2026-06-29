@@ -1194,13 +1194,16 @@ function initSlot(assets){
 
   // Pre-calculate expected win (for suspense detection)
   function preCalculateWin(grid){
-    // Simple estimation using the reward system logic
-    // We'll just use the same cycle logic here to see if it would produce a win
-    if(typeof window._cycleSpins==='undefined') return 0;
-    const spinsSinceLastWin=(window._cycleSpins+1)-(window._lastWinSpin||0);
-    if(spinsSinceLastWin<6) return 0;
-    if(spinsSinceLastWin>=20) return totalBet()*4; // likely a decent win
-    if(spinsSinceLastWin>=15) return totalBet()*2;
+    // Check if there are 3+ consecutive matching symbols in any row
+    for(let row=0;row<ROWS;row++){
+      let count=1;
+      for(let c=1;c<REELS;c++){
+        if(grid[c][row].id===grid[0][row].id||grid[c][row].id==='wild') count++;
+        else break;
+      }
+      if(count>=4) return totalBet()*4;
+      if(count>=3) return totalBet()*2;
+    }
     return 0;
   }
 
@@ -1235,76 +1238,97 @@ function initSlot(assets){
     }
 
 
-    // === SISTEMA DE PREMIOS "CICLO 999" ===
+    // === SISTEMA DE PREMIOS BASADO EN COINCIDENCIAS REALES ===
     let totalWin=0;
 
     if(typeof window._cycleSpins==='undefined') window._cycleSpins=0;
-    if(typeof window._cyclePool==='undefined') window._cyclePool=0;
     if(typeof window._lastWinSpin==='undefined') window._lastWinSpin=0;
-    if(typeof window._totalSpins==='undefined') window._totalSpins=0;
     window._cycleSpins++;
-    window._totalSpins++;
 
-    window._cyclePool += Math.round(totalBet() * 0.70);
-
-    if(window._cycleSpins > 999){
-      window._cycleSpins = 1;
-      window._cyclePool = Math.round(totalBet() * 0.70);
-      window._lastWinSpin = 0;
-    }
+    if(window._cycleSpins > 999){ window._cycleSpins=1; window._lastWinSpin=0; }
 
     const spinsSinceLastWin = window._cycleSpins - window._lastWinSpin;
-    const roll = Math.random();
-    let winChance;
 
-    if(window._cycleSpins <= 8){
-      winChance = 0;
-    } else if(spinsSinceLastWin < 6){
-      winChance = 0.02;
-    } else if(spinsSinceLastWin < 10){
-      winChance = 0.05;
-    } else if(spinsSinceLastWin < 15){
-      winChance = 0.08;
-    } else if(spinsSinceLastWin < 20){
-      winChance = 0.12;
-    } else if(spinsSinceLastWin < 30){
-      winChance = 0.18;
-    } else if(spinsSinceLastWin < 40){
-      winChance = 0.30;
+    // Decidir si este giro DEBERÍA ganar (para forzar coincidencias)
+    let shouldWin = false;
+    let winTier = 0; // 0=no, 1=pequeño(3), 2=medio(4), 3=grande(5)
+    const isFreeSpin = freeSpins > 0;
+
+    // En giros gratis: mucho más generoso
+    if(isFreeSpin){
+      const freeRoll = Math.random();
+      if(freeRoll < 0.45) { shouldWin=true; winTier=1; }
+      else if(freeRoll < 0.65) { shouldWin=true; winTier=2; }
+      else if(freeRoll < 0.72) { shouldWin=true; winTier=3; }
     } else {
-      winChance = 0.50;
-    }
+      // Modo real: equilibrado, no abusivo
+      let winChance;
+      if(window._cycleSpins <= 5) winChance = 0;
+      else if(spinsSinceLastWin < 5) winChance = 0.03;
+      else if(spinsSinceLastWin < 10) winChance = 0.08;
+      else if(spinsSinceLastWin < 15) winChance = 0.12;
+      else if(spinsSinceLastWin < 25) winChance = 0.20;
+      else if(spinsSinceLastWin < 35) winChance = 0.35;
+      else winChance = 0.50;
 
-    let isMigaja = false;
-    if(roll >= winChance && Math.random() < 0.05 && window._cycleSpins > 10 && spinsSinceLastWin > 5){
-      totalWin = Math.round(totalBet() * (0.15 + Math.random() * 0.25));
-      isMigaja = true;
-    }
-
-
-    if(!isMigaja && roll < winChance && window._cycleSpins > 8){
-      window._lastWinSpin = window._cycleSpins;
-
-      const prizeRoll = Math.random();
-      let prizeAmount;
-
-      if(prizeRoll < 0.50){
-        prizeAmount = Math.round(totalBet() * (1.3 + Math.random() * 0.7));
-      } else if(prizeRoll < 0.78){
-        prizeAmount = Math.round(totalBet() * (2.0 + Math.random() * 2.0));
-      } else if(prizeRoll < 0.92){
-        prizeAmount = Math.round(totalBet() * (4.0 + Math.random() * 4.0));
-      } else if(prizeRoll < 0.98){
-        prizeAmount = Math.round(totalBet() * (8.0 + Math.random() * 7.0));
-      } else {
-        prizeAmount = Math.round(totalBet() * (15.0 + Math.random() * 15.0));
+      if(Math.random() < winChance){
+        shouldWin = true;
+        const tierRoll = Math.random();
+        if(tierRoll < 0.60) winTier = 1;
+        else if(tierRoll < 0.88) winTier = 2;
+        else winTier = 3;
       }
-
-      prizeAmount = Math.min(prizeAmount, Math.round(window._cyclePool * 0.60));
-      prizeAmount = Math.max(prizeAmount, Math.round(totalBet() * 1.2));
-      window._cyclePool = Math.max(0, window._cyclePool - prizeAmount);
-      totalWin = prizeAmount;
     }
+
+    // Si debe ganar: FORZAR coincidencias en el grid para que se vean
+    if(shouldWin && winTier > 0){
+      const matchLen = winTier === 3 ? 5 : winTier === 2 ? 4 : 3;
+      // Elegir símbolo ganador (no scatter)
+      const winSyms = SYMBOLS.filter(s=>s.id!=='scatter');
+      const winSym = winSyms[Math.floor(Math.random()*winSyms.length)];
+      // Forzar en la fila central (row 1)
+      for(let c=0;c<matchLen;c++){
+        grid[c][1] = winSym;
+      }
+      // Actualizar sprites para que se muestre correctamente
+      for(let c=0;c<matchLen;c++){
+        const sp=reels[c].strips[2]; // row 1 = strips[2] (strips[0]=above, strips[1]=row0, strips[2]=row1, strips[3]=row2)
+        sp.texture=texMap[winSym.id];
+        sp.symData=winSym;
+      }
+    }
+
+    // EVALUAR coincidencias REALES del grid visible
+    function evaluateRealGrid(){
+      let bestWin = 0;
+      // Evaluar las 3 filas
+      for(let row=0;row<ROWS;row++){
+        const firstSym = grid[0][row];
+        if(!firstSym) continue;
+        let count = 1;
+        for(let c=1;c<REELS;c++){
+          if(grid[c][row].id === firstSym.id || grid[c][row].id === 'wild' || firstSym.id === 'wild'){
+            count++;
+          } else break;
+        }
+        if(count >= 3){
+          const paySymId = firstSym.id === 'wild' ? 'wild' : firstSym.id;
+          const paySym = SYMBOLS.find(s=>s.id===paySymId);
+          if(paySym && paySym.pay && paySym.pay[count]){
+            const lineWin = paySym.pay[count] * bet();
+            if(lineWin > bestWin) bestWin = lineWin;
+          } else {
+            // Fallback premio
+            const fallback = count === 5 ? bet()*15 : count === 4 ? bet()*5 : bet()*2;
+            if(fallback > bestWin) bestWin = fallback;
+          }
+        }
+      }
+      return bestWin;
+    }
+
+    totalWin = evaluateRealGrid();
+    if(totalWin > 0) window._lastWinSpin = window._cycleSpins;
 
     // Scatters for BONUS ROUND — Solo se activa con 5 scatters en una línea
     let scatterLine=false;
@@ -1327,17 +1351,17 @@ function initSlot(assets){
       },3200);
     }
 
-    // Modo Rugido
-    if(totalWin>0&&Math.random()<0.05){
-      const rm=[2,3,5,8,10][Math.floor(Math.random()*5)];
+    // Modo Rugido (solo si hay premio)
+    if(totalWin>0&&Math.random()<0.04){
+      const rm=[2,3,5][Math.floor(Math.random()*3)];
       totalWin*=rm;
       multiplier=rm;
       mVal.text='X'+multiplier;
       showBonus(totalWin, rm, 'rugido');
     }
 
-    // Progressive jackpot
-    if(Math.random()<0.0001&&freeSpins<=0){
+    // Progressive jackpot (muy raro)
+    if(Math.random()<0.00005&&freeSpins<=0){
       totalWin+=jackpot;
       addChat('🦁 ¡¡¡JACKPOT!!! '+fmt(jackpot),'win');
       showBonus(jackpot, 0, 'jackpot');
@@ -1345,9 +1369,8 @@ function initSlot(assets){
       sfxBig();
     }
 
-
-    // Apply win
-    if(totalWin>0 && !isMigaja){
+    // Apply win — SOLO si hay coincidencias reales
+    if(totalWin>0){
       credits+=totalWin;
       lastWin=totalWin;
       addChat('✅ Ganaste: +'+fmt(totalWin),'win');
@@ -1376,11 +1399,6 @@ function initSlot(assets){
         showWinEffect(totalWin,false);
         vibrateDevice([50]);
       }
-    } else if(isMigaja && totalWin>0){
-      credits+=totalWin;
-      lastWin=totalWin;
-      addChat('💫 Recuperas: +'+fmt(totalWin),'system');
-      botSay('Algo es algo... 💫');
     } else {
       addChat('❌ Sin premio','loss');
       const lossMessages=['La próxima va... 💪','Sigue intentando 🎰','Casi... 😤','Paciencia... 🦁','El león está dormido... 💤'];
