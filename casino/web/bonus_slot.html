@@ -198,22 +198,41 @@
             background: #0a0800;
         }
 
+        /* Video dinámico (visible cuando PARADO) */
         .reel-cell video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 2;
+            transition: opacity 0.25s ease;
         }
 
+        /* Strip de imágenes para animación de giro (visible cuando GIRANDO) */
+        .reel-cell .reel-strip {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .reel-cell .reel-strip img {
+            width: 100%;
+            height: 95px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        /* Cuando gira: ocultar video, mostrar strip moviéndose */
         .reel-cell.spinning video {
-            filter: blur(6px) brightness(0.5);
-            transform: scaleY(0.8);
-            transition: none;
+            opacity: 0;
         }
 
         .reel-cell.stopped video {
-            filter: none;
-            transform: scaleY(1);
-            transition: filter 0.2s, transform 0.2s;
+            opacity: 1;
         }
 
         .reel-cell.winning {
@@ -485,29 +504,21 @@
         let accumulated = 0;
         let isSpinning = false;
 
-        // ========== SYMBOLS CONFIG ==========
+        // ========== SYMBOLS CONFIG (video dinámico + imagen estática) ==========
         const symbols = [
-            { id: 'leon', src: 'assets/video/leo_din.mp4', weight: 3, name: 'León' },
-            { id: 'wild', src: 'assets/video/wild_din.mp4', weight: 2, name: 'Wild' },
-            { id: 'scatter', src: 'assets/video/scatter_din.mp4', weight: 4, name: 'Scatter' },
-            { id: 'a', src: 'assets/video/a_din.mp4', weight: 5, name: 'A' },
-            { id: 'k', src: 'assets/video/k_din.mp4', weight: 6, name: 'K' },
-            { id: 'q', src: 'assets/video/q_din.mp4', weight: 7, name: 'Q' },
-            { id: 'j', src: 'assets/video/j_din.mp4', weight: 8, name: 'J' },
-            { id: '10', src: 'assets/video/10_din.mp4', weight: 9, name: '10' }
+            { id: 'leon', video: 'assets/video/leo_din.mp4', img: 'assets/img/sym_leon.png', weight: 3 },
+            { id: 'wild', video: 'assets/video/wild_din.mp4', img: 'assets/img/sym_wild.png', weight: 2 },
+            { id: 'scatter', video: 'assets/video/scatter_din.mp4', img: 'assets/img/sym_scatter.png', weight: 4 },
+            { id: 'a', video: 'assets/video/a_din.mp4', img: 'assets/img/sym_A.png', weight: 5 },
+            { id: 'k', video: 'assets/video/k_din.mp4', img: 'assets/img/sym_K.jpeg', weight: 6 },
+            { id: 'q', video: 'assets/video/q_din.mp4', img: 'assets/img/sym_Q.jpeg', weight: 7 },
+            { id: 'j', video: 'assets/video/j_din.mp4', img: 'assets/img/sym_J.jpeg', weight: 8 },
+            { id: '10', video: 'assets/video/10_din.mp4', img: 'assets/img/sym_10.jpeg', weight: 9 }
         ];
 
-        // Build weighted pool
         const weightedPool = [];
-        symbols.forEach(s => {
-            for (let i = 0; i < s.weight; i++) {
-                weightedPool.push(s);
-            }
-        });
-
-        function getRandomSymbol() {
-            return weightedPool[Math.floor(Math.random() * weightedPool.length)];
-        }
+        symbols.forEach(s => { for (let i = 0; i < s.weight; i++) weightedPool.push(s); });
+        function getRandomSymbol() { return weightedPool[Math.floor(Math.random() * weightedPool.length)]; }
 
         // ========== WEB AUDIO API ==========
         let audioCtx = null;
@@ -560,36 +571,83 @@
             });
         }
 
-        // ========== GRID INITIALIZATION ==========
+        // ========== GRID + REEL ANIMATION ENGINE ==========
+        const CELL_H = 95;
+        const STRIP_LEN = 10;
         const grid = document.getElementById('reel-grid');
         const cells = [];
-        const cellSymbols = []; // track which symbol is in each cell
+        const cellSymbols = [];
+        const reelStrips = [];
+        const colState = [];
+        let animFrameId = null;
+        let lastTime = 0;
 
         function initGrid() {
             grid.innerHTML = '';
+            for (let col = 0; col < 5; col++) {
+                colState.push({ spinning: false, speed: 0, offset: 0, stopped: true });
+            }
             for (let row = 0; row < 3; row++) {
                 for (let col = 0; col < 5; col++) {
                     const cell = document.createElement('div');
-                    cell.className = 'reel-cell';
+                    cell.className = 'reel-cell stopped';
                     cell.dataset.row = row;
                     cell.dataset.col = col;
 
                     const sym = getRandomSymbol();
                     const video = document.createElement('video');
-                    video.src = sym.src;
+                    video.src = sym.video;
                     video.autoplay = true;
                     video.muted = true;
                     video.loop = true;
                     video.playsInline = true;
                     video.preload = 'auto';
                     video.setAttribute('playsinline', '');
-
                     cell.appendChild(video);
+
+                    const strip = document.createElement('div');
+                    strip.className = 'reel-strip';
+                    for (let s = 0; s < STRIP_LEN; s++) {
+                        const img = document.createElement('img');
+                        img.src = getRandomSymbol().img;
+                        img.draggable = false;
+                        strip.appendChild(img);
+                    }
+                    cell.appendChild(strip);
+
                     grid.appendChild(cell);
                     cells.push(cell);
                     cellSymbols.push(sym);
+                    reelStrips.push(strip);
                 }
             }
+        }
+
+        function animLoop(ts) {
+            if (!lastTime) lastTime = ts;
+            const dt = Math.min((ts - lastTime) / 16.67, 3);
+            lastTime = ts;
+            let any = false;
+
+            for (let col = 0; col < 5; col++) {
+                const cs = colState[col];
+                if (!cs.spinning && cs.stopped) continue;
+                any = true;
+                cs.offset += cs.speed * dt;
+                if (cs.offset >= CELL_H) {
+                    cs.offset -= CELL_H;
+                }
+                for (let row = 0; row < 3; row++) {
+                    const idx = row * 5 + col;
+                    reelStrips[idx].style.transform = 'translateY(' + (-cs.offset) + 'px)';
+                }
+            }
+            if (any) { animFrameId = requestAnimationFrame(animLoop); }
+            else { animFrameId = null; lastTime = 0; }
+        }
+
+        function startAnim() {
+            if (!animFrameId) { lastTime = 0; animFrameId = requestAnimationFrame(animLoop); }
         }
 
         // ========== SPIN LOGIC ==========
@@ -603,60 +661,90 @@
             btn.disabled = true;
             document.getElementById('result-text').textContent = '';
 
-            // Start spinning all cells
+            // Switch to spinning mode: hide videos, show strips
             cells.forEach(cell => {
                 cell.classList.add('spinning');
                 cell.classList.remove('stopped', 'winning');
             });
             playSpin();
 
-            // Determine result based on prize system
-            const prizeResult = determinePrize();
-
-            // Generate new symbols for each cell
-            const newSymbols = [];
-            for (let i = 0; i < 15; i++) {
-                newSymbols.push(getRandomSymbol());
-            }
-
-            // If there's a win, force matching symbols in first row (left to right)
-            if (prizeResult.matchCount > 0) {
-                const winSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-                for (let col = 0; col < prizeResult.matchCount; col++) {
-                    const idx = 0 * 5 + col; // first row
-                    newSymbols[idx] = winSymbol;
+            // Start columns spinning
+            for (let col = 0; col < 5; col++) {
+                colState[col].spinning = true;
+                colState[col].stopped = false;
+                colState[col].speed = 0;
+                colState[col].offset = 0;
+                for (let row = 0; row < 3; row++) {
+                    const idx = row * 5 + col;
+                    reelStrips[idx].style.transform = 'translateY(0)';
+                    const imgs = reelStrips[idx].querySelectorAll('img');
+                    imgs.forEach(img => { img.src = getRandomSymbol().img; });
                 }
             }
 
-            // Stop columns one at a time
+            // Accelerate
+            const accel = setInterval(() => {
+                let done = true;
+                for (let col = 0; col < 5; col++) {
+                    if (colState[col].speed < 50) {
+                        colState[col].speed = Math.min(colState[col].speed + 6, 50);
+                        done = false;
+                    }
+                }
+                if (done) clearInterval(accel);
+            }, 40);
+
+            startAnim();
+
+            // Determine prize
+            const prizeResult = determinePrize();
+            const newSymbols = [];
+            for (let i = 0; i < 15; i++) newSymbols.push(getRandomSymbol());
+
+            if (prizeResult.matchCount > 0) {
+                const winSym = symbols[Math.floor(Math.random() * symbols.length)];
+                for (let col = 0; col < prizeResult.matchCount; col++) {
+                    newSymbols[0 * 5 + col] = winSym;
+                }
+            }
+
+            // Stop columns sequentially
             for (let col = 0; col < 5; col++) {
                 setTimeout(() => {
-                    stopColumn(col, newSymbols);
+                    stopCol(col, newSymbols);
                     playStop(col);
-
-                    if (col === 4) {
-                        // All stopped
-                        setTimeout(() => finishSpin(prizeResult, newSymbols), 300);
-                    }
-                }, 1500 + col * 200);
+                    if (col === 4) setTimeout(() => finishSpin(prizeResult, newSymbols), 350);
+                }, 1100 + col * 260);
             }
         }
 
-        function stopColumn(col, newSymbols) {
-            for (let row = 0; row < 3; row++) {
-                const idx = row * 5 + col;
-                const cell = cells[idx];
-                cell.classList.remove('spinning');
-                cell.classList.add('stopped');
-
-                const sym = newSymbols[idx];
-                cellSymbols[idx] = sym;
-
-                const video = cell.querySelector('video');
-                video.src = sym.src;
-                video.currentTime = 0;
-                video.play().catch(() => {});
-            }
+        function stopCol(col, newSymbols) {
+            const cs = colState[col];
+            const brake = () => {
+                cs.speed *= 0.7;
+                if (cs.speed < 1.5) {
+                    cs.speed = 0;
+                    cs.spinning = false;
+                    cs.stopped = true;
+                    for (let row = 0; row < 3; row++) {
+                        const idx = row * 5 + col;
+                        const cell = cells[idx];
+                        const sym = newSymbols[idx];
+                        cellSymbols[idx] = sym;
+                        cell.classList.remove('spinning');
+                        cell.classList.add('stopped');
+                        const video = cell.querySelector('video');
+                        video.src = sym.video;
+                        video.currentTime = 0;
+                        video.play().catch(() => {});
+                        const imgs = reelStrips[idx].querySelectorAll('img');
+                        if (imgs[0]) imgs[0].src = sym.img;
+                    }
+                    return;
+                }
+                requestAnimationFrame(brake);
+            };
+            brake();
         }
 
         function determinePrize() {
