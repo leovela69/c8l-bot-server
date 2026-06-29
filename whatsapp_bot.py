@@ -1901,12 +1901,12 @@ def main():
                     _send_feedback_buttons(msg.chat.id)
                     broadcast_content_created(msg.from_user.first_name, "video", tema)
                 elif result and result.get("type") == "text":
-                    content = result["content"]
-                    if len(content) > 3000:
-                        pdf_bytes = generate_pdf(content, f"Video: {tema[:40]}")
-                        tg_send_document(msg.chat.id, pdf_bytes, "video_c8l.pdf", caption=f"🎬 {tema[:60]}")
-                    else:
-                        tg_send(msg.chat.id, content)
+                    # Video falló, se generó guión. NO enviar PDF — dar mensaje claro
+                    tg_send(msg.chat.id,
+                        "⚠️ Los motores de video están saturados ahora.\n"
+                        "Intenta de nuevo en 1-2 minutos con /crear_video\n\n"
+                        "💡 Tip: Prueba prompts más simples en inglés:\n"
+                        "`/crear_video a golden lion walking through neon city at night`")
                 else:
                     tg_send(msg.chat.id, "❌ No pude generar el video. Intenta de nuevo en unos minutos.")
             except Exception as e:
