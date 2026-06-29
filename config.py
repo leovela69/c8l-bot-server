@@ -47,13 +47,13 @@ GEMINI_IMAGE_URL: str = f"https://generativelanguage.googleapis.com/v1beta/model
 # ---------------------------------------------------------------------------
 # GROQ — Motor principal (GRATIS)
 # ---------------------------------------------------------------------------
-GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
+GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "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")
 GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
 
 # ---------------------------------------------------------------------------
 # OpenRouter — Backup
 # ---------------------------------------------------------------------------
-OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "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")
 OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
 # ---------------------------------------------------------------------------
