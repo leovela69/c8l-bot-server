@@ -1173,6 +1173,86 @@ function initSlot(assets){
       grid.push(col);
     }
 
+    // === FORZAR RESULTADO EN EL GRID ANTES DE GIRAR ===
+    if(typeof window._cycleSpins==='undefined') window._cycleSpins=0;
+    if(typeof window._lastWinSpin==='undefined') window._lastWinSpin=0;
+    if(typeof window._premiumPattern==='undefined') window._premiumPattern=Math.floor(60+Math.random()*60);
+    if(typeof window._nextPremium==='undefined') window._nextPremium=window._premiumPattern;
+    window._cycleSpins++;
+
+    const isFreeSpin = freeSpins > 0;
+    let forceCommon=false, forcePremium=false, forceScatter=false, forceNearScatter=0;
+
+    if(Math.random() < (isFreeSpin ? 0.05 : 0.02) && window._cycleSpins > 8){
+      forceScatter = true;
+    } else if(Math.random() < (isFreeSpin ? 0.35 : 0.25)){
+      forceNearScatter = Math.random() < 0.70 ? 3 : 4;
+    } else if(window._cycleSpins >= window._nextPremium){
+      forcePremium = true;
+      window._premiumPattern = Math.floor(60 + Math.random()*60);
+      window._nextPremium = window._cycleSpins + (isFreeSpin ? Math.floor(20+Math.random()*20) : window._premiumPattern);
+    } else if(Math.random() < (isFreeSpin ? 0.90 : 0.80)){
+      forceCommon = true;
+    }
+
+    if(forceScatter){
+      const scatterSym = SYMBOLS.find(s=>s.id==='scatter');
+      for(let c=0;c<REELS;c++) grid[c][1] = scatterSym;
+    } else if(forceNearScatter > 0){
+      const scatterSym = SYMBOLS.find(s=>s.id==='scatter');
+      const positions = [0,1,2,3,4];
+      for(let i=positions.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [positions[i],positions[j]]=[positions[j],positions[i]];
+      }
+      for(let k=0;k<forceNearScatter;k++) grid[positions[k]][1] = scatterSym;
+      for(let k=forceNearScatter;k<5;k++){
+        if(grid[positions[k]][1].id==='scatter'){
+          let diff=rSym(); while(diff.id==='scatter') diff=rSym();
+          grid[positions[k]][1]=diff;
+        }
+      }
+    } else if(forcePremium){
+      const leonSym = SYMBOLS.find(s=>s.id==='leon');
+      for(let c=0;c<REELS;c++) grid[c][1] = leonSym;
+      if(Math.random() < 0.40){
+        grid[Math.floor(Math.random()*5)][1] = SYMBOLS.find(s=>s.id==='wild');
+      }
+    } else if(forceCommon){
+      const commonSyms = SYMBOLS.filter(s=>!s.premium&&!s.isWild&&!s.isScatter);
+      const chosenSym = commonSyms[Math.floor(Math.random()*commonSyms.length)];
+      const plIdx = Math.floor(Math.random()*PAYLINES.length);
+      const pl = PAYLINES[plIdx];
+      for(let c=0;c<REELS;c++) grid[c][pl[c]] = chosenSym;
+      if(Math.random() < 0.25){
+        const wPos=Math.floor(Math.random()*5);
+        grid[wPos][pl[wPos]] = SYMBOLS.find(s=>s.id==='wild');
+      }
+      if(Math.random() < 0.15){
+        const pl2Idx=(plIdx+1+Math.floor(Math.random()*(PAYLINES.length-1)))%PAYLINES.length;
+        const pl2=PAYLINES[pl2Idx];
+        const chosenSym2=commonSyms[Math.floor(Math.random()*commonSyms.length)];
+        for(let c=0;c<REELS;c++) grid[c][pl2[c]]=chosenSym2;
+      }
+    } else {
+      // Sin premio: romper coincidencias de 5 en paylines
+      for(let p=0;p<PAYLINES.length;p++){
+        const pl=PAYLINES[p];
+        const first=grid[0][pl[0]];
+        let count=1;
+        for(let c=1;c<REELS;c++){
+          if(grid[c][pl[c]].id===first.id||grid[c][pl[c]].isWild) count++; else break;
+        }
+        if(count>=5){
+          let diff=rSym(); while(diff.id===first.id||diff.isWild) diff=rSym();
+          grid[4][pl[4]]=diff;
+        }
+      }
+    }
+
+    // Guardar info para evaluateSpin
+    window._lastGridForce = {forceScatter, forcePremium, forceCommon, forceNearScatter};
+
     // Pre-calculate win to determine if we should apply suspense on last reel
     const preCalcWin=preCalculateWin(grid);
     pendingBigWin=(preCalcWin>=totalBet()*3);
@@ -1258,137 +1338,12 @@ function initSlot(assets){
     }
 
 
-    // === SISTEMA DE PREMIOS v2 — Solo 5 en línea, paylines, multi-línea ===
+    // === EVALUAR PREMIOS DEL GRID (ya viene preparado desde doSpin) ===
     let totalWin=0;
+    const gForce = window._lastGridForce || {};
+    const isFreeSpin2 = freeSpins > 0;
 
-    if(typeof window._cycleSpins==='undefined') window._cycleSpins=0;
-    if(typeof window._lastWinSpin==='undefined') window._lastWinSpin=0;
-    if(typeof window._premiumPattern==='undefined') window._premiumPattern=Math.floor(60+Math.random()*60);
-    if(typeof window._nextPremium==='undefined') window._nextPremium=window._premiumPattern;
-    window._cycleSpins++;
-
-    const isFreeSpin = freeSpins > 0;
-
-    // --- DECIDIR QUÉ TIPO DE GIRO ES ---
-    // commonWin = premio común (devuelve 5-20%)
-    // premiumWin = premio gordo (x10-x25 apuesta)
-    // scatterWin = activa bonus round
-    let forceCommon = false;
-    let forcePremium = false;
-    let forceScatter = false;
-    let forceNearScatter = 0; // 0=no, 3=casi(3), 4=muy cerca(4)
-
-    // Scatter COMPLETO (5): ~2% en real, ~5% en gratis
-    if(Math.random() < (isFreeSpin ? 0.05 : 0.02) && window._cycleSpins > 8){
-      forceScatter = true;
-    }
-    // Near-scatter (3 o 4): MUY FRECUENTE para crear tensión
-    else if(Math.random() < (isFreeSpin ? 0.35 : 0.25)){
-      // 25% de giros muestra 3-4 scatters casi alineados
-      forceNearScatter = Math.random() < 0.70 ? 3 : 4; // 70% muestra 3, 30% muestra 4
-    }
-    // Premium: patrón no repetitivo (varía entre 60-120 giros)
-    else if(window._cycleSpins >= window._nextPremium){
-      forcePremium = true;
-      window._premiumPattern = Math.floor(60 + Math.random()*60);
-      window._nextPremium = window._cycleSpins + (isFreeSpin ? Math.floor(20+Math.random()*20) : window._premiumPattern);
-    }
-    // Común: 80% de las tiradas dan premio pequeño
-    else if(Math.random() < (isFreeSpin ? 0.90 : 0.80)){
-      forceCommon = true;
-    }
-
-    // --- FORZAR GRID SEGÚN TIPO DE GIRO ---
-    if(forceScatter){
-      // 5 scatters en payline 0 (fila central [1,1,1,1,1])
-      const scatterSym = SYMBOLS.find(s=>s.id==='scatter');
-      for(let c=0;c<REELS;c++) grid[c][1] = scatterSym;
-    }
-    else if(forceNearScatter > 0){
-      // Colocar 3 o 4 scatters en la fila central (casi bonus!)
-      const scatterSym = SYMBOLS.find(s=>s.id==='scatter');
-      // Elegir posiciones para los scatters
-      const positions = [0,1,2,3,4];
-      // Shuffle y tomar las primeras N
-      for(let i=positions.length-1;i>0;i--){
-        const j=Math.floor(Math.random()*(i+1));
-        [positions[i],positions[j]]=[positions[j],positions[i]];
-      }
-      const scatterPositions = positions.slice(0, forceNearScatter);
-      for(const pos of scatterPositions){
-        grid[pos][1] = scatterSym;
-      }
-      // Las posiciones restantes: asegurar que NO sean scatter
-      const remaining = positions.slice(forceNearScatter);
-      for(const pos of remaining){
-        if(grid[pos][1].id==='scatter'){
-          let diff=rSym();
-          while(diff.id==='scatter') diff=rSym();
-          grid[pos][1]=diff;
-        }
-      }
-    }
-    else if(forcePremium){
-      // 5 leones en una payline (fila central)
-      const leonSym = SYMBOLS.find(s=>s.id==='leon');
-      for(let c=0;c<REELS;c++) grid[c][1] = leonSym;
-      // Puede incluir 1 wild: 40% chance
-      if(Math.random() < 0.40){
-        const wildPos = Math.floor(Math.random()*5);
-        grid[wildPos][1] = SYMBOLS.find(s=>s.id==='wild');
-      }
-    }
-    else if(forceCommon){
-      // 5 comunes en una payline random
-      const commonSyms = SYMBOLS.filter(s=>!s.premium&&!s.isWild&&!s.isScatter);
-      const chosenSym = commonSyms[Math.floor(Math.random()*commonSyms.length)];
-      // Elegir payline random
-      const plIdx = Math.floor(Math.random()*PAYLINES.length);
-      const pl = PAYLINES[plIdx];
-      for(let c=0;c<REELS;c++){
-        grid[c][pl[c]] = chosenSym;
-      }
-      // 25% chance de meter 1 wild (reduce premio)
-      if(Math.random() < 0.25){
-        const wPos = Math.floor(Math.random()*5);
-        grid[wPos][pl[wPos]] = SYMBOLS.find(s=>s.id==='wild');
-      }
-      // 15% chance de duplicar en otra payline (x2)
-      if(Math.random() < 0.15){
-        const pl2Idx = (plIdx + 1 + Math.floor(Math.random()*(PAYLINES.length-1))) % PAYLINES.length;
-        const pl2 = PAYLINES[pl2Idx];
-        const chosenSym2 = commonSyms[Math.floor(Math.random()*commonSyms.length)];
-        for(let c=0;c<REELS;c++) grid[c][pl2[c]] = chosenSym2;
-      }
-    }
-    else {
-      // Sin premio: asegurar que NO haya 5 iguales en ninguna payline
-      for(let p=0;p<PAYLINES.length;p++){
-        const pl=PAYLINES[p];
-        let count=1;
-        const first=grid[0][pl[0]];
-        for(let c=1;c<REELS;c++){
-          if(grid[c][pl[c]].id===first.id||grid[c][pl[c]].isWild) count++;
-          else break;
-        }
-        if(count>=5){
-          let diff=rSym();
-          while(diff.id===first.id||diff.isWild) diff=rSym();
-          grid[4][pl[4]]=diff;
-        }
-      }
-    }
-
-    // Actualizar sprites del grid
-    for(let col=0;col<REELS;col++){
-      for(let row=0;row<ROWS;row++){
-        const sp=reels[col].strips[row+1];
-        sp.texture=texMap[grid[col][row].id];
-        sp.symData=grid[col][row];
-      }
-    }
-
-    // --- EVALUAR PAYLINES REALES (solo 5 en línea) ---
+    // Evaluar paylines (solo 5 en línea)
     let linesWon = 0;
     let lineWinAmount = 0;
     let hasWild = false;
@@ -1399,53 +1354,45 @@ function initSlot(assets){
       const syms=[];
       for(let c=0;c<REELS;c++) syms.push(grid[c][pl[c]]);
 
-      // Check scatter line
       if(syms.every(s=>s.id==='scatter')){ scatterLine=true; continue; }
 
-      // Determine base symbol (first non-wild)
-      let baseSym = null;
-      let wildCount = 0;
+      let baseSym=null, wildCount=0;
       for(const s of syms){
         if(s.isWild) wildCount++;
-        else if(!baseSym) baseSym = s;
+        else if(!baseSym) baseSym=s;
       }
-      if(!baseSym) continue; // all wilds? skip
-      if(wildCount > 1) continue; // max 1 wild per line
+      if(!baseSym||wildCount>1) continue;
 
-      // Check if all 5 match (same id or wild)
-      let allMatch = true;
-      let usedWild = false;
+      let allMatch=true, usedWild=false;
       for(const s of syms){
-        if(s.id === baseSym.id) continue;
-        if(s.isWild && !usedWild){ usedWild=true; continue; }
-        allMatch=false; break;
+        if(s.id===baseSym.id) continue;
+        if(s.isWild&&!usedWild){usedWild=true;continue;}
+        allMatch=false;break;
       }
 
       if(allMatch){
         linesWon++;
-        const payInfo = PAYTABLE[baseSym.id];
+        const payInfo=PAYTABLE[baseSym.id];
         if(payInfo){
-          let win = 0;
-          if(payInfo.pct) win = Math.round(totalBet() * payInfo.pct);
-          else if(payInfo.mult) win = Math.round(totalBet() * payInfo.mult);
-          if(usedWild) win = Math.round(win * WILD_PENALTY);
-          lineWinAmount += win;
-          if(usedWild) hasWild = true;
+          let win=0;
+          if(payInfo.pct) win=Math.round(totalBet()*payInfo.pct);
+          else if(payInfo.mult) win=Math.round(totalBet()*payInfo.mult);
+          if(usedWild) win=Math.round(win*WILD_PENALTY);
+          lineWinAmount+=win;
+          if(usedWild) hasWild=true;
         }
       }
     }
 
-    // Multiplicador multi-línea
-    if(linesWon >= 3) totalWin = lineWinAmount * 3;
-    else if(linesWon >= 2) totalWin = lineWinAmount * 2;
-    else totalWin = lineWinAmount;
+    if(linesWon>=3) totalWin=lineWinAmount*3;
+    else if(linesWon>=2) totalWin=lineWinAmount*2;
+    else totalWin=lineWinAmount;
 
-    if(totalWin > 0) window._lastWinSpin = window._cycleSpins;
+    if(totalWin>0) window._lastWinSpin=window._cycleSpins;
 
-    // --- SCATTER BONUS ROUND ---
+    // Scatter bonus
     if(scatterLine){
-      const fsAward=15;
-      const bonusMult=3;
+      const fsAward=15, bonusMult=3;
       showBonus(0, fsAward, 'scatter');
       botSay('¡¡¡BONUS ROUND!!! 🌟🌟🌟🌟🌟');
       addChat('🌟 ¡¡¡BONUS ROUND!!! '+fsAward+' giros x'+bonusMult,'freespin');
@@ -1455,55 +1402,43 @@ function initSlot(assets){
       },3200);
     }
 
-    // Modo Rugido (solo premios premium)
-    if(forcePremium && totalWin>0 && Math.random()<0.30){
+    // Modo Rugido
+    if(gForce.forcePremium&&totalWin>0&&Math.random()<0.30){
       const rm=[2,3,5][Math.floor(Math.random()*3)];
-      totalWin*=rm;
-      multiplier=rm;
-      mVal.text='X'+multiplier;
+      totalWin*=rm; multiplier=rm; mVal.text='X'+multiplier;
       showBonus(totalWin, rm, 'rugido');
     }
 
-    // Progressive jackpot (extremadamente raro)
-    if(Math.random()<0.00002&&!isFreeSpin){
+    // Jackpot
+    if(Math.random()<0.00002&&!isFreeSpin2){
       totalWin+=jackpot;
       addChat('🦁 ¡¡¡JACKPOT!!! '+fmt(jackpot),'win');
       showBonus(jackpot, 0, 'jackpot');
-      jackpot=1000000;
-      sfxBig();
+      jackpot=1000000; sfxBig();
     }
 
-    // --- APLICAR RESULTADO ---
+    // Aplicar resultado
     if(totalWin>0){
-      credits+=totalWin;
-      lastWin=totalWin;
-      const wildTxt = hasWild ? ' (con comodín)' : '';
-      const linesTxt = linesWon > 1 ? ' ['+linesWon+' líneas x'+linesWon+']' : '';
+      credits+=totalWin; lastWin=totalWin;
+      const wildTxt=hasWild?' (comodín)':'';
+      const linesTxt=linesWon>1?' ['+linesWon+' líneas]':'';
       addChat('✅ +'+fmt(totalWin)+wildTxt+linesTxt,'win');
       setPupilState('hearts');
-      
       if(totalWin>=totalBet()*5){
-        shakeScreen();
-        playWinMusic();
-        botSay('¡INCREÍBLE! 🔥🔥🔥');
-        sfxBig();
+        shakeScreen();playWinMusic();botSay('¡INCREÍBLE! 🔥🔥🔥');sfxBig();
         showWinEffect(totalWin,true);
-        if(!forcePremium) showBonus(totalWin, Math.round(totalWin/totalBet()), 'bigwin');
+        if(!gForce.forcePremium) showBonus(totalWin,Math.round(totalWin/totalBet()),'bigwin');
         vibrateDevice([200,100,200,100,300]);
       } else if(totalWin>=totalBet()){
-        botSay('¡Buen premio! +'+fmt(totalWin)+' 🎉');
-        sfxWin();
-        showWinEffect(totalWin,true);
-        vibrateDevice([100,50,100]);
+        botSay('¡Buen premio! +'+fmt(totalWin)+' 🎉');sfxWin();
+        showWinEffect(totalWin,true);vibrateDevice([100,50,100]);
       } else {
-        botSay('+'+fmt(totalWin)+' 💫');
-        sfxWin();
-        showWinEffect(totalWin,false);
+        botSay('+'+fmt(totalWin)+' 💫');sfxWin();showWinEffect(totalWin,false);
       }
     } else if(!scatterLine){
       addChat('❌ Sin premio','loss');
-      const lossMessages=['La próxima va... 💪','Sigue intentando 🎰','Casi... 😤','Paciencia... 🦁','El león está dormido... 💤'];
-      botSay(lossMessages[Math.floor(Math.random()*lossMessages.length)]);
+      const msgs=['La próxima va... 💪','Sigue intentando 🎰','Casi... 😤','Paciencia... 🦁','El león está dormido... 💤'];
+      botSay(msgs[Math.floor(Math.random()*msgs.length)]);
       setPupilState('sad');
     }
 
