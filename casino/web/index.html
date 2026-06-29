@@ -468,7 +468,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
       <div id="video-overlay"></div>
     </div>
     <div class="info-bar">
-      <div class="info-item"><div class="lbl">LÍNEAS</div><div class="val" id="info-lines">20</div></div>
+      <div class="info-item"><div class="lbl">LÍNEAS</div><div class="val" id="info-lines">3</div></div>
       <div class="info-item"><div class="lbl">APUESTA</div><div class="val" id="info-bet">250</div></div>
       <div class="info-item"><div class="lbl">APUESTA TOTAL</div><div class="val" id="info-total">5.000</div></div>
       <div class="info-item"><div class="lbl">GANANCIA</div><div class="val" id="info-win">0</div></div>
@@ -567,13 +567,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 'use strict';
 
 // ===== CONSTANTS =====
-const REELS=5, ROWS=3, LINES=20;
+const REELS=5, ROWS=3, LINES=3;
 const BET_LEVELS=[10,25,50,100,250,500,1000,2500,5000];
 const PAYLINES=[
-  [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
-  [0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,0],
-  [2,1,1,1,2],[1,0,1,2,1],[1,2,1,0,1],[0,0,1,0,0],[2,2,1,2,2],
-  [0,1,0,1,0],[2,1,2,1,2],[1,0,1,0,1],[1,2,1,2,1],[0,1,2,2,1]
+  [0,0,0,0,0],[1,1,1,1,1],[2,2,2,2,2]
 ];
 
 const SYMBOLS=[
@@ -1221,18 +1218,16 @@ function initSlot(assets){
     } else if(forceCommon){
       const commonSyms = SYMBOLS.filter(s=>!s.premium&&!s.isWild&&!s.isScatter);
       const chosenSym = commonSyms[Math.floor(Math.random()*commonSyms.length)];
-      const plIdx = Math.floor(Math.random()*PAYLINES.length);
-      const pl = PAYLINES[plIdx];
-      for(let c=0;c<REELS;c++) grid[c][pl[c]] = chosenSym;
+      const row = Math.floor(Math.random()*ROWS); // fila horizontal 0, 1 o 2
+      for(let c=0;c<REELS;c++) grid[c][row] = chosenSym;
       if(Math.random() < 0.25){
         const wPos=Math.floor(Math.random()*5);
-        grid[wPos][pl[wPos]] = SYMBOLS.find(s=>s.id==='wild');
+        grid[wPos][row] = SYMBOLS.find(s=>s.id==='wild');
       }
       if(Math.random() < 0.15){
-        const pl2Idx=(plIdx+1+Math.floor(Math.random()*(PAYLINES.length-1)))%PAYLINES.length;
-        const pl2=PAYLINES[pl2Idx];
+        const row2=(row+1+Math.floor(Math.random()*2))%ROWS;
         const chosenSym2=commonSyms[Math.floor(Math.random()*commonSyms.length)];
-        for(let c=0;c<REELS;c++) grid[c][pl2[c]]=chosenSym2;
+        for(let c=0;c<REELS;c++) grid[c][row2]=chosenSym2;
       }
     } else {
       // Sin premio: romper coincidencias de 5 en paylines
