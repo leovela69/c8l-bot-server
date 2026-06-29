@@ -27,7 +27,7 @@ if os.path.exists(_env_path):
 # ---------------------------------------------------------------------------
 # Telegram
 # ---------------------------------------------------------------------------
-TELEGRAM_BOT_TOKEN: str = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_BOT_TOKEN: str = os.environ.get("TELEGRAM_BOT_TOKEN", "8557275735:AAFvVQaDkxp9E2ks_R0MYoVUrIDzz8EHT2w")
 ADMIN_CHAT_ID: str = os.environ.get("ADMIN_CHAT_ID", "")
 BOT_NAME: str = os.environ.get("BOT_NAME", "leon_leo_bot")
 
