@@ -1306,21 +1306,21 @@ function initSlot(assets){
       totalWin = prizeAmount;
     }
 
-    // Scatters for BONUS ROUND
-    let scatterCount=0;
-    for(let c=0;c<REELS;c++){
-      for(let r=0;r<ROWS;r++){
-        if(grid[c][r].id==='scatter') scatterCount++;
+    // Scatters for BONUS ROUND — Solo se activa con 5 scatters en una línea
+    let scatterLine=false;
+    for(let r=0;r<ROWS;r++){
+      let allScatter=true;
+      for(let c=0;c<REELS;c++){
+        if(grid[c][r].id!=='scatter'){allScatter=false;break;}
       }
+      if(allScatter){scatterLine=true;break;}
     }
-    if(scatterCount>=3){
-      const fsAward=scatterCount>=5?25:scatterCount>=4?15:10;
-      const bonusMult=scatterCount>=5?5:scatterCount>=4?3:2;
-      // Show bonus card first
+    if(scatterLine){
+      const fsAward=20;
+      const bonusMult=3;
       showBonus(0, fsAward, 'scatter');
-      botSay('¡BONUS ROUND! 🌟🌟🌟');
+      botSay('¡¡¡5 SCATTERS EN LÍNEA!!! 🌟🌟🌟🌟🌟');
       addChat('🌟 ¡¡¡BONUS ROUND!!! '+fsAward+' giros x'+bonusMult,'freespin');
-      // Open bonus slot in new window/tab after overlay disappears
       setTimeout(()=>{
         const bonusUrl='bonus_slot.html?spins='+fsAward+'&mult='+bonusMult+'&bet='+totalBet();
         window.open(bonusUrl,'_blank');
