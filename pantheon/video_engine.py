@@ -702,8 +702,8 @@ class VideoEngine:
 
             logger.info(f"  Agnes: video queued (task={task_id})")
 
-            # 2. Poll for completion (max 90s)
-            for _ in range(18):  # 18 * 5s = 90s
+            # 2. Poll for completion (max 60s)
+            for _ in range(12):  # 12 * 5s = 60s
                 time.sleep(5)
                 poll_r = requests.get(
                     f"https://apihub.agnes-ai.com/v1/videos/{task_id}",
@@ -745,7 +745,7 @@ class VideoEngine:
                 if progress > 0:
                     logger.info(f"  Agnes: {progress}% ...")
 
-            logger.warning("  Agnes: timeout (90s)")
+            logger.warning("  Agnes: timeout (60s) — cola lenta, intentando fallbacks")
             return None
 
         except Exception as e:
