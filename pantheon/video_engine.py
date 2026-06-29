@@ -170,11 +170,11 @@ VIDEO_MODELS = {
     },
 }
 
-# Cadena de fallback (orden en que se intentan si el modelo elegido falla)
+# Cadena de fallback (modelos rapidos primero para Render)
 FALLBACK_CHAIN = [
-    "wan-fast", "ltx-2", "wan", "seedance-pro", "veo",
-    "seedance-2.0", "grok-video-pro", "p-video-720p",
-    "wan-pro", "nova-reel", "p-video-1080p"
+    "ltx-2", "wan-fast", "p-video-720p", "wan",
+    "seedance-pro", "veo", "seedance-2.0",
+    "grok-video-pro", "wan-pro", "p-video-1080p", "nova-reel"
 ]
 
 # Pollinations API base
@@ -507,8 +507,11 @@ class VideoEngine:
             params = {
                 "model": model,
                 "duration": duration,
-                "key": POLLINATIONS_API_KEY_P,
             }
+
+            # Solo enviar key si existe (Pollinations funciona sin key)
+            if POLLINATIONS_API_KEY_P:
+                params["key"] = POLLINATIONS_API_KEY_P
 
             # Audio (solo para modelos que lo soportan)
             if audio:
@@ -520,8 +523,8 @@ class VideoEngine:
 
             logger.info(f"  Pollinations API: model={model}, dur={duration}s, aspect={aspect_ratio}")
 
-            # Timeout largo porque la generacion de video tarda
-            timeout = 300  # 5 minutos maximo
+            # Timeout: 120s en Render Free (el servicio puede morir con más)
+            timeout = 120
 
             r = requests.get(url, params=params, timeout=timeout, stream=True)
 
