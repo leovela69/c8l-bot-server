@@ -261,6 +261,11 @@ class VideoEngine:
                 audio=request_audio,
             )
 
+            if video_bytes == "AUTH_REQUIRED":
+                # Pollinations ahora requiere API key — skip TODOS los modelos
+                logger.warning("  🔒 Pollinations requiere API key — saltando directo a fallbacks")
+                break
+
             if video_bytes:
                 self.generations_count += 1
                 self.last_model_used = model_id
@@ -553,7 +558,7 @@ class VideoEngine:
                     return None
             elif r.status_code == 401:
                 logger.warning(f"  Pollinations 401: modelo {model} requiere API key")
-                return None
+                return "AUTH_REQUIRED"
             elif r.status_code == 402:
                 logger.warning(f"  Pollinations 402: balance agotado para {model}")
                 return None
