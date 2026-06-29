@@ -4,11 +4,12 @@
 Pipeline completo de producción cinematográfica:
 
 Módulos:
-- video_api: 7 proveedores gratuitos + 1 premium (admin-locked) con fallback
+- video_api: 7 proveedores gratuitos + 2 premium (admin-locked) con fallback
 - skills: Producer, Director, Editor, Motion Graphics, Music
 - pipeline: Pipeline completo de producción end-to-end
 - long_film: Películas de 60+ minutos desde una sola idea
 - comfyui_cloud: Proveedor premium ComfyUI Cloud (🔒 admin-only)
+- higgsfield_api: Proveedor premium Higgsfield AI — 30+ modelos (🔒 admin-only)
 """
 
 from film.video_api import VideoAPI, VideoProvider
@@ -22,6 +23,7 @@ from film.long_film import (
     VideoAssembler, LongFilmOrchestrator, FilmLength
 )
 from film.comfyui_cloud import ComfyUICloudAPI, PremiumAdminGate
+from film.higgsfield_api import HiggsfieldAPI
 
 __all__ = [
     # Video API
@@ -36,6 +38,7 @@ __all__ = [
     'VideoAssembler', 'LongFilmOrchestrator', 'FilmLength',
     # Premium (🔒 admin-only)
     'ComfyUICloudAPI', 'PremiumAdminGate',
+    'HiggsfieldAPI',
 ]
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"

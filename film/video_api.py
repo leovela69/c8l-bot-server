@@ -1,5 +1,5 @@
 """
-🎬 VIDEO API — 7 Proveedores GRATUITOS + 1 PREMIUM (admin-locked)
+🎬 VIDEO API — 7 Proveedores GRATUITOS + 2 PREMIUM (admin-locked)
 ===================================================================
 Máximo de herramientas FREE para el bot. Sin tarjeta de crédito.
 
@@ -12,13 +12,14 @@ Proveedores GRATIS (7):
 6. HuggingFace Inference — Modelos open source gratis
 7. Perchance — 80+ estilos imágenes (sin API key)
 
-Proveedor PREMIUM (🔒 ADMIN-ONLY):
+Proveedores PREMIUM (🔒 ADMIN-ONLY):
 8. ComfyUI Cloud — RTX 6000 Pro, 900+ modelos, $20-100/mes
-   ⚠️ BLOQUEADO por defecto. Solo Leo puede activarlo.
+9. Higgsfield AI — 30+ modelos (Kling 3.0, Veo 3.1, Sora 2, Seedance 2.0), $15-129/mes
+   ⚠️ AMBOS BLOQUEADOS por defecto. Solo Leo puede activarlos.
 
 EXCLUIDOS (de pago sin API útil):
-❌ Runway ($12/mes), Luma ($30/mes), Kling ($5/mes)
-❌ Artlist ($199/año), Grok ($5/mes), Replicate ($/uso)
+❌ Runway ($12/mes), Luma ($30/mes)
+❌ Artlist ($199/año), Replicate ($/uso)
 """
 
 import os
@@ -52,6 +53,7 @@ class VideoProvider(Enum):
     HUGGINGFACE = "huggingface"
     PERCHANCE = "perchance"
     COMFYUI_CLOUD = "comfyui_cloud"  # 🔒 PREMIUM — Admin-only
+    HIGGSFIELD = "higgsfield"  # 🔒 PREMIUM — Admin-only (30+ models)
 
 
 
@@ -324,9 +326,9 @@ class HuggingFaceVideoAPI:
 
 class VideoAPI:
     """
-    API unificada — 7 proveedores GRATUITOS + 1 PREMIUM (admin-locked)
+    API unificada — 7 proveedores GRATUITOS + 2 PREMIUM (admin-locked)
     Fallback automático: si uno falla, prueba el siguiente.
-    ComfyUI Cloud: 🔒 SOLO con permiso explícito del admin.
+    Premium (🔒 admin-only): ComfyUI Cloud + Higgsfield AI.
     Costo base de operación: $0/mes.
     """
 
@@ -344,6 +346,14 @@ class VideoAPI:
         try:
             from film.comfyui_cloud import ComfyUICloudAPI
             self._comfyui_cloud = ComfyUICloudAPI()
+        except ImportError:
+            pass
+
+        # 🔒 Higgsfield AI — inicializar solo si hay token
+        self._higgsfield = None
+        try:
+            from film.higgsfield_api import HiggsfieldAPI
+            self._higgsfield = HiggsfieldAPI()
         except ImportError:
             pass
 
@@ -470,10 +480,103 @@ class VideoAPI:
         raise Exception("Todos los proveedores fallaron (gratuitos y premium no disponible)")
 
     def get_premium_status(self, admin_chat_id: str = "") -> Dict:
-        """Estado del proveedor premium (info completa solo para admin)"""
-        if not self._comfyui_cloud:
-            return {'available': False, 'reason': 'Módulo no instalado'}
-        return self._comfyui_cloud.get_status()
+        """Estado de los proveedores premium (info completa solo para admin)"""
+        result = {}
+        if self._comfyui_cloud:
+            result['comfyui_cloud'] = self._comfyui_cloud.get_status()
+        else:
+            result['comfyui_cloud'] = {'available': False, 'reason': 'Módulo no instalado'}
+        if self._higgsfield:
+            result['higgsfield'] = self._higgsfield.get_status()
+        else:
+            result['higgsfield'] = {'available': False, 'reason': 'Módulo no instalado'}
+        return result
+
+    # ==================================================================
+    # 🔒 PREMIUM: Higgsfield AI (Admin-only) — 30+ models
+    # ==================================================================
+
+    async def generate_video_higgsfield(self, params: Dict,
+                                         chat_id: str = "",
+                                         model: str = "") -> Dict:
+        """
+        🔒 Genera video con Higgsfield AI (PREMIUM).
+        
+        30+ modelos: Kling 3.0, Veo 3.1, Sora 2, Seedance 2.0, etc.
+        REQUIERE autorización explícita del admin (Leo).
+        
+        Args:
+            params: {'prompt': str, 'duration': int, 'model': str, ...}
+            chat_id: ID del usuario
+            model: Modelo específico (kling3, veo3, sora2, seedance, etc.)
+        """
+        if not self._higgsfield:
+            return {
+                'status': 'error',
+                'error': 'Higgsfield AI no disponible (módulo no instalado)',
+                'provider': 'higgsfield'
+            }
+        
+        if model:
+            params['model'] = model
+        
+        return await self._higgsfield.generate(params, chat_id=chat_id)
+
+    async def generate_image_higgsfield(self, params: Dict,
+                                          chat_id: str = "",
+                                          model: str = "") -> Dict:
+        """
+        🔒 Genera imagen con Higgsfield AI (PREMIUM).
+        
+        Modelos: Nano Banana Pro, Soul 2.0, GPT Image 2.
+        """
+        if not self._higgsfield:
+            return {
+                'status': 'error',
+                'error': 'Higgsfield AI no disponible',
+                'provider': 'higgsfield'
+            }
+        
+        if model:
+            params['model'] = model
+        params['type'] = 'image'
+        params['generate_image'] = True
+        
+        return await self._higgsfield.generate(params, chat_id=chat_id)
+
+    async def generate_with_full_premium_fallback(self, params: Dict,
+                                                    chat_id: str = "") -> Dict:
+        """
+        Intenta: gratuitos → ComfyUI Cloud → Higgsfield.
+        Cada premium solo si autorizado.
+        
+        🔒 Premium solo como último recurso y solo si autorizado.
+        """
+        # 1. Intentar gratuitos
+        try:
+            return await self.generate_video(params)
+        except Exception as free_error:
+            logger.warning(f"Gratuitos fallaron: {free_error}")
+        
+        # 2. Fallback ComfyUI Cloud
+        if self._comfyui_cloud:
+            result = await self._comfyui_cloud.generate(params, chat_id=chat_id)
+            if result.get('status') == 'success':
+                return result
+        
+        # 3. Fallback Higgsfield
+        if self._higgsfield:
+            result = await self._higgsfield.generate(params, chat_id=chat_id)
+            if result.get('status') == 'success':
+                return result
+            if result.get('status') == 'blocked':
+                raise Exception(
+                    "Todos los proveedores fallaron. "
+                    "Premium no autorizado para este usuario."
+                )
+            return result
+        
+        raise Exception("Todos los proveedores fallaron (gratuitos y premium)")
 
     def get_status(self) -> Dict:
         """Estado completo del sistema"""
@@ -499,6 +602,14 @@ class VideoAPI:
                     'type': 'video+image',
                     'quality': '4K, 900+ models, RTX 6000 Pro',
                     'cost': '$20-100/mes',
+                    'locked': '🔒 ADMIN-ONLY (requiere permiso de Leo)',
+                    'warning': 'NADIE puede usar sin autorización explícita del admin'
+                },
+                'higgsfield': {
+                    'status': 'available' if self._higgsfield and self._higgsfield.is_configured() else 'not_configured',
+                    'type': 'video+image (30+ models)',
+                    'quality': 'Kling 3.0, Veo 3.1, Sora 2, Seedance 2.0, Soul 2.0',
+                    'cost': '$15-129/mes',
                     'locked': '🔒 ADMIN-ONLY (requiere permiso de Leo)',
                     'warning': 'NADIE puede usar sin autorización explícita del admin'
                 }
