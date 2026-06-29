@@ -490,6 +490,34 @@
         </div>
     </div>
 
+    <!-- FIREBASE: Control remoto de fases desde bot Telegram -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    try {
+      firebase.initializeApp(firebaseConfig);
+      firebase.database().ref('slot_config').on('value', (snapshot) => {
+        const config = snapshot.val();
+        if (!config) return;
+        if (config.phase !== undefined && config.phase !== 'auto') {
+          window._remotePhase = parseInt(config.phase);
+          window._remotePhaseActive = true;
+        } else {
+          window._remotePhaseActive = false;
+        }
+      });
+    } catch(e) { window._remotePhaseActive = false; }
+    </script>
+
     <script>
         // ========== URL PARAMETERS ==========
         const urlParams = new URLSearchParams(window.location.search);
@@ -709,7 +737,9 @@
                 else window._bonusPhaseLen = 1 + Math.floor(Math.random() * 2); // 1-2 (extraordinaria)
             }
 
-            const phaseChance = [0.20, 0.45, 0.80][window._bonusPhase];
+            // Control remoto de fase (desde bot/Firebase)
+            const activePhase = window._remotePhaseActive ? window._remotePhase : window._bonusPhase;
+            const phaseChance = [0.20, 0.45, 0.80][activePhase] || 0.20;
             const shouldWin = Math.random() < phaseChance;
 
             if (shouldWin) {

@@ -562,6 +562,54 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 </div>
 
 <script src="https://pixijs.download/v7.3.2/pixi.min.js"></script>
+
+<!-- FIREBASE: Control remoto de fases desde bot Telegram -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// ===== FIREBASE CONFIG (REEMPLAZA CON TUS DATOS) =====
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Inicializar Firebase
+try {
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Escuchar cambios en /slot_config en tiempo real
+  db.ref('slot_config').on('value', (snapshot) => {
+    const config = snapshot.val();
+    if (!config) return;
+
+    // Control de fase: 0=Sequía, 1=Normal, 2=Extraordinaria, 'auto'=rotación automática
+    if (config.phase !== undefined && config.phase !== 'auto') {
+      window._remotePhase = parseInt(config.phase);
+      window._remotePhaseActive = true;
+      console.log('🎮 Fase remota activada:', window._remotePhase);
+    } else {
+      window._remotePhaseActive = false;
+      console.log('🎮 Fase remota desactivada: modo automático');
+    }
+
+    // Duración override (opcional)
+    if (config.duration) {
+      window._remotePhaseDuration = parseInt(config.duration);
+    }
+  });
+  console.log('🔥 Firebase conectado — escuchando /slot_config');
+} catch(e) {
+  console.log('⚠️ Firebase no configurado, usando fases automáticas');
+  window._remotePhaseActive = false;
+}
+</script>
+
 <script>
 (function(){
 'use strict';
@@ -1200,7 +1248,9 @@ function initSlot(assets){
     const isFreeSpin = freeSpins > 0;
     // En giros gratis: fases más generosas
     const phaseChances = isFreeSpin ? [0.35, 0.60, 0.85] : [0.15, 0.40, 0.75];
-    const currentChance = phaseChances[window._mainPhase];
+    // Control remoto de fase (desde bot/Firebase)
+    const activePhase = window._remotePhaseActive ? window._remotePhase : window._mainPhase;
+    const currentChance = phaseChances[activePhase] || phaseChances[0];
 
     let forceCommon=false, forcePremium=false, forceScatter=false, forceNearScatter=0;
 
