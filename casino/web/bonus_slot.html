@@ -503,18 +503,21 @@
       messagingSenderId: "YOUR_SENDER_ID",
       appId: "YOUR_APP_ID"
     };
+    window._remotePhaseActive = false;
     try {
-      firebase.initializeApp(firebaseConfig);
-      firebase.database().ref('slot_config').on('value', (snapshot) => {
-        const config = snapshot.val();
-        if (!config) return;
-        if (config.phase !== undefined && config.phase !== 'auto') {
-          window._remotePhase = parseInt(config.phase);
-          window._remotePhaseActive = true;
-        } else {
-          window._remotePhaseActive = false;
-        }
-      });
+      if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_')) {
+        firebase.initializeApp(firebaseConfig);
+        firebase.database().ref('slot_config').on('value', (snapshot) => {
+          const config = snapshot.val();
+          if (!config) return;
+          if (config.phase !== undefined && config.phase !== 'auto') {
+            window._remotePhase = parseInt(config.phase);
+            window._remotePhaseActive = true;
+          } else {
+            window._remotePhaseActive = false;
+          }
+        });
+      }
     } catch(e) { window._remotePhaseActive = false; }
     </script>
 

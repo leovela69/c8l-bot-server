@@ -579,7 +579,9 @@ const firebaseConfig = {
 };
 
 // Inicializar Firebase
+window._remotePhaseActive = false;
 try {
+  if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_')) {
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
@@ -603,9 +605,9 @@ try {
       window._remotePhaseDuration = parseInt(config.duration);
     }
   });
-  console.log('🔥 Firebase conectado — escuchando /slot_config');
+  console.log('Firebase conectado');
+  }
 } catch(e) {
-  console.log('⚠️ Firebase no configurado, usando fases automáticas');
   window._remotePhaseActive = false;
 }
 </script>
