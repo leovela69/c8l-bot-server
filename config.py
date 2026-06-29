@@ -202,6 +202,6 @@ SKILLSCAN_AUDIT_INTERVAL: int = int(os.environ.get("SKILLSCAN_AUDIT_INTERVAL", "
 # ---------------------------------------------------------------------------
 # Film Production — Video APIs Gratuitas
 # ---------------------------------------------------------------------------
-AGNES_API_KEY: str = os.environ.get("AGNES_API_KEY", "")
+AGNES_API_KEY: str = os.environ.get("AGNES_API_KEY", "sk-XwX3WByBNCD72zmSK0Q2MPW8fadnVsl8Z1NEheY0k8NL69HN")
 CLOUDFLARE_ACCOUNT_ID: str = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
 CLOUDFLARE_AI_TOKEN: str = os.environ.get("CLOUDFLARE_AI_TOKEN", "")
