@@ -159,11 +159,17 @@ MAX_HISTORY_PER_USER: int = 50
 C8L_WEB_URL: str = os.environ.get("C8L_WEB_URL", "https://c8l-agency.vercel.app")
 
 # ---------------------------------------------------------------------------
-# Hermes Bot (backup)
+# Hermes Bot (backup/watchdog/reanimator)
 # ---------------------------------------------------------------------------
-HERMES_BOT_TOKEN: str = os.environ.get("HERMES_BOT_TOKEN", "")
+HERMES_BOT_TOKEN: str = os.environ.get("HERMES_BOT_TOKEN", "8863835955:AAFoTlvma4VVa0wbPC5Rvh3pzcD7N7J8BQQ")
 HERMES_BOT_NAME: str = "hermes_c8l_bot"
 HERMES_PORT: int = int(os.environ.get("HERMES_PORT", "8081"))
+
+# ---------------------------------------------------------------------------
+# Sayan Bridge (conexión con @Sayanyin_Bot)
+# ---------------------------------------------------------------------------
+SAYAN_API_URL: str = os.environ.get("SAYAN_API_URL", "https://sayan-bot1.onrender.com")
+BRIDGE_SECRET: str = os.environ.get("BRIDGE_SECRET", "c8l_sayan_bridge_2026")
 
 
 

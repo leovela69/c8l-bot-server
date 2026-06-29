@@ -4,18 +4,18 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
+    healthCheckPath: /
+    autoDeployTrigger: commit
     envVars:
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: GEMINI_API_KEY_2
-        sync: false
-      - key: HUGGINGFACE_TOKEN
         sync: false
       - key: ADMIN_CHAT_ID
         sync: false
       - key: PORT
         value: "8080"
-      - key: RENDER_SERVICE_NAME
-        value: "c8l-bot-server"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: HUGGINGFACE_TOKEN
+        sync: false

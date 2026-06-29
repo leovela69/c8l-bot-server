@@ -59,6 +59,14 @@ from pantheon.tools import (
 # Import Auto-Repair Engine
 from pantheon.auto_repair import auto_repair, auto_capture
 
+# Import Hermes Watchdog (reanimador + puente con Sayan)
+try:
+    from hermes_watchdog import hermes_watchdog
+    hermes_watchdog.start()
+    logger.info("📢 Hermes Watchdog activo — vigilando + puente Sayan")
+except Exception as _hw_err:
+    logger.warning(f"⚠️ Hermes Watchdog no pudo arrancar: {_hw_err}")
+
 # Import Suno Auto-Healer (arranca monitoreo de token en background)
 try:
     from suno_auto_healer import start_healer
