@@ -1,6 +1,6 @@
 """
-🎬 VIDEO API — TODOS los Proveedores 100% GRATUITOS
-=====================================================
+🎬 VIDEO API — 7 Proveedores GRATUITOS + 1 PREMIUM (admin-locked)
+===================================================================
 Máximo de herramientas FREE para el bot. Sin tarjeta de crédito.
 
 Proveedores GRATIS (7):
@@ -12,7 +12,11 @@ Proveedores GRATIS (7):
 6. HuggingFace Inference — Modelos open source gratis
 7. Perchance — 80+ estilos imágenes (sin API key)
 
-EXCLUIDOS (de pago):
+Proveedor PREMIUM (🔒 ADMIN-ONLY):
+8. ComfyUI Cloud — RTX 6000 Pro, 900+ modelos, $20-100/mes
+   ⚠️ BLOQUEADO por defecto. Solo Leo puede activarlo.
+
+EXCLUIDOS (de pago sin API útil):
 ❌ Runway ($12/mes), Luma ($30/mes), Kling ($5/mes)
 ❌ Artlist ($199/año), Grok ($5/mes), Replicate ($/uso)
 """
@@ -47,6 +51,7 @@ class VideoProvider(Enum):
     CLOUDFLARE = "cloudflare"
     HUGGINGFACE = "huggingface"
     PERCHANCE = "perchance"
+    COMFYUI_CLOUD = "comfyui_cloud"  # 🔒 PREMIUM — Admin-only
 
 
 
@@ -319,9 +324,10 @@ class HuggingFaceVideoAPI:
 
 class VideoAPI:
     """
-    API unificada — 7 proveedores 100% GRATUITOS
+    API unificada — 7 proveedores GRATUITOS + 1 PREMIUM (admin-locked)
     Fallback automático: si uno falla, prueba el siguiente.
-    Costo total de operación: $0/mes.
+    ComfyUI Cloud: 🔒 SOLO con permiso explícito del admin.
+    Costo base de operación: $0/mes.
     """
 
     def __init__(self):
@@ -333,6 +339,14 @@ class VideoAPI:
             VideoProvider.CLOUDFLARE: CloudflareVideoAPI(),
             VideoProvider.HUGGINGFACE: HuggingFaceVideoAPI(),
         }
+        # 🔒 ComfyUI Cloud — inicializar solo si hay key
+        self._comfyui_cloud = None
+        try:
+            from film.comfyui_cloud import ComfyUICloudAPI
+            self._comfyui_cloud = ComfyUICloudAPI()
+        except ImportError:
+            pass
+
         self.current_provider = VideoProvider.AGNES
         self.fallback_order = [
             VideoProvider.POLLINATIONS,
@@ -401,25 +415,96 @@ class VideoAPI:
             except:
                 return {'status': 'error', 'error': 'No image provider available'}
 
+    # ==================================================================
+    # 🔒 PREMIUM: ComfyUI Cloud (Admin-only)
+    # ==================================================================
+
+    async def generate_video_premium(self, params: Dict, chat_id: str = "") -> Dict:
+        """
+        🔒 Genera video con ComfyUI Cloud (PREMIUM).
+        
+        REQUIERE autorización explícita del admin (Leo).
+        Sin autorización = BLOQUEADO automáticamente.
+        
+        Args:
+            params: {'prompt': str, 'duration': int, ...}
+            chat_id: ID del usuario que solicita
+            
+        Returns:
+            Dict con resultado o error de bloqueo
+        """
+        if not self._comfyui_cloud:
+            return {
+                'status': 'error',
+                'error': 'ComfyUI Cloud no disponible (módulo no instalado)',
+                'provider': 'comfyui_cloud'
+            }
+        
+        return await self._comfyui_cloud.generate(params, chat_id=chat_id)
+
+    async def generate_video_with_premium_fallback(self, params: Dict,
+                                                     chat_id: str = "") -> Dict:
+        """
+        Intenta generar con providers gratuitos primero.
+        Si TODOS fallan Y el usuario tiene permiso premium → usa ComfyUI Cloud.
+        
+        🔒 ComfyUI Cloud solo se usa como último recurso y solo si autorizado.
+        """
+        # Intentar gratuitos primero
+        try:
+            return await self.generate_video(params)
+        except Exception as free_error:
+            logger.warning(f"Todos los gratuitos fallaron: {free_error}")
+        
+        # Fallback a premium (si autorizado)
+        if self._comfyui_cloud:
+            result = await self._comfyui_cloud.generate(params, chat_id=chat_id)
+            if result.get('status') == 'blocked':
+                # No autorizado — re-raise el error gratuito
+                raise Exception(
+                    "Todos los proveedores gratuitos fallaron. "
+                    "Premium no autorizado para este usuario."
+                )
+            return result
+        
+        raise Exception("Todos los proveedores fallaron (gratuitos y premium no disponible)")
+
+    def get_premium_status(self, admin_chat_id: str = "") -> Dict:
+        """Estado del proveedor premium (info completa solo para admin)"""
+        if not self._comfyui_cloud:
+            return {'available': False, 'reason': 'Módulo no instalado'}
+        return self._comfyui_cloud.get_status()
+
     def get_status(self) -> Dict:
         """Estado completo del sistema"""
-        return {
+        status = {
             'current_provider': self.current_provider.value,
             'providers_count': len(self.providers),
-            'all_free': True,
-            'monthly_cost': '$0',
+            'free_providers': len(self.providers),
+            'monthly_cost_free': '$0',
             'stats': self.stats,
             'history_count': len(self.history),
             'providers': {
-                'agnes': {'status': 'active', 'type': 'video', 'limit': 'unlimited', 'quality': '4K'},
-                'puter': {'status': 'active', 'type': 'video', 'limit': 'unlimited', 'quality': 'Sora/Veo'},
-                'seedance': {'status': 'active', 'type': 'video', 'limit': 'free_tier', 'quality': '1080p'},
-                'pollinations': {'status': 'active', 'type': 'video', 'limit': 'unlimited', 'quality': '720p+'},
-                'cloudflare': {'status': 'active', 'type': 'image', 'limit': '10k tokens/day', 'quality': '1024px'},
-                'huggingface': {'status': 'active', 'type': 'video+image', 'limit': 'rate_limited', 'quality': '720p'},
-                'perchance': {'status': 'active', 'type': 'image', 'limit': 'unlimited', 'quality': '80+ styles'},
+                'agnes': {'status': 'active', 'type': 'video', 'limit': 'unlimited', 'quality': '4K', 'cost': '$0'},
+                'puter': {'status': 'active', 'type': 'video', 'limit': 'unlimited', 'quality': 'Sora/Veo', 'cost': '$0'},
+                'seedance': {'status': 'active', 'type': 'video', 'limit': 'free_tier', 'quality': '1080p', 'cost': '$0'},
+                'pollinations': {'status': 'active', 'type': 'video', 'limit': 'unlimited', 'quality': '720p+', 'cost': '$0'},
+                'cloudflare': {'status': 'active', 'type': 'image', 'limit': '10k tokens/day', 'quality': '1024px', 'cost': '$0'},
+                'huggingface': {'status': 'active', 'type': 'video+image', 'limit': 'rate_limited', 'quality': '720p', 'cost': '$0'},
+                'perchance': {'status': 'active', 'type': 'image', 'limit': 'unlimited', 'quality': '80+ styles', 'cost': '$0'},
+            },
+            'premium': {
+                'comfyui_cloud': {
+                    'status': 'available' if self._comfyui_cloud and self._comfyui_cloud.is_configured() else 'not_configured',
+                    'type': 'video+image',
+                    'quality': '4K, 900+ models, RTX 6000 Pro',
+                    'cost': '$20-100/mes',
+                    'locked': '🔒 ADMIN-ONLY (requiere permiso de Leo)',
+                    'warning': 'NADIE puede usar sin autorización explícita del admin'
+                }
             }
         }
+        return status
 
     def _record(self, provider, params, result, fallback=False):
         self.history.append({
