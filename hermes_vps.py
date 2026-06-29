@@ -35,7 +35,7 @@ from datetime import datetime
 
 # ===== CONFIG =====
 HERMES_TOKEN = os.environ.get("HERMES_BOT_TOKEN",
-    "8863835955:AAFoTlvma4VVa0wbPC5Rvh3pzcD7N7J8BQQ")
+    "8863835955:AAEYZ8HegFWPxND_RqKDM4a7Iy6_qRcZssI")
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID", "")
 BRIDGE_SECRET = os.environ.get("BRIDGE_SECRET", "c8l_sayan_bridge_2026")
 API_PORT = int(os.environ.get("HERMES_PORT", "9090"))
