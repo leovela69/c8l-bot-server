@@ -580,35 +580,22 @@ const firebaseConfig = {
 
 // Inicializar Firebase
 window._remotePhaseActive = false;
-try {
-  if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_')) {
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  // Escuchar cambios en /slot_config en tiempo real
-  db.ref('slot_config').on('value', (snapshot) => {
-    const config = snapshot.val();
-    if (!config) return;
-
-    // Control de fase: 0=Sequía, 1=Normal, 2=Extraordinaria, 'auto'=rotación automática
-    if (config.phase !== undefined && config.phase !== 'auto') {
-      window._remotePhase = parseInt(config.phase);
-      window._remotePhaseActive = true;
-      console.log('🎮 Fase remota activada:', window._remotePhase);
-    } else {
-      window._remotePhaseActive = false;
-      console.log('🎮 Fase remota desactivada: modo automático');
-    }
-
-    // Duración override (opcional)
-    if (config.duration) {
-      window._remotePhaseDuration = parseInt(config.duration);
-    }
-  });
-  console.log('Firebase conectado');
-  }
-} catch(e) {
-  window._remotePhaseActive = false;
+// Firebase se activará cuando pongas tus credenciales reales arriba
+// (reemplaza los YOUR_... con datos de tu proyecto Firebase)
+if (typeof firebase !== 'undefined' && firebaseConfig.apiKey.indexOf('YOUR_') === -1) {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    firebase.database().ref('slot_config').on('value', function(snapshot) {
+      var config = snapshot.val();
+      if (!config) return;
+      if (config.phase !== undefined && config.phase !== 'auto') {
+        window._remotePhase = parseInt(config.phase);
+        window._remotePhaseActive = true;
+      } else {
+        window._remotePhaseActive = false;
+      }
+    });
+  } catch(e) { window._remotePhaseActive = false; }
 }
 </script>
 
