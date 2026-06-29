@@ -1471,13 +1471,16 @@ function initSlot(assets){
     // Scatter bonus
     if(scatterLine){
       const fsAward=15, bonusMult=3;
+      // PARAR auto-spin inmediatamente
+      if(autoSpinActive) stopAutoSpin();
       showBonus(0, fsAward, 'scatter');
       botSay('¡¡¡BONUS ROUND!!! 🌟🌟🌟🌟🌟');
       addChat('🌟 ¡¡¡BONUS ROUND!!! '+fsAward+' giros x'+bonusMult,'freespin');
+      // Abrir bonus automáticamente después del cartel
       setTimeout(()=>{
         const bonusUrl='bonus_slot.html?spins='+fsAward+'&mult='+bonusMult+'&bet='+totalBet();
         window.open(bonusUrl,'_blank');
-      },3200);
+      },2500);
     }
 
     // Modo Rugido
