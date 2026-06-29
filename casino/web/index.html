@@ -1276,15 +1276,20 @@ function initSlot(assets){
     let forceCommon = false;
     let forcePremium = false;
     let forceScatter = false;
+    let forceNearScatter = 0; // 0=no, 3=casi(3), 4=muy cerca(4)
 
-    // Scatter: ~2% en real, ~5% en gratis (fuerza 5 scatters en payline)
+    // Scatter COMPLETO (5): ~2% en real, ~5% en gratis
     if(Math.random() < (isFreeSpin ? 0.05 : 0.02) && window._cycleSpins > 8){
       forceScatter = true;
+    }
+    // Near-scatter (3 o 4): MUY FRECUENTE para crear tensión
+    else if(Math.random() < (isFreeSpin ? 0.35 : 0.25)){
+      // 25% de giros muestra 3-4 scatters casi alineados
+      forceNearScatter = Math.random() < 0.70 ? 3 : 4; // 70% muestra 3, 30% muestra 4
     }
     // Premium: patrón no repetitivo (varía entre 60-120 giros)
     else if(window._cycleSpins >= window._nextPremium){
       forcePremium = true;
-      // Siguiente premium: distancia variable para que nunca sea predecible
       window._premiumPattern = Math.floor(60 + Math.random()*60);
       window._nextPremium = window._cycleSpins + (isFreeSpin ? Math.floor(20+Math.random()*20) : window._premiumPattern);
     }
@@ -1298,6 +1303,30 @@ function initSlot(assets){
       // 5 scatters en payline 0 (fila central [1,1,1,1,1])
       const scatterSym = SYMBOLS.find(s=>s.id==='scatter');
       for(let c=0;c<REELS;c++) grid[c][1] = scatterSym;
+    }
+    else if(forceNearScatter > 0){
+      // Colocar 3 o 4 scatters en la fila central (casi bonus!)
+      const scatterSym = SYMBOLS.find(s=>s.id==='scatter');
+      // Elegir posiciones para los scatters
+      const positions = [0,1,2,3,4];
+      // Shuffle y tomar las primeras N
+      for(let i=positions.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [positions[i],positions[j]]=[positions[j],positions[i]];
+      }
+      const scatterPositions = positions.slice(0, forceNearScatter);
+      for(const pos of scatterPositions){
+        grid[pos][1] = scatterSym;
+      }
+      // Las posiciones restantes: asegurar que NO sean scatter
+      const remaining = positions.slice(forceNearScatter);
+      for(const pos of remaining){
+        if(grid[pos][1].id==='scatter'){
+          let diff=rSym();
+          while(diff.id==='scatter') diff=rSym();
+          grid[pos][1]=diff;
+        }
+      }
     }
     else if(forcePremium){
       // 5 leones en una payline (fila central)
