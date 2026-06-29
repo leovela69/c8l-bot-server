@@ -1739,14 +1739,20 @@ function initSlot(assets){
           }
           sfxStop(col);
         } else {
+          // Frenando: usar símbolos del target para transición suave
+          let stripIdx=0;
           for(const sp of rl.strips){
             sp.y+=rl.speed*delta;
             if(sp.y>GY+GH+CELL){
               sp.y-=STRIP*CELL;
-              const ns=rSym();
-              sp.texture=texMap[ns.id];
-              sp.symData=ns;
+              // Mostrar el target correspondiente para que al frenar se vea natural
+              const tIdx=stripIdx%ROWS;
+              if(rl.target&&rl.target[tIdx]){
+                sp.texture=texMap[rl.target[tIdx].id];
+                sp.symData=rl.target[tIdx];
+              }
             }
+            stripIdx++;
           }
         }
       }
