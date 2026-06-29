@@ -132,12 +132,13 @@
         /* SLOT MACHINE WRAPPER */
         .slot-wrapper {
             position: relative;
-            padding: 20px;
+            padding: 30px;
             border: 3px solid #ffd700;
-            border-radius: 15px;
+            border-radius: 18px;
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 30px rgba(255, 215, 0, 0.1);
             animation: border-glow 3s ease-in-out infinite;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
+            overflow: visible;
         }
 
         @keyframes border-glow {
@@ -145,23 +146,36 @@
             50% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.7), inset 0 0 40px rgba(255, 215, 0, 0.2); }
         }
 
-        /* MARCO VIDEO (decorative frame) — DELANTE de los carretes */
+        /* MARCO VIDEO (decorative frame) — DETRÁS de los carretes, agrandado como marco exterior */
         .marco-frame {
             position: absolute;
-            top: -15px; left: -15px;
-            width: calc(100% + 30px);
-            height: calc(100% + 30px);
-            border-radius: 18px;
+            top: -30px; left: -30px;
+            width: calc(100% + 60px);
+            height: calc(100% + 60px);
+            border-radius: 22px;
             overflow: hidden;
             pointer-events: none;
-            opacity: 0.7;
-            z-index: 10;
+            opacity: 0.85;
+            z-index: 1;
+            -webkit-mask-image: linear-gradient(#000, #000);
+            mask-image: linear-gradient(#000, #000);
         }
 
         .marco-frame video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        /* Inner cutout so the marco only shows as a border frame, not covering reels */
+        .marco-frame::after {
+            content: '';
+            position: absolute;
+            top: 30px; left: 30px;
+            width: calc(100% - 60px);
+            height: calc(100% - 60px);
+            background: rgba(0, 0, 0, 0.95);
+            border-radius: 12px;
         }
 
         /* REEL GRID */
@@ -371,7 +385,19 @@
             }
 
             .slot-wrapper {
-                padding: 12px;
+                padding: 18px;
+            }
+
+            .marco-frame {
+                top: -18px; left: -18px;
+                width: calc(100% + 36px);
+                height: calc(100% + 36px);
+            }
+
+            .marco-frame::after {
+                top: 18px; left: 18px;
+                width: calc(100% - 36px);
+                height: calc(100% - 36px);
             }
 
             .reel-grid {

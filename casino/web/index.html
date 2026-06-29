@@ -194,56 +194,121 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 .chat-input button:hover{background:#f5d061}
 
 
-/* BONUS OVERLAY */
+/* BONUS OVERLAY — DYNAMIC CINEMATIC VERSION */
 #bonus-overlay{
   position:fixed;inset:0;display:none;align-items:center;justify-content:center;
-  z-index:9998;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);
-  flex-direction:column;gap:10px
+  z-index:9998;background:rgba(0,0,0,0);backdrop-filter:blur(0px);
+  flex-direction:column;gap:0;transition:background 0.4s, backdrop-filter 0.4s
 }
-#bonus-overlay.show{display:flex}
+#bonus-overlay.show{display:flex;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px)}
+#bonus-overlay .bonus-bg-rays{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden
+}
+#bonus-overlay .bonus-bg-rays::before{
+  content:'';position:absolute;top:50%;left:50%;width:200%;height:200%;
+  transform:translate(-50%,-50%);
+  background:conic-gradient(from 0deg,transparent 0%,rgba(212,160,23,0.06) 5%,transparent 10%,transparent 15%,rgba(245,208,97,0.04) 20%,transparent 25%);
+  animation:raysRotate 8s linear infinite
+}
+@keyframes raysRotate{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+
 .bonus-card{
-  text-align:center;animation:bonusIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
-  background:linear-gradient(135deg,#1a0f00,#2a1800,#1a0f00);
-  border:3px solid #d4a017;border-radius:20px;padding:30px 50px;
-  box-shadow:0 0 60px rgba(212,160,23,0.5),0 0 120px rgba(212,160,23,0.2),inset 0 0 30px rgba(212,160,23,0.1);
-  position:relative;overflow:visible
+  text-align:center;animation:bonusCardEntry 0.7s cubic-bezier(0.16,1,0.3,1);
+  background:radial-gradient(ellipse at 50% 30%,rgba(50,35,0,0.95) 0%,rgba(15,10,0,0.98) 70%);
+  border:2px solid transparent;border-radius:24px;padding:40px 60px;
+  position:relative;overflow:visible;
+  box-shadow:0 0 80px rgba(212,160,23,0.4),0 0 160px rgba(212,160,23,0.15),0 20px 60px rgba(0,0,0,0.8);
+  isolation:isolate
 }
+.bonus-card::before{
+  content:'';position:absolute;inset:-2px;border-radius:26px;
+  background:linear-gradient(135deg,#f5d061,#d4a017,#8b6914,#d4a017,#f5d061);
+  background-size:300% 300%;animation:borderShimmer 2s ease infinite;z-index:-1
+}
+@keyframes borderShimmer{
+  0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}
+}
+.bonus-card::after{
+  content:'';position:absolute;inset:0;border-radius:24px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(245,208,97,0.08) 0%,transparent 50%);
+  pointer-events:none
+}
+
 .bonus-lion{
-  font-size:60px;animation:lionEntry 0.8s cubic-bezier(0.34,1.56,0.64,1);
-  text-shadow:0 0 30px rgba(212,160,23,0.6);
-  position:relative
+  font-size:72px;position:relative;display:inline-block;
+  animation:lionSlam 0.8s cubic-bezier(0.22,1,0.36,1);
+  filter:drop-shadow(0 0 25px rgba(212,160,23,0.7))
 }
-@keyframes lionEntry{
-  0%{transform:translateX(-200px) scale(0.2) rotate(-30deg);opacity:0}
-  40%{transform:translateX(20px) scale(1.3) rotate(5deg);opacity:1}
-  60%{transform:translateX(-10px) scale(0.9) rotate(-3deg)}
-  80%{transform:translateX(5px) scale(1.1) rotate(2deg)}
-  100%{transform:translateX(0) scale(1) rotate(0)}
+@keyframes lionSlam{
+  0%{transform:translateY(-120px) scale(0.3) rotate(-20deg);opacity:0}
+  50%{transform:translateY(10px) scale(1.2) rotate(5deg);opacity:1}
+  70%{transform:translateY(-5px) scale(0.95) rotate(-2deg)}
+  100%{transform:translateY(0) scale(1) rotate(0)}
 }
 @keyframes lionRoar{
   0%,100%{transform:scale(1) rotate(0)}
-  10%{transform:scale(1.2) rotate(-5deg)}
-  20%{transform:scale(1.3) rotate(5deg)}
-  30%{transform:scale(1.1) rotate(-3deg)}
-  40%{transform:scale(1.2) rotate(3deg)}
-  50%{transform:scale(1) rotate(0)}
+  15%{transform:scale(1.25) rotate(-8deg)}
+  30%{transform:scale(1.35) rotate(6deg)}
+  45%{transform:scale(1.15) rotate(-4deg)}
+  60%{transform:scale(1.2) rotate(4deg)}
+  75%{transform:scale(1.05) rotate(-2deg)}
 }
-.bonus-lion.roar{animation:lionEntry 0.8s cubic-bezier(0.34,1.56,0.64,1), lionRoar 1.5s ease-in-out 0.8s infinite}
-.bonus-title{font-family:Georgia,serif;font-size:36px;font-weight:bold;color:#f5d061;text-shadow:0 0 20px rgba(245,208,97,0.6);letter-spacing:4px;margin-top:8px}
-.bonus-mult{font-size:28px;color:#ff6600;font-weight:bold;margin:8px 0;text-shadow:0 0 15px rgba(255,102,0,0.5);animation:pulseMult 0.5s ease infinite}
-@keyframes pulseMult{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.bonus-amount{font-family:Georgia,serif;font-size:40px;color:#4caf50;font-weight:bold;text-shadow:0 0 15px rgba(76,175,80,0.5);animation:countUp 0.5s ease-out}
-@keyframes countUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.bonus-sub{font-size:14px;color:#8b6914;margin-top:8px;letter-spacing:2px}
-.bonus-sparks{position:absolute;inset:-20px;pointer-events:none;overflow:hidden}
-.bonus-sparks::before,.bonus-sparks::after{
-  content:'✦';position:absolute;font-size:20px;color:#f5d061;
-  animation:sparkFloat 1.5s ease-in-out infinite
+.bonus-lion.roar{animation:lionSlam 0.8s cubic-bezier(0.22,1,0.36,1), lionRoar 1.8s ease-in-out 0.8s infinite}
+
+.bonus-title{
+  font-family:Georgia,serif;font-size:32px;font-weight:bold;letter-spacing:5px;margin-top:12px;
+  background:linear-gradient(180deg,#fff 0%,#f5d061 40%,#d4a017 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 2px 8px rgba(245,208,97,0.6));
+  animation:titleReveal 0.6s ease-out 0.3s both
 }
-.bonus-sparks::before{top:10%;left:10%;animation-delay:0s}
-.bonus-sparks::after{top:20%;right:15%;animation-delay:0.5s}
-@keyframes sparkFloat{0%,100%{opacity:0.3;transform:translateY(0) scale(0.8)}50%{opacity:1;transform:translateY(-10px) scale(1.2)}}
-@keyframes bonusIn{from{transform:scale(0) rotate(-15deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes titleReveal{from{opacity:0;transform:translateY(15px) scale(0.9);letter-spacing:12px}to{opacity:1;transform:translateY(0) scale(1);letter-spacing:5px}}
+
+.bonus-mult{
+  font-size:34px;font-weight:900;margin:12px 0;letter-spacing:2px;
+  background:linear-gradient(135deg,#ff6600,#ffaa00,#ff6600);
+  background-size:200% 200%;animation:multGlow 1s ease infinite, multEntry 0.5s ease-out 0.5s both;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 12px rgba(255,102,0,0.7))
+}
+@keyframes multGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes multEntry{from{opacity:0;transform:scale(0.3)}to{opacity:1;transform:scale(1)}}
+
+.bonus-amount{
+  font-family:Georgia,serif;font-size:44px;font-weight:bold;margin:8px 0;
+  color:#4caf50;text-shadow:0 0 20px rgba(76,175,80,0.6),0 0 40px rgba(76,175,80,0.3);
+  animation:amountPop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.7s both
+}
+@keyframes amountPop{from{opacity:0;transform:scale(0) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.bonus-sub{
+  font-size:13px;color:#a08030;margin-top:12px;letter-spacing:3px;text-transform:uppercase;
+  animation:subFade 0.5s ease 0.9s both
+}
+@keyframes subFade{from{opacity:0}to{opacity:1}}
+
+/* Floating particles container */
+.bonus-particles{position:absolute;inset:-40px;pointer-events:none;overflow:hidden;z-index:-1}
+.bonus-particle{
+  position:absolute;width:6px;height:6px;border-radius:50%;
+  animation:particleRise 2s ease-out infinite
+}
+@keyframes particleRise{
+  0%{opacity:0;transform:translateY(40px) scale(0)}
+  20%{opacity:1;transform:translateY(20px) scale(1)}
+  100%{opacity:0;transform:translateY(-80px) scale(0.5)}
+}
+/* Spark ring effect */
+.bonus-ring{
+  position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;
+  border:3px solid rgba(245,208,97,0.6);transform:translate(-50%,-50%);
+  animation:ringExpand 1s ease-out 0.2s both;pointer-events:none
+}
+@keyframes ringExpand{from{width:0;height:0;opacity:1;border-width:4px}to{width:350px;height:350px;opacity:0;border-width:1px}}
+.bonus-ring:nth-child(2){animation-delay:0.4s}
+.bonus-ring:nth-child(3){animation-delay:0.6s}
+
+@keyframes bonusCardEntry{from{transform:scale(0) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
 @keyframes screenShake{
   0%,100%{transform:translate(0)}
   10%{transform:translate(-8px,4px)}
@@ -443,13 +508,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050505;font-family:
 </div>
 
 <div id="bonus-overlay">
+  <div class="bonus-bg-rays"></div>
   <div class="bonus-card">
-    <div class="bonus-sparks"></div>
+    <div class="bonus-ring"></div>
+    <div class="bonus-ring"></div>
+    <div class="bonus-ring"></div>
+    <div class="bonus-particles" id="bonus-particles"></div>
     <div class="bonus-lion" id="bonus-lion">🦁</div>
     <div class="bonus-title" id="bonus-title">🎰 BONUS 🎰</div>
     <div class="bonus-mult" id="bonus-mult">x5</div>
     <div class="bonus-amount" id="bonus-amount">+125.000</div>
-    <div class="bonus-sub">¡FELICIDADES!</div>
+    <div class="bonus-sub" id="bonus-sub">¡FELICIDADES!</div>
   </div>
 </div>
 
@@ -660,42 +729,94 @@ function setPupilState(state){
   }
 }
 
-// ===== BONUS OVERLAY =====
+// ===== BONUS OVERLAY (DYNAMIC CINEMATIC) =====
 const bonusOverlay=document.getElementById('bonus-overlay');
 const bonusTitle=document.getElementById('bonus-title');
 const bonusMult=document.getElementById('bonus-mult');
 const bonusAmount=document.getElementById('bonus-amount');
+const bonusSub=document.getElementById('bonus-sub');
+const bonusParticles=document.getElementById('bonus-particles');
+
+function createBonusParticles(){
+  bonusParticles.innerHTML='';
+  const colors=['#f5d061','#d4a017','#ff6600','#ffaa00','#fff','#4caf50'];
+  for(let i=0;i<20;i++){
+    const p=document.createElement('div');
+    p.className='bonus-particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.top=(40+Math.random()*60)+'%';
+    p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDelay=(Math.random()*2)+'s';
+    p.style.animationDuration=(1.5+Math.random()*1.5)+'s';
+    p.style.width=(4+Math.random()*6)+'px';
+    p.style.height=p.style.width;
+    bonusParticles.appendChild(p);
+  }
+}
+
+function animateCounter(el, target, prefix){
+  const dur=800;
+  const start=performance.now();
+  const fmt2=(n)=>prefix+n.toLocaleString('es-ES');
+  el.textContent=fmt2(0);
+  function step(now){
+    const t=Math.min((now-start)/dur,1);
+    const ease=1-Math.pow(1-t,3);
+    const val=Math.round(target*ease);
+    el.textContent=fmt2(val);
+    if(t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
 function showBonus(amount, mult, type){
   if(type==='scatter'){
     bonusTitle.textContent='🌟 GIROS GRATIS 🌟';
     bonusMult.textContent=mult+' GIROS';
+    bonusSub.textContent='¡BONUS ROUND ACTIVADO!';
   } else if(type==='rugido'){
     bonusTitle.textContent='🦁 MODO RUGIDO 🦁';
     bonusMult.textContent='x'+mult;
+    bonusSub.textContent='¡MULTIPLICADOR ACTIVADO!';
   } else if(type==='jackpot'){
     bonusTitle.textContent='👑 JACKPOT 👑';
     bonusMult.textContent='¡¡¡MÁXIMO!!!';
+    bonusSub.textContent='¡¡¡HAS GANADO EL JACKPOT!!!';
   } else if(type==='bigwin'){
     bonusTitle.textContent='🦁 SUPER BONUS 🦁';
     bonusMult.textContent='x'+mult;
+    bonusSub.textContent='¡PREMIO ÉPICO!';
   } else if(type==='bonus'){
     bonusTitle.textContent='🎰 BONUS 🎰';
     bonusMult.textContent='x'+mult;
+    bonusSub.textContent='¡FELICIDADES!';
   } else {
     bonusTitle.textContent='🦁 ¡PREMIO! 🦁';
     bonusMult.textContent='¡ENHORABUENA!';
+    bonusSub.textContent='¡SIGUE ASÍ!';
   }
-  bonusAmount.textContent='+'+fmt(amount);
+  // Animated counter for amount
+  if(amount>0){
+    animateCounter(bonusAmount, amount, '+');
+  } else {
+    bonusAmount.textContent='+'+fmt(amount);
+  }
+  // Create dynamic particles
+  createBonusParticles();
   // Reset lion animation
   const bonusLion=document.getElementById('bonus-lion');
   bonusLion.classList.remove('roar');
-  void bonusLion.offsetWidth; // force reflow
+  void bonusLion.offsetWidth;
   bonusLion.classList.add('roar');
+  // Reset card animation
+  const card=bonusOverlay.querySelector('.bonus-card');
+  card.style.animation='none';
+  void card.offsetWidth;
+  card.style.animation='';
   bonusOverlay.classList.add('show');
   vibrateDevice([100,50,100,50,200]);
   shakeScreen();
-  const duration = (type==='win') ? 2000 : 3000;
+  const duration = (type==='win') ? 2500 : 3500;
   setTimeout(()=>{bonusOverlay.classList.remove('show');},duration);
 }
 bonusOverlay.addEventListener('click',()=>bonusOverlay.classList.remove('show'));
