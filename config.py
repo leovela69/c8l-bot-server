@@ -120,7 +120,7 @@ MUSICAPI_KEY: str = os.environ.get("MUSICAPI_KEY", "")
 # ---------------------------------------------------------------------------
 # Pollinations — Video/Imagen
 # ---------------------------------------------------------------------------
-POLLINATIONS_API_KEY_P: str = os.environ.get("POLLINATIONS_API_KEY", "")
+POLLINATIONS_API_KEY_P: str = os.environ.get("POLLINATIONS_API_KEY", "sk_MlXME9FBm9QeBjcpuYS9DbW95N5xGWg3")
 POLLINATIONS_BASE_URL: str = "https://gen.pollinations.ai"
 POLLINATIONS_VIDEO_URL: str = f"{POLLINATIONS_BASE_URL}/video"
 POLLINATIONS_IMAGE_URL: str = f"{POLLINATIONS_BASE_URL}/image"

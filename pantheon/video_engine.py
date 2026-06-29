@@ -514,7 +514,7 @@ class VideoEngine:
                 "duration": duration,
             }
 
-            # Solo enviar key si existe (Pollinations funciona sin key)
+            # Siempre enviar key (ahora es obligatoria)
             if POLLINATIONS_API_KEY_P:
                 params["key"] = POLLINATIONS_API_KEY_P
 
