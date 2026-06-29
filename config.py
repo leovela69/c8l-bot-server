@@ -164,3 +164,19 @@ C8L_WEB_URL: str = os.environ.get("C8L_WEB_URL", "https://c8l-agency.vercel.app"
 HERMES_BOT_TOKEN: str = os.environ.get("HERMES_BOT_TOKEN", "")
 HERMES_BOT_NAME: str = "hermes_c8l_bot"
 HERMES_PORT: int = int(os.environ.get("HERMES_PORT", "8081"))
+
+
+
+# ---------------------------------------------------------------------------
+# Hyperframes — Video Rendering Engine (HTML → MP4)
+# ---------------------------------------------------------------------------
+HYPERFRAMES_ENABLED: bool = os.environ.get("HYPERFRAMES_ENABLED", "true").lower() == "true"
+HYPERFRAMES_NODE_PATH: str = os.environ.get("HYPERFRAMES_NODE_PATH", "node")
+HYPERFRAMES_FFMPEG_PATH: str = os.environ.get("HYPERFRAMES_FFMPEG_PATH", "ffmpeg")
+HYPERFRAMES_DEFAULT_WIDTH: int = int(os.environ.get("HYPERFRAMES_WIDTH", "1920"))
+HYPERFRAMES_DEFAULT_HEIGHT: int = int(os.environ.get("HYPERFRAMES_HEIGHT", "1080"))
+HYPERFRAMES_DEFAULT_FPS: int = int(os.environ.get("HYPERFRAMES_FPS", "30"))
+HYPERFRAMES_MAX_DURATION: int = int(os.environ.get("HYPERFRAMES_MAX_DURATION", "60"))
+HYPERFRAMES_RENDER_TIMEOUT: int = int(os.environ.get("HYPERFRAMES_RENDER_TIMEOUT", "300"))
+VIDEOS_DIR: str = os.path.join(DATA_DIR, "videos")
+os.makedirs(VIDEOS_DIR, exist_ok=True)

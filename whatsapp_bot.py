@@ -68,6 +68,18 @@ except Exception as _healer_err:
     logger.warning(f"⚠️ Suno Auto-Healer no pudo arrancar: {_healer_err}")
     _suno_healer = None
 
+# Import Hyperframes Video Engine (HTML → MP4)
+try:
+    from hyperframes.telegram_handler import handle_video_command, is_video_intent, get_video_prompt_from_text
+    from hyperframes.engine import HyperframesEngine
+    _hyperframes_engine = HyperframesEngine()
+    _hyperframes_available = True
+    logger.info("🎬 Hyperframes Engine cargado")
+except Exception as _hf_err:
+    logger.warning(f"⚠️ Hyperframes no disponible: {_hf_err}")
+    _hyperframes_available = False
+    _hyperframes_engine = None
+
 # ---------------------------------------------------------------------------
 # Inicializar agentes
 # ---------------------------------------------------------------------------
@@ -495,48 +507,82 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
             threading.Thread(target=_gen_apolo, daemon=True).start()
 
         elif agent == "ares":
-            # Video — Genera VIDEO REAL con VideoEngine multi-motor
-            tg_typing(chat_id)
-            tg_send(chat_id, "🎬 Generando video con IA... (puede tardar 1-3 min)")
-            tg_video_action(chat_id)
+            # Video — detectar si es mejor usar Hyperframes (HTML→MP4) o Ares (AI video gen)
+            t_lower = text.lower()
+            use_hyperframes = _hyperframes_available and any(kw in t_lower for kw in [
+                'html', 'hyperframe', 'template', 'animación html', 'render html',
+                'motion graphic', 'tipografía', 'kinetic', 'intro animado',
+                'promo animada', 'stats video', 'logo animado'
+            ])
 
-            # Registrar para auto-evolución
-            evolution.record_generation(chat_id, text, "ares", "video")
+            if use_hyperframes:
+                # Usar Hyperframes para videos basados en HTML/templates
+                tg_typing(chat_id)
+                tg_send(chat_id, "🎬 Generando video con Hyperframes Engine...")
 
-            result = ares_bot.process(text, user_name)
-            if result:
-                rtype = result.get("type", "error")
-                if rtype == "video":
-                    # Video real generado — enviar como video MP4/GIF
-                    tg_video_action(chat_id)
-                    video_bytes = result["content"]
-                    filename = result.get("filename", "c8l_video.mp4")
-                    caption = result.get("caption", "🎬 Video generado por ARES")
-                    fmt = result.get("format", "mp4")
+                def _hf_dispatch():
+                    try:
+                        import asyncio
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        result = loop.run_until_complete(
+                            handle_video_command(
+                                text=text, chat_id=chat_id, user_name=user_name,
+                                send_fn=tg_send, typing_fn=tg_typing,
+                                video_fn=tg_send_video, video_action_fn=tg_video_action
+                            )
+                        )
+                        loop.close()
+                        if result.get('status') == 'ok':
+                            _send_feedback_buttons(chat_id)
+                    except Exception as e:
+                        logger.error(f"Hyperframes dispatch error: {e}")
+                        tg_send(chat_id, f"❌ Error Hyperframes: {str(e)[:150]}")
 
-                    if fmt == "gif":
-                        tg_send_animation(chat_id, video_bytes, caption=caption)
-                    else:
-                        tg_send_video(chat_id, video_bytes, filename=filename, caption=caption)
-                    _send_feedback_buttons(chat_id)
-
-                elif rtype == "text":
-                    # Guion/storyboard o fallback texto
-                    content = result["content"]
-                    if len(content) > 3000:
-                        pdf_bytes = generate_pdf(content, f"Video: {text[:40]}")
-                        tg_send_document(chat_id, pdf_bytes, "video_c8l.pdf",
-                                         caption=f"🎬 {text[:60]}")
-                    else:
-                        tg_send(chat_id, content)
-                    _send_feedback_buttons(chat_id)
-
-                elif rtype == "error":
-                    tg_send(chat_id, result.get("content", "❌ Error generando video."))
-                else:
-                    tg_send(chat_id, str(result.get("content", "Resultado no reconocido")))
+                threading.Thread(target=_hf_dispatch, daemon=True).start()
             else:
-                tg_send(chat_id, "❌ No pude generar el video. Intenta de nuevo en unos minutos.")
+                # Video estándar con Ares (AI video generation)
+                tg_typing(chat_id)
+                tg_send(chat_id, "🎬 Generando video con IA... (puede tardar 1-3 min)")
+                tg_video_action(chat_id)
+
+                # Registrar para auto-evolución
+                evolution.record_generation(chat_id, text, "ares", "video")
+
+                result = ares_bot.process(text, user_name)
+                if result:
+                    rtype = result.get("type", "error")
+                    if rtype == "video":
+                        # Video real generado — enviar como video MP4/GIF
+                        tg_video_action(chat_id)
+                        video_bytes = result["content"]
+                        filename = result.get("filename", "c8l_video.mp4")
+                        caption = result.get("caption", "🎬 Video generado por ARES")
+                        fmt = result.get("format", "mp4")
+
+                        if fmt == "gif":
+                            tg_send_animation(chat_id, video_bytes, caption=caption)
+                        else:
+                            tg_send_video(chat_id, video_bytes, filename=filename, caption=caption)
+                        _send_feedback_buttons(chat_id)
+
+                    elif rtype == "text":
+                        # Guion/storyboard o fallback texto
+                        content = result["content"]
+                        if len(content) > 3000:
+                            pdf_bytes = generate_pdf(content, f"Video: {text[:40]}")
+                            tg_send_document(chat_id, pdf_bytes, "video_c8l.pdf",
+                                             caption=f"🎬 {text[:60]}")
+                        else:
+                            tg_send(chat_id, content)
+                        _send_feedback_buttons(chat_id)
+
+                    elif rtype == "error":
+                        tg_send(chat_id, result.get("content", "❌ Error generando video."))
+                    else:
+                        tg_send(chat_id, str(result.get("content", "Resultado no reconocido")))
+                else:
+                    tg_send(chat_id, "❌ No pude generar el video. Intenta de nuevo en unos minutos.")
 
         elif agent == "hefesto":
             # Diseno / Codigo / Juegos
@@ -1922,6 +1968,54 @@ def main():
                 tg_send(msg.chat.id, f"❌ Error: {str(e)[:150]}")
 
         threading.Thread(target=_generate_and_send, daemon=True).start()
+
+    # ---------------------------------------------------------------------------
+    # /hf — Hyperframes Video (HTML → MP4 con templates y IA)
+    # ---------------------------------------------------------------------------
+    @bot.message_handler(commands=["hf", "hyperframes"])
+    def cmd_hyperframes(msg):
+        """Genera video HTML→MP4 con Hyperframes Engine."""
+        if not _hyperframes_available:
+            bot.reply_to(msg, "⚠️ Hyperframes no está disponible en este momento.")
+            return
+
+        text = msg.text
+        for prefix in ["/hf", "/hyperframes"]:
+            if text.startswith(prefix):
+                text = text[len(prefix):].strip()
+                break
+
+        chat_id = msg.chat.id
+        user_name = msg.from_user.first_name if msg.from_user else "User"
+
+        def _render():
+            try:
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+                result = loop.run_until_complete(
+                    handle_video_command(
+                        text=text,
+                        chat_id=chat_id,
+                        user_name=user_name,
+                        send_fn=tg_send,
+                        typing_fn=tg_typing,
+                        video_fn=tg_send_video,
+                        video_action_fn=tg_video_action
+                    )
+                )
+                loop.close()
+
+                if result.get('status') == 'ok':
+                    _send_feedback_buttons(chat_id)
+                    estia.record_interaction(chat_id, user_name, text, "hyperframes", "hyperframes")
+
+            except Exception as e:
+                logger.error(f"Error Hyperframes: {e}")
+                tg_send(chat_id, f"❌ Error en Hyperframes: {str(e)[:150]}")
+
+        threading.Thread(target=_render, daemon=True).start()
 
     @bot.message_handler(commands=["crear_imagen"])
     def cmd_imagen(msg):
