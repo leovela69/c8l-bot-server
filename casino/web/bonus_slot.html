@@ -289,6 +289,11 @@
             font-size: 1.5rem;
         }
 
+        .spin-btn.active {
+            background: linear-gradient(135deg, #ff4444, #cc0000, #ff4444) !important;
+            color: #fff !important;
+        }
+
         @keyframes btn-gradient {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -469,6 +474,7 @@
             </div>
 
             <button class="spin-btn" id="spin-btn" onclick="spin()">GIRAR BONUS (15 restantes)</button>
+            <button class="spin-btn" id="auto-btn" onclick="toggleAuto()" style="margin-top:8px;height:40px;font-size:1rem;background:linear-gradient(135deg,#8b6914,#d4a017,#8b6914);background-size:200% 200%;">AUTO</button>
 
             <div class="footer">
                 <div class="result" id="result-text"></div>
@@ -640,29 +646,15 @@
             if (!animFrameId) { lastTime = 0; animFrameId = requestAnimationFrame(animLoop); }
         }
 
-        // ========== SPIN LOGIC — Mismo sistema que máquina 1 ==========
-        // PAYLINES: SOLO las 3 filas horizontales (lo que el jugador VE)
-        const PAYLINES = [
-            [0,0,0,0,0],  // fila superior
-            [1,1,1,1,1],  // fila central
-            [2,2,2,2,2]   // fila inferior
-        ];
-
-        // Tabla de pagos bonus (más generosa que la principal)
+        // ========== SPIN LOGIC — Solo 3 filas horizontales ==========
         const BONUS_PAYTABLE = {
-            '10':  0.08,   // 8% apuesta
-            'j':   0.12,   // 12%
-            'q':   0.15,   // 15%
-            'k':   0.20,   // 20%
-            'a':   0.25,   // 25%
-            'leon': 5,     // x5 apuesta (premium)
-            'wild': 10,    // x10 apuesta
-            'scatter': 0
+            '10':  0.05,  'j': 0.08,  'q': 0.12,  'k': 0.15,  'a': 0.20,
+            'leon': 3,  'wild': 5,  'scatter': 0
         };
         const WILD_PENALTY = 0.6;
-
-        // Grid interno [col][row]
         let spinGrid = [];
+        let autoMode = false;
+        let autoTimer = null;
 
         function spin() {
             if (isSpinning || spinsLeft <= 0) return;
@@ -680,7 +672,7 @@
             });
             playSpin();
 
-            // === GENERAR GRID Y FORZAR RESULTADO ANTES DE GIRAR ===
+            // === GENERAR GRID ===
             spinGrid = [];
             for (let c = 0; c < 5; c++) {
                 const col = [];
@@ -688,57 +680,84 @@
                 spinGrid.push(col);
             }
 
-            // Bonus es MUY generoso (gratis): 85% gana algo
-            const roll = Math.random();
-            if (roll < 0.50) {
-                // 50%: forzar 5 comunes en una fila horizontal random
-                const commonSyms = symbols.filter(s => s.id !== 'scatter' && s.id !== 'wild' && s.id !== 'leon');
-                const sym = commonSyms[Math.floor(Math.random() * commonSyms.length)];
-                const row = Math.floor(Math.random() * 3); // fila 0, 1 o 2
-                for (let c = 0; c < 5; c++) spinGrid[c][row] = sym;
-                // 30% chance de wild en 1 posición
-                if (Math.random() < 0.30) {
-                    const wPos = Math.floor(Math.random() * 5);
-                    spinGrid[wPos][row] = symbols.find(s => s.id === 'wild');
-                }
-            } else if (roll < 0.70) {
-                // 20%: forzar 5 premium (león) en fila central
-                const leonSym = symbols.find(s => s.id === 'leon');
-                for (let c = 0; c < 5; c++) spinGrid[c][1] = leonSym;
-                if (Math.random() < 0.40) {
-                    spinGrid[Math.floor(Math.random() * 5)][1] = symbols.find(s => s.id === 'wild');
-                }
-            } else if (roll < 0.85) {
-                // 15%: dos filas ganadoras (x2!)
-                const commonSyms = symbols.filter(s => s.id !== 'scatter' && s.id !== 'wild' && s.id !== 'leon');
-                const sym1 = commonSyms[Math.floor(Math.random() * commonSyms.length)];
-                const sym2 = commonSyms[Math.floor(Math.random() * commonSyms.length)];
-                for (let c = 0; c < 5; c++) { spinGrid[c][1] = sym1; spinGrid[c][0] = sym2; }
+            // === SISTEMA DE 3 FASES ROTATIVAS (impredecible) ===
+            // Fase 0="Sequía" (dura MÁS: 5-10 giros, 20% chance premio)
+            // Fase 1="Normal" (dura MENOS: 2-4 giros, 45% chance premio)
+            // Fase 2="Extraordinaria" (MUY CORTA: 1-2 giros, 80% chance premio, RARA)
+            if (typeof window._bonusPhase === 'undefined') {
+                window._bonusPhase = 0; // empieza en sequía
+                window._bonusPhaseSpins = 0;
+                window._bonusPhaseLen = 5 + Math.floor(Math.random() * 6); // 5-10
             }
-            // 15%: sin premio — romper cualquier fila que tenga 5 iguales
-            else {
-                for (let row = 0; row < 3; row++) {
-                    const first = spinGrid[0][row];
-                    let count = 1;
-                    for (let c = 1; c < 5; c++) {
-                        if (spinGrid[c][row].id === first.id || spinGrid[c][row].id === 'wild') count++;
-                        else break;
-                    }
-                    if (count >= 5) {
-                        let diff = getRandomSymbol();
-                        while (diff.id === first.id || diff.id === 'wild') diff = getRandomSymbol();
-                        spinGrid[4][row] = diff;
-                    }
+            window._bonusPhaseSpins++;
+            if (window._bonusPhaseSpins >= window._bonusPhaseLen) {
+                const prev = window._bonusPhase;
+                // Transiciones: Sequía→Normal (70%) o Sequía→Extraordinaria (30%)
+                // Normal→Sequía (80%) o Normal→Extraordinaria (20%)
+                // Extraordinaria→Sequía (100%)
+                if (prev === 0) {
+                    window._bonusPhase = Math.random() < 0.70 ? 1 : 2;
+                } else if (prev === 1) {
+                    window._bonusPhase = Math.random() < 0.80 ? 0 : 2;
+                } else {
+                    window._bonusPhase = 0; // Extraordinaria siempre vuelve a sequía
+                }
+                window._bonusPhaseSpins = 0;
+                // Duración según fase
+                if (window._bonusPhase === 0) window._bonusPhaseLen = 5 + Math.floor(Math.random() * 6); // 5-10
+                else if (window._bonusPhase === 1) window._bonusPhaseLen = 2 + Math.floor(Math.random() * 3); // 2-4
+                else window._bonusPhaseLen = 1 + Math.floor(Math.random() * 2); // 1-2 (extraordinaria)
+            }
+
+            const phaseChance = [0.20, 0.45, 0.80][window._bonusPhase];
+            const shouldWin = Math.random() < phaseChance;
+
+            if (shouldWin) {
+                const commonSyms = symbols.filter(s => s.id !== 'scatter' && s.id !== 'wild' && s.id !== 'leon');
+                const tierRoll = Math.random();
+                if (tierRoll < 0.70) {
+                    // 70% de wins: comunes (premio pequeño)
+                    const sym = commonSyms[Math.floor(Math.random() * commonSyms.length)];
+                    const row = Math.floor(Math.random() * 3);
+                    for (let c = 0; c < 5; c++) spinGrid[c][row] = sym;
+                } else if (tierRoll < 0.90) {
+                    // 20% de wins: comunes con wild
+                    const sym = commonSyms[Math.floor(Math.random() * commonSyms.length)];
+                    const row = Math.floor(Math.random() * 3);
+                    for (let c = 0; c < 5; c++) spinGrid[c][row] = sym;
+                    spinGrid[Math.floor(Math.random() * 5)][row] = symbols.find(s => s.id === 'wild');
+                } else {
+                    // 10% de wins: león (premio gordo)
+                    const leonSym = symbols.find(s => s.id === 'leon');
+                    const row = Math.floor(Math.random() * 3);
+                    for (let c = 0; c < 5; c++) spinGrid[c][row] = leonSym;
                 }
             }
 
-            // Preparar strips con targets para transición suave
+            // === ROMPER coincidencias si NO toca ganar ===
+            for (let row = 0; row < 3; row++) {
+                const first = spinGrid[0][row];
+                let allSame = true;
+                let wildUsed = false;
+                for (let c = 1; c < 5; c++) {
+                    if (spinGrid[c][row].id === first.id) continue;
+                    if (spinGrid[c][row].id === 'wild' && !wildUsed) { wildUsed = true; continue; }
+                    allSame = false; break;
+                }
+                if (allSame && !shouldWin) {
+                    let diff = getRandomSymbol();
+                    while (diff.id === first.id || diff.id === 'wild') diff = getRandomSymbol();
+                    spinGrid[Math.floor(Math.random() * 3 + 2)][row] = diff;
+                }
+            }
+
+            // Preparar strips con targets
             for (let col = 0; col < 5; col++) {
                 colState[col].spinning = true;
                 colState[col].stopped = false;
                 colState[col].speed = 0;
                 colState[col].offset = 0;
-                colState[col].target = spinGrid[col]; // guardar target
+                colState[col].target = spinGrid[col];
                 for (let row = 0; row < 3; row++) {
                     const idx = row * 5 + col;
                     reelStrips[idx].style.transform = 'translateY(0)';
@@ -759,7 +778,6 @@
             }, 40);
             startAnim();
 
-            // Stop columns sequentially
             for (let col = 0; col < 5; col++) {
                 setTimeout(() => {
                     stopCol(col);
@@ -771,7 +789,6 @@
 
         function stopCol(col) {
             const cs = colState[col];
-            // Antes de frenar: poner targets en las imágenes del strip
             for (let row = 0; row < 3; row++) {
                 const idx = row * 5 + col;
                 const imgs = reelStrips[idx].querySelectorAll('img');
@@ -804,27 +821,28 @@
             brake();
         }
 
-        // === EVALUAR PAYLINES (solo 5 en línea, como máquina 1) ===
+        // === EVALUAR: solo filas horizontales con 5 EXACTOS iguales ===
         function finishSpin() {
             isSpinning = false;
-            let totalLineWin = 0;
+            let winAmount = 0;
             let linesWon = 0;
             let hasWild = false;
 
-            for (let p = 0; p < PAYLINES.length; p++) {
-                const pl = PAYLINES[p];
-                const syms = [];
-                for (let c = 0; c < 5; c++) syms.push(spinGrid[c][pl[c]]);
+            for (let row = 0; row < 3; row++) {
+                const rowSyms = [];
+                for (let c = 0; c < 5; c++) rowSyms.push(spinGrid[c][row]);
 
+                // Encontrar símbolo base (primer no-wild)
                 let baseSym = null, wildCount = 0;
-                for (const s of syms) {
+                for (const s of rowSyms) {
                     if (s.id === 'wild') wildCount++;
                     else if (!baseSym) baseSym = s;
                 }
                 if (!baseSym || wildCount > 1) continue;
 
+                // Verificar que TODOS sean iguales (o wild)
                 let allMatch = true, usedWild = false;
-                for (const s of syms) {
+                for (const s of rowSyms) {
                     if (s.id === baseSym.id) continue;
                     if (s.id === 'wild' && !usedWild) { usedWild = true; continue; }
                     allMatch = false; break;
@@ -832,51 +850,60 @@
 
                 if (allMatch) {
                     linesWon++;
-                    const payVal = BONUS_PAYTABLE[baseSym.id] || 0;
-                    let win = 0;
-                    if (payVal < 1) win = Math.round(bet * 20 * payVal); // porcentaje de apuesta total
-                    else win = Math.round(bet * 20 * payVal); // multiplicador
+                    const payVal = BONUS_PAYTABLE[baseSym.id] || 0.05;
+                    let win = payVal < 1 
+                        ? Math.round(bet * multiplier * payVal)  
+                        : Math.round(bet * multiplier * payVal);
                     if (usedWild) { win = Math.round(win * WILD_PENALTY); hasWild = true; }
-                    totalLineWin += win;
+                    winAmount += win;
 
-                    // Highlight celdas ganadoras
+                    // Highlight fila ganadora
                     for (let c = 0; c < 5; c++) {
-                        const idx = pl[c] * 5 + c;
+                        const idx = row * 5 + c;
                         cells[idx].classList.add('winning');
                     }
                 }
             }
 
             // Multi-línea
-            let winAmount = totalLineWin;
-            if (linesWon >= 3) winAmount = totalLineWin * 3;
-            else if (linesWon >= 2) winAmount = totalLineWin * 2;
-
-            // Aplicar multiplicador de bonus
-            winAmount = Math.round(winAmount * multiplier);
+            if (linesWon >= 3) winAmount *= 3;
+            else if (linesWon >= 2) winAmount *= 2;
 
             if (winAmount > 0) {
                 accumulated += winAmount;
                 document.body.classList.add('shaking');
                 setTimeout(() => document.body.classList.remove('shaking'), 500);
                 spawnParticles();
-
-                const wildTxt = hasWild ? ' (comodín)' : '';
-                const linesTxt = linesWon > 1 ? ` [${linesWon} líneas x${Math.min(linesWon, 3)}]` : '';
-
-                if (linesWon >= 2 || winAmount >= bet * 20 * 3) {
-                    playMegaWin();
-                    showMegaOverlay();
-                    document.getElementById('result-text').textContent = `🎉 +${winAmount.toLocaleString()}${wildTxt}${linesTxt} 🎉`;
-                } else {
-                    playWin();
-                    document.getElementById('result-text').textContent = `✨ +${winAmount.toLocaleString()}${wildTxt} ✨`;
-                }
+                playWin();
+                const wildTxt = hasWild ? ' (comodín -40%)' : '';
+                const linesTxt = linesWon > 1 ? ` [${linesWon} líneas x${linesWon}]` : '';
+                document.getElementById('result-text').textContent = `+${winAmount.toLocaleString()}${wildTxt}${linesTxt}`;
             } else {
-                document.getElementById('result-text').textContent = '— Sin coincidencias —';
+                document.getElementById('result-text').textContent = '— Sin premio —';
             }
 
             updateUI();
+
+            // Auto-spin
+            if (autoMode && spinsLeft > 0) {
+                autoTimer = setTimeout(() => { if (autoMode && spinsLeft > 0) spin(); }, 1500);
+            }
+        }
+
+        // === AUTO SPIN ===
+        function toggleAuto() {
+            autoMode = !autoMode;
+            const btn = document.getElementById('auto-btn');
+            if (autoMode) {
+                btn.textContent = 'STOP AUTO';
+                btn.classList.add('active');
+                if (!isSpinning && spinsLeft > 0) spin();
+            } else {
+                btn.textContent = 'AUTO';
+                btn.classList.remove('active');
+                if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+            }
+        }
         }
 
         function updateUI() {

@@ -1172,23 +1172,54 @@ function initSlot(assets){
 
     // === FORZAR RESULTADO EN EL GRID ANTES DE GIRAR ===
     if(typeof window._cycleSpins==='undefined') window._cycleSpins=0;
-    if(typeof window._lastWinSpin==='undefined') window._lastWinSpin=0;
     if(typeof window._premiumPattern==='undefined') window._premiumPattern=Math.floor(60+Math.random()*60);
     if(typeof window._nextPremium==='undefined') window._nextPremium=window._premiumPattern;
     window._cycleSpins++;
 
+    // === SISTEMA DE 3 FASES ROTATIVAS ===
+    // Fase 0="Sequía": dura 8-15 giros, 15% chance común
+    // Fase 1="Normal": dura 3-6 giros, 40% chance común
+    // Fase 2="Extraordinaria": dura 1-3 giros, 75% chance, MUY RARA
+    if(typeof window._mainPhase==='undefined'){
+      window._mainPhase=0;
+      window._mainPhaseSpins=0;
+      window._mainPhaseLen=8+Math.floor(Math.random()*8); // 8-15
+    }
+    window._mainPhaseSpins++;
+    if(window._mainPhaseSpins>=window._mainPhaseLen){
+      const prev=window._mainPhase;
+      if(prev===0) window._mainPhase=Math.random()<0.75?1:2;
+      else if(prev===1) window._mainPhase=Math.random()<0.85?0:2;
+      else window._mainPhase=0;
+      window._mainPhaseSpins=0;
+      if(window._mainPhase===0) window._mainPhaseLen=8+Math.floor(Math.random()*8);
+      else if(window._mainPhase===1) window._mainPhaseLen=3+Math.floor(Math.random()*4);
+      else window._mainPhaseLen=1+Math.floor(Math.random()*3);
+    }
+
     const isFreeSpin = freeSpins > 0;
+    // En giros gratis: fases más generosas
+    const phaseChances = isFreeSpin ? [0.35, 0.60, 0.85] : [0.15, 0.40, 0.75];
+    const currentChance = phaseChances[window._mainPhase];
+
     let forceCommon=false, forcePremium=false, forceScatter=false, forceNearScatter=0;
 
+    // Scatter (bonus): 2% real, 5% gratis
     if(Math.random() < (isFreeSpin ? 0.05 : 0.02) && window._cycleSpins > 8){
       forceScatter = true;
-    } else if(Math.random() < (isFreeSpin ? 0.35 : 0.25)){
+    }
+    // Near-scatter (tensión): 20% real, 30% gratis
+    else if(Math.random() < (isFreeSpin ? 0.30 : 0.20)){
       forceNearScatter = Math.random() < 0.70 ? 3 : 4;
-    } else if(window._cycleSpins >= window._nextPremium){
+    }
+    // Premium: patrón no repetitivo
+    else if(window._cycleSpins >= window._nextPremium){
       forcePremium = true;
       window._premiumPattern = Math.floor(60 + Math.random()*60);
       window._nextPremium = window._cycleSpins + (isFreeSpin ? Math.floor(20+Math.random()*20) : window._premiumPattern);
-    } else if(Math.random() < (isFreeSpin ? 0.90 : 0.80)){
+    }
+    // Común: depende de la fase actual
+    else if(Math.random() < currentChance){
       forceCommon = true;
     }
 
