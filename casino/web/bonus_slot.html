@@ -640,8 +640,31 @@
             if (!animFrameId) { lastTime = 0; animFrameId = requestAnimationFrame(animLoop); }
         }
 
-        // ========== SPIN LOGIC (premios basados en coincidencias reales) ==========
-        // El bonus es SIEMPRE gratis, así que es generoso
+        // ========== SPIN LOGIC — Mismo sistema que máquina 1 ==========
+        // PAYLINES del bonus (mismas 20 que la máquina principal)
+        const PAYLINES = [
+            [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
+            [0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,0],
+            [2,1,1,1,2],[1,0,1,2,1],[1,2,1,0,1],[0,0,1,0,0],[2,2,1,2,2],
+            [0,1,0,1,0],[2,1,2,1,2],[1,0,1,0,1],[1,2,1,2,1],[0,1,2,2,1]
+        ];
+
+        // Tabla de pagos bonus (más generosa que la principal)
+        const BONUS_PAYTABLE = {
+            '10':  0.08,   // 8% apuesta
+            'j':   0.12,   // 12%
+            'q':   0.15,   // 15%
+            'k':   0.20,   // 20%
+            'a':   0.25,   // 25%
+            'leon': 5,     // x5 apuesta (premium)
+            'wild': 10,    // x10 apuesta
+            'scatter': 0
+        };
+        const WILD_PENALTY = 0.6;
+
+        // Grid interno [col][row]
+        let spinGrid = [];
+
         function spin() {
             if (isSpinning || spinsLeft <= 0) return;
             initAudio();
@@ -658,12 +681,69 @@
             });
             playSpin();
 
-            // Start columns spinning
+            // === GENERAR GRID Y FORZAR RESULTADO ANTES DE GIRAR ===
+            spinGrid = [];
+            for (let c = 0; c < 5; c++) {
+                const col = [];
+                for (let r = 0; r < 3; r++) col.push(getRandomSymbol());
+                spinGrid.push(col);
+            }
+
+            // Bonus es MUY generoso (gratis): 85% gana algo
+            const roll = Math.random();
+            if (roll < 0.50) {
+                // 50%: forzar 5 comunes en payline random
+                const commonSyms = symbols.filter(s => s.id !== 'scatter' && s.id !== 'wild' && s.id !== 'leon');
+                const sym = commonSyms[Math.floor(Math.random() * commonSyms.length)];
+                const plIdx = Math.floor(Math.random() * PAYLINES.length);
+                const pl = PAYLINES[plIdx];
+                for (let c = 0; c < 5; c++) spinGrid[c][pl[c]] = sym;
+                // 30% chance de wild en 1 posición
+                if (Math.random() < 0.30) {
+                    const wPos = Math.floor(Math.random() * 5);
+                    spinGrid[wPos][pl[wPos]] = symbols.find(s => s.id === 'wild');
+                }
+            } else if (roll < 0.70) {
+                // 20%: forzar 5 premium (león) en fila central
+                const leonSym = symbols.find(s => s.id === 'leon');
+                for (let c = 0; c < 5; c++) spinGrid[c][1] = leonSym;
+                if (Math.random() < 0.40) {
+                    spinGrid[Math.floor(Math.random() * 5)][1] = symbols.find(s => s.id === 'wild');
+                }
+            } else if (roll < 0.85) {
+                // 15%: dos líneas ganadoras (x2!)
+                const commonSyms = symbols.filter(s => s.id !== 'scatter' && s.id !== 'wild' && s.id !== 'leon');
+                const sym1 = commonSyms[Math.floor(Math.random() * commonSyms.length)];
+                const sym2 = commonSyms[Math.floor(Math.random() * commonSyms.length)];
+                const pl1 = PAYLINES[0]; // fila central
+                const pl2 = PAYLINES[1]; // fila superior
+                for (let c = 0; c < 5; c++) { spinGrid[c][pl1[c]] = sym1; spinGrid[c][pl2[c]] = sym2; }
+            }
+            // 15%: sin premio (grid random) — romper coincidencias accidentales
+            else {
+                for (let p = 0; p < PAYLINES.length; p++) {
+                    const pl = PAYLINES[p];
+                    const first = spinGrid[0][pl[0]];
+                    let count = 1;
+                    for (let c = 1; c < 5; c++) {
+                        if (spinGrid[c][pl[c]].id === first.id || spinGrid[c][pl[c]].id === 'wild') count++;
+                        else break;
+                    }
+                    if (count >= 5) {
+                        let diff = getRandomSymbol();
+                        while (diff.id === first.id || diff.id === 'wild') diff = getRandomSymbol();
+                        spinGrid[4][pl[4]] = diff;
+                    }
+                }
+            }
+
+            // Preparar strips con targets para transición suave
             for (let col = 0; col < 5; col++) {
                 colState[col].spinning = true;
                 colState[col].stopped = false;
                 colState[col].speed = 0;
                 colState[col].offset = 0;
+                colState[col].target = spinGrid[col]; // guardar target
                 for (let row = 0; row < 3; row++) {
                     const idx = row * 5 + col;
                     reelStrips[idx].style.transform = 'translateY(0)';
@@ -684,51 +764,26 @@
             }, 40);
             startAnim();
 
-            // === GENERAR RESULTADO BASADO EN COINCIDENCIAS REALES ===
-            // El bonus es generoso: 65% chance de forzar coincidencias
-            const newSymbols = generateBonusGrid();
-
             // Stop columns sequentially
             for (let col = 0; col < 5; col++) {
                 setTimeout(() => {
-                    stopCol(col, newSymbols);
+                    stopCol(col);
                     playStop(col);
-                    if (col === 4) setTimeout(() => finishSpin(newSymbols), 350);
+                    if (col === 4) setTimeout(() => finishSpin(), 350);
                 }, 1100 + col * 260);
             }
         }
 
-        // Genera grid con probabilidades generosas (es bonus = gratis)
-        function generateBonusGrid() {
-            const newSymbols = [];
-            // Generar grid completamente aleatorio primero
-            for (let i = 0; i < 15; i++) newSymbols.push(getRandomSymbol());
-
-            // Bonus es generoso: forzar coincidencias frecuentes
-            const forceRoll = Math.random();
-            if (forceRoll < 0.35) {
-                // 35% — 3 iguales en fila 1
-                const sym = symbols[Math.floor(Math.random() * symbols.length)];
-                newSymbols[0] = sym; newSymbols[1] = sym; newSymbols[2] = sym;
-            } else if (forceRoll < 0.55) {
-                // 20% — 4 iguales en fila 1
-                const sym = symbols[Math.floor(Math.random() * symbols.length)];
-                newSymbols[0] = sym; newSymbols[1] = sym; newSymbols[2] = sym; newSymbols[3] = sym;
-            } else if (forceRoll < 0.62) {
-                // 7% — 5 iguales en fila 1 (LINEA COMPLETA)
-                const sym = symbols[Math.floor(Math.random() * symbols.length)];
-                newSymbols[0] = sym; newSymbols[1] = sym; newSymbols[2] = sym; newSymbols[3] = sym; newSymbols[4] = sym;
-            } else if (forceRoll < 0.75) {
-                // 13% — 3 iguales en fila 2
-                const sym = symbols[Math.floor(Math.random() * symbols.length)];
-                newSymbols[5] = sym; newSymbols[6] = sym; newSymbols[7] = sym;
-            }
-            // 25% — completamente aleatorio (puede o no tener coincidencias naturales)
-            return newSymbols;
-        }
-
-        function stopCol(col, newSymbols) {
+        function stopCol(col) {
             const cs = colState[col];
+            // Antes de frenar: poner targets en las imágenes del strip
+            for (let row = 0; row < 3; row++) {
+                const idx = row * 5 + col;
+                const imgs = reelStrips[idx].querySelectorAll('img');
+                if (imgs[0] && cs.target && cs.target[row]) {
+                    imgs[0].src = cs.target[row].img;
+                }
+            }
             const brake = () => {
                 cs.speed *= 0.7;
                 if (cs.speed < 1.5) {
@@ -738,7 +793,7 @@
                     for (let row = 0; row < 3; row++) {
                         const idx = row * 5 + col;
                         const cell = cells[idx];
-                        const sym = newSymbols[idx];
+                        const sym = spinGrid[col][row];
                         cellSymbols[idx] = sym;
                         cell.classList.remove('spinning');
                         cell.classList.add('stopped');
@@ -754,73 +809,73 @@
             brake();
         }
 
-        // === EVALUAR COINCIDENCIAS REALES DEL GRID VISIBLE ===
-        function evaluateGrid(newSymbols) {
-            let bestMatch = 0;
-            let bestRow = -1;
-            let matchId = '';
+        // === EVALUAR PAYLINES (solo 5 en línea, como máquina 1) ===
+        function finishSpin() {
+            isSpinning = false;
+            let totalLineWin = 0;
+            let linesWon = 0;
+            let hasWild = false;
 
-            // Evaluar cada fila (3 filas)
-            for (let row = 0; row < 3; row++) {
-                const rowSyms = [];
-                for (let col = 0; col < 5; col++) {
-                    rowSyms.push(newSymbols[row * 5 + col]);
+            for (let p = 0; p < PAYLINES.length; p++) {
+                const pl = PAYLINES[p];
+                const syms = [];
+                for (let c = 0; c < 5; c++) syms.push(spinGrid[c][pl[c]]);
+
+                let baseSym = null, wildCount = 0;
+                for (const s of syms) {
+                    if (s.id === 'wild') wildCount++;
+                    else if (!baseSym) baseSym = s;
                 }
-                // Contar coincidencias consecutivas desde la izquierda
-                let count = 1;
-                const firstId = rowSyms[0].id;
-                for (let c = 1; c < 5; c++) {
-                    if (rowSyms[c].id === firstId || rowSyms[c].id === 'wild') {
-                        count++;
-                    } else {
-                        break;
+                if (!baseSym || wildCount > 1) continue;
+
+                let allMatch = true, usedWild = false;
+                for (const s of syms) {
+                    if (s.id === baseSym.id) continue;
+                    if (s.id === 'wild' && !usedWild) { usedWild = true; continue; }
+                    allMatch = false; break;
+                }
+
+                if (allMatch) {
+                    linesWon++;
+                    const payVal = BONUS_PAYTABLE[baseSym.id] || 0;
+                    let win = 0;
+                    if (payVal < 1) win = Math.round(bet * 20 * payVal); // porcentaje de apuesta total
+                    else win = Math.round(bet * 20 * payVal); // multiplicador
+                    if (usedWild) { win = Math.round(win * WILD_PENALTY); hasWild = true; }
+                    totalLineWin += win;
+
+                    // Highlight celdas ganadoras
+                    for (let c = 0; c < 5; c++) {
+                        const idx = pl[c] * 5 + c;
+                        cells[idx].classList.add('winning');
                     }
                 }
-                if (count >= 3 && count > bestMatch) {
-                    bestMatch = count;
-                    bestRow = row;
-                    matchId = firstId;
-                }
             }
-            return { matchCount: bestMatch, row: bestRow, symbolId: matchId };
-        }
 
-        function finishSpin(newSymbols) {
-            isSpinning = false;
+            // Multi-línea
+            let winAmount = totalLineWin;
+            if (linesWon >= 3) winAmount = totalLineWin * 3;
+            else if (linesWon >= 2) winAmount = totalLineWin * 2;
 
-            // Evaluar coincidencias REALES visibles
-            const result = evaluateGrid(newSymbols);
-            let winAmount = 0;
+            // Aplicar multiplicador de bonus
+            winAmount = Math.round(winAmount * multiplier);
 
-            if (result.matchCount >= 3) {
-                // Calcular premio basado en coincidencias reales
-                if (result.matchCount === 5) {
-                    winAmount = Math.round(bet * (10 + Math.random() * 10) * multiplier);
-                } else if (result.matchCount === 4) {
-                    winAmount = Math.round(bet * (4 + Math.random() * 4) * multiplier);
-                } else {
-                    winAmount = Math.round(bet * (1.5 + Math.random() * 1.5) * multiplier);
-                }
-
+            if (winAmount > 0) {
                 accumulated += winAmount;
-
-                // Highlight las celdas ganadoras REALES
-                for (let col = 0; col < result.matchCount; col++) {
-                    const idx = result.row * 5 + col;
-                    cells[idx].classList.add('winning');
-                }
-
                 document.body.classList.add('shaking');
                 setTimeout(() => document.body.classList.remove('shaking'), 500);
                 spawnParticles();
 
-                if (result.matchCount === 5) {
+                const wildTxt = hasWild ? ' (comodín)' : '';
+                const linesTxt = linesWon > 1 ? ` [${linesWon} líneas x${Math.min(linesWon, 3)}]` : '';
+
+                if (linesWon >= 2 || winAmount >= bet * 20 * 3) {
                     playMegaWin();
                     showMegaOverlay();
-                    document.getElementById('result-text').textContent = `🎉 ¡¡LINEA COMPLETA!! +${winAmount.toLocaleString()} 🎉`;
+                    document.getElementById('result-text').textContent = `🎉 +${winAmount.toLocaleString()}${wildTxt}${linesTxt} 🎉`;
                 } else {
                     playWin();
-                    document.getElementById('result-text').textContent = `✨ ${result.matchCount} iguales: +${winAmount.toLocaleString()} ✨`;
+                    document.getElementById('result-text').textContent = `✨ +${winAmount.toLocaleString()}${wildTxt} ✨`;
                 }
             } else {
                 document.getElementById('result-text').textContent = '— Sin coincidencias —';
