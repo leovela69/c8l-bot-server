@@ -190,3 +190,12 @@ SKILLSCAN_API_KEY: str = os.environ.get("SKILLSCAN_API_KEY", "")
 SKILLSCAN_API_URL: str = os.environ.get("SKILLSCAN_API_URL", "https://skillscan.dev/api/v1")
 SKILLSCAN_AUTO_AUDIT: bool = os.environ.get("SKILLSCAN_AUTO_AUDIT", "true").lower() == "true"
 SKILLSCAN_AUDIT_INTERVAL: int = int(os.environ.get("SKILLSCAN_AUDIT_INTERVAL", "3600"))
+
+
+
+# ---------------------------------------------------------------------------
+# Film Production — Video APIs Gratuitas
+# ---------------------------------------------------------------------------
+AGNES_API_KEY: str = os.environ.get("AGNES_API_KEY", "")
+CLOUDFLARE_ACCOUNT_ID: str = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
+CLOUDFLARE_AI_TOKEN: str = os.environ.get("CLOUDFLARE_AI_TOKEN", "")
