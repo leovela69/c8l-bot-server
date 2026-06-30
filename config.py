@@ -205,3 +205,118 @@ SKILLSCAN_AUDIT_INTERVAL: int = int(os.environ.get("SKILLSCAN_AUDIT_INTERVAL", "
 AGNES_API_KEY: str = os.environ.get("AGNES_API_KEY", "sk-XwX3WByBNCD72zmSK0Q2MPW8fadnVsl8Z1NEheY0k8NL69HN")
 CLOUDFLARE_ACCOUNT_ID: str = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
 CLOUDFLARE_AI_TOKEN: str = os.environ.get("CLOUDFLARE_AI_TOKEN", "")
+
+
+
+# ===========================================================================
+# ⚡ PLAN ANTIGRAVITY v4.0 — Configuración de Nuevos Servicios
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# 🧠 NLP / Intent Engine (3-Layer Triage)
+# ---------------------------------------------------------------------------
+# Capa 0: Cache
+INTENT_CACHE_SIZE: int = int(os.environ.get("INTENT_CACHE_SIZE", "1000"))
+INTENT_CACHE_TTL: int = int(os.environ.get("INTENT_CACHE_TTL", "600"))  # 10 min
+
+# Capa 1: Modelo ligero (DistilBERT / Groq 1B)
+GROQ_LIGHT_MODEL: str = os.environ.get("GROQ_LIGHT_MODEL", "llama-3.2-1b-preview")
+HF_INFERENCE_URL: str = "https://api-inference.huggingface.co/models"
+HF_INTENT_MODEL: str = os.environ.get("HF_INTENT_MODEL", "distilbert-base-uncased")
+HF_SENTIMENT_MODEL: str = os.environ.get("HF_SENTIMENT_MODEL", "distilbert-base-uncased-finetuned-sst-2-english")
+
+# Capa 2: LLM completo (ya configurado arriba como GROQ_API_KEY / MODELS)
+
+# ---------------------------------------------------------------------------
+# 🌐 Cloudflare AI Gateway (Caché de LLM, retry, monitorización)
+# ---------------------------------------------------------------------------
+CF_AI_GATEWAY_URL: str = os.environ.get("CF_AI_GATEWAY_URL", "")
+CF_AI_GATEWAY_ID: str = os.environ.get("CF_AI_GATEWAY_ID", "")
+
+# ---------------------------------------------------------------------------
+# 📡 Cloudflare Workers / KV (Cache distribuido)
+# ---------------------------------------------------------------------------
+CF_WORKERS_URL: str = os.environ.get("CF_WORKERS_URL", "")
+CF_KV_NAMESPACE: str = os.environ.get("CF_KV_NAMESPACE", "")
+CF_KV_TOKEN: str = os.environ.get("CF_KV_TOKEN", "")
+
+# ---------------------------------------------------------------------------
+# 🔊 TTS / STT
+# ---------------------------------------------------------------------------
+EDGE_TTS_DEFAULT_VOICE: str = os.environ.get("EDGE_TTS_VOICE", "es-MX-DaliaNeural")
+WHISPER_MODEL: str = os.environ.get("WHISPER_MODEL", "whisper-large-v3-turbo")
+
+# ---------------------------------------------------------------------------
+# 👁️ Vision
+# ---------------------------------------------------------------------------
+GROQ_VISION_MODEL: str = os.environ.get("GROQ_VISION_MODEL", "llama-3.2-90b-vision-preview")
+GROQ_VISION_LIGHT: str = os.environ.get("GROQ_VISION_LIGHT", "llama-3.2-11b-vision-preview")
+
+# ---------------------------------------------------------------------------
+# 📖 OCR
+# ---------------------------------------------------------------------------
+OCR_SPACE_API_KEY: str = os.environ.get("OCR_SPACE_API_KEY", "helloworld")
+OCR_SPACE_URL: str = "https://api.ocr.space/parse/image"
+
+# ---------------------------------------------------------------------------
+# 🌤️ Weather (Open-Meteo — sin API key)
+# ---------------------------------------------------------------------------
+OPEN_METEO_URL: str = "https://api.open-meteo.com/v1/forecast"
+NOMINATIM_URL: str = "https://nominatim.openstreetmap.org/search"
+
+# ---------------------------------------------------------------------------
+# 💰 Crypto (CoinGecko — sin API key)
+# ---------------------------------------------------------------------------
+COINGECKO_URL: str = "https://api.coingecko.com/api/v3"
+
+# ---------------------------------------------------------------------------
+# 📰 News
+# ---------------------------------------------------------------------------
+GNEWS_API_KEY: str = os.environ.get("GNEWS_API_KEY", "")
+GNEWS_URL: str = "https://gnews.io/api/v4"
+
+# ---------------------------------------------------------------------------
+# 🌐 Translation (MyMemory — sin API key)
+# ---------------------------------------------------------------------------
+MYMEMORY_URL: str = "https://api.mymemory.translated.net/get"
+
+# ---------------------------------------------------------------------------
+# 🎬 FreeBeat AI — Videos Musicales con IA
+# ---------------------------------------------------------------------------
+FREEBEAT_URL: str = os.environ.get("FREEBEAT_URL", "https://freebeat.ai")
+FREEBEAT_ENABLED: bool = os.environ.get("FREEBEAT_ENABLED", "true").lower() == "true"
+
+# ---------------------------------------------------------------------------
+# 🎭 Playwright (Web Browser Automation)
+# ---------------------------------------------------------------------------
+PLAYWRIGHT_ENABLED: bool = os.environ.get("PLAYWRIGHT_ENABLED", "false").lower() == "true"
+PLAYWRIGHT_TIMEOUT: int = int(os.environ.get("PLAYWRIGHT_TIMEOUT", "15000"))
+
+# ---------------------------------------------------------------------------
+# 📷 Cloudinary (Imágenes/Videos — 25GB gratis)
+# ---------------------------------------------------------------------------
+CLOUDINARY_URL: str = os.environ.get("CLOUDINARY_URL", "")
+CLOUDINARY_CLOUD_NAME: str = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
+CLOUDINARY_API_KEY: str = os.environ.get("CLOUDINARY_API_KEY", "")
+CLOUDINARY_API_SECRET: str = os.environ.get("CLOUDINARY_API_SECRET", "")
+
+# ---------------------------------------------------------------------------
+# 🔮 Proactive Engine
+# ---------------------------------------------------------------------------
+PROACTIVE_ENABLED: bool = os.environ.get("PROACTIVE_ENABLED", "true").lower() == "true"
+PROACTIVE_MIN_PATTERN_COUNT: int = int(os.environ.get("PROACTIVE_MIN_PATTERNS", "3"))
+
+# ---------------------------------------------------------------------------
+# ⏰ Automation Scheduler
+# ---------------------------------------------------------------------------
+SCHEDULER_ENABLED: bool = os.environ.get("SCHEDULER_ENABLED", "true").lower() == "true"
+NIGHTLY_LEARN_HOUR: int = int(os.environ.get("NIGHTLY_LEARN_HOUR", "3"))  # 3 AM
+
+# ---------------------------------------------------------------------------
+# 📊 Plan Antigravity — Feature Flags
+# ---------------------------------------------------------------------------
+ANTIGRAVITY_ENABLED: bool = os.environ.get("ANTIGRAVITY_ENABLED", "true").lower() == "true"
+TRIAGE_3LAYER_ENABLED: bool = os.environ.get("TRIAGE_3LAYER", "true").lower() == "true"
+MEMORY_V4_ENABLED: bool = os.environ.get("MEMORY_V4", "true").lower() == "true"
+SKILLS_V4_ENABLED: bool = os.environ.get("SKILLS_V4", "true").lower() == "true"
+EVENT_BUS_ENABLED: bool = os.environ.get("EVENT_BUS", "true").lower() == "true"

@@ -3035,7 +3035,7 @@ def main():
             _respond_in_group(chat_id, text, user_name)
             return
 
-        # En PRIVADO: flujo normal con Zeus
+        # En PRIVADO: flujo normal
         logger.info(f"[{user_name}] ({chat_id}): {text[:80]}")
         tg_typing(chat_id)
 
@@ -3045,7 +3045,22 @@ def main():
         # XP por mensaje
         levels.add_xp(msg.from_user.id, user_name, "message")
 
-        # Zeus analiza y decide
+        # ⚡ ANTIGRAVITY v4.0 — Triage de 3 capas (intercepta antes de Zeus)
+        try:
+            from antigravity import antigravity_process
+            ag_response = antigravity_process(
+                text=text,
+                chat_id=str(chat_id),
+                user_name=user_name,
+                user_id=str(msg.from_user.id),
+            )
+            if ag_response:
+                tg_send(chat_id, ag_response)
+                return
+        except Exception as _ag_err:
+            logger.debug(f"Antigravity bypass: {_ag_err}")
+
+        # Fallback: Zeus analiza y decide (sistema clásico)
         intent_data = analyze_intent(text, user_name)
         logger.info(f"  Zeus -> {intent_data.get('primary_agent', '?').upper()}")
 

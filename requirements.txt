@@ -6,5 +6,10 @@ python-chess>=1.10.0
 google-genai>=1.0.0
 aiohttp>=3.9.0
 
-# VPS extras (quitar fondos, edicion avanzada)
-# rembg se instala aparte con: pip install rembg[cpu]
+# ⚡ Plan Antigravity v4.0 — Nuevas dependencias ultraligeras
+edge-tts>=6.1.0              # TTS gratuito sin límite (Microsoft Neural voices)
+sympy>=1.12                  # Calculadora científica simbólica
+
+# Opcional — instalar solo en VPS con recursos:
+# playwright>=1.40.0         # Web browser automation (requiere: playwright install chromium)
+# rembg[cpu]                 # Quitar fondos de imágenes
