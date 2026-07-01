@@ -2288,6 +2288,111 @@ async def cmd_withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     result = eco.withdraw_diamonds(user_id, amount)
     await update.message.reply_text(result["message"], parse_mode="Markdown")
 
+
+# ---------------------------------------------------------------------------
+# SEGURIDAD CRÍTICA — /killswitch, /admin_streamer, /securitylog
+# ---------------------------------------------------------------------------
+@admin_only
+async def cmd_killswitch(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /killswitch PASSWORD — Apaga el bot (requiere master password).
+    """
+    from security.master_keys import get_security
+
+    sec = get_security()
+    user_id = str(update.effective_user.id)
+    text = update.message.text.replace("/killswitch", "").strip()
+
+    if not text:
+        await update.message.reply_text(
+            "🔐 *Kill Switch*\n\n"
+            "Uso: `/killswitch TU_MASTER_PASSWORD`\n\n"
+            "⚠️ Esto APAGARÁ el bot completamente.\n"
+            "Solo usa esto en emergencias.",
+            parse_mode="Markdown",
+        )
+        return
+
+    auth = sec.authorize_critical(user_id, text)
+    if not auth["authorized"]:
+        await update.message.reply_text(f"🔒 {auth['reason']}")
+        return
+
+    await update.message.reply_text(
+        "🔴 *KILL SWITCH ACTIVADO*\n\n"
+        "Bot apagándose en 3 segundos...\n"
+        "_Para reiniciar: /deploy restart desde Hermes_",
+        parse_mode="Markdown",
+    )
+
+    # Apagar
+    import sys
+    await asyncio.sleep(3)
+    sys.exit(0)
+
+
+@admin_only
+async def cmd_admin_streamer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /admin_streamer add USER_ID NOMBRE — Agregar streamer C8L
+    /admin_streamer remove USER_ID — Quitar streamer
+    /admin_streamer list — Ver todos
+    """
+    from security.streamers import get_streamer_manager
+
+    sm = get_streamer_manager()
+    text = update.message.text.replace("/admin_streamer", "").strip()
+    args = text.split()
+
+    if not args:
+        stats = sm.get_stats()
+        await update.message.reply_text(
+            f"{stats}\n\n"
+            "Comandos:\n"
+            "`/admin_streamer add USER_ID Nombre` — Agregar\n"
+            "`/admin_streamer remove USER_ID` — Quitar\n"
+            "`/admin_streamer list` — Ver todos",
+            parse_mode="Markdown",
+        )
+        return
+
+    subcmd = args[0].lower()
+
+    if subcmd == "add" and len(args) >= 2:
+        user_id = args[1]
+        name = " ".join(args[2:]) if len(args) > 2 else ""
+        result = sm.add_streamer(user_id, name)
+        await update.message.reply_text(result["message"], parse_mode="Markdown")
+
+    elif subcmd == "remove" and len(args) >= 2:
+        user_id = args[1]
+        result = sm.remove_streamer(user_id)
+        await update.message.reply_text(result["message"], parse_mode="Markdown")
+
+    elif subcmd == "list":
+        streamers = sm.list_streamers()
+        if not streamers:
+            await update.message.reply_text("🎬 No hay streamers activos.")
+            return
+        lines = [f"  {s['badge']} `{s['user_id'][:10]}` — *{s['name']}* (desde {s['added_at']})"
+                 for s in streamers]
+        await update.message.reply_text(
+            f"🎬 *Streamers C8L ({len(streamers)}):*\n\n" + "\n".join(lines),
+            parse_mode="Markdown",
+        )
+    else:
+        await update.message.reply_text(
+            "Uso: `/admin_streamer add|remove|list`", parse_mode="Markdown")
+
+
+@admin_only
+async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/securitylog — Ver log de seguridad."""
+    from security.master_keys import get_security
+    sec = get_security()
+    log_text = sec.get_security_log(limit=15)
+    await update.message.reply_text(log_text, parse_mode="Markdown")
+
     # Visual Guide
     app.add_handler(CommandHandler("guide", cmd_guide))
 
@@ -2310,6 +2415,11 @@ async def cmd_withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     app.add_handler(CommandHandler("comprar", cmd_buy))
     app.add_handler(CommandHandler("tienda", cmd_shop))
     app.add_handler(CommandHandler("retirar", cmd_withdraw))
+
+    # Seguridad y Streamers (admin + password)
+    app.add_handler(CommandHandler("killswitch", cmd_killswitch))
+    app.add_handler(CommandHandler("admin_streamer", cmd_admin_streamer))
+    app.add_handler(CommandHandler("securitylog", cmd_securitylog))
 
     # Mensajes de texto (catch-all)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
