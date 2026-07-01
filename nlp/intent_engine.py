@@ -456,14 +456,31 @@ class Layer1LightClassifier:
 # ---------------------------------------------------------------------------
 class Layer2FullLLM:
     """
-    Capa 2: Llama al LLM grande (Groq Llama 3.3 70B / OpenRouter).
+    Capa 2: Llama al LLM grande via API Router Infinito.
     Solo se activa cuando:
     - Capa 0 y 1 no pudieron resolver
     - El mensaje es ambiguo o complejo
     - Se requiere generación creativa
 
-    Optimización: Comprime el contexto antes de enviar.
+    Usa api_router.py para rotación infinita entre proveedores.
+    NUNCA falla porque el router siempre encuentra un proveedor disponible.
     """
+
+    CLASSIFY_PROMPT = """Analiza el siguiente mensaje de usuario y devuelve un JSON con:
+- "intent": la intención principal (crear_imagen, crear_musica, crear_video, crear_codigo, investigar, estrategia, diagnostico, traducir, clima, crypto, noticias, recordatorio, calcular, conversacion, jugar_casino, jugar_ajedrez)
+- "primary_agent": quién debe manejarlo (hermes=chat, vulcano=imagen, apolo=musica, ares=video, hefesto=codigo/juegos, minerva=investigar, atenea=estrategia, aries=diagnostico, artemisa=redes, estia=memoria)
+- "task_description": descripción breve de lo que quiere el usuario
+- "secondary_agents": lista de agentes auxiliares si aplica
+- "requires_memory": true si necesita contexto previo
+- "priority": "low", "medium" o "high"
+
+REGLAS:
+- Si no está claro, usa intent="conversacion" y agent="hermes"
+- Si pide CREAR algo, identifica QUÉ tipo de creación
+- Si pregunta algo, es "investigar" con "minerva"
+- Si es chat casual, "conversacion" con "hermes"
+
+Responde SOLO con el JSON, sin explicaciones."""
 
     def __init__(self):
         self.call_count = 0
@@ -472,31 +489,45 @@ class Layer2FullLLM:
     def process(self, text: str, user_name: str = "Usuario",
                 user_context: str = "") -> TriageResult:
         """
-        Llama a Zeus (LLM) para analizar intención compleja.
+        Llama al LLM via API Router Infinito para analizar intención.
         Siempre devuelve un resultado (es la última capa).
         """
         self.call_count += 1
+        self.last_call_time = time.time()
 
         try:
-            # Import Zeus para análisis completo
-            from pantheon.zeus import analyze_intent
-            result = analyze_intent(text, user_name)
+            from api_router import get_router
 
-            if result and isinstance(result, dict):
-                return TriageResult(
-                    intent=result.get("intent", "desconocido"),
-                    agent=result.get("primary_agent", "hermes"),
-                    confidence=0.85,  # LLM analysis
-                    layer=2,
-                    task_description=result.get("task_description", text[:200]),
-                    secondary_agents=result.get("secondary_agents", []),
-                    requires_memory=result.get("requires_memory", True),
-                    priority=result.get("priority", "medium"),
-                )
+            router = get_router()
+            user_msg = f"[Usuario: {user_name}] Mensaje: {text[:500]}"
+            if user_context:
+                user_msg += f"\n[Contexto: {user_context[:200]}]"
+
+            response = router.quick(
+                prompt=user_msg,
+                system=self.CLASSIFY_PROMPT,
+                max_tokens=256,
+            )
+
+            if response:
+                # Parsear JSON de la respuesta
+                result = self._parse_llm_response(response)
+                if result:
+                    return TriageResult(
+                        intent=result.get("intent", "conversacion"),
+                        agent=result.get("primary_agent", "hermes"),
+                        confidence=0.85,
+                        layer=2,
+                        task_description=result.get("task_description", text[:200]),
+                        secondary_agents=result.get("secondary_agents", []),
+                        requires_memory=result.get("requires_memory", True),
+                        priority=result.get("priority", "medium"),
+                    )
+
         except Exception as e:
             logger.error(f"Layer2 LLM error: {e}")
 
-        # Ultimate fallback
+        # Ultimate fallback — NUNCA deja sin respuesta
         return TriageResult(
             intent="conversacion_general",
             agent="hermes",
@@ -506,6 +537,24 @@ class Layer2FullLLM:
             requires_memory=True,
             priority="low",
         )
+
+    def _parse_llm_response(self, response: str) -> Optional[Dict]:
+        """Extrae JSON de la respuesta del LLM."""
+        import json as json_mod
+        try:
+            # Intentar parsear directamente
+            return json_mod.loads(response)
+        except json_mod.JSONDecodeError:
+            pass
+        # Buscar JSON dentro del texto
+        try:
+            start = response.find("{")
+            end = response.rfind("}") + 1
+            if start >= 0 and end > start:
+                return json_mod.loads(response[start:end])
+        except (json_mod.JSONDecodeError, ValueError):
+            pass
+        return None
 
     def get_stats(self) -> Dict:
         return {
