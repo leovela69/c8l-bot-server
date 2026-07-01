@@ -2028,6 +2028,7 @@ def main():
 
     # Watchdog
     app.add_handler(CommandHandler("watchdog", cmd_watchdog))
+    _start_bot(app)
 
 
 # ---------------------------------------------------------------------------
@@ -2405,6 +2406,7 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_text = sec.get_security_log(limit=15)
     await update.message.reply_text(log_text, parse_mode="Markdown")
 
+def _start_bot(app):
     # Visual Guide
     app.add_handler(CommandHandler("guide", cmd_guide))
 
