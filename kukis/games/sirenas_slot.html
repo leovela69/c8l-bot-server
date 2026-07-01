@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>C8L Casino — Sirenas Slot</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; background:#020a0c; overflow:hidden; }
+  canvas { display:block; }
+  #loading {
+    position:fixed; inset:0; background:#020a0c; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; z-index:10; gap:12px;
+  }
+  #loading h1 { color:#00e3fd; font-family:Georgia,serif; font-size:22px; letter-spacing:2px; }
+  #loading p { color:#00616d; font-family:monospace; font-size:11px; }
+  #loadtrack { width:220px; height:4px; background:#00363d; border-radius:2px; overflow:hidden; }
+  #loadbar { width:0%; height:100%; background:#00daf3; transition:width .2s; }
+</style>
+</head>
+<body>
+<div id="loading">
+  <h1>🧜 SIRENAS SLOT</h1>
+  <p>Cargando El Reino Sumergido...</p>
+  <div id="loadtrack"><div id="loadbar"></div></div>
+</div>
+
+<script src="https://pixijs.download/v7.3.2/pixi.min.js"></script>
+<script>
+window.SLOT_CONFIG = {
+  title: 'C8L LEGENDS',
+  subtitle: 'SIRENAS SLOT',
+  assetPath: 'assets/sirenas/',
+  colorAccent: 0x00b8c9,
+  colorAccentLight: 0x66f0ff,
+  colorAccentDim: 0x2a7a86,
+  colorText: 0xdfffff,
+  multiModeLabel: 'MODO\nMAREA',
+  startCredits: 150000000,
+  startJackpot: 42800000,
+  winEmojis: ['🧜','🐚','💎','⭐'],
+  symbols: [
+    {id:'sirena',   img:'sym_sirena.png',   w:3, pay:{5:500,4:100,3:25}},
+    {id:'perla',    img:'sym_perla.png',    w:2, pay:{5:1000,4:200,3:50}},
+    {id:'concha',   img:'sym_concha.png',   w:2, pay:{5:100,4:20,3:5}},
+    {id:'tridente', img:'sym_tridente.png', w:5, pay:{5:50,4:15,3:5}},
+    {id:'estrella', img:'sym_estrella.png', w:6, pay:{5:40,4:12,3:4}},
+    {id:'ancla',    img:'sym_ancla.png',    w:7, pay:{5:30,4:10,3:3}},
+    {id:'ola',      img:'sym_ola.png',      w:8, pay:{5:20,4:8,3:2}},
+    {id:'burbuja',  img:'sym_burbuja.png',  w:9, pay:{5:15,4:5,3:2}},
+  ],
+};
+</script>
+<script src="assets/slot_engine_generic.js"></script>
+</body>
+</html>
