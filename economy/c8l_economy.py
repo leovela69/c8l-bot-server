@@ -46,7 +46,8 @@ os.makedirs(DATA_DIR, exist_ok=True)
 # CONFIGURACIÓN DE PRECIOS
 # ===================================================================
 
-COIN_PRICE_USD = 0.015  # 1 coin = $0.015
+PAYPAL_PAYMENT_LINK = os.environ.get("PAYPAL_PAYMENT_LINK", "https://www.paypal.com/ncp/payment/YFQBHL69MXWBN")
+PAYPAL_BUTTON_ID = "YFQBHL69MXWBN"
 COINS_PER_DIAMOND = 3   # 3 coins regalados = 1 diamante
 MIN_WITHDRAWAL_DIAMONDS = 1000  # Mínimo para retirar
 

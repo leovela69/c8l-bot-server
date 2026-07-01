@@ -2184,20 +2184,31 @@ async def cmd_gift(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handler para /comprar — Comprar pack de coins."""
-    from economy.c8l_economy import get_c8l_economy
+    """Handler para /comprar — Comprar pack de coins via PayPal."""
+    from economy.c8l_economy import get_c8l_economy, PAYPAL_PAYMENT_LINK, COIN_PACKS
+
     eco = get_c8l_economy()
     user_id = str(update.effective_user.id)
     text = update.message.text.replace("/comprar", "").strip()
 
-    if not text:
-        packs = eco.get_packs_text()
-        await update.message.reply_text(packs, parse_mode="Markdown")
-        return
+    # Mostrar packs + link de PayPal
+    packs_text = eco.get_packs_text()
 
-    pack_name = text.lower().split()[0]
-    result = eco.purchase_coins(user_id, pack_name)
-    await update.message.reply_text(result["message"], parse_mode="Markdown")
+    keyboard = [[InlineKeyboardButton("💳 Pagar con PayPal", url=PAYPAL_PAYMENT_LINK)]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(
+        f"{packs_text}\n\n"
+        f"{'─'*30}\n\n"
+        f"📋 *Instrucciones:*\n"
+        f"1️⃣ Haz click en el botón de abajo\n"
+        f"2️⃣ Paga el monto del pack que elijas\n"
+        f"3️⃣ Escribe tu ID: `{user_id}`\n"
+        f"4️⃣ Los coins se acreditan en 5-10 min\n\n"
+        f"🆔 Tu ID: `{user_id}` _(cópialo al pagar)_",
+        parse_mode="Markdown",
+        reply_markup=reply_markup,
+    )
 
 
 async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
