@@ -1983,7 +1983,6 @@ def main():
     logger.info(f"   Puerto health: {PORT}")
     logger.info("")
 
-    import sys
     sys.stdout.write(">>> PUNTO 1: Antes de crear Application\n")
     sys.stdout.flush()
 
