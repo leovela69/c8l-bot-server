@@ -368,8 +368,8 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/imagen [descripcion] — Generar imagen\n"
         "/musica [estilo] — Crear cancion\n"
         "/video [concepto] — Crear video\n"
-        "/pelicula [idea] [minutos] — Estudio de produccion (guion+voz+montaje)\n"
-        "/juego [descripcion] — Diseñar juego 3D/4D poligonal\n"
+        "/pelicula [idea] [minutos] — Estudio de produccion (guion+voz+montaje) 🔒 Premium\n"
+        "/juego [descripcion] — Diseñar juego 3D/4D poligonal 🔒 Premium\n"
         "/codigo [que quieres] — Generar codigo\n\n"
         "🎮 *Juegos:*\n"
         "/casino — Jugar slots\n"
@@ -1637,9 +1637,30 @@ async def cmd_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Error: {r.message}")
 
 
+async def _require_premium(update: Update, feature: str) -> bool:
+    """
+    Chequea si el usuario puede usar una feature premium (juego, pelicula, ...).
+    Si no puede, le responde por qué y devuelve False.
+    """
+    from suno_credits import SunoCreditsManager
+
+    user_id = str(update.effective_user.id)
+    cm = SunoCreditsManager()
+    check = cm.can_generate(user_id, feature)
+    if not check["allowed"]:
+        await update.message.reply_text(
+            f"🔒 *Función premium*\n\n{check['reason']}\n\n"
+            f"Canjea un código con `/premium CODIGO` o pídele uno al admin.",
+            parse_mode="Markdown",
+        )
+        return False
+    return True
+
+
 async def cmd_juego(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handler para /juego — Arquitecto de videojuegos poligonales 3D/4D.
+    Función premium.
 
     Uso:
         /juego un laberinto de cristal con enemigos voladores
@@ -1652,7 +1673,7 @@ async def cmd_juego(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not text:
         await update.message.reply_text(
-            "🏗️ *Polygon Architect*\n\n"
+            "🏗️ *Polygon Architect* (función premium)\n\n"
             "Describeme el nivel/juego que quieres y lo diseño:\n\n"
             "`/juego un laberinto de cristal con enemigos voladores`\n"
             "`/juego arena flotante con portales 4D y trampas`\n\n"
@@ -1662,9 +1683,13 @@ async def cmd_juego(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    if not await _require_premium(update, "juego"):
+        return
+
     status_msg = await update.message.reply_text("🏗️ Repartiendo el diseño entre los sirvientes...")
 
     from game_designer.polygon_architect import get_architect
+    from suno_credits import SunoCreditsManager
 
     architect = get_architect()
     result = await asyncio.to_thread(architect.design, text)
@@ -1673,6 +1698,7 @@ async def cmd_juego(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await status_msg.edit_text(result.message, parse_mode="Markdown")
         return
 
+    SunoCreditsManager().record_generation(str(update.effective_user.id), "juego")
     await status_msg.edit_text(result.message, parse_mode="Markdown")
     with open(result.html_path, "rb") as f:
         await update.message.reply_document(
@@ -1713,6 +1739,9 @@ async def cmd_pelicula(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    if not await _require_premium(update, "pelicula"):
+        return
+
     minutes = 3.0
     match = re.search(r"(\d+(?:\.\d+)?)\s*$", text)
     if match:
@@ -1731,6 +1760,7 @@ async def cmd_pelicula(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
     from film_studio.producer import get_producer
+    from suno_credits import SunoCreditsManager
 
     producer = get_producer()
     result = await producer.produce(text, target_minutes=minutes, progress_cb=progress)
@@ -1739,6 +1769,7 @@ async def cmd_pelicula(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await status_msg.edit_text(result.message, parse_mode="Markdown")
         return
 
+    SunoCreditsManager().record_generation(str(update.effective_user.id), "pelicula")
     await status_msg.edit_text(result.message, parse_mode="Markdown")
 
     if result.size_mb < 45:

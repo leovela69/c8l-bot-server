@@ -41,17 +41,19 @@ TIER_LIMITS = {
     UserTier.ADMIN: {
         "daily_limit": 999,
         "cooldown_seconds": 0,
-        "features": ["generate", "extend", "remix", "lyrics", "stems", "feed", "concat"],
+        "features": ["generate", "extend", "remix", "lyrics", "stems", "feed", "concat",
+                     "juego", "pelicula"],
     },
     UserTier.PREMIUM: {
         "daily_limit": 5,
         "cooldown_seconds": 60,  # 1 min entre generaciones
-        "features": ["generate", "extend", "remix", "lyrics", "stems", "feed"],
+        "features": ["generate", "extend", "remix", "lyrics", "stems", "feed",
+                     "juego", "pelicula"],
     },
     UserTier.FREE: {
         "daily_limit": 1,
         "cooldown_seconds": 120,  # 2 min entre generaciones
-        "features": ["generate", "lyrics"],  # Solo generar y letras
+        "features": ["generate", "lyrics"],  # Solo generar y letras (juego/pelicula son premium)
     },
 }
 
