@@ -576,6 +576,212 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ---------------------------------------------------------------------------
 # Handler de CALLBACKS (botones inline)
 # ---------------------------------------------------------------------------
+async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Procesa videos y video notas: extrae audio + analiza frames."""
+    if not update.message:
+        return
+
+    video = update.message.video or update.message.video_note or update.message.animation
+    if not video:
+        return
+
+    user = update.effective_user
+    user_name = user.first_name or "Usuario"
+
+    await update.message.reply_text("🎬 Procesando video...")
+
+    try:
+        from skills.media_processor import get_media_processor
+        mp = get_media_processor()
+
+        # Descargar video
+        file = await context.bot.get_file(video.file_id)
+        tmp_path = tempfile.mktemp(suffix=".mp4")
+        await file.download_to_drive(tmp_path)
+
+        # Procesar
+        result = await mp.process_video(tmp_path)
+
+        # Limpiar
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+        if result.success:
+            response_parts = []
+            if result.text:
+                response_parts.append(f"🎤 *Transcripción:*\n_{result.text[:1500]}_")
+            if result.analysis:
+                response_parts.append(f"👁️ *Visual:*\n_{result.analysis[:500]}_")
+            if result.duration_sec:
+                response_parts.append(f"⏱️ Duración: {result.duration_sec:.0f}s")
+
+            response = "\n\n".join(response_parts)
+            try:
+                await update.message.reply_text(response, parse_mode="Markdown")
+            except Exception:
+                await update.message.reply_text(response)
+        else:
+            await update.message.reply_text("❌ No pude procesar el video.")
+
+    except Exception as e:
+        logger.error(f"Error procesando video: {e}")
+        await update.message.reply_text(f"⚡ Error procesando video: {type(e).__name__}")
+
+
+async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Procesa documentos: PDF, Word, código, texto, etc."""
+    if not update.message or not update.message.document:
+        return
+
+    doc = update.message.document
+    user = update.effective_user
+    filename = doc.file_name or "archivo"
+    file_size_mb = (doc.file_size or 0) / (1024 * 1024)
+
+    # Límite de tamaño (20MB)
+    if file_size_mb > 20:
+        await update.message.reply_text(
+            f"❌ Archivo muy grande ({file_size_mb:.1f}MB). Máximo: 20MB.")
+        return
+
+    await update.message.reply_text(f"📄 Procesando _{filename}_...", parse_mode="Markdown")
+
+    try:
+        from skills.media_processor import get_media_processor
+        mp = get_media_processor()
+
+        # Descargar
+        file = await context.bot.get_file(doc.file_id)
+        ext = os.path.splitext(filename)[1].lower()
+        tmp_path = tempfile.mktemp(suffix=ext)
+        await file.download_to_drive(tmp_path)
+
+        # Detectar si es audio/video disfrazado de documento
+        if ext in mp.AUDIO_FORMATS:
+            result = await mp.process_audio(tmp_path)
+        elif ext in mp.VIDEO_FORMATS:
+            result = await mp.process_video(tmp_path)
+        else:
+            result = await mp.process_document(tmp_path, filename)
+
+        # Limpiar
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+        if result.success and result.text:
+            # Si es muy largo, resumir con LLM
+            text = result.text
+            if len(text) > 2000:
+                # Resumir
+                router = bot_state.router
+                summary = router.quick(
+                    prompt=f"Resume este documento en español (máximo 500 palabras):\n\n{text[:5000]}",
+                    system="Eres un asistente que resume documentos de forma clara y concisa.",
+                    max_tokens=600,
+                )
+                response = (
+                    f"📄 *{filename}*\n"
+                    f"📊 {result.metadata.get('chars', 0)} caracteres\n\n"
+                    f"📝 *Resumen:*\n{summary}\n\n"
+                    f"_Envía un mensaje preguntando sobre el contenido para más detalle._"
+                )
+            else:
+                response = f"📄 *{filename}*\n\n```\n{text[:3500]}\n```"
+
+            try:
+                await update.message.reply_text(response, parse_mode="Markdown")
+            except Exception:
+                await update.message.reply_text(response[:4000])
+        else:
+            await update.message.reply_text(
+                f"❌ No pude extraer texto de _{filename}_.\n"
+                f"Formato: `{ext}`",
+                parse_mode="Markdown",
+            )
+
+    except Exception as e:
+        logger.error(f"Error procesando documento: {e}")
+        await update.message.reply_text(f"⚡ Error procesando documento: {type(e).__name__}")
+
+
+async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Procesa stickers: analiza con Vision."""
+    if not update.message or not update.message.sticker:
+        return
+
+    sticker = update.message.sticker
+
+    # Stickers animados/video — solo emoji
+    if sticker.is_animated or sticker.is_video:
+        emoji = sticker.emoji or "🎭"
+        response = generate_response(
+            f"[El usuario envió un sticker con emoji {emoji}]",
+            str(update.effective_user.id),
+            update.effective_user.first_name or "Usuario",
+        )
+        await update.message.reply_text(response)
+        return
+
+    # Sticker estático — analizar con Vision
+    try:
+        file = await context.bot.get_file(sticker.file_id)
+        image_url = file.file_path
+
+        analysis = await analyze_image(
+            image_url,
+            "Describe este sticker brevemente. ¿Qué expresa o comunica?"
+        )
+
+        if analysis:
+            # Responder de forma conversacional
+            response = generate_response(
+                f"[Sticker que muestra: {analysis}]",
+                str(update.effective_user.id),
+                update.effective_user.first_name or "Usuario",
+            )
+            await update.message.reply_text(response)
+        else:
+            emoji = sticker.emoji or "🎭"
+            await update.message.reply_text(f"{emoji}")
+
+    except Exception as e:
+        logger.error(f"Error procesando sticker: {e}")
+
+
+async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Procesa ubicaciones: clima + info del lugar."""
+    if not update.message or not update.message.location:
+        return
+
+    loc = update.message.location
+
+    try:
+        from skills.media_processor import get_media_processor
+        mp = get_media_processor()
+
+        result = await mp.process_location(loc.latitude, loc.longitude)
+
+        if result.success:
+            await update.message.reply_text(
+                f"📍 *Ubicación recibida*\n\n{result.text}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(
+                f"📍 Ubicación: {loc.latitude}, {loc.longitude}")
+
+    except Exception as e:
+        logger.error(f"Error procesando ubicación: {e}")
+        await update.message.reply_text(f"📍 Recibí tu ubicación: {loc.latitude}, {loc.longitude}")
+
+
+# ---------------------------------------------------------------------------
+# Handler de CALLBACKS (botones inline) [ORIGINAL]
+# ---------------------------------------------------------------------------
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Procesa callbacks de botones inline."""
     query = update.callback_query
@@ -1780,6 +1986,19 @@ def main():
 
     # Fotos
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+
+    # Videos y video notas
+    app.add_handler(MessageHandler(
+        filters.VIDEO | filters.VIDEO_NOTE | filters.ANIMATION, handle_video))
+
+    # Documentos
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
+
+    # Stickers
+    app.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
+
+    # Ubicación
+    app.add_handler(MessageHandler(filters.LOCATION, handle_location))
 
     # Callbacks de botones
     app.add_handler(CallbackQueryHandler(handle_callback))
