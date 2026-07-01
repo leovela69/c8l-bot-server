@@ -2477,44 +2477,27 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Callbacks de botones
     app.add_handler(CallbackQueryHandler(handle_callback))
 
-    # --- Iniciar health server + bot ---
-    logger.info("⚡ Bot Telegram ONLINE — Esperando mensajes...")
+    # --- Iniciar bot ---
+    logger.info("⚡ Bot Telegram ONLINE — Iniciando polling...")
 
-    # Iniciar bot con asyncio directo (más compatible con threading)
-    logger.info("⚡ Bot Telegram ONLINE — Esperando mensajes...")
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    async def run_bot():
-        """Inicia el bot de forma compatible con el health server thread."""
-        try:
-            await app.initialize()
-            await app.start()
-            await app.updater.start_polling(drop_pending_updates=True)
-            logger.info("✅ Polling activo — Bot recibiendo mensajes")
-
-            # Mantener vivo indefinidamente
-            while True:
-                await asyncio.sleep(3600)
-        except Exception as e:
-            logger.error(f"❌ Error en bot: {e}", exc_info=True)
-            raise
-
+    # run_polling es bloqueante y maneja todo internamente
     try:
-        loop.run_until_complete(run_bot())
-    except (KeyboardInterrupt, SystemExit):
-        logger.info("⚡ Apagando Antigravity...")
+        app.run_polling(
+            drop_pending_updates=True,
+            close_loop=False,
+        )
+    except SystemExit:
+        pass
     except Exception as e:
-        logger.error(f"❌ Error fatal: {e}", exc_info=True)
-        # Mantener proceso vivo aunque falle el bot (health sigue respondiendo)
-        logger.info("♻️ Manteniendo proceso vivo para health server...")
-        while True:
-            time.sleep(60)
+        logger.error(f"❌ Error en polling: {e}", exc_info=True)
+
+    # Si llegamos aquí, mantener vivo para health server
+    logger.info("♻️ Polling terminó — manteniendo health server vivo...")
+    while True:
+        time.sleep(60)
 
 
 if __name__ == "__main__":
-    # Desactivar WEB_CONCURRENCY de Render (causa fork duplicado)
     os.environ["WEB_CONCURRENCY"] = "1"
     os.environ["PYTHONUNBUFFERED"] = "1"
     main()
