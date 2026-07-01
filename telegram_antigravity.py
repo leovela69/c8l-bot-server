@@ -1975,8 +1975,172 @@ def main():
     # Watchdog
     app.add_handler(CommandHandler("watchdog", cmd_watchdog))
 
+
+# ---------------------------------------------------------------------------
+# PREMIUM Y ADMIN PANEL — /premium, /admin
+# ---------------------------------------------------------------------------
+async def cmd_premium(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler para /premium CODIGO — Cualquier usuario canjea código."""
+    user = update.effective_user
+    user_id = str(user.id)
+    user_name = user.first_name or "Usuario"
+    text = update.message.text.replace("/premium", "").strip()
+
+    if not text:
+        await update.message.reply_text(
+            "🎫 *Código Premium*\n\n"
+            "Usa: `/premium C8L-XXXX-XXXX`\n\n"
+            "¿No tienes código? Contacta al admin.",
+            parse_mode="Markdown",
+        )
+        return
+
+    # Canjear código
+    from premium_codes import PremiumCodeManager
+    pm = PremiumCodeManager()
+    result = pm.redeem_code(text, user_id, user_name)
+
+    if result["success"]:
+        await update.message.reply_text(
+            f"🎉 *{result['message']}*\n\n"
+            f"👑 Tier: {result['tier']}\n"
+            f"📅 Duración: {result['duration_days']} días\n\n"
+            f"¡Bienvenido al club premium, {user_name}! 🦁",
+            parse_mode="Markdown",
+        )
+    else:
+        await update.message.reply_text(f"❌ {result['message']}")
+
+
+@admin_only
+async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler para /admin — Panel de administración completo."""
+    from premium_codes import PremiumCodeManager
+    from admin_panel import AdminPanel
+
+    text = update.message.text.strip()
+    user_id = str(update.effective_user.id)
+    panel = AdminPanel(admin_id=user_id)
+    pm = PremiumCodeManager()
+
+    # --- /admin (resumen general) ---
+    if text == "/admin":
+        summary = panel.get_summary()
+        await update.message.reply_text(summary, parse_mode="Markdown")
+
+    # --- /admin_gencode [cantidad] ---
+    elif text.startswith("/admin_gencode"):
+        parts = text.split()
+        count = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+        days = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else 30
+
+        codes = pm.generate_batch(count=count, duration_days=days)
+        codes_text = "\n".join(f"  `{c}`" for c in codes)
+        await update.message.reply_text(
+            f"🎫 *{len(codes)} código(s) premium generados:*\n\n"
+            f"{codes_text}\n\n"
+            f"📅 Duración: {days} días\n"
+            f"⏳ Expiran en 90 días si no se usan",
+            parse_mode="Markdown",
+        )
+
+    # --- /admin_codes ---
+    elif text.startswith("/admin_codes"):
+        active = pm.get_active_codes()
+        if not active:
+            await update.message.reply_text("🎫 No hay códigos activos.")
+            return
+        lines = []
+        for c in active[:20]:
+            lines.append(f"  `{c['code']}` — {c['tier']} ({c['duration_days']}d) exp:{c['expires_at']}")
+        await update.message.reply_text(
+            f"🎫 *Códigos activos ({len(active)}):*\n\n" + "\n".join(lines),
+            parse_mode="Markdown",
+        )
+
+    # --- /admin_set_premium USER_ID ---
+    elif text.startswith("/admin_set_premium"):
+        parts = text.split()
+        if len(parts) < 2:
+            await update.message.reply_text("Uso: `/admin_set_premium USER_ID`", parse_mode="Markdown")
+            return
+        target_id = parts[1]
+        try:
+            from suno_credits import SunoCreditsManager
+            cm = SunoCreditsManager()
+            cm.set_tier(target_id, "premium")
+            await update.message.reply_text(f"👑 Usuario `{target_id}` ahora es Premium!", parse_mode="Markdown")
+        except Exception as e:
+            await update.message.reply_text(f"❌ Error: {e}")
+
+    # --- /admin_users ---
+    elif text.startswith("/admin_users"):
+        try:
+            from suno_credits import SunoCreditsManager
+            cm = SunoCreditsManager()
+            users = cm._data.get("users", {})
+            total = len(users)
+            premium_count = sum(1 for u in users.values() if u.get("tier") == "premium")
+            users_text = "\n".join(
+                f"  {'👑' if u.get('tier') == 'premium' else '👤'} "
+                f"`{uid[:10]}` — {u.get('name', '?')} ({u.get('tier', 'free')})"
+                for uid, u in list(users.items())[:20]
+            )
+            await update.message.reply_text(
+                f"👥 *Usuarios* ({total} total, {premium_count} premium)\n\n{users_text}",
+                parse_mode="Markdown",
+            )
+        except Exception as e:
+            await update.message.reply_text(f"❌ Error: {e}")
+
+    # --- /admin_billing ---
+    elif text.startswith("/admin_billing"):
+        try:
+            from billing import get_billing
+            billing = get_billing()
+            report = billing.get_summary()
+            await update.message.reply_text(report, parse_mode="Markdown")
+        except Exception as e:
+            await update.message.reply_text(f"🧾 Billing no configurado: {e}")
+
+    # --- /admin_credits ---
+    elif text.startswith("/admin_credits"):
+        try:
+            from musicapi_client import MusicAPIClient
+            client = MusicAPIClient()
+            credits = client.get_credits()
+            await update.message.reply_text(
+                f"🎵 *MusicAPI Credits:* {credits.get('credits', '?')}",
+                parse_mode="Markdown",
+            )
+        except Exception as e:
+            await update.message.reply_text(f"🎵 MusicAPI no disponible: {e}")
+
+    else:
+        await update.message.reply_text(
+            "👑 *Admin Panel*\n\n"
+            "`/admin` — Resumen general\n"
+            "`/admin_gencode [N] [dias]` — Generar N códigos\n"
+            "`/admin_codes` — Ver códigos activos\n"
+            "`/admin_set_premium USER_ID` — Dar premium\n"
+            "`/admin_users` — Ver usuarios\n"
+            "`/admin_billing` — Facturación\n"
+            "`/admin_credits` — Créditos MusicAPI",
+            parse_mode="Markdown",
+        )
+
     # Visual Guide
     app.add_handler(CommandHandler("guide", cmd_guide))
+
+    # Premium y Admin Panel
+    app.add_handler(CommandHandler("premium", cmd_premium))
+    app.add_handler(CommandHandler("admin", cmd_admin))
+    app.add_handler(CommandHandler("admin_users", cmd_admin))
+    app.add_handler(CommandHandler("admin_gencode", cmd_admin))
+    app.add_handler(CommandHandler("admin_codes", cmd_admin))
+    app.add_handler(CommandHandler("admin_set_premium", cmd_admin))
+    app.add_handler(CommandHandler("admin_billing", cmd_admin))
+    app.add_handler(CommandHandler("admin_credits", cmd_admin))
 
     # Mensajes de texto (catch-all)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))

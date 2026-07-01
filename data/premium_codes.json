@@ -1,0 +1,61 @@
+{
+  "codes": {
+    "C8L-WUJS-ROCM": {
+      "tier": "premium",
+      "duration_days": 30,
+      "created_at": "2026-07-01T06:59:28.729166",
+      "expires_at": "2026-09-29T06:59:28.729173",
+      "created_by": "admin",
+      "note": "",
+      "used": false,
+      "used_by": null,
+      "used_at": null
+    },
+    "C8L-D6V8-NV3A": {
+      "tier": "premium",
+      "duration_days": 30,
+      "created_at": "2026-07-01T06:59:28.729295",
+      "expires_at": "2026-09-29T06:59:28.729297",
+      "created_by": "admin",
+      "note": "",
+      "used": false,
+      "used_by": null,
+      "used_at": null
+    },
+    "C8L-Q2Q6-ZPZP": {
+      "tier": "premium",
+      "duration_days": 30,
+      "created_at": "2026-07-01T06:59:28.729523",
+      "expires_at": "2026-09-29T06:59:28.729526",
+      "created_by": "admin",
+      "note": "",
+      "used": false,
+      "used_by": null,
+      "used_at": null
+    },
+    "C8L-BRD6-B5JM": {
+      "tier": "premium",
+      "duration_days": 30,
+      "created_at": "2026-07-01T06:59:28.729760",
+      "expires_at": "2026-09-29T06:59:28.729764",
+      "created_by": "admin",
+      "note": "",
+      "used": false,
+      "used_by": null,
+      "used_at": null
+    },
+    "C8L-NCSN-H3IZ": {
+      "tier": "premium",
+      "duration_days": 30,
+      "created_at": "2026-07-01T06:59:28.729850",
+      "expires_at": "2026-09-29T06:59:28.729852",
+      "created_by": "admin",
+      "note": "",
+      "used": false,
+      "used_by": null,
+      "used_at": null
+    }
+  },
+  "redeemed_history": [],
+  "total_generated": 5
+}
