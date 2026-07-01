@@ -50,15 +50,29 @@ COIN_PRICE_USD = 0.015  # 1 coin = $0.015
 COINS_PER_DIAMOND = 3   # 3 coins regalados = 1 diamante
 MIN_WITHDRAWAL_DIAMONDS = 1000  # Mínimo para retirar
 
-# Packs de compra
-COIN_PACKS = {
-    "mini":     {"coins": 100,   "price_usd": 1.50,   "bonus": 0},
-    "basico":   {"coins": 500,   "price_usd": 7.50,   "bonus": 0},
-    "estandar": {"coins": 1000,  "price_usd": 15.00,  "bonus": 0},
-    "grande":   {"coins": 2500,  "price_usd": 37.50,  "bonus": 250},
-    "mega":     {"coins": 5000,  "price_usd": 75.00,  "bonus": 750},
-    "ultra":    {"coins": 10000, "price_usd": 150.00,  "bonus": 2000},
+# Packs de compra — PayPal (1 USD ≈ 75 coins base)
+COIN_PACKS_PAYPAL = {
+    "mini":      {"coins": 301,   "price_usd": 3.99,   "discount": "17.08%", "bonus": 0},
+    "basico":    {"coins": 762,   "price_usd": 9.99,   "discount": "18.53%", "bonus": 0},
+    "estandar":  {"coins": 1538,  "price_usd": 19.99,  "discount": "19.66%", "bonus": 0},
+    "popular":   {"coins": 3876,  "price_usd": 49.99,  "discount": "20.66%", "bonus": 0, "hot": True},
+    "grande":    {"coins": 7813,  "price_usd": 99.99,  "discount": "21.65%", "bonus": 0},
+    "mega":      {"coins": 15750, "price_usd": 199.99, "discount": "22.63%", "bonus": 0},
+    "ultra":     {"coins": 31500, "price_usd": 399.99, "discount": "22.63%", "bonus": 0},
 }
+
+# Packs de compra — Tarjeta (1 USD ≈ 79 coins base)
+COIN_PACKS_CARD = {
+    "micro":     {"coins": 79,    "price_usd": 1.00,   "discount": "19.39%", "bonus": 0},
+    "basico":    {"coins": 558,   "price_usd": 7.00,   "discount": "20.55%", "bonus": 0},
+    "estandar":  {"coins": 802,   "price_usd": 10.00,  "discount": "21.31%", "bonus": 0},
+    "popular":   {"coins": 1618,  "price_usd": 20.00,  "discount": "22.40%", "bonus": 0},
+    "hot":       {"coins": 4076,  "price_usd": 50.00,  "discount": "23.33%", "bonus": 0, "hot": True},
+    "mega":      {"coins": 8216,  "price_usd": 100.00, "discount": "24.27%", "bonus": 0},
+}
+
+# Default packs (PayPal es el principal)
+COIN_PACKS = COIN_PACKS_PAYPAL
 
 # Regalos disponibles
 GIFTS = {
@@ -570,13 +584,24 @@ class C8LEconomy:
             f"📊 Beneficio neto: ${s['total_revenue_usd'] - s['total_withdrawals_usd']:.2f}"
         )
 
-    def get_packs_text(self) -> str:
-        """Texto de packs disponibles."""
-        lines = ["💰 *Packs de Coins*\n"]
-        for key, pack in COIN_PACKS.items():
-            bonus = f" (+{pack['bonus']} gratis!)" if pack["bonus"] else ""
-            lines.append(f"  • `{key}`: {pack['coins']} coins = ${pack['price_usd']:.2f}{bonus}")
-        lines.append(f"\n_1 coin = ${COIN_PRICE_USD}. Usa: /comprar [pack]_")
+    def get_packs_text(self, method: str = "paypal") -> str:
+        """Texto de packs disponibles con descuentos visuales."""
+        packs = COIN_PACKS_PAYPAL if method == "paypal" else COIN_PACKS_CARD
+        rate = "75" if method == "paypal" else "79"
+
+        lines = [
+            f"💰 *Recarga de Coins C8L*",
+            f"💳 Método: {'PayPal' if method == 'paypal' else 'Tarjeta'}",
+            f"📊 Rate: 1 USD ≈ {rate} coins\n",
+        ]
+        for key, pack in packs.items():
+            hot = " 🔥" if pack.get("hot") else ""
+            lines.append(
+                f"  🪙 *{pack['coins']:,} coins* — ${pack['price_usd']:.2f}{hot}\n"
+                f"      _{pack['discount']} de descuento_"
+            )
+        lines.append(f"\n_Usa: /comprar [pack]_")
+        lines.append(f"_Ej: /comprar popular_")
         return "\n".join(lines)
 
 
