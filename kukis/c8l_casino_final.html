@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦁 C8L Casino — Jugador Maestro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a0a1a;color:#e0e0e0;font-family:'Segoe UI',Tahoma,sans-serif;min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:#0a0a1a;}
+::-webkit-scrollbar-thumb{background:#d4a017;border-radius:3px;}
+header{position:sticky;top:0;z-index:100;background:rgba(10,10,30,0.95);border-bottom:2px solid #f4b41a;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(10px);}
+header h1{font-size:1.5em;color:#f4b41a;text-shadow:0 0 10px rgba(244,180,26,0.3);}
+header .balance{font-size:1.2em;color:#f4b41a;font-weight:bold;}
+.tabs{display:flex;gap:4px;padding:10px 20px;background:rgba(10,10,30,0.8);overflow-x:auto;justify-content:center;flex-wrap:wrap;}
+.tabs button{background:rgba(20,20,40,0.9);color:#f4b41a;border:1px solid #d4a017;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:0.9em;font-weight:bold;transition:all 0.3s ease;white-space:nowrap;}
+.tabs button:hover{background:rgba(244,180,26,0.2);}
+.tabs button.active{background:linear-gradient(135deg,#f4b41a,#d4a017);color:#0a0a1a;border-color:#f4b41a;box-shadow:0 0 15px rgba(244,180,26,0.4);}
+.game-area{max-width:800px;margin:0 auto;padding:20px;}
+.game{display:none;}
+.game.active{display:block;}
+.panel{background:rgba(20,20,40,0.9);border:1px solid #d4a017;border-radius:12px;padding:20px;margin-bottom:15px;}
+.btn{background:linear-gradient(135deg,#f4b41a,#d4a017);color:#0a0a1a;font-weight:bold;border:none;border-radius:8px;padding:12px 24px;cursor:pointer;font-size:1em;transition:all 0.3s ease;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(244,180,26,0.4);}
+.btn:disabled{opacity:0.4;transform:none;cursor:not-allowed;box-shadow:none;}
+.btn-sm{padding:8px 16px;font-size:0.85em;}
+.btn-danger{background:linear-gradient(135deg,#e74c3c,#c0392b);}
+.btn-success{background:linear-gradient(135deg,#2ecc71,#27ae60);}
+.bet-row{display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap;}
+.bet-row button{padding:8px 16px;font-size:0.9em;}
+.bet-row button.active{box-shadow:0 0 10px rgba(244,180,26,0.6);transform:scale(1.05);}
+footer{text-align:center;padding:20px;color:#666;font-size:0.8em;border-top:1px solid rgba(212,160,23,0.2);margin-top:40px;}
+.win-banner{position:fixed;top:0;left:0;right:0;background:#f4b41a;color:#0a0a1a;text-align:center;padding:15px;font-size:1.3em;font-weight:bold;transform:translateY(-100%);transition:transform 0.4s ease;z-index:200;}
+.win-banner.show{transform:translateY(0);}
+@keyframes flash{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.flash{animation:flash 0.3s ease 3;}
+@media(max-width:600px){
+  header h1{font-size:1.1em;}
+  header .balance{font-size:1em;}
+  .tabs button{padding:8px 10px;font-size:0.8em;}
+  .game-area{padding:10px;}
+  .panel{padding:12px;}
+}
+/* SLOT */
+.slot-machine{text-align:center;}
+.reels-container{display:flex;justify-content:center;gap:10px;margin:20px 0;overflow:hidden;}
+.reel-window{width:80px;height:240px;overflow:hidden;border:2px solid #d4a017;border-radius:8px;background:rgba(0,0,0,0.5);position:relative;}
+.reel-strip{display:flex;flex-direction:column;transition:transform 1s cubic-bezier(0.17,0.67,0.12,0.99);}
+.reel-strip .sym{width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:3em;}
+.payline{position:absolute;left:-5px;right:-5px;top:50%;transform:translateY(-50%);height:3px;background:#f4b41a;z-index:5;pointer-events:none;box-shadow:0 0 8px #f4b41a;}
+.slot-result{font-size:1.5em;min-height:40px;margin:10px 0;color:#f4b41a;font-weight:bold;}
+/* CRASH */
+.crash-area{text-align:center;}
+.crash-canvas{border:1px solid #d4a017;border-radius:8px;background:#0d0d1f;display:block;margin:0 auto;max-width:100%;}
+.crash-multiplier{font-size:3em;font-weight:bold;margin:10px 0;color:#2ecc71;}
+.crash-multiplier.danger{color:#e74c3c;}
+.crash-history{display:flex;gap:6px;justify-content:center;margin:10px 0;flex-wrap:wrap;}
+.crash-pill{padding:4px 10px;border-radius:12px;font-size:0.8em;font-weight:bold;}
+.crash-pill.green{background:#2ecc71;color:#000;}
+.crash-pill.gold{background:#f4b41a;color:#000;}
+.crash-pill.red{background:#e74c3c;color:#fff;}
+/* MINES */
+.mines-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:350px;margin:15px auto;}
+.mine-tile{width:100%;aspect-ratio:1;border:2px solid #d4a017;border-radius:8px;background:rgba(20,20,50,0.8);cursor:pointer;font-size:1.8em;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;}
+.mine-tile:hover:not(.revealed){border-color:#f4b41a;box-shadow:0 0 10px rgba(244,180,26,0.3);}
+.mine-tile.revealed.safe{background:rgba(46,204,113,0.3);border-color:#2ecc71;}
+.mine-tile.revealed.bomb{background:rgba(231,76,60,0.3);border-color:#e74c3c;}
+.mines-info{text-align:center;font-size:1.8em;color:#f4b41a;margin:10px 0;}
+/* BINGO */
+.bingo-card{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:320px;margin:10px auto;}
+.bingo-header{background:#d4a017;color:#0a0a1a;font-weight:bold;text-align:center;padding:8px;border-radius:4px;font-size:1.1em;}
+.bingo-cell{background:rgba(20,20,50,0.8);border:1px solid #555;border-radius:4px;text-align:center;padding:10px 4px;font-size:1em;transition:all 0.3s;}
+.bingo-cell.marked{background:rgba(244,180,26,0.3);border-color:#f4b41a;color:#f4b41a;font-weight:bold;}
+.bingo-cell.free{background:rgba(244,180,26,0.5);color:#0a0a1a;font-weight:bold;}
+.bingo-ball{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:bold;margin:10px auto;border:3px solid #f4b41a;}
+.bingo-ball.B{background:#e74c3c;}
+.bingo-ball.I{background:#3498db;}
+.bingo-ball.N{background:#2ecc71;}
+.bingo-ball.G{background:#9b59b6;}
+.bingo-ball.O{background:#f39c12;}
+.ball-history{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin:10px 0;}
+.ball-small{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.6em;font-weight:bold;color:#fff;}
+/* RULETA */
+.ruleta-wheel{width:280px;height:280px;border-radius:50%;margin:20px auto;border:4px solid #f4b41a;position:relative;transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99);}
+.ruleta-pointer{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:20px solid #f4b41a;position:absolute;top:-24px;left:50%;transform:translateX(-50%);z-index:5;}
+.ruleta-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:#0a0a1a;border:2px solid #f4b41a;z-index:3;}
+.number-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:15px 0;}
+.num-cell{padding:6px 2px;text-align:center;border-radius:4px;cursor:pointer;font-size:0.75em;font-weight:bold;border:1px solid transparent;transition:all 0.2s;}
+.num-cell:hover{border-color:#f4b41a;transform:scale(1.1);}
+.num-cell.red{background:#c0392b;color:#fff;}
+.num-cell.black{background:#2c3e50;color:#fff;}
+.num-cell.green{background:#27ae60;color:#fff;}
+.num-cell.selected{border:2px solid #f4b41a;box-shadow:0 0 8px #f4b41a;}
+.ruleta-result{font-size:2em;text-align:center;margin:10px 0;font-weight:bold;}
+/* POKER */
+.poker-table{text-align:center;}
+.cards-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0;}
+.card{width:60px;height:85px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:bold;position:relative;transition:transform 0.3s;}
+.card-front{background:#fff;border:2px solid #ccc;color:#000;}
+.card-front.red{color:#e74c3c;}
+.card-front .rank{position:absolute;top:4px;left:6px;font-size:0.8em;}
+.card-front .suit{font-size:1.8em;}
+.card-back{background:linear-gradient(135deg,#f4b41a,#d4a017);border:2px solid #d4a017;color:#0a0a1a;font-size:0.7em;font-weight:bold;}
+.poker-community{min-height:100px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.poker-pot{font-size:1.5em;color:#f4b41a;font-weight:bold;margin:10px 0;}
+.poker-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:15px 0;}
+.poker-msg{font-size:1.2em;min-height:30px;margin:5px 0;color:#f4b41a;}
+</style>
+</head>
+<body>
+<div class="win-banner" id="winBanner"></div>
+<header>
+<h1>🦁 C8L CASINO</h1>
+<div class="balance">💰 <span id="balanceDisplay">10000</span> chips</div>
+</header>
+<div class="tabs">
+<button class="active" onclick="switchGame('slot')">🎰 Slot</button>
+<button onclick="switchGame('crash')">🚀 Crash</button>
+<button onclick="switchGame('mines')">💎 Mines</button>
+<button onclick="switchGame('bingo')">🎱 Bingo</button>
+<button onclick="switchGame('ruleta')">🎡 Ruleta</button>
+<button onclick="switchGame('poker')">🃏 Poker</button>
+</div>
+<div class="game-area">
+<!-- SLOT GAME -->
+<div class="game active" id="game-slot">
+<div class="panel slot-machine">
+<h2 style="color:#f4b41a;margin-bottom:15px;">🎰 TRAGAMONEDAS</h2>
+<div style="position:relative;display:inline-block;">
+<div class="reels-container">
+<div class="reel-window"><div class="reel-strip" id="reel0"></div></div>
+<div class="reel-window"><div class="reel-strip" id="reel1"></div></div>
+<div class="reel-window"><div class="reel-strip" id="reel2"></div></div>
+</div>
+<div class="payline"></div>
+</div>
+<div class="slot-result" id="slotResult"></div>
+<div class="bet-row" style="justify-content:center;">
+<span style="color:#aaa;">Apuesta:</span>
+<button class="btn btn-sm slot-bet active" data-bet="10">10</button>
+<button class="btn btn-sm slot-bet" data-bet="25">25</button>
+<button class="btn btn-sm slot-bet" data-bet="50">50</button>
+<button class="btn btn-sm slot-bet" data-bet="100">100</button>
+</div>
+<button class="btn" id="spinBtn" onclick="slotSpin()">🎰 GIRAR</button>
+<div style="margin-top:15px;font-size:0.8em;color:#888;">
+🦁x50 💎x25 7️⃣x15 ⭐x10 🔔x5 🍒x3 🎰x2 | 2 iguales = x1
+</div>
+</div>
+</div>
+<!-- CRASH GAME -->
+<div class="game" id="game-crash">
+<div class="panel crash-area">
+<h2 style="color:#f4b41a;margin-bottom:15px;">🚀 CRASH</h2>
+<canvas class="crash-canvas" id="crashCanvas" width="400" height="250"></canvas>
+<div class="crash-multiplier" id="crashMultiplier">1.00x</div>
+<div class="crash-history" id="crashHistory"></div>
+<div class="bet-row" style="justify-content:center;">
+<span style="color:#aaa;">Apuesta:</span>
+<button class="btn btn-sm crash-bet active" data-bet="10">10</button>
+<button class="btn btn-sm crash-bet" data-bet="25">25</button>
+<button class="btn btn-sm crash-bet" data-bet="50">50</button>
+<button class="btn btn-sm crash-bet" data-bet="100">100</button>
+</div>
+<div style="display:flex;gap:10px;justify-content:center;margin-top:10px;">
+<button class="btn" id="crashBetBtn" onclick="crashStart()">🚀 APOSTAR</button>
+<button class="btn btn-success" id="crashCashBtn" onclick="crashCashout()" disabled>💰 RETIRAR</button>
+</div>
+</div>
+</div>
+<!-- MINES GAME -->
+<div class="game" id="game-mines">
+<div class="panel">
+<h2 style="color:#f4b41a;margin-bottom:15px;text-align:center;">💎 MINAS</h2>
+<div style="text-align:center;">
+<div class="bet-row" style="justify-content:center;">
+<span style="color:#aaa;">Minas:</span>
+<button class="btn btn-sm mines-count active" data-mines="3">3</button>
+<button class="btn btn-sm mines-count" data-mines="5">5</button>
+<button class="btn btn-sm mines-count" data-mines="10">10</button>
+</div>
+<div class="bet-row" style="justify-content:center;">
+<span style="color:#aaa;">Apuesta:</span>
+<button class="btn btn-sm mines-bet active" data-bet="10">10</button>
+<button class="btn btn-sm mines-bet" data-bet="25">25</button>
+<button class="btn btn-sm mines-bet" data-bet="50">50</button>
+<button class="btn btn-sm mines-bet" data-bet="100">100</button>
+</div>
+</div>
+<div class="mines-info" id="minesInfo">Multiplicador: 1.00x</div>
+<div class="mines-grid" id="minesGrid"></div>
+<div style="text-align:center;margin-top:10px;display:flex;gap:10px;justify-content:center;">
+<button class="btn" id="minesStartBtn" onclick="minesStart()">💎 INICIAR</button>
+<button class="btn btn-success" id="minesCashBtn" onclick="minesCashout()" disabled>💰 RETIRAR</button>
+</div>
+</div>
+</div>
+<!-- BINGO GAME -->
+<div class="game" id="game-bingo">
+<div class="panel">
+<h2 style="color:#f4b41a;margin-bottom:15px;text-align:center;">🎱 BINGO</h2>
+<div style="text-align:center;">
+<div class="bingo-ball" id="bingoBall">?</div>
+<div class="ball-history" id="ballHistory"></div>
+</div>
+<div class="bingo-card" id="bingoCard"></div>
+<div style="text-align:center;margin-top:15px;">
+<div style="margin-bottom:10px;color:#aaa;">Costo: 50 chips por cartón</div>
+<button class="btn" id="bingoDrawBtn" onclick="bingoDraw()">🎱 SACAR BOLA</button>
+<button class="btn" id="bingoNewBtn" onclick="bingoNew()" style="margin-left:10px;">🔄 NUEVO CARTÓN</button>
+<label style="display:block;margin-top:10px;color:#aaa;cursor:pointer;">
+<input type="checkbox" id="bingoAuto" onchange="bingoToggleAuto()"> Auto (cada 2s)
+</label>
+</div>
+<div style="margin-top:10px;font-size:0.8em;color:#888;text-align:center;">
+Línea/Diagonal = x5 | Cartón completo = x50
+</div>
+</div>
+</div>
+<!-- RULETA GAME -->
+<div class="game" id="game-ruleta">
+<div class="panel">
+<h2 style="color:#f4b41a;margin-bottom:15px;text-align:center;">🎡 RULETA EUROPEA</h2>
+<div style="position:relative;text-align:center;">
+<div class="ruleta-pointer"></div>
+<div class="ruleta-wheel" id="ruletaWheel"></div>
+<div class="ruleta-center"></div>
+</div>
+<div class="ruleta-result" id="ruletaResult"></div>
+<div class="bet-row" style="justify-content:center;">
+<span style="color:#aaa;">Apuesta:</span>
+<button class="btn btn-sm ruleta-bet active" data-bet="10">10</button>
+<button class="btn btn-sm ruleta-bet" data-bet="25">25</button>
+<button class="btn btn-sm ruleta-bet" data-bet="50">50</button>
+<button class="btn btn-sm ruleta-bet" data-bet="100">100</button>
+</div>
+<div style="margin:10px 0;">
+<div style="text-align:center;margin-bottom:8px;color:#aaa;">Apuesta externa:</div>
+<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+<button class="btn btn-sm" style="background:#c0392b;" onclick="ruletaSelectType('rojo')">Rojo</button>
+<button class="btn btn-sm" style="background:#2c3e50;color:#fff;" onclick="ruletaSelectType('negro')">Negro</button>
+<button class="btn btn-sm" onclick="ruletaSelectType('par')">Par</button>
+<button class="btn btn-sm" onclick="ruletaSelectType('impar')">Impar</button>
+</div>
+</div>
+<div style="text-align:center;margin:5px 0;color:#aaa;font-size:0.85em;" id="ruletaBetInfo">Selecciona número o tipo</div>
+<div class="number-grid" id="numberGrid"></div>
+<div style="text-align:center;margin-top:10px;">
+<button class="btn" id="ruletaSpinBtn" onclick="ruletaSpin()">🎡 GIRAR</button>
+</div>
+</div>
+</div>
+<!-- POKER GAME -->
+<div class="game" id="game-poker">
+<div class="panel poker-table">
+<h2 style="color:#f4b41a;margin-bottom:15px;">🃏 TEXAS HOLD'EM</h2>
+<div style="color:#aaa;margin-bottom:5px;">Bot:</div>
+<div class="cards-row" id="botCards"></div>
+<div style="color:#aaa;margin:10px 0 5px;">Comunitarias:</div>
+<div class="cards-row poker-community" id="communityCards"></div>
+<div class="poker-pot" id="pokerPot">Pot: 0</div>
+<div style="color:#aaa;margin-bottom:5px;">Tus cartas:</div>
+<div class="cards-row" id="playerCards"></div>
+<div class="poker-msg" id="pokerMsg"></div>
+<div class="bet-row" style="justify-content:center;">
+<span style="color:#aaa;">Apuesta:</span>
+<button class="btn btn-sm poker-bet active" data-bet="10">10</button>
+<button class="btn btn-sm poker-bet" data-bet="25">25</button>
+<button class="btn btn-sm poker-bet" data-bet="50">50</button>
+<button class="btn btn-sm poker-bet" data-bet="100">100</button>
+</div>
+<div class="poker-actions">
+<button class="btn" id="pokerDealBtn" onclick="pokerDeal()">🃏 REPARTIR</button>
+<button class="btn" id="pokerCallBtn" onclick="pokerCall()" disabled>IGUALAR</button>
+<button class="btn" id="pokerRaiseBtn" onclick="pokerRaise()" disabled>SUBIR x2</button>
+<button class="btn btn-danger" id="pokerFoldBtn" onclick="pokerFold()" disabled>RETIRARSE</button>
+</div>
+</div>
+</div>
+</div>
+<footer>Jugador Maestro • C8L Agency • Todos los juegos son simulados</footer>
+<script>
+// === AUDIO ENGINE ===
+const AudioEngine = {
+  ctx: null,
+  init() { if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
+  tone(freq, dur, type='sine', vol=0.15) {
+    this.init();
+    const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol, this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+dur);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(); o.stop(this.ctx.currentTime+dur);
+  },
+  spin() { this.tone(300,0.1,'square',0.1); },
+  stop() { this.tone(150,0.08,'sine',0.2); },
+  win() { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,0.2),i*100)); },
+  lose() { this.tone(100,0.3,'sawtooth',0.15); },
+  click() { this.tone(600,0.03,'square',0.08); },
+  tick() { this.tone(800+Math.random()*400,0.02,'square',0.05); },
+  pop() { this.tone(400,0.05,'sine',0.12); },
+  explosion() { this.tone(60,0.4,'sawtooth',0.2); },
+  rising(mult) { this.tone(200+mult*100,0.05,'sine',0.08); },
+  cashout() { [800,1000,1200].forEach((f,i)=>setTimeout(()=>this.tone(f,0.15),i*80)); },
+  cardFlick() { this.tone(1200,0.03,'square',0.06); },
+  fanfare() { [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,0.25,'sine',0.12),i*120)); }
+};
+
+// === BALANCE ===
+let balance = parseInt(localStorage.getItem('c8l_balance')) || 10000;
+function updateBalance(amount) {
+  balance += amount;
+  if(balance < 0) balance = 0;
+  localStorage.setItem('c8l_balance', balance);
+  document.getElementById('balanceDisplay').textContent = balance.toLocaleString();
+}
+function setBalance() {
+  document.getElementById('balanceDisplay').textContent = balance.toLocaleString();
+}
+setBalance();
+
+// === WIN BANNER ===
+function showWin(text) {
+  const b = document.getElementById('winBanner');
+  b.textContent = text;
+  b.classList.add('show');
+  setTimeout(()=>b.classList.remove('show'), 2500);
+}
+
+// === TAB NAVIGATION ===
+function switchGame(name) {
+  document.querySelectorAll('.game').forEach(g=>g.classList.remove('active'));
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('game-'+name).classList.add('active');
+  const tabs = document.querySelectorAll('.tabs button');
+  const names = ['slot','crash','mines','bingo','ruleta','poker'];
+  tabs[names.indexOf(name)].classList.add('active');
+  AudioEngine.click();
+}
+
+// === BET SELECTOR HELPER ===
+function setupBetButtons(selector, defaultBet) {
+  document.querySelectorAll(selector).forEach(btn=>{
+    btn.addEventListener('click', function(){
+      document.querySelectorAll(selector).forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      AudioEngine.click();
+    });
+  });
+}
+function getActiveBet(selector) {
+  const active = document.querySelector(selector+'.active');
+  return active ? parseInt(active.dataset.bet) : 10;
+}
+setupBetButtons('.slot-bet');
+setupBetButtons('.crash-bet');
+setupBetButtons('.mines-bet');
+setupBetButtons('.ruleta-bet');
+setupBetButtons('.poker-bet');
+document.querySelectorAll('.mines-count').forEach(btn=>{
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.mines-count').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    AudioEngine.click();
+  });
+});
+
+// ========================================
+// GAME 1: SLOT
+// ========================================
+const SLOT_SYMBOLS = ['🦁','💎','7️⃣','⭐','🔔','🍒','🎰'];
+const SLOT_PAYOUTS = {'🦁':50,'💎':25,'7️⃣':15,'⭐':10,'🔔':5,'🍒':3,'🎰':2};
+let slotSpinning = false;
+let slotReelPositions = [0,0,0];
+
+function initSlotReels() {
+  for(let r=0; r<3; r++) {
+    const strip = document.getElementById('reel'+r);
+    strip.innerHTML = '';
+    // Create enough symbols for spinning (7 sets)
+    for(let s=0; s<7*7; s++) {
+      const div = document.createElement('div');
+      div.className = 'sym';
+      div.textContent = SLOT_SYMBOLS[s % 7];
+      strip.appendChild(div);
+    }
+    strip.style.transform = 'translateY(0px)';
+  }
+}
+initSlotReels();
+
+function slotSpin() {
+  if(slotSpinning) return;
+  const bet = getActiveBet('.slot-bet');
+  if(balance < bet) { document.getElementById('slotResult').textContent = '❌ Sin fondos'; return; }
+  updateBalance(-bet);
+  slotSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('slotResult').textContent = '';
+  AudioEngine.spin();
+
+  // Pick random results
+  const results = [0,1,2].map(()=> Math.floor(Math.random()*7));
+
+  for(let r=0; r<3; r++) {
+    const strip = document.getElementById('reel'+r);
+    // We want the middle cell (index 1 of visible 3) to show our result
+    // Each symbol is 80px high, we show 3 (240px window)
+    // Target: result symbol in middle = offset so that result is at position 1
+    const baseOffset = 7 * 7 * 80; // big offset for spin illusion
+    const targetSymIndex = (7*5) + results[r]; // land in 5th set
+    const targetOffset = -(targetSymIndex * 80) + 80; // +80 to center in middle row
+    strip.style.transition = 'none';
+    strip.style.transform = 'translateY(80px)';
+    setTimeout(()=>{
+      strip.style.transition = `transform ${1 + r*0.4}s cubic-bezier(0.17,0.67,0.12,0.99)`;
+      strip.style.transform = `translateY(${targetOffset}px)`;
+    }, 50);
+    setTimeout(()=>{
+      AudioEngine.stop();
+    }, (1 + r*0.4)*1000);
+  }
+
+  // Check results after all reels stop
+  setTimeout(()=>{
+    const syms = results.map(i=>SLOT_SYMBOLS[i]);
+    let winAmount = 0;
+    if(syms[0]===syms[1] && syms[1]===syms[2]) {
+      winAmount = bet * SLOT_PAYOUTS[syms[0]];
+      updateBalance(winAmount);
+      document.getElementById('slotResult').textContent = `🎉 ¡${syms[0]}${syms[0]}${syms[0]}! +${winAmount} chips!`;
+      document.getElementById('slotResult').classList.add('flash');
+      setTimeout(()=>document.getElementById('slotResult').classList.remove('flash'),1000);
+      showWin(`🎰 ¡GANASTE ${winAmount} chips!`);
+      AudioEngine.win();
+    } else if(syms[0]===syms[1]) {
+      winAmount = bet;
+      updateBalance(winAmount);
+      document.getElementById('slotResult').textContent = `${syms[0]}${syms[1]} — Reembolso +${winAmount}`;
+      AudioEngine.click();
+    } else {
+      document.getElementById('slotResult').textContent = `${syms.join(' ')} — Sin premio`;
+      AudioEngine.lose();
+    }
+    slotSpinning = false;
+    document.getElementById('spinBtn').disabled = false;
+  }, 2800);
+}
+// ========================================
+// GAME 2: CRASH
+// ========================================
+let crashRunning = false;
+let crashBetPlaced = false;
+let crashMultiplier = 1.0;
+let crashPoint = 1.0;
+let crashInterval = null;
+let crashHistory = [];
+const crashCanvas = document.getElementById('crashCanvas');
+const crashCtx = crashCanvas.getContext('2d');
+let crashPoints = [];
+
+function crashDrawGraph() {
+  crashCtx.clearRect(0,0,400,250);
+  // Grid
+  crashCtx.strokeStyle = 'rgba(212,160,23,0.1)';
+  crashCtx.lineWidth = 1;
+  for(let i=0;i<10;i++){
+    crashCtx.beginPath();
+    crashCtx.moveTo(0,i*25);
+    crashCtx.lineTo(400,i*25);
+    crashCtx.stroke();
+    crashCtx.beginPath();
+    crashCtx.moveTo(i*40,0);
+    crashCtx.lineTo(i*40,250);
+    crashCtx.stroke();
+  }
+  // Curve
+  if(crashPoints.length > 1) {
+    crashCtx.beginPath();
+    crashCtx.strokeStyle = crashRunning ? '#2ecc71' : '#e74c3c';
+    crashCtx.lineWidth = 3;
+    crashCtx.moveTo(crashPoints[0].x, crashPoints[0].y);
+    for(let i=1;i<crashPoints.length;i++){
+      crashCtx.lineTo(crashPoints[i].x, crashPoints[i].y);
+    }
+    crashCtx.stroke();
+  }
+}
+
+function crashStart() {
+  if(crashRunning) return;
+  const bet = getActiveBet('.crash-bet');
+  if(balance < bet) return;
+  updateBalance(-bet);
+  crashBetPlaced = true;
+  crashRunning = true;
+  crashMultiplier = 1.0;
+  crashPoint = Math.max(1.01, 0.99 / (1 - Math.random()));
+  crashPoints = [{x:0, y:250}];
+  document.getElementById('crashBetBtn').disabled = true;
+  document.getElementById('crashCashBtn').disabled = false;
+  document.getElementById('crashMultiplier').textContent = '1.00x';
+  document.getElementById('crashMultiplier').className = 'crash-multiplier';
+  let tick = 0;
+  crashInterval = setInterval(()=>{
+    tick++;
+    crashMultiplier *= 1.006;
+    const x = Math.min(tick * 2, 398);
+    const y = Math.max(250 - (crashMultiplier - 1) * 50, 5);
+    crashPoints.push({x, y});
+    crashDrawGraph();
+    document.getElementById('crashMultiplier').textContent = crashMultiplier.toFixed(2) + 'x';
+    if(crashMultiplier > crashPoint * 0.7) {
+      document.getElementById('crashMultiplier').className = 'crash-multiplier danger';
+    }
+    if(tick % 5 === 0) AudioEngine.rising(crashMultiplier);
+    if(crashMultiplier >= crashPoint) {
+      crashEnd(false);
+    }
+  }, 50);
+}
+
+function crashCashout() {
+  if(!crashRunning || !crashBetPlaced) return;
+  crashEnd(true);
+}
+
+function crashEnd(cashed) {
+  clearInterval(crashInterval);
+  crashRunning = false;
+  crashBetPlaced = false;
+  document.getElementById('crashBetBtn').disabled = false;
+  document.getElementById('crashCashBtn').disabled = true;
+  const bet = getActiveBet('.crash-bet');
+  if(cashed) {
+    const winnings = Math.floor(bet * crashMultiplier);
+    updateBalance(winnings);
+    document.getElementById('crashMultiplier').textContent = `💰 +${winnings}`;
+    document.getElementById('crashMultiplier').className = 'crash-multiplier';
+    document.getElementById('crashMultiplier').style.color = '#f4b41a';
+    showWin(`🚀 Retiraste a ${crashMultiplier.toFixed(2)}x — +${winnings} chips!`);
+    AudioEngine.cashout();
+  } else {
+    document.getElementById('crashMultiplier').textContent = `💥 CRASH ${crashPoint.toFixed(2)}x`;
+    document.getElementById('crashMultiplier').className = 'crash-multiplier danger';
+    AudioEngine.explosion();
+  }
+  setTimeout(()=>{
+    document.getElementById('crashMultiplier').style.color = '';
+  }, 2000);
+  // History
+  crashHistory.unshift(crashPoint);
+  if(crashHistory.length > 5) crashHistory.pop();
+  const histEl = document.getElementById('crashHistory');
+  histEl.innerHTML = crashHistory.map(v=>{
+    let cls = v < 2 ? 'green' : v < 5 ? 'gold' : 'red';
+    return `<span class="crash-pill ${cls}">${v.toFixed(2)}x</span>`;
+  }).join('');
+  crashDrawGraph();
+}
+crashDrawGraph();
+// ========================================
+// GAME 3: MINES
+// ========================================
+let minesActive = false;
+let minesBoard = [];
+let minesRevealed = 0;
+let minesMineCount = 3;
+let minesBet = 10;
+
+function minesStart() {
+  minesMineCount = parseInt(document.querySelector('.mines-count.active').dataset.mines);
+  minesBet = getActiveBet('.mines-bet');
+  if(balance < minesBet) return;
+  updateBalance(-minesBet);
+  minesActive = true;
+  minesRevealed = 0;
+  document.getElementById('minesStartBtn').disabled = true;
+  document.getElementById('minesCashBtn').disabled = false;
+  // Generate board
+  minesBoard = Array(25).fill(false);
+  let placed = 0;
+  while(placed < minesMineCount) {
+    const idx = Math.floor(Math.random()*25);
+    if(!minesBoard[idx]) { minesBoard[idx] = true; placed++; }
+  }
+  renderMinesGrid();
+  updateMinesMultiplier();
+}
+
+function renderMinesGrid() {
+  const grid = document.getElementById('minesGrid');
+  grid.innerHTML = '';
+  for(let i=0;i<25;i++) {
+    const tile = document.createElement('div');
+    tile.className = 'mine-tile';
+    tile.dataset.index = i;
+    tile.addEventListener('click', ()=>minesTileClick(i, tile));
+    grid.appendChild(tile);
+  }
+}
+renderMinesGrid();
+
+function minesTileClick(idx, tile) {
+  if(!minesActive || tile.classList.contains('revealed')) return;
+  tile.classList.add('revealed');
+  if(minesBoard[idx]) {
+    // MINE HIT
+    tile.classList.add('bomb');
+    tile.textContent = '💣';
+    minesActive = false;
+    AudioEngine.explosion();
+    // Reveal all mines
+    document.querySelectorAll('.mine-tile').forEach((t,i)=>{
+      if(minesBoard[i] && !t.classList.contains('revealed')) {
+        t.classList.add('revealed','bomb');
+        t.textContent = '💣';
+      }
+    });
+    document.getElementById('minesInfo').textContent = '💥 GAME OVER';
+    document.getElementById('minesInfo').style.color = '#e74c3c';
+    document.getElementById('minesStartBtn').disabled = false;
+    document.getElementById('minesCashBtn').disabled = true;
+    setTimeout(()=>{document.getElementById('minesInfo').style.color='#f4b41a';},2000);
+  } else {
+    // SAFE
+    tile.classList.add('safe');
+    tile.textContent = '💎';
+    minesRevealed++;
+    AudioEngine.pop();
+    updateMinesMultiplier();
+  }
+}
+
+function updateMinesMultiplier() {
+  const safeTiles = 25 - minesMineCount;
+  let mult = 1;
+  for(let i=0;i<minesRevealed;i++) {
+    mult *= (25 - i) / (25 - minesMineCount - i);
+  }
+  mult *= 0.97;
+  if(minesRevealed === 0) mult = 1;
+  document.getElementById('minesInfo').textContent = `Multiplicador: ${mult.toFixed(2)}x | Ganancia: ${Math.floor(minesBet * mult)}`;
+}
+
+function minesCashout() {
+  if(!minesActive) return;
+  minesActive = false;
+  const safeTiles = 25 - minesMineCount;
+  let mult = 1;
+  for(let i=0;i<minesRevealed;i++) {
+    mult *= (25 - i) / (25 - minesMineCount - i);
+  }
+  mult *= 0.97;
+  if(minesRevealed === 0) mult = 1;
+  const winnings = Math.floor(minesBet * mult);
+  updateBalance(winnings);
+  document.getElementById('minesInfo').textContent = `💰 +${winnings} chips!`;
+  showWin(`💎 ¡Retiraste ${winnings} chips!`);
+  AudioEngine.cashout();
+  document.getElementById('minesStartBtn').disabled = false;
+  document.getElementById('minesCashBtn').disabled = true;
+  // Reveal remaining mines
+  document.querySelectorAll('.mine-tile').forEach((t,i)=>{
+    if(minesBoard[i] && !t.classList.contains('revealed')) {
+      t.classList.add('revealed','bomb');
+      t.textContent = '💣';
+      t.style.opacity = '0.5';
+    }
+  });
+}
+// ========================================
+// GAME 4: BINGO
+// ========================================
+let bingoCard = [];
+let bingoMarked = Array(25).fill(false);
+let bingoDrawn = [];
+let bingoAllBalls = [];
+let bingoAutoInterval = null;
+let bingoGameActive = false;
+let bingoBet = 50;
+
+function bingoGenerateCard() {
+  const card = [];
+  const ranges = [[1,15],[16,30],[31,45],[46,60],[61,75]];
+  for(let col=0;col<5;col++) {
+    const [min,max] = ranges[col];
+    const nums = [];
+    while(nums.length < 5) {
+      const n = Math.floor(Math.random()*(max-min+1))+min;
+      if(!nums.includes(n)) nums.push(n);
+    }
+    nums.sort((a,b)=>a-b);
+    for(let row=0;row<5;row++) {
+      card[row*5+col] = nums[row];
+    }
+  }
+  card[12] = 0; // FREE center
+  return card;
+}
+
+function bingoNew() {
+  if(balance < bingoBet) { document.getElementById('bingoBall').textContent = '❌'; return; }
+  updateBalance(-bingoBet);
+  bingoCard = bingoGenerateCard();
+  bingoMarked = Array(25).fill(false);
+  bingoMarked[12] = true; // FREE
+  bingoDrawn = [];
+  bingoAllBalls = [];
+  for(let i=1;i<=75;i++) bingoAllBalls.push(i);
+  // Shuffle
+  for(let i=bingoAllBalls.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [bingoAllBalls[i],bingoAllBalls[j]]=[bingoAllBalls[j],bingoAllBalls[i]];
+  }
+  bingoGameActive = true;
+  document.getElementById('bingoDrawBtn').disabled = false;
+  document.getElementById('bingoBall').textContent = '?';
+  document.getElementById('bingoBall').className = 'bingo-ball';
+  document.getElementById('ballHistory').innerHTML = '';
+  renderBingoCard();
+}
+
+function renderBingoCard() {
+  const grid = document.getElementById('bingoCard');
+  grid.innerHTML = '';
+  const headers = ['B','I','N','G','O'];
+  headers.forEach(h=>{
+    const div = document.createElement('div');
+    div.className = 'bingo-header';
+    div.textContent = h;
+    grid.appendChild(div);
+  });
+  for(let i=0;i<25;i++) {
+    const cell = document.createElement('div');
+    cell.className = 'bingo-cell';
+    if(i===12) {
+      cell.className = 'bingo-cell free';
+      cell.textContent = '⭐';
+    } else {
+      cell.textContent = bingoCard[i];
+    }
+    if(bingoMarked[i]) cell.classList.add('marked');
+    grid.appendChild(cell);
+  }
+}
+
+function getBingoLetter(num) {
+  if(num<=15) return 'B';
+  if(num<=30) return 'I';
+  if(num<=45) return 'N';
+  if(num<=60) return 'G';
+  return 'O';
+}
+
+function bingoDraw() {
+  if(!bingoGameActive || bingoAllBalls.length === 0) return;
+  const ball = bingoAllBalls.pop();
+  bingoDrawn.push(ball);
+  const letter = getBingoLetter(ball);
+  AudioEngine.pop();
+
+  // Display ball
+  const ballEl = document.getElementById('bingoBall');
+  ballEl.textContent = `${letter}-${ball}`;
+  ballEl.className = `bingo-ball ${letter}`;
+
+  // Check if on card
+  const idx = bingoCard.indexOf(ball);
+  if(idx !== -1 && !bingoMarked[idx]) {
+    bingoMarked[idx] = true;
+    AudioEngine.tick();
+    renderBingoCard();
+  }
+
+  // Ball history
+  const histEl = document.getElementById('ballHistory');
+  const colors = {B:'#e74c3c',I:'#3498db',N:'#2ecc71',G:'#9b59b6',O:'#f39c12'};
+  const smallBall = document.createElement('div');
+  smallBall.className = 'ball-small';
+  smallBall.style.background = colors[letter];
+  smallBall.textContent = ball;
+  histEl.insertBefore(smallBall, histEl.firstChild);
+  if(histEl.children.length > 10) histEl.removeChild(histEl.lastChild);
+
+  // Check win
+  checkBingoWin();
+}
+
+function checkBingoWin() {
+  // Check rows
+  for(let r=0;r<5;r++) {
+    if(bingoMarked[r*5]&&bingoMarked[r*5+1]&&bingoMarked[r*5+2]&&bingoMarked[r*5+3]&&bingoMarked[r*5+4]) {
+      bingoWin('line'); return;
+    }
+  }
+  // Check columns
+  for(let c=0;c<5;c++) {
+    if(bingoMarked[c]&&bingoMarked[c+5]&&bingoMarked[c+10]&&bingoMarked[c+15]&&bingoMarked[c+20]) {
+      bingoWin('line'); return;
+    }
+  }
+  // Check diagonals
+  if(bingoMarked[0]&&bingoMarked[6]&&bingoMarked[12]&&bingoMarked[18]&&bingoMarked[24]) {
+    bingoWin('diagonal'); return;
+  }
+  if(bingoMarked[4]&&bingoMarked[8]&&bingoMarked[12]&&bingoMarked[16]&&bingoMarked[20]) {
+    bingoWin('diagonal'); return;
+  }
+  // Check full card
+  if(bingoMarked.every(m=>m)) {
+    bingoWin('full'); return;
+  }
+}
+
+function bingoWin(type) {
+  bingoGameActive = false;
+  if(bingoAutoInterval) { clearInterval(bingoAutoInterval); bingoAutoInterval=null; document.getElementById('bingoAuto').checked=false; }
+  let mult = type==='full' ? 50 : 5;
+  const winnings = bingoBet * mult;
+  updateBalance(winnings);
+  const typeText = type==='full' ? '¡CARTÓN COMPLETO!' : type==='diagonal' ? '¡DIAGONAL!' : '¡LÍNEA!';
+  showWin(`🎱 ¡BINGO! ${typeText} +${winnings} chips!`);
+  AudioEngine.fanfare();
+  document.getElementById('bingoDrawBtn').disabled = true;
+}
+
+function bingoToggleAuto() {
+  if(document.getElementById('bingoAuto').checked) {
+    if(!bingoGameActive) { document.getElementById('bingoAuto').checked=false; return; }
+    bingoAutoInterval = setInterval(()=>{
+      if(bingoGameActive && bingoAllBalls.length > 0) bingoDraw();
+      else { clearInterval(bingoAutoInterval); bingoAutoInterval=null; }
+    }, 2000);
+  } else {
+    if(bingoAutoInterval) { clearInterval(bingoAutoInterval); bingoAutoInterval=null; }
+  }
+}
+
+// Init first card
+bingoNew();
+// Refund the auto-deduction since it's the first free card
+updateBalance(bingoBet);
+// ========================================
+// GAME 5: RULETA
+// ========================================
+const RULETA_NUMBERS = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const RULETA_REDS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+let ruletaSelectedNumber = null;
+let ruletaSelectedType = null;
+let ruletaSpinning = false;
+
+function getNumColor(n) {
+  if(n===0) return 'green';
+  return RULETA_REDS.includes(n) ? 'red' : 'black';
+}
+
+function initRuletaWheel() {
+  const wheel = document.getElementById('ruletaWheel');
+  const segAngle = 360 / 37;
+  let gradient = 'conic-gradient(';
+  const colors = {red:'#c0392b',black:'#2c3e50',green:'#27ae60'};
+  for(let i=0;i<37;i++){
+    const color = colors[getNumColor(RULETA_NUMBERS[i])];
+    const start = (i*segAngle).toFixed(2);
+    const end = ((i+1)*segAngle).toFixed(2);
+    gradient += `${color} ${start}deg ${end}deg`;
+    if(i<36) gradient += ', ';
+  }
+  gradient += ')';
+  wheel.style.background = gradient;
+}
+initRuletaWheel();
+
+function initNumberGrid() {
+  const grid = document.getElementById('numberGrid');
+  grid.innerHTML = '';
+  // Zero
+  const zero = document.createElement('div');
+  zero.className = 'num-cell green';
+  zero.textContent = '0';
+  zero.style.gridColumn = 'span 12';
+  zero.addEventListener('click',()=>ruletaSelectNumber(0));
+  grid.appendChild(zero);
+  // 1-36
+  for(let i=1;i<=36;i++){
+    const cell = document.createElement('div');
+    cell.className = `num-cell ${getNumColor(i)}`;
+    cell.textContent = i;
+    cell.addEventListener('click',()=>ruletaSelectNumber(i));
+    grid.appendChild(cell);
+  }
+}
+initNumberGrid();
+
+function ruletaSelectNumber(n) {
+  ruletaSelectedNumber = n;
+  ruletaSelectedType = null;
+  document.querySelectorAll('.num-cell').forEach(c=>c.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById('ruletaBetInfo').textContent = `Apuesta: Número ${n} (x35)`;
+  AudioEngine.click();
+}
+
+function ruletaSelectType(type) {
+  ruletaSelectedType = type;
+  ruletaSelectedNumber = null;
+  document.querySelectorAll('.num-cell').forEach(c=>c.classList.remove('selected'));
+  const labels = {rojo:'Rojo (x2)',negro:'Negro (x2)',par:'Par (x2)',impar:'Impar (x2)'};
+  document.getElementById('ruletaBetInfo').textContent = `Apuesta: ${labels[type]}`;
+  AudioEngine.click();
+}
+
+function ruletaSpin() {
+  if(ruletaSpinning) return;
+  if(ruletaSelectedNumber === null && ruletaSelectedType === null) {
+    document.getElementById('ruletaResult').textContent = '⚠️ Selecciona apuesta';
+    return;
+  }
+  const bet = getActiveBet('.ruleta-bet');
+  if(balance < bet) { document.getElementById('ruletaResult').textContent = '❌ Sin fondos'; return; }
+  updateBalance(-bet);
+  ruletaSpinning = true;
+  document.getElementById('ruletaSpinBtn').disabled = true;
+  document.getElementById('ruletaResult').textContent = '';
+
+  // Pick result
+  const resultIdx = Math.floor(Math.random()*37);
+  const resultNumber = RULETA_NUMBERS[resultIdx];
+  const segAngle = 360/37;
+
+  // Spin wheel
+  const wheel = document.getElementById('ruletaWheel');
+  const spins = 5 + Math.random()*3;
+  const targetAngle = spins*360 + (360 - resultIdx*segAngle - segAngle/2);
+  wheel.style.transition = 'transform 4s cubic-bezier(0.17,0.67,0.12,0.99)';
+  wheel.style.transform = `rotate(${targetAngle}deg)`;
+
+  // Tick sounds
+  let tickCount = 0;
+  const tickInterval = setInterval(()=>{
+    AudioEngine.tick();
+    tickCount++;
+    if(tickCount > 30) clearInterval(tickInterval);
+  }, 100 + tickCount*5);
+
+  setTimeout(()=>{
+    clearInterval(tickInterval);
+    ruletaSpinning = false;
+    document.getElementById('ruletaSpinBtn').disabled = false;
+    const color = getNumColor(resultNumber);
+    const colorEmoji = color==='red'?'🔴':color==='black'?'⚫':'🟢';
+    document.getElementById('ruletaResult').textContent = `${colorEmoji} ${resultNumber}`;
+    document.getElementById('ruletaResult').style.color = color==='red'?'#e74c3c':color==='black'?'#aaa':'#2ecc71';
+
+    // Check win
+    let won = false;
+    let mult = 0;
+    if(ruletaSelectedNumber !== null && resultNumber === ruletaSelectedNumber) {
+      won = true; mult = 35;
+    } else if(ruletaSelectedType === 'rojo' && color === 'red') {
+      won = true; mult = 2;
+    } else if(ruletaSelectedType === 'negro' && color === 'black') {
+      won = true; mult = 2;
+    } else if(ruletaSelectedType === 'par' && resultNumber !== 0 && resultNumber % 2 === 0) {
+      won = true; mult = 2;
+    } else if(ruletaSelectedType === 'impar' && resultNumber % 2 === 1) {
+      won = true; mult = 2;
+    }
+
+    if(won) {
+      const winnings = bet * mult;
+      updateBalance(winnings);
+      showWin(`🎡 ¡GANASTE ${winnings} chips!`);
+      AudioEngine.win();
+    } else {
+      AudioEngine.lose();
+    }
+    // Reset wheel transition for next spin
+    setTimeout(()=>{
+      wheel.style.transition = 'none';
+      wheel.style.transform = `rotate(${targetAngle % 360}deg)`;
+    }, 500);
+  }, 4200);
+}
+// ========================================
+// GAME 6: POKER
+// ========================================
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+let pokerDeck = [];
+let pokerPlayerHand = [];
+let pokerBotHand = [];
+let pokerCommunity = [];
+let pokerPot = 0;
+let pokerStage = 'idle'; // idle, preflop, flop, turn, river, showdown
+let pokerPlayerBet = 0;
+let pokerBotBet = 0;
+
+function createDeck() {
+  const deck = [];
+  for(const s of SUITS) for(const r of RANKS) deck.push({rank:r, suit:s});
+  // Shuffle
+  for(let i=deck.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [deck[i],deck[j]]=[deck[j],deck[i]];
+  }
+  return deck;
+}
+
+function cardHTML(card, faceDown=false) {
+  if(faceDown) return `<div class="card card-back">C8L</div>`;
+  const isRed = card.suit==='♥'||card.suit==='♦';
+  return `<div class="card card-front ${isRed?'red':''}"><span class="rank">${card.rank}${card.suit}</span><span class="suit">${card.suit}</span></div>`;
+}
+
+function renderPoker() {
+  const botEl = document.getElementById('botCards');
+  const playerEl = document.getElementById('playerCards');
+  const commEl = document.getElementById('communityCards');
+  botEl.innerHTML = pokerBotHand.map(c=> pokerStage==='showdown' ? cardHTML(c) : cardHTML(c, true)).join('');
+  playerEl.innerHTML = pokerPlayerHand.map(c=>cardHTML(c)).join('');
+  commEl.innerHTML = pokerCommunity.map(c=>cardHTML(c)).join('');
+  document.getElementById('pokerPot').textContent = `Pot: ${pokerPot}`;
+}
+
+function pokerDeal() {
+  const bet = getActiveBet('.poker-bet');
+  if(balance < bet) { document.getElementById('pokerMsg').textContent = '❌ Sin fondos'; return; }
+  updateBalance(-bet);
+  pokerPlayerBet = bet;
+  pokerBotBet = bet;
+  pokerPot = bet * 2;
+  pokerDeck = createDeck();
+  pokerPlayerHand = [pokerDeck.pop(), pokerDeck.pop()];
+  pokerBotHand = [pokerDeck.pop(), pokerDeck.pop()];
+  pokerCommunity = [];
+  pokerStage = 'preflop';
+  document.getElementById('pokerMsg').textContent = 'Pre-flop — Tu turno';
+  document.getElementById('pokerDealBtn').disabled = true;
+  document.getElementById('pokerCallBtn').disabled = false;
+  document.getElementById('pokerRaiseBtn').disabled = false;
+  document.getElementById('pokerFoldBtn').disabled = false;
+  AudioEngine.cardFlick();
+  renderPoker();
+}
+
+function pokerCall() {
+  if(pokerStage==='idle'||pokerStage==='showdown') return;
+  AudioEngine.click();
+  pokerAdvanceStage();
+}
+
+function pokerRaise() {
+  if(pokerStage==='idle'||pokerStage==='showdown') return;
+  const bet = getActiveBet('.poker-bet');
+  if(balance < bet) { document.getElementById('pokerMsg').textContent = '❌ Sin fondos para subir'; return; }
+  updateBalance(-bet);
+  pokerPlayerBet += bet;
+  pokerPot += bet;
+  // Bot responds
+  const botDecision = botRespond(true);
+  if(botDecision === 'fold') {
+    pokerWin('Bot se retiró');
+    return;
+  }
+  // Bot calls the raise
+  pokerBotBet += bet;
+  pokerPot += bet;
+  AudioEngine.click();
+  pokerAdvanceStage();
+}
+
+function pokerFold() {
+  pokerStage = 'showdown';
+  pokerPot = 0;
+  document.getElementById('pokerMsg').textContent = '😔 Te retiraste';
+  document.getElementById('pokerCallBtn').disabled = true;
+  document.getElementById('pokerRaiseBtn').disabled = true;
+  document.getElementById('pokerFoldBtn').disabled = true;
+  document.getElementById('pokerDealBtn').disabled = false;
+  AudioEngine.lose();
+  renderPoker();
+}
+
+function pokerAdvanceStage() {
+  if(pokerStage === 'preflop') {
+    pokerStage = 'flop';
+    pokerCommunity.push(pokerDeck.pop(), pokerDeck.pop(), pokerDeck.pop());
+    document.getElementById('pokerMsg').textContent = 'Flop — Tu turno';
+    AudioEngine.cardFlick();
+  } else if(pokerStage === 'flop') {
+    pokerStage = 'turn';
+    pokerCommunity.push(pokerDeck.pop());
+    document.getElementById('pokerMsg').textContent = 'Turn — Tu turno';
+    AudioEngine.cardFlick();
+  } else if(pokerStage === 'turn') {
+    pokerStage = 'river';
+    pokerCommunity.push(pokerDeck.pop());
+    document.getElementById('pokerMsg').textContent = 'River — Tu turno';
+    AudioEngine.cardFlick();
+  } else if(pokerStage === 'river') {
+    pokerShowdown();
+    return;
+  }
+  // Bot action
+  const botAction = botRespond(false);
+  if(botAction === 'raise') {
+    const bet = getActiveBet('.poker-bet');
+    pokerBotBet += bet;
+    pokerPot += bet;
+    document.getElementById('pokerMsg').textContent += ' | Bot subió!';
+  }
+  renderPoker();
+}
+
+function botRespond(wasRaise) {
+  const botAll = [...pokerBotHand, ...pokerCommunity];
+  const botScore = evaluateHand(botAll);
+  const rand = Math.random();
+  // Bluff 15%
+  if(rand < 0.15) return 'raise';
+  if(botScore.rank >= 2) { // pair or better
+    return rand < 0.4 ? 'raise' : 'call';
+  }
+  // High card A or K
+  const hasHighCard = pokerBotHand.some(c=>c.rank==='A'||c.rank==='K');
+  if(hasHighCard) return rand < 0.6 ? 'call' : 'fold';
+  // Weak
+  if(wasRaise && rand < 0.2) return 'fold';
+  return 'call';
+}
+
+function pokerShowdown() {
+  pokerStage = 'showdown';
+  document.getElementById('pokerCallBtn').disabled = true;
+  document.getElementById('pokerRaiseBtn').disabled = true;
+  document.getElementById('pokerFoldBtn').disabled = true;
+  document.getElementById('pokerDealBtn').disabled = false;
+  const playerAll = [...pokerPlayerHand, ...pokerCommunity];
+  const botAll = [...pokerBotHand, ...pokerCommunity];
+  const playerScore = evaluateHand(playerAll);
+  const botScore = evaluateHand(botAll);
+  renderPoker();
+  if(playerScore.rank > botScore.rank || (playerScore.rank === botScore.rank && playerScore.highCard > botScore.highCard)) {
+    pokerWin(`¡Ganaste! ${playerScore.name} vs ${botScore.name}`);
+  } else if(playerScore.rank === botScore.rank && playerScore.highCard === botScore.highCard) {
+    // Tie - return bets
+    updateBalance(Math.floor(pokerPot/2));
+    document.getElementById('pokerMsg').textContent = `Empate: ${playerScore.name}`;
+    AudioEngine.click();
+  } else {
+    document.getElementById('pokerMsg').textContent = `Bot gana: ${botScore.name} vs ${playerScore.name}`;
+    AudioEngine.lose();
+  }
+}
+
+function pokerWin(msg) {
+  updateBalance(pokerPot);
+  document.getElementById('pokerMsg').textContent = `🎉 ${msg} +${pokerPot}`;
+  showWin(`🃏 ¡GANASTE ${pokerPot} chips!`);
+  AudioEngine.win();
+  pokerPot = 0;
+  pokerStage = 'showdown';
+  document.getElementById('pokerCallBtn').disabled = true;
+  document.getElementById('pokerRaiseBtn').disabled = true;
+  document.getElementById('pokerFoldBtn').disabled = true;
+  document.getElementById('pokerDealBtn').disabled = false;
+  renderPoker();
+}
+// === HAND EVALUATOR ===
+function evaluateHand(cards) {
+  if(cards.length < 2) return {rank:0, name:'Carta Alta', highCard:0};
+  const rankValues = {'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
+  const vals = cards.map(c=>rankValues[c.rank]).sort((a,b)=>b-a);
+  const suits = cards.map(c=>c.suit);
+
+  // Count occurrences
+  const counts = {};
+  vals.forEach(v=>{ counts[v]=(counts[v]||0)+1; });
+  const countEntries = Object.entries(counts).map(([v,c])=>({val:parseInt(v),count:c})).sort((a,b)=>b.count-a.count||b.val-a.val);
+
+  // Check flush (5 of same suit)
+  const suitCounts = {};
+  suits.forEach(s=>{ suitCounts[s]=(suitCounts[s]||0)+1; });
+  let isFlush = false;
+  let flushSuit = null;
+  for(const [s,c] of Object.entries(suitCounts)) {
+    if(c>=5) { isFlush=true; flushSuit=s; break; }
+  }
+
+  // Check straight
+  const uniqueVals = [...new Set(vals)].sort((a,b)=>b-a);
+  let isStraight = false;
+  let straightHigh = 0;
+  for(let i=0;i<=uniqueVals.length-5;i++){
+    if(uniqueVals[i]-uniqueVals[i+4]===4) {
+      isStraight=true;
+      straightHigh=uniqueVals[i];
+      break;
+    }
+  }
+  // Ace-low straight (A-2-3-4-5)
+  if(!isStraight && uniqueVals.includes(14)&&uniqueVals.includes(2)&&uniqueVals.includes(3)&&uniqueVals.includes(4)&&uniqueVals.includes(5)) {
+    isStraight=true;
+    straightHigh=5;
+  }
+
+  // Four of a kind
+  if(countEntries[0].count===4) return {rank:8, name:'Póker (4)', highCard:countEntries[0].val};
+  // Full house
+  if(countEntries[0].count===3 && countEntries.length>=2 && countEntries[1].count>=2) return {rank:7, name:'Full House', highCard:countEntries[0].val};
+  // Flush
+  if(isFlush && isStraight) return {rank:9, name:'Escalera Color', highCard:straightHigh};
+  if(isFlush) return {rank:6, name:'Color', highCard:vals[0]};
+  // Straight
+  if(isStraight) return {rank:5, name:'Escalera', highCard:straightHigh};
+  // Three of a kind
+  if(countEntries[0].count===3) return {rank:4, name:'Trío', highCard:countEntries[0].val};
+  // Two pair
+  if(countEntries[0].count===2 && countEntries.length>=2 && countEntries[1].count===2) return {rank:3, name:'Doble Par', highCard:Math.max(countEntries[0].val, countEntries[1].val)};
+  // One pair
+  if(countEntries[0].count===2) return {rank:2, name:'Par', highCard:countEntries[0].val};
+  // High card
+  return {rank:1, name:'Carta Alta', highCard:vals[0]};
+}
+
+// === INIT ===
+renderPoker();
+</script>
+</body>
+</html>

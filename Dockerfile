@@ -17,4 +17,4 @@ EXPOSE 8080
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "whatsapp_bot.py"]
+CMD ["python", "telegram_antigravity.py"]

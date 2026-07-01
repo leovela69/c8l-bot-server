@@ -1,19 +1,17 @@
 import os
-TELEGRAM_BOT_TOKEN = "8863835955:AAFoTlvma4VVa0wbPC5Rvh3pzcD7N7J8BQQ"
+
+# All keys read from environment variables — NEVER hardcode secrets
+TELEGRAM_BOT_TOKEN = os.environ.get("HERMES_BOT_TOKEN", "")
 BOT_NAME = "hermes_c8l_bot"
-ADMIN_CHAT_ID = "1970956749"
-GROUP_CHAT_ID = "-1002476372487"
-_OR_P1 = "sk-or-v1-54d357da6f52be58"
-_OR_P2 = "12e50cc9a46a04abe809c10cf21ad1b8416e76408ca11a4c"
-OPENROUTER_API_KEY = _OR_P1 + _OR_P2
+ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID", "")
+GROUP_CHAT_ID = os.environ.get("GROUP_CHAT_ID", "")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 AI_MODEL = "deepseek/deepseek-v4-flash:free"
 AI_MODEL_FAST = "qwen/qwen3-30b-a3b:free"
-POLLINATIONS_API_KEY = "sk_NCU6ElY6L4i0KhoMODTxNqj3QJRGetyS"
+POLLINATIONS_API_KEY = os.environ.get("POLLINATIONS_API_KEY", "")
 POLLINATIONS_BASE_URL = "https://gen.pollinations.ai"
-_HF_P1 = "hf_htCXebTQMcMq"
-_HF_P2 = "DmQEyGfCyzdSvddJQWvRfG"
-HUGGINGFACE_TOKEN = _HF_P1 + _HF_P2
+HUGGINGFACE_TOKEN = os.environ.get("HUGGINGFACE_TOKEN", "")
 HERMES_PERSONALITY = "Eres Hermes, el mensajero del Panteon C8L. Rapido, eficiente, leal. Hablas directo con energia. Usas emojis moderado. Firme pero justo. Tu lema: Hermes entrega. Siempre."
 MAX_WARNINGS = 3
 SPAM_THRESHOLD = 5

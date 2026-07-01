@@ -1,9 +1,30 @@
-pyTelegramBotAPI>=4.18.0,<5.0
-requests>=2.31.0
-Pillow>=10.0.0
-fpdf2>=2.7.0
-python-chess>=1.10.0
-google-genai>=1.0.0
+# ===========================================================================
+# C8L BOT SERVER — Dependencias
+# ⚡ Antigravity v5.0 — Motor Universal
+# ===========================================================================
 
-# VPS extras (quitar fondos, edicion avanzada)
-# rembg se instala aparte con: pip install rembg[cpu]
+# --- Core Bot ---
+python-telegram-bot>=21.0      # Bot Telegram (async, v21+)
+aiohttp>=3.9.0                 # Health server + webhooks async
+httpx>=0.27.0                  # HTTP client (sync+async) para API Router
+requests>=2.31.0               # HTTP legacy (compatibilidad)
+
+# --- IA / LLM (todo via API, nada local) ---
+# Las APIs se llaman via httpx, no requieren SDK pesado
+
+# --- NLP / Audio / Vision ---
+edge-tts>=6.1.0                # TTS gratuito (Microsoft Neural voices)
+
+# --- Juegos ---
+python-chess>=1.10.0           # Motor de ajedrez
+
+# --- Utilidades ---
+Pillow>=10.0.0                 # Procesamiento de imagenes
+requests>=2.31.0               # HTTP legacy (compatibilidad)
+sympy>=1.12                    # Calculadora cientifica
+
+# --- Opcional (instalar si se necesita) ---
+# fpdf2>=2.7.0                 # Generacion de PDFs
+# google-genai>=1.0.0          # SDK Gemini (no necesario, usamos httpx directo)
+# playwright>=1.40.0           # Web browser automation
+# pyTelegramBotAPI>=4.18.0     # Legacy (reemplazado por python-telegram-bot)

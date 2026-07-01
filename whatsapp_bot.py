@@ -59,6 +59,14 @@ from pantheon.tools import (
 # Import Auto-Repair Engine
 from pantheon.auto_repair import auto_repair, auto_capture
 
+# Import Hermes Watchdog (reanimador + puente con Sayan)
+try:
+    from hermes_watchdog import hermes_watchdog
+    hermes_watchdog.start()
+    logger.info("📢 Hermes Watchdog activo — vigilando + puente Sayan")
+except Exception as _hw_err:
+    logger.warning(f"⚠️ Hermes Watchdog no pudo arrancar: {_hw_err}")
+
 # Import Suno Auto-Healer (arranca monitoreo de token en background)
 try:
     from suno_auto_healer import start_healer
@@ -67,6 +75,27 @@ try:
 except Exception as _healer_err:
     logger.warning(f"⚠️ Suno Auto-Healer no pudo arrancar: {_healer_err}")
     _suno_healer = None
+
+# Import Hyperframes Video Engine (HTML → MP4)
+try:
+    from hyperframes.telegram_handler import handle_video_command, is_video_intent, get_video_prompt_from_text
+    from hyperframes.engine import HyperframesEngine
+    _hyperframes_engine = HyperframesEngine()
+    _hyperframes_available = True
+    logger.info("🎬 Hyperframes Engine cargado")
+except Exception as _hf_err:
+    logger.warning(f"⚠️ Hyperframes no disponible: {_hf_err}")
+    _hyperframes_available = False
+    _hyperframes_engine = None
+
+# Import SkillScan Security Scanner
+try:
+    from skillscan.telegram_handler import handle_scan_command
+    _skillscan_available = True
+    logger.info("🛡️ SkillScan Security Scanner cargado")
+except Exception as _ss_err:
+    logger.warning(f"⚠️ SkillScan no disponible: {_ss_err}")
+    _skillscan_available = False
 
 # ---------------------------------------------------------------------------
 # Inicializar agentes
@@ -495,48 +524,82 @@ def dispatch_to_agent(intent_data, text, chat_id, user_name):
             threading.Thread(target=_gen_apolo, daemon=True).start()
 
         elif agent == "ares":
-            # Video — Genera VIDEO REAL con VideoEngine multi-motor
-            tg_typing(chat_id)
-            tg_send(chat_id, "🎬 Generando video con IA... (puede tardar 1-3 min)")
-            tg_video_action(chat_id)
+            # Video — detectar si es mejor usar Hyperframes (HTML→MP4) o Ares (AI video gen)
+            t_lower = text.lower()
+            use_hyperframes = _hyperframes_available and any(kw in t_lower for kw in [
+                'html', 'hyperframe', 'template', 'animación html', 'render html',
+                'motion graphic', 'tipografía', 'kinetic', 'intro animado',
+                'promo animada', 'stats video', 'logo animado'
+            ])
 
-            # Registrar para auto-evolución
-            evolution.record_generation(chat_id, text, "ares", "video")
+            if use_hyperframes:
+                # Usar Hyperframes para videos basados en HTML/templates
+                tg_typing(chat_id)
+                tg_send(chat_id, "🎬 Generando video con Hyperframes Engine...")
 
-            result = ares_bot.process(text, user_name)
-            if result:
-                rtype = result.get("type", "error")
-                if rtype == "video":
-                    # Video real generado — enviar como video MP4/GIF
-                    tg_video_action(chat_id)
-                    video_bytes = result["content"]
-                    filename = result.get("filename", "c8l_video.mp4")
-                    caption = result.get("caption", "🎬 Video generado por ARES")
-                    fmt = result.get("format", "mp4")
+                def _hf_dispatch():
+                    try:
+                        import asyncio
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        result = loop.run_until_complete(
+                            handle_video_command(
+                                text=text, chat_id=chat_id, user_name=user_name,
+                                send_fn=tg_send, typing_fn=tg_typing,
+                                video_fn=tg_send_video, video_action_fn=tg_video_action
+                            )
+                        )
+                        loop.close()
+                        if result.get('status') == 'ok':
+                            _send_feedback_buttons(chat_id)
+                    except Exception as e:
+                        logger.error(f"Hyperframes dispatch error: {e}")
+                        tg_send(chat_id, f"❌ Error Hyperframes: {str(e)[:150]}")
 
-                    if fmt == "gif":
-                        tg_send_animation(chat_id, video_bytes, caption=caption)
-                    else:
-                        tg_send_video(chat_id, video_bytes, filename=filename, caption=caption)
-                    _send_feedback_buttons(chat_id)
-
-                elif rtype == "text":
-                    # Guion/storyboard o fallback texto
-                    content = result["content"]
-                    if len(content) > 3000:
-                        pdf_bytes = generate_pdf(content, f"Video: {text[:40]}")
-                        tg_send_document(chat_id, pdf_bytes, "video_c8l.pdf",
-                                         caption=f"🎬 {text[:60]}")
-                    else:
-                        tg_send(chat_id, content)
-                    _send_feedback_buttons(chat_id)
-
-                elif rtype == "error":
-                    tg_send(chat_id, result.get("content", "❌ Error generando video."))
-                else:
-                    tg_send(chat_id, str(result.get("content", "Resultado no reconocido")))
+                threading.Thread(target=_hf_dispatch, daemon=True).start()
             else:
-                tg_send(chat_id, "❌ No pude generar el video. Intenta de nuevo en unos minutos.")
+                # Video estándar con Ares (AI video generation)
+                tg_typing(chat_id)
+                tg_send(chat_id, "🎬 Generando video con IA... (puede tardar 1-3 min)")
+                tg_video_action(chat_id)
+
+                # Registrar para auto-evolución
+                evolution.record_generation(chat_id, text, "ares", "video")
+
+                result = ares_bot.process(text, user_name)
+                if result:
+                    rtype = result.get("type", "error")
+                    if rtype == "video":
+                        # Video real generado — enviar como video MP4/GIF
+                        tg_video_action(chat_id)
+                        video_bytes = result["content"]
+                        filename = result.get("filename", "c8l_video.mp4")
+                        caption = result.get("caption", "🎬 Video generado por ARES")
+                        fmt = result.get("format", "mp4")
+
+                        if fmt == "gif":
+                            tg_send_animation(chat_id, video_bytes, caption=caption)
+                        else:
+                            tg_send_video(chat_id, video_bytes, filename=filename, caption=caption)
+                        _send_feedback_buttons(chat_id)
+
+                    elif rtype == "text":
+                        # Guion/storyboard o fallback texto
+                        content = result["content"]
+                        if len(content) > 3000:
+                            pdf_bytes = generate_pdf(content, f"Video: {text[:40]}")
+                            tg_send_document(chat_id, pdf_bytes, "video_c8l.pdf",
+                                             caption=f"🎬 {text[:60]}")
+                        else:
+                            tg_send(chat_id, content)
+                        _send_feedback_buttons(chat_id)
+
+                    elif rtype == "error":
+                        tg_send(chat_id, result.get("content", "❌ Error generando video."))
+                    else:
+                        tg_send(chat_id, str(result.get("content", "Resultado no reconocido")))
+                else:
+                    tg_send(chat_id, "❌ No pude generar el video. Intenta de nuevo en unos minutos.")
 
         elif agent == "hefesto":
             # Diseno / Codigo / Juegos
@@ -1838,12 +1901,12 @@ def main():
                     _send_feedback_buttons(msg.chat.id)
                     broadcast_content_created(msg.from_user.first_name, "video", tema)
                 elif result and result.get("type") == "text":
-                    content = result["content"]
-                    if len(content) > 3000:
-                        pdf_bytes = generate_pdf(content, f"Video: {tema[:40]}")
-                        tg_send_document(msg.chat.id, pdf_bytes, "video_c8l.pdf", caption=f"🎬 {tema[:60]}")
-                    else:
-                        tg_send(msg.chat.id, content)
+                    # Video falló, se generó guión. NO enviar PDF — dar mensaje claro
+                    tg_send(msg.chat.id,
+                        "⚠️ Los motores de video están saturados ahora.\n"
+                        "Intenta de nuevo en 1-2 minutos con /crear_video\n\n"
+                        "💡 Tip: Prueba prompts más simples en inglés:\n"
+                        "`/crear_video a golden lion walking through neon city at night`")
                 else:
                     tg_send(msg.chat.id, "❌ No pude generar el video. Intenta de nuevo en unos minutos.")
             except Exception as e:
@@ -1922,6 +1985,89 @@ def main():
                 tg_send(msg.chat.id, f"❌ Error: {str(e)[:150]}")
 
         threading.Thread(target=_generate_and_send, daemon=True).start()
+
+    # ---------------------------------------------------------------------------
+    # /hf — Hyperframes Video (HTML → MP4 con templates y IA)
+    # ---------------------------------------------------------------------------
+    @bot.message_handler(commands=["hf", "hyperframes"])
+    def cmd_hyperframes(msg):
+        """Genera video HTML→MP4 con Hyperframes Engine."""
+        if not _hyperframes_available:
+            bot.reply_to(msg, "⚠️ Hyperframes no está disponible en este momento.")
+            return
+
+        text = msg.text
+        for prefix in ["/hf", "/hyperframes"]:
+            if text.startswith(prefix):
+                text = text[len(prefix):].strip()
+                break
+
+        chat_id = msg.chat.id
+        user_name = msg.from_user.first_name if msg.from_user else "User"
+
+        def _render():
+            try:
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+                result = loop.run_until_complete(
+                    handle_video_command(
+                        text=text,
+                        chat_id=chat_id,
+                        user_name=user_name,
+                        send_fn=tg_send,
+                        typing_fn=tg_typing,
+                        video_fn=tg_send_video,
+                        video_action_fn=tg_video_action
+                    )
+                )
+                loop.close()
+
+                if result.get('status') == 'ok':
+                    _send_feedback_buttons(chat_id)
+                    estia.record_interaction(chat_id, user_name, text, "hyperframes", "hyperframes")
+
+            except Exception as e:
+                logger.error(f"Error Hyperframes: {e}")
+                tg_send(chat_id, f"❌ Error en Hyperframes: {str(e)[:150]}")
+
+        threading.Thread(target=_render, daemon=True).start()
+
+    # ---------------------------------------------------------------------------
+    # /scan — SkillScan Security Scanner (Auto-auditoría + escáner externo)
+    # ---------------------------------------------------------------------------
+    @bot.message_handler(commands=["scan", "escanear", "audit"])
+    def cmd_scan(msg):
+        """Escanea el bot o URLs externas en busca de vulnerabilidades."""
+        if not _skillscan_available:
+            bot.reply_to(msg, "⚠️ SkillScan no está disponible en este momento.")
+            return
+
+        text = msg.text
+        chat_id = msg.chat.id
+
+        def _run_scan():
+            try:
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+                result = loop.run_until_complete(
+                    handle_scan_command(
+                        text=text,
+                        chat_id=chat_id,
+                        send_fn=tg_send,
+                        typing_fn=tg_typing
+                    )
+                )
+                loop.close()
+
+            except Exception as e:
+                logger.error(f"Error SkillScan: {e}")
+                tg_send(chat_id, f"❌ Error en escáner: {str(e)[:150]}")
+
+        threading.Thread(target=_run_scan, daemon=True).start()
 
     @bot.message_handler(commands=["crear_imagen"])
     def cmd_imagen(msg):
@@ -2860,6 +3006,87 @@ def main():
             logger.error(f"Error procesando foto: {e}")
             tg_send(chat_id, "❌ Error al procesar la foto.")
 
+    # === HANDLER DE AUDIO/VOZ — Antigravity Voice Control ===
+
+    @bot.message_handler(content_types=["voice", "audio"])
+    def handle_voice(msg):
+        """Procesa notas de voz y audios. Transcribe con Whisper y ejecuta."""
+        import asyncio
+        chat_id = msg.chat.id
+        user_name = msg.from_user.first_name or "Usuario"
+        chat_type = msg.chat.type
+
+        # En grupos: solo si es reply al bot
+        if 'group' in chat_type:
+            is_reply_to_bot = (msg.reply_to_message and
+                               msg.reply_to_message.from_user and
+                               msg.reply_to_message.from_user.username == BOT_NAME)
+            if not is_reply_to_bot:
+                return
+
+        logger.info(f"[VOZ] [{user_name}] ({chat_id}): audio recibido")
+        tg_typing(chat_id)
+
+        try:
+            # Descargar el audio
+            if msg.voice:
+                file_info = bot.get_file(msg.voice.file_id)
+                filename = "voice.ogg"
+            else:
+                file_info = bot.get_file(msg.audio.file_id)
+                filename = msg.audio.file_name or "audio.ogg"
+
+            audio_bytes = bot.download_file(file_info.file_path)
+
+            # Transcribir con Whisper via Groq (gratis)
+            from nlp.audio_processor import AudioProcessor
+            audio_proc = AudioProcessor()
+            text = asyncio.run(audio_proc.transcribe(audio_bytes, filename))
+
+            if not text:
+                tg_send(chat_id, "❌ No pude entender el audio. Intenta de nuevo.")
+                return
+
+            # Mostrar qué entendió
+            tg_send(chat_id, f"🎤 Entendí: _{text[:200]}_", parse_mode="Markdown")
+            tg_typing(chat_id)
+
+            # Actualizar memoria
+            smart_memory.update_from_interaction(msg.from_user.id, user_name, text)
+            levels.add_xp(msg.from_user.id, user_name, "voice_message")
+
+            # Procesar con Antigravity
+            try:
+                from antigravity import antigravity_process
+                ag_response = antigravity_process(
+                    text=text,
+                    chat_id=str(chat_id),
+                    user_name=user_name,
+                    user_id=str(msg.from_user.id),
+                )
+                if ag_response:
+                    tg_send(chat_id, ag_response)
+
+                    # TTS: responder con audio si es mensaje corto
+                    if len(ag_response) < 500:
+                        try:
+                            audio_response = asyncio.run(audio_proc.text_to_speech(ag_response))
+                            if audio_response:
+                                bot.send_voice(chat_id, audio_response)
+                        except Exception as _tts_err:
+                            logger.debug(f"TTS skip: {_tts_err}")
+                    return
+            except Exception as _ag_err:
+                logger.debug(f"Antigravity voice bypass: {_ag_err}")
+
+            # Fallback: Zeus
+            intent_data = analyze_intent(text, user_name)
+            dispatch_to_agent(intent_data, text, chat_id, user_name)
+
+        except Exception as e:
+            logger.error(f"Error procesando audio: {e}")
+            tg_send(chat_id, "❌ Error al procesar el audio.")
+
     # === MENSAJE LIBRE (Zeus orquesta) ===
 
     @bot.message_handler(func=lambda m: m.text and not m.text.startswith('/'), content_types=["text"])
@@ -2889,7 +3116,7 @@ def main():
             _respond_in_group(chat_id, text, user_name)
             return
 
-        # En PRIVADO: flujo normal con Zeus
+        # En PRIVADO: flujo normal
         logger.info(f"[{user_name}] ({chat_id}): {text[:80]}")
         tg_typing(chat_id)
 
@@ -2899,7 +3126,22 @@ def main():
         # XP por mensaje
         levels.add_xp(msg.from_user.id, user_name, "message")
 
-        # Zeus analiza y decide
+        # ⚡ ANTIGRAVITY v4.0 — Triage de 3 capas (intercepta antes de Zeus)
+        try:
+            from antigravity import antigravity_process
+            ag_response = antigravity_process(
+                text=text,
+                chat_id=str(chat_id),
+                user_name=user_name,
+                user_id=str(msg.from_user.id),
+            )
+            if ag_response:
+                tg_send(chat_id, ag_response)
+                return
+        except Exception as _ag_err:
+            logger.debug(f"Antigravity bypass: {_ag_err}")
+
+        # Fallback: Zeus analiza y decide (sistema clásico)
         intent_data = analyze_intent(text, user_name)
         logger.info(f"  Zeus -> {intent_data.get('primary_agent', '?').upper()}")
 

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🃏 C8L Poker — Texas Hold'em</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0e11 url('https://image.pollinations.ai/prompt/dark%20luxury%20casino%20interior%20gold%20ambient%20lights%20bokeh%20premium%20elegant?width=1400&height=900&nologo=true') center/cover no-repeat fixed;
+  font-family:'Segoe UI',system-ui,sans-serif;
+  color:#fff;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;
+}
+.header{
+  width:100%;padding:14px 24px;
+  background:linear-gradient(180deg,#1a1d23 0%,#0b0e11 100%);
+  border-bottom:2px solid #c9a227;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.header h1{font-size:1.4em;color:#c9a227;letter-spacing:1px}
+.header .chips{font-size:1.1em;color:#4ade80;font-weight:700}
+.table-wrap{
+  position:relative;
+  width:min(820px,95vw);height:min(520px,60vh);
+  margin:20px auto;
+  perspective:800px;
+}
+.felt{
+  width:100%;height:100%;
+  background:url('https://raw.githubusercontent.com/leovela69/c8l-bot-server/main/kukis/assets/table_poker.jpg') center/cover no-repeat,
+    radial-gradient(ellipse at 50% 45%,#1b6b35 0%,#145a2b 40%,#0d4420 70%,#0a3318 100%);
+  border-radius:50% / 40%;
+  border:12px solid #1a1d23;
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,0.4),
+    inset 0 0 20px rgba(0,0,0,0.3),
+    0 0 0 4px #c9a227,
+    0 0 0 8px #1a1d23,
+    0 20px 60px rgba(0,0,0,0.7);
+  position:relative;
+  overflow:hidden;
+}
+.felt::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  border-radius:inherit;pointer-events:none;
+}
+.felt::after{
+  content:'C8L POKER';
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-size:2.5em;font-weight:900;letter-spacing:8px;
+  color:rgba(201,162,39,0.08);
+  pointer-events:none;
+}
+/* CARTAS */
+.card{
+  width:72px;height:100px;
+  border-radius:8px;
+  position:relative;
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.3s;
+  transform-style:preserve-3d;
+  cursor:default;
+}
+.card:hover{transform:translateY(-4px)}
+.card-front{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:linear-gradient(145deg,#ffffff 0%,#f8f8f8 50%,#f0f0f0 100%);
+  border-radius:8px;
+  border:1px solid #d0d0d0;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.2),
+    0 8px 16px rgba(0,0,0,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  display:flex;flex-direction:column;
+  padding:6px 8px;
+  backface-visibility:hidden;
+}
+.card-front .top-rank{
+  font-size:0.95em;font-weight:800;line-height:1;
+}
+.card-front .center-suit{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  font-size:2.2em;
+}
+.card-front .bottom-rank{
+  font-size:0.95em;font-weight:800;line-height:1;
+  align-self:flex-end;transform:rotate(180deg);
+}
+.card-front.red{color:#d32f2f}
+.card-front.black{color:#1a1a1a}
+.card-back{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:url('https://raw.githubusercontent.com/leovela69/c8l-bot-server/main/kukis/assets/card_back.jpg') center/cover no-repeat,
+    linear-gradient(135deg,#1a3a5c 0%,#0d2240 50%,#1a3a5c 100%);
+  border-radius:8px;
+  border:2px solid #c9a227;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.2),
+    0 8px 16px rgba(0,0,0,0.15);
+  display:flex;align-items:center;justify-content:center;
+  backface-visibility:hidden;
+  transform:rotateY(180deg);
+}
+.card-back::before{
+  content:'';position:absolute;top:6px;left:6px;right:6px;bottom:6px;
+  border:1px solid rgba(201,162,39,0.4);border-radius:4px;
+  background:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(201,162,39,0.05) 4px,rgba(201,162,39,0.05) 8px);
+}
+.card-back::after{
+  content:'♠';font-size:1.8em;color:#c9a227;
+  text-shadow:0 0 10px rgba(201,162,39,0.5);
+  position:relative;z-index:1;
+}
+.card.flipped .card-front{transform:rotateY(0deg)}
+.card.flipped .card-back{transform:rotateY(180deg)}
+.card.face-down .card-front{transform:rotateY(180deg)}
+.card.face-down .card-back{transform:rotateY(0deg)}
+/* ZONAS DE MESA */
+.zone{position:absolute;display:flex;gap:8px;align-items:center;justify-content:center}
+.zone-bot{top:12%;left:50%;transform:translateX(-50%)}
+.zone-community{top:42%;left:50%;transform:translateX(-50%)}
+.zone-player{bottom:8%;left:50%;transform:translateX(-50%)}
+.zone-pot{
+  position:absolute;top:30%;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,0.4);border:1px solid rgba(201,162,39,0.4);
+  border-radius:20px;padding:6px 18px;
+  font-size:1.1em;color:#c9a227;font-weight:700;
+  backdrop-filter:blur(4px);
+}
+/* FICHAS */
+.chip{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.6em;font-weight:800;color:#fff;
+  border:3px dashed rgba(255,255,255,0.5);
+  box-shadow:0 3px 6px rgba(0,0,0,0.4),inset 0 1px 2px rgba(255,255,255,0.2);
+}
+.chip-gold{background:radial-gradient(circle at 30% 30%,#f4d03f,#c9a227)}
+.chip-red{background:radial-gradient(circle at 30% 30%,#e74c3c,#922b21)}
+.chip-blue{background:radial-gradient(circle at 30% 30%,#3498db,#1a5276)}
+/* CONTROLES */
+.controls{
+  width:min(820px,95vw);
+  display:flex;gap:10px;justify-content:center;align-items:center;
+  flex-wrap:wrap;padding:10px 0;
+}
+.btn{
+  padding:12px 28px;border:none;border-radius:8px;
+  font-size:1em;font-weight:700;cursor:pointer;
+  transition:all 0.2s;letter-spacing:0.5px;
+}
+.btn:active{transform:scale(0.95)}
+.btn:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+.btn-deal{background:linear-gradient(135deg,#c9a227,#a68521);color:#0b0e11}
+.btn-deal:hover:not(:disabled){box-shadow:0 0 20px rgba(201,162,39,0.5)}
+.btn-call{background:linear-gradient(135deg,#27ae60,#1e8449);color:#fff}
+.btn-call:hover:not(:disabled){box-shadow:0 0 20px rgba(39,174,96,0.5)}
+.btn-raise{background:linear-gradient(135deg,#2980b9,#1a5276);color:#fff}
+.btn-raise:hover:not(:disabled){box-shadow:0 0 20px rgba(41,128,185,0.5)}
+.btn-fold{background:linear-gradient(135deg,#c0392b,#922b21);color:#fff}
+.btn-fold:hover:not(:disabled){box-shadow:0 0 20px rgba(192,57,43,0.5)}
+/* INFO */
+.info-bar{
+  width:min(820px,95vw);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 16px;flex-wrap:wrap;gap:8px;
+}
+.info-item{
+  background:rgba(26,29,35,0.9);border:1px solid #333;
+  border-radius:8px;padding:8px 14px;text-align:center;
+}
+.info-item .label{font-size:0.7em;color:#888;text-transform:uppercase}
+.info-item .val{font-size:1.1em;font-weight:700;color:#c9a227}
+.msg{
+  text-align:center;font-size:1.1em;min-height:28px;
+  margin:8px 0;color:#c9a227;font-weight:600;
+}
+/* PLAYER LABELS */
+.player-label{
+  position:absolute;
+  background:rgba(0,0,0,0.6);border:1px solid #555;
+  border-radius:6px;padding:4px 10px;font-size:0.75em;
+  backdrop-filter:blur(4px);
+}
+.player-label.bot{top:6%;left:50%;transform:translateX(-50%);color:#ff6b6b}
+.player-label.you{bottom:3%;left:50%;transform:translateX(-50%);color:#4ade80}
+/* RESPONSIVE */
+@media(max-width:600px){
+  .card{width:56px;height:78px}
+  .card-front .center-suit{font-size:1.6em}
+  .card-front .top-rank,.card-front .bottom-rank{font-size:0.8em}
+  .felt::after{font-size:1.5em}
+  .btn{padding:10px 18px;font-size:0.9em}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="header">
+<h1>🃏 C8L POKER</h1>
+<div class="chips">💰 <span id="bal">10000</span></div>
+</header>
+<div class="table-wrap">
+<div class="felt">
+<div class="player-label bot">🤖 BOT</div>
+<div class="zone zone-bot" id="botZone"></div>
+<div class="zone-pot" id="potDisplay">Pot: 0</div>
+<div class="zone zone-community" id="commZone"></div>
+<div class="zone zone-player" id="playerZone"></div>
+<div class="player-label you">👤 TÚ</div>
+</div>
+</div>
+<div class="msg" id="msg">Pulsa REPARTIR para empezar</div>
+<div class="info-bar">
+<div class="info-item"><div class="label">Tu mano</div><div class="val" id="handName">—</div></div>
+<div class="info-item"><div class="label">Fase</div><div class="val" id="stageDisplay">—</div></div>
+<div class="info-item"><div class="label">Apuesta</div><div class="val" id="betDisplay">50</div></div>
+</div>
+<div class="controls">
+<button class="btn btn-deal" id="btnDeal" onclick="deal()">🃏 REPARTIR</button>
+<button class="btn btn-call" id="btnCall" onclick="call()" disabled>IGUALAR</button>
+<button class="btn btn-raise" id="btnRaise" onclick="raise()" disabled>SUBIR</button>
+<button class="btn btn-fold" id="btnFold" onclick="fold()" disabled>RETIRARSE</button>
+</div>
+</div>
+<script>
+// ==========================================
+// C8L POKER — Texas Hold'em vs Bot
+// Premium visual: 888poker-style felt + cards
+// ==========================================
+
+// === AUDIO ===
+const SFX={ctx:null,
+  init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)()},
+  tone(f,d,t='sine',v=0.12){this.init();const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+d);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+d)},
+  deal(){this.tone(1200,0.04,'square',0.06)},
+  chip(){this.tone(800,0.06,'sine',0.08)},
+  win(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,0.2),i*100))},
+  lose(){this.tone(100,0.3,'sawtooth',0.1)},
+  fold(){this.tone(200,0.15,'sine',0.06)}
+};
+
+// === STATE ===
+let balance=parseInt(localStorage.getItem('c8l_poker_bal'))||10000;
+let bet=50;
+let pot=0;
+let deck=[],playerHand=[],botHand=[],community=[];
+let stage='idle'; // idle,preflop,flop,turn,river,showdown
+
+const SUITS=['♠','♥','♦','♣'];
+const RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RANK_VAL={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+
+function save(){localStorage.setItem('c8l_poker_bal',balance)}
+function updateUI(){
+  document.getElementById('bal').textContent=balance.toLocaleString();
+  document.getElementById('potDisplay').textContent='Pot: '+pot;
+  document.getElementById('betDisplay').textContent=bet;
+  const stages={idle:'—',preflop:'Pre-Flop',flop:'Flop',turn:'Turn',river:'River',showdown:'Showdown'};
+  document.getElementById('stageDisplay').textContent=stages[stage];
+}
+
+// === CARD RENDERING ===
+function cardHTML(card,faceDown=false){
+  if(faceDown) return '<div class="card face-down"><div class="card-front black"><span class="top-rank"></span><span class="center-suit"></span><span class="bottom-rank"></span></div><div class="card-back"></div></div>';
+  const isRed=card.suit==='♥'||card.suit==='♦';
+  const cls=isRed?'red':'black';
+  return `<div class="card flipped"><div class="card-front ${cls}"><span class="top-rank">${card.rank}${card.suit}</span><span class="center-suit">${card.suit}</span><span class="bottom-rank">${card.rank}${card.suit}</span></div><div class="card-back"></div></div>`;
+}
+
+function renderCards(){
+  document.getElementById('botZone').innerHTML=botHand.map(c=>stage==='showdown'?cardHTML(c):cardHTML(c,true)).join('');
+  document.getElementById('playerZone').innerHTML=playerHand.map(c=>cardHTML(c)).join('');
+  document.getElementById('commZone').innerHTML=community.map(c=>cardHTML(c)).join('');
+}
+
+// === DECK ===
+function makeDeck(){
+  deck=[];
+  for(const s of SUITS)for(const r of RANKS)deck.push({rank:r,suit:s,value:RANK_VAL[r]});
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}
+}
+
+// === HAND EVALUATION ===
+function evaluate(cards){
+  if(cards.length<5) return{rank:0,name:'—',high:0};
+  const vals=cards.map(c=>c.value).sort((a,b)=>b-a);
+  const suits=cards.map(c=>c.suit);
+  const counts={};
+  vals.forEach(v=>{counts[v]=(counts[v]||0)+1});
+  const entries=Object.entries(counts).map(([v,c])=>({v:+v,c})).sort((a,b)=>b.c-a.c||b.v-a.v);
+
+  // Flush?
+  const suitCnt={};suits.forEach(s=>{suitCnt[s]=(suitCnt[s]||0)+1});
+  const flush=Object.values(suitCnt).some(c=>c>=5);
+
+  // Straight?
+  const uniq=[...new Set(vals)].sort((a,b)=>b-a);
+  let straight=false,strHigh=0;
+  for(let i=0;i<=uniq.length-5;i++){
+    if(uniq[i]-uniq[i+4]===4){straight=true;strHigh=uniq[i];break}
+  }
+  if(!straight&&uniq.includes(14)&&uniq.includes(5)&&uniq.includes(4)&&uniq.includes(3)&&uniq.includes(2)){straight=true;strHigh=5}
+
+  if(flush&&straight) return{rank:9,name:'Escalera Color',high:strHigh};
+  if(entries[0].c===4) return{rank:8,name:'Póker',high:entries[0].v};
+  if(entries[0].c===3&&entries.length>=2&&entries[1].c>=2) return{rank:7,name:'Full House',high:entries[0].v};
+  if(flush) return{rank:6,name:'Color',high:vals[0]};
+  if(straight) return{rank:5,name:'Escalera',high:strHigh};
+  if(entries[0].c===3) return{rank:4,name:'Trío',high:entries[0].v};
+  if(entries[0].c===2&&entries.length>=2&&entries[1].c===2) return{rank:3,name:'Doble Par',high:Math.max(entries[0].v,entries[1].v)};
+  if(entries[0].c===2) return{rank:2,name:'Par',high:entries[0].v};
+  return{rank:1,name:'Carta Alta',high:vals[0]};
+}
+
+// === BOT AI ===
+function botDecide(wasRaise){
+  const botAll=[...botHand,...community];
+  const score=evaluate(botAll);
+  const r=Math.random();
+  if(r<0.12) return 'raise'; // bluff 12%
+  if(score.rank>=3) return r<0.5?'raise':'call'; // two pair+
+  if(score.rank>=2) return 'call'; // pair
+  const highCards=botHand.filter(c=>c.value>=12);
+  if(highCards.length>0) return r<0.7?'call':'fold';
+  if(wasRaise) return r<0.4?'fold':'call';
+  return r<0.3?'fold':'call';
+}
+
+// === GAME FLOW ===
+function deal(){
+  if(balance<bet){msg('❌ Sin fondos');return}
+  SFX.init();
+  balance-=bet;pot=bet*2;
+  makeDeck();
+  playerHand=[deck.pop(),deck.pop()];
+  botHand=[deck.pop(),deck.pop()];
+  community=[];
+  stage='preflop';
+  SFX.deal();setTimeout(()=>SFX.deal(),150);
+  setButtons(false,true,true,true);
+  msg('Pre-Flop — Tu turno');
+  renderCards();updateUI();
+  updateHandDisplay();
+}
+
+function call(){
+  if(stage==='idle'||stage==='showdown')return;
+  SFX.chip();
+  advance();
+}
+
+function raise(){
+  if(stage==='idle'||stage==='showdown')return;
+  if(balance<bet){msg('Sin fondos para subir');return}
+  balance-=bet;pot+=bet;
+  SFX.chip();
+  const botAct=botDecide(true);
+  if(botAct==='fold'){win('Bot se retiró 🏳️');return}
+  pot+=bet; // bot matches
+  advance();
+}
+
+function fold(){
+  SFX.fold();
+  stage='showdown';
+  pot=0;
+  msg('Te retiraste 😔');
+  setButtons(true,false,false,false);
+  renderCards();updateUI();save();
+}
+
+function advance(){
+  const botAct=botDecide(false);
+  if(botAct==='raise'){pot+=bet;msg('Bot subió!')}
+
+  if(stage==='preflop'){
+    stage='flop';
+    community.push(deck.pop(),deck.pop(),deck.pop());
+    msg('Flop');SFX.deal();
+  }else if(stage==='flop'){
+    stage='turn';
+    community.push(deck.pop());
+    msg('Turn');SFX.deal();
+  }else if(stage==='turn'){
+    stage='river';
+    community.push(deck.pop());
+    msg('River — Última oportunidad');SFX.deal();
+  }else if(stage==='river'){
+    showdown();return;
+  }
+  renderCards();updateUI();updateHandDisplay();
+}
+
+function showdown(){
+  stage='showdown';
+  const pAll=[...playerHand,...community];
+  const bAll=[...botHand,...community];
+  const pScore=evaluate(pAll);
+  const bScore=evaluate(bAll);
+  renderCards();
+
+  if(pScore.rank>bScore.rank||(pScore.rank===bScore.rank&&pScore.high>bScore.high)){
+    win(`¡GANASTE! ${pScore.name} vs ${bScore.name}`);
+  }else if(pScore.rank===bScore.rank&&pScore.high===bScore.high){
+    balance+=Math.floor(pot/2);
+    msg(`Empate: ${pScore.name}`);
+    SFX.chip();
+  }else{
+    msg(`Bot gana: ${bScore.name} vs tu ${pScore.name}`);
+    SFX.lose();
+  }
+  setButtons(true,false,false,false);
+  updateUI();save();
+}
+
+function win(text){
+  balance+=pot;
+  msg('🎉 '+text+' — +'+pot+' chips!');
+  SFX.win();
+  pot=0;
+  setButtons(true,false,false,false);
+  updateUI();save();
+}
+
+function msg(t){document.getElementById('msg').textContent=t}
+function updateHandDisplay(){
+  const pAll=[...playerHand,...community];
+  const score=evaluate(pAll);
+  document.getElementById('handName').textContent=score.name;
+}
+function setButtons(deal,call,raise,fold){
+  document.getElementById('btnDeal').disabled=!deal;
+  document.getElementById('btnCall').disabled=!call;
+  document.getElementById('btnRaise').disabled=!raise;
+  document.getElementById('btnFold').disabled=!fold;
+}
+
+// === INIT ===
+updateUI();renderCards();
+</script>
+</body>
+</html>

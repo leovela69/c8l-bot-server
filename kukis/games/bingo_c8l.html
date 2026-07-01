@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>BINGO C8L - Tombola de Oro</title>
+</head>
+<body>
+<div id="R"></div>
+<script>
+// BINGO C8L — Tombola de Oro — Complete Game
+(function(){
+const D=document,B=D.body;
+
+
+// ========== AUDIO ENGINE ==========
+const Audio={
+  ctx:null,
+  init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)()},
+  play(type){
+    this.init();const c=this.ctx,t=c.currentTime;
+    const o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    switch(type){
+      case'pop':o.frequency.setValueAtTime(600,t);o.frequency.exponentialRampToValueAtTime(200,t+0.1);
+        g.gain.setValueAtTime(0.3,t);g.gain.exponentialRampToValueAtTime(0.01,t+0.1);o.start(t);o.stop(t+0.1);break;
+      case'ding':o.frequency.setValueAtTime(880,t);o.frequency.exponentialRampToValueAtTime(1200,t+0.05);
+        g.gain.setValueAtTime(0.2,t);g.gain.exponentialRampToValueAtTime(0.01,t+0.2);o.start(t);o.stop(t+0.2);break;
+      case'win':this.playWin();return;
+      case'powerup':o.type='sine';o.frequency.setValueAtTime(400,t);o.frequency.exponentialRampToValueAtTime(1600,t+0.3);
+        g.gain.setValueAtTime(0.25,t);g.gain.exponentialRampToValueAtTime(0.01,t+0.3);o.start(t);o.stop(t+0.3);break;
+      case'fanfare':this.playFanfare();return;
+    }
+  },
+  playWin(){
+    this.init();const c=this.ctx,t=c.currentTime;
+    [523,659,784,1047].forEach((f,i)=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(c.destination);o.type='sine';
+      o.frequency.setValueAtTime(f,t+i*0.12);
+      g.gain.setValueAtTime(0.2,t+i*0.12);g.gain.exponentialRampToValueAtTime(0.01,t+i*0.12+0.3);
+      o.start(t+i*0.12);o.stop(t+i*0.12+0.3);
+    });
+  },
+  playFanfare(){
+    this.init();const c=this.ctx,t=c.currentTime;
+    [392,494,587,784,587,784,1047].forEach((f,i)=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(c.destination);o.type='triangle';
+      o.frequency.setValueAtTime(f,t+i*0.1);
+      g.gain.setValueAtTime(0.25,t+i*0.1);g.gain.exponentialRampToValueAtTime(0.01,t+i*0.1+0.25);
+      o.start(t+i*0.1);o.stop(t+i*0.1+0.25);
+    });
+  }
+};
+
+
+// ========== VOICE CALLER ==========
+const Voice={
+  enabled:true,
+  speak(text){
+    if(!this.enabled||!window.speechSynthesis)return;
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='es-ES';u.rate=1.1;u.pitch=1.0;u.volume=0.8;
+    window.speechSynthesis.speak(u);
+  },
+  callBall(letter,num){this.speak(letter+' '+num+'!');}
+};
+
+// ========== GAME STATE ==========
+const State={
+  balance:5000,bet:100,numCards:1,speed:3000,
+  playing:false,balls:[],drawnBalls:[],currentBall:null,
+  cards:[],winDetected:false,winTimeout:null,
+  autoDetect:true,voiceOn:true,
+  stats:{played:0,won:0,bestWin:0,blackouts:0,totalWon:0,totalSpent:0,streak:0,maxStreak:0},
+  powerups:{reveal:false,extraBall:false,doublePrize:false},
+  revealedBalls:[],interval:null,
+  patterns:{line:true,corners:true,blackout:true}
+};
+
+// ========== BINGO LOGIC ==========
+function generateCard(){
+  const card=[];
+  const ranges=[[1,15],[16,30],[31,45],[46,60],[61,75]];
+  for(let col=0;col<5;col++){
+    const[min,max]=ranges[col];
+    const nums=[];
+    while(nums.length<5){
+      const n=Math.floor(Math.random()*(max-min+1))+min;
+      if(!nums.includes(n))nums.push(n);
+    }
+    card.push(nums);
+  }
+  return card;
+}
+
+function getCardValue(card,row,col){
+  if(row===2&&col===2)return'FREE';
+  return card[col][row];
+}
+
+function shuffleBalls(){
+  const balls=[];
+  for(let i=1;i<=75;i++)balls.push(i);
+  for(let i=balls.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [balls[i],balls[j]]=[balls[j],balls[i]];
+  }
+  return balls;
+}
+
+function getBallLetter(num){
+  if(num<=15)return'B';if(num<=30)return'I';
+  if(num<=45)return'N';if(num<=60)return'G';return'O';
+}
+
+function checkWin(marked){
+  const wins=[];
+  // Rows
+  if(State.patterns.line){
+    for(let r=0;r<5;r++){
+      if(marked[r][0]&&marked[r][1]&&marked[r][2]&&marked[r][3]&&marked[r][4])
+        wins.push('line');
+    }
+    // Cols
+    for(let c=0;c<5;c++){
+      if(marked[0][c]&&marked[1][c]&&marked[2][c]&&marked[3][c]&&marked[4][c])
+        wins.push('line');
+    }
+    // Diagonals
+    if(marked[0][0]&&marked[1][1]&&marked[2][2]&&marked[3][3]&&marked[4][4])wins.push('line');
+    if(marked[0][4]&&marked[1][3]&&marked[2][2]&&marked[3][1]&&marked[4][0])wins.push('line');
+  }
+  // 4 Corners
+  if(State.patterns.corners){
+    if(marked[0][0]&&marked[0][4]&&marked[4][0]&&marked[4][4])wins.push('corners');
+  }
+  // Blackout
+  if(State.patterns.blackout){
+    let full=true;
+    for(let r=0;r<5;r++)for(let c=0;c<5;c++)if(!marked[r][c])full=false;
+    if(full)wins.push('blackout');
+  }
+  return wins;
+}
+
+
+// ========== PARTICLES ==========
+let particles=[];
+function spawnParticles(x,y,count){
+  for(let i=0;i<count;i++){
+    particles.push({
+      x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8-3,
+      life:1,size:Math.random()*4+2,
+      color:`hsl(${40+Math.random()*20},100%,${50+Math.random()*30}%)`
+    });
+  }
+}
+function updateParticles(){
+  particles=particles.filter(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=0.02;
+    return p.life>0;
+  });
+}
+
+// ========== GAME ACTIONS ==========
+function startGame(){
+  if(State.playing)return;
+  if(State.balance<State.bet*State.numCards){alert('¡No tienes suficientes fichas!');return;}
+  State.balance-=State.bet*State.numCards;
+  State.stats.totalSpent+=State.bet*State.numCards;
+  State.playing=true;State.winDetected=false;
+  State.balls=shuffleBalls();State.drawnBalls=[];State.currentBall=null;
+  State.powerups={reveal:false,extraBall:false,doublePrize:false};
+  State.revealedBalls=[];
+  // Generate cards
+  State.cards=[];
+  for(let i=0;i<State.numCards;i++){
+    const card=generateCard();
+    const marked=Array.from({length:5},()=>Array(5).fill(false));
+    marked[2][2]=true; // FREE
+    State.cards.push({numbers:card,marked});
+  }
+  State.stats.played++;
+  startDrawing();
+  render();
+}
+
+function startDrawing(){
+  if(State.interval)clearInterval(State.interval);
+  State.interval=setInterval(drawBall,State.speed);
+}
+
+function drawBall(){
+  if(!State.playing||State.balls.length===0){
+    stopGame('No quedan bolas. ¡Ronda terminada!');return;
+  }
+  const ball=State.balls.shift();
+  State.currentBall=ball;
+  State.drawnBalls.push(ball);
+  Audio.play('pop');
+  const letter=getBallLetter(ball);
+  if(State.voiceOn)Voice.callBall(letter,ball);
+  // Auto-daub
+  State.cards.forEach(card=>{
+    const col=letter==='B'?0:letter==='I'?1:letter==='N'?2:letter==='G'?3:4;
+    for(let row=0;row<5;row++){
+      if(card.numbers[col][row]===ball){
+        card.marked[row][col]=true;
+        Audio.play('ding');
+      }
+    }
+  });
+  // Check wins
+  checkAllWins();
+  render();
+}
+
+function checkAllWins(){
+  for(let i=0;i<State.cards.length;i++){
+    const wins=checkWin(State.cards[i].marked);
+    if(wins.length>0&&!State.winDetected){
+      State.winDetected=true;
+      if(State.autoDetect){
+        State.winTimeout=setTimeout(()=>collectWin(wins),5000);
+      }
+      render();
+      return;
+    }
+  }
+}
+
+function collectWin(wins){
+  if(!State.playing)return;
+  if(State.winTimeout){clearTimeout(State.winTimeout);State.winTimeout=null;}
+  clearInterval(State.interval);State.interval=null;
+  let bestWin='line';let mult=3;
+  if(wins.includes('blackout')){bestWin='blackout';mult=20;State.stats.blackouts++;}
+  else if(wins.includes('corners')){bestWin='corners';mult=5;}
+  let prize=State.bet*mult;
+  if(State.powerups.doublePrize)prize*=2;
+  State.balance+=prize;State.stats.totalWon+=prize;
+  State.stats.won++;State.stats.streak++;
+  if(State.stats.streak>State.stats.maxStreak)State.stats.maxStreak=State.stats.streak;
+  if(prize>State.stats.bestWin)State.stats.bestWin=prize;
+  State.playing=false;
+  Audio.play('fanfare');
+  showWinAnimation(bestWin,prize);
+}
+
+function callBingo(){
+  if(!State.winDetected)return;
+  for(let i=0;i<State.cards.length;i++){
+    const wins=checkWin(State.cards[i].marked);
+    if(wins.length>0){collectWin(wins);return;}
+  }
+}
+
+function stopGame(msg){
+  if(State.interval){clearInterval(State.interval);State.interval=null;}
+  if(State.winTimeout){clearTimeout(State.winTimeout);State.winTimeout=null;}
+  State.playing=false;State.stats.streak=0;
+  render();
+}
+
+// ========== POWER-UPS ==========
+function useReveal(){
+  if(!State.playing||State.balance<50)return;
+  State.balance-=50;State.stats.totalSpent+=50;
+  State.powerups.reveal=true;
+  State.revealedBalls=State.balls.slice(0,3);
+  Audio.play('powerup');render();
+  setTimeout(()=>{State.revealedBalls=[];render();},4000);
+}
+function useExtraBall(){
+  if(!State.playing||State.balance<100)return;
+  State.balance-=100;State.stats.totalSpent+=100;
+  Audio.play('powerup');drawBall();
+}
+function useDoublePrize(){
+  if(!State.playing||State.balance<200||State.powerups.doublePrize)return;
+  State.balance-=200;State.stats.totalSpent+=200;
+  State.powerups.doublePrize=true;
+  Audio.play('powerup');render();
+}
+
+
+// ========== WIN ANIMATION ==========
+let winAnim={active:false,type:'',prize:0,frame:0};
+function showWinAnimation(type,prize){
+  winAnim={active:true,type,prize,frame:0};
+  const iv=setInterval(()=>{
+    winAnim.frame++;
+    spawnParticles(Math.random()*window.innerWidth,Math.random()*300,5);
+    updateParticles();render();
+    if(winAnim.frame>60){clearInterval(iv);winAnim.active=false;render();}
+  },50);
+}
+
+// ========== RENDER ==========
+function render(){
+  updateParticles();
+  const letters=['B','I','N','G','O'];
+  const speedLabel=State.speed===5000?'Lento':State.speed===3000?'Normal':'Rápido';
+  
+  let html=`<div class="game-container">`;
+  // Header
+  html+=`<div class="header"><h1>🎱 BINGO C8L — Tombola de Oro 🦁</h1></div>`;
+  // HUD
+  html+=`<div class="hud">
+    <div class="hud-item"><span class="hud-label">💰 Fichas</span><span class="hud-val">${State.balance.toLocaleString()}</span></div>
+    <div class="hud-item"><span class="hud-label">🎯 Apuesta</span><span class="hud-val">${State.bet}</span></div>
+    <div class="hud-item"><span class="hud-label">🎱 Bolas</span><span class="hud-val">${State.drawnBalls.length}/75</span></div>
+  </div>`;
+  
+  // Current ball display
+  if(State.currentBall){
+    const l=getBallLetter(State.currentBall);
+    html+=`<div class="current-ball-wrap"><div class="current-ball bounce">${l}-${State.currentBall}</div></div>`;
+  }else{
+    html+=`<div class="current-ball-wrap"><div class="current-ball idle">?</div></div>`;
+  }
+  
+  // Ball history
+  html+=`<div class="ball-history">`;
+  const last10=State.drawnBalls.slice(-10);
+  last10.forEach(b=>{
+    const l=getBallLetter(b);
+    html+=`<div class="history-ball ball-${l}">${l}${b}</div>`;
+  });
+  html+=`</div>`;
+  
+  // Revealed balls
+  if(State.revealedBalls.length>0){
+    html+=`<div class="revealed"><span>🔮 Próximas: </span>`;
+    State.revealedBalls.forEach(b=>{html+=`<span class="rev-ball">${getBallLetter(b)}-${b}</span>`;});
+    html+=`</div>`;
+  }
+  
+  // Cards
+  html+=`<div class="cards-area cards-${State.numCards}">`;
+  State.cards.forEach((card,ci)=>{
+    html+=`<div class="bingo-card"><div class="card-header">`;
+    letters.forEach(l=>{html+=`<div class="col-header">${l}</div>`;});
+    html+=`</div><div class="card-grid">`;
+    for(let row=0;row<5;row++){
+      for(let col=0;col<5;col++){
+        const val=row===2&&col===2?'⭐':card.numbers[col][row];
+        const marked=card.marked[row][col];
+        html+=`<div class="cell${marked?' marked':''}">${val}</div>`;
+      }
+    }
+    html+=`</div></div>`;
+  });
+  html+=`</div>`;
+  
+  // Controls
+  if(!State.playing){
+    html+=`<div class="controls">
+      <div class="ctrl-row">
+        <label>Cartones: </label>
+        <button class="btn-sm${State.numCards===1?' active':''}" onclick="setCards(1)">1</button>
+        <button class="btn-sm${State.numCards===2?' active':''}" onclick="setCards(2)">2</button>
+        <button class="btn-sm${State.numCards===4?' active':''}" onclick="setCards(4)">4</button>
+      </div>
+      <div class="ctrl-row">
+        <label>Apuesta: </label>
+        <button class="btn-sm" onclick="setBet(-50)">-</button>
+        <span class="bet-display">${State.bet}</span>
+        <button class="btn-sm" onclick="setBet(50)">+</button>
+      </div>
+      <div class="ctrl-row">
+        <label>Velocidad: </label>
+        <button class="btn-sm${State.speed===5000?' active':''}" onclick="setSpeed(5000)">🐢</button>
+        <button class="btn-sm${State.speed===3000?' active':''}" onclick="setSpeed(3000)">🏃</button>
+        <button class="btn-sm${State.speed===1500?' active':''}" onclick="setSpeed(1500)">⚡</button>
+      </div>
+      <div class="ctrl-row">
+        <label>Voz: </label>
+        <button class="btn-sm${State.voiceOn?' active':''}" onclick="toggleVoice()">${State.voiceOn?'🔊 ON':'🔇 OFF'}</button>
+      </div>
+      <button class="btn-play" onclick="startGame()">🎰 JUGAR</button>
+    </div>`;
+  }else{
+    html+=`<div class="controls playing">
+      <button class="btn-bingo${State.winDetected?' pulse':''}" onclick="callBingo()" ${!State.winDetected?'disabled':''}>¡BINGO!</button>
+      <div class="powerups">
+        <button class="btn-power" onclick="useReveal()" ${State.balance<50?'disabled':''}>🔮 Revelar<br><small>50 fichas</small></button>
+        <button class="btn-power" onclick="useExtraBall()" ${State.balance<100?'disabled':''}>⚡ Bola Extra<br><small>100 fichas</small></button>
+        <button class="btn-power${State.powerups.doublePrize?' used':''}" onclick="useDoublePrize()" ${State.balance<200||State.powerups.doublePrize?'disabled':''}>💎 Doble${State.powerups.doublePrize?' ✓':''}<br><small>200 fichas</small></button>
+      </div>
+    </div>`;
+  }
+  
+  // Patterns indicator
+  html+=`<div class="patterns">
+    <span class="pat${State.patterns.line?' on':''}">━ Línea (×3)</span>
+    <span class="pat${State.patterns.corners?' on':''}">◇ Esquinas (×5)</span>
+    <span class="pat${State.patterns.blackout?' on':''}">■ Blackout (×20)</span>
+  </div>`;
+  
+  // Stats
+  html+=`<div class="stats-toggle" onclick="toggleStats()">📊 Estadísticas</div>`;
+  html+=`<div class="stats-panel" id="stats-panel">
+    <div class="stat-row"><span>Partidas jugadas</span><span>${State.stats.played}</span></div>
+    <div class="stat-row"><span>Partidas ganadas</span><span>${State.stats.won}</span></div>
+    <div class="stat-row"><span>Win rate</span><span>${State.stats.played?Math.round(State.stats.won/State.stats.played*100):0}%</span></div>
+    <div class="stat-row"><span>Mejor premio</span><span>${State.stats.bestWin.toLocaleString()}</span></div>
+    <div class="stat-row"><span>Blackouts</span><span>${State.stats.blackouts}</span></div>
+    <div class="stat-row"><span>Total ganado</span><span>${State.stats.totalWon.toLocaleString()}</span></div>
+    <div class="stat-row"><span>Total apostado</span><span>${State.stats.totalSpent.toLocaleString()}</span></div>
+    <div class="stat-row"><span>Racha actual</span><span>${State.stats.streak}</span></div>
+    <div class="stat-row"><span>Mejor racha</span><span>${State.stats.maxStreak}</span></div>
+  </div>`;
+  
+  // Win overlay
+  if(winAnim.active){
+    const winName=winAnim.type==='blackout'?'¡BLACKOUT!':winAnim.type==='corners'?'¡4 ESQUINAS!':'¡LÍNEA!';
+    html+=`<div class="win-overlay">
+      <div class="win-text flash">${winName}</div>
+      <div class="win-prize">+${winAnim.prize.toLocaleString()} fichas</div>
+    </div>`;
+  }
+  
+  // Particles canvas
+  html+=`<canvas id="particles-canvas"></canvas>`;
+  html+=`</div>`; // game-container
+  
+  D.getElementById('R').innerHTML=html;
+  drawParticles();
+}
+
+
+// ========== PARTICLES CANVAS ==========
+function drawParticles(){
+  const canvas=D.getElementById('particles-canvas');
+  if(!canvas||particles.length===0)return;
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{
+    ctx.globalAlpha=p.life;ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+  });
+}
+
+// ========== HELPERS ==========
+window.setCards=function(n){State.numCards=n;render();};
+window.setBet=function(d){State.bet=Math.max(50,Math.min(500,State.bet+d));render();};
+window.setSpeed=function(s){State.speed=s;if(State.playing){clearInterval(State.interval);State.interval=setInterval(drawBall,s);}render();};
+window.toggleVoice=function(){State.voiceOn=!State.voiceOn;Voice.enabled=State.voiceOn;render();};
+window.startGame=startGame;
+window.callBingo=callBingo;
+window.useReveal=useReveal;
+window.useExtraBall=useExtraBall;
+window.useDoublePrize=useDoublePrize;
+window.toggleStats=function(){
+  const p=D.getElementById('stats-panel');
+  if(p)p.classList.toggle('open');
+};
+
+// ========== STYLES ==========
+const style=D.createElement('style');
+style.textContent=`
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06060f;color:#f4e4c1;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;user-select:none}
+.game-container{max-width:900px;margin:0 auto;padding:10px;position:relative}
+.header{text-align:center;padding:12px;background:linear-gradient(180deg,#1a0a00,#06060f);border-bottom:2px solid #8b6914;margin-bottom:10px;border-radius:8px}
+.header h1{font-size:clamp(1rem,4vw,1.5rem);color:#d4a017;text-shadow:0 0 15px rgba(212,160,23,0.6)}
+.hud{display:flex;justify-content:space-around;padding:10px;background:#0d0d1a;border:1px solid rgba(139,105,20,0.4);border-radius:8px;margin-bottom:10px}
+.hud-item{text-align:center}
+.hud-label{display:block;font-size:0.7em;color:#8b6914}
+.hud-val{font-size:1.1em;font-weight:bold;color:#d4a017}
+.current-ball-wrap{text-align:center;margin:10px 0}
+.current-ball{display:inline-block;width:80px;height:80px;line-height:80px;border-radius:50%;font-size:1.4em;font-weight:bold;text-align:center;border:3px solid #d4a017;background:radial-gradient(circle at 30% 30%,#2a1a00,#0a0500);box-shadow:0 0 20px rgba(212,160,23,0.5),inset 0 0 20px rgba(212,160,23,0.2);color:#f5d060}
+.current-ball.bounce{animation:bounce 0.5s ease}
+.current-ball.idle{color:#555;border-color:#333}
+@keyframes bounce{0%{transform:scale(0.5)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ball-history{display:flex;gap:5px;overflow-x:auto;padding:8px;background:#0d0d1a;border-radius:6px;margin-bottom:10px;justify-content:center;flex-wrap:wrap}
+.history-ball{padding:3px 6px;border-radius:4px;font-size:0.7em;font-weight:bold;background:#1a0a00;border:1px solid #8b6914;color:#d4a017}
+.ball-B{border-color:#ff6b35;color:#ff6b35}.ball-I{border-color:#00e676;color:#00e676}
+.ball-N{border-color:#448aff;color:#448aff}.ball-G{border-color:#d4a017;color:#d4a017}
+.ball-O{border-color:#e040fb;color:#e040fb}
+.revealed{text-align:center;padding:8px;background:rgba(100,0,200,0.2);border:1px solid #7c4dff;border-radius:6px;margin-bottom:10px}
+.rev-ball{margin:0 5px;padding:2px 8px;background:#7c4dff;border-radius:4px;font-weight:bold}
+.cards-area{display:grid;gap:10px;margin-bottom:10px}
+.cards-1{grid-template-columns:1fr}
+.cards-2{grid-template-columns:repeat(2,1fr)}
+.cards-4{grid-template-columns:repeat(2,1fr)}
+@media(max-width:600px){.cards-2,.cards-4{grid-template-columns:1fr}}
+.bingo-card{background:#1a0a00;border:2px solid #8b6914;border-radius:8px;padding:5px;box-shadow:0 0 15px rgba(139,105,20,0.3)}
+.card-header{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;font-weight:bold;color:#d4a017;font-size:clamp(0.8em,2.5vw,1.1em);padding:4px 0;border-bottom:1px solid #8b6914}
+.card-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:5px}
+.cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#0d0500;border:1px solid #333;border-radius:4px;font-size:clamp(0.65em,2vw,0.9em);font-weight:bold;transition:all 0.3s}
+.cell.marked{background:radial-gradient(circle,#d4a017,#8b6914);color:#000;border-color:#f5d060;box-shadow:0 0 8px rgba(212,160,23,0.7);animation:markPop 0.3s ease}
+@keyframes markPop{0%{transform:scale(0.7)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.controls{text-align:center;padding:15px;background:#0d0d1a;border:1px solid rgba(139,105,20,0.4);border-radius:8px;margin-bottom:10px}
+.controls.playing{display:flex;flex-direction:column;align-items:center;gap:10px}
+.ctrl-row{margin:6px 0;display:flex;align-items:center;justify-content:center;gap:8px}
+.ctrl-row label{color:#8b6914;font-size:0.85em}
+.btn-sm{padding:5px 12px;background:#1a0a00;border:1px solid #8b6914;color:#d4a017;border-radius:4px;cursor:pointer;font-size:0.85em}
+.btn-sm.active{background:#8b6914;color:#000}
+.btn-sm:hover{background:#2a1a00}
+.bet-display{color:#f5d060;font-weight:bold;min-width:40px;text-align:center}
+.btn-play{margin-top:12px;padding:12px 40px;font-size:1.2em;font-weight:bold;background:linear-gradient(135deg,#8b6914,#d4a017);color:#000;border:none;border-radius:8px;cursor:pointer;box-shadow:0 0 20px rgba(212,160,23,0.4)}
+.btn-play:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(212,160,23,0.7)}
+.btn-bingo{padding:15px 40px;font-size:1.3em;font-weight:bold;background:linear-gradient(135deg,#d4a017,#f5d060);color:#000;border:none;border-radius:10px;cursor:pointer}
+.btn-bingo:disabled{opacity:0.4;cursor:not-allowed}
+.btn-bingo.pulse{animation:pulse 0.5s infinite alternate;box-shadow:0 0 30px #d4a017}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.08)}}
+.powerups{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn-power{padding:8px 12px;background:#1a0a00;border:1px solid #8b6914;color:#d4a017;border-radius:6px;cursor:pointer;font-size:0.8em;text-align:center}
+.btn-power:hover:not(:disabled){background:#2a1a00;border-color:#d4a017}
+.btn-power:disabled{opacity:0.4;cursor:not-allowed}
+.btn-power.used{border-color:#00e676;color:#00e676}
+.patterns{display:flex;justify-content:center;gap:12px;padding:8px;font-size:0.75em;flex-wrap:wrap}
+.pat{padding:3px 8px;border-radius:4px;background:#111;border:1px solid #333;color:#555}
+.pat.on{border-color:#d4a017;color:#d4a017;background:#1a0a00}
+.stats-toggle{text-align:center;padding:8px;cursor:pointer;color:#8b6914;font-size:0.85em;margin-top:10px}
+.stats-toggle:hover{color:#d4a017}
+.stats-panel{max-height:0;overflow:hidden;transition:max-height 0.3s;background:#0d0d1a;border-radius:8px;margin-top:5px}
+.stats-panel.open{max-height:400px;padding:10px;border:1px solid rgba(139,105,20,0.4)}
+.stat-row{display:flex;justify-content:space-between;padding:4px 8px;font-size:0.8em;border-bottom:1px solid #1a1a2e}
+.stat-row span:last-child{color:#d4a017;font-weight:bold}
+.win-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+.win-text{font-size:clamp(2em,8vw,4em);font-weight:bold;color:#d4a017;text-shadow:0 0 30px #d4a017,0 0 60px rgba(212,160,23,0.5)}
+.win-text.flash{animation:flash 0.3s infinite alternate}
+@keyframes flash{from{opacity:1;transform:scale(1)}to{opacity:0.7;transform:scale(1.05)}}
+.win-prize{font-size:1.5em;color:#00e676;margin-top:15px}
+#particles-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1001}
+.col-header{font-size:clamp(0.7em,2.5vw,1em)}
+`;
+D.head.appendChild(style);
+
+// Initial render
+render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎡 Bonus Diario C8L — Rueda de la Fortuna</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #06060f;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+.header {
+  text-align: center;
+  padding: 20px 10px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #06060f 100%);
+  width: 100%;
+  border-bottom: 2px solid #d4a017;
+}
+.header h1 {
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  background: linear-gradient(135deg, #f4b41a, #d4a017, #8b6914);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  letter-spacing: 1px;
+}
+.balance-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  background: rgba(212, 160, 23, 0.1);
+  border: 1px solid #8b6914;
+  border-radius: 12px;
+  margin: 15px auto;
+  max-width: 400px;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎡 BONUS DIARIO C8L — Rueda de la Fortuna 🦁</h1>
+</div>
+
+
+<div class="balance-bar">
+  <span style="font-size:1.5rem;">🪙</span>
+  <span id="balanceDisplay" style="font-size:1.3rem; font-weight:bold; color:#f4b41a;">0</span>
+  <span style="color:#aaa; font-size:0.9rem;">chips</span>
+</div>
+
+<div class="streak-bar" id="streakBar">
+  <span>🔥 Racha: <strong id="streakCount">0</strong> días</span>
+  <span id="streakMultiplier" style="color:#f4b41a;">x1</span>
+</div>
+
+<div class="wheel-container">
+  <div class="pointer">▼</div>
+  <canvas id="wheelCanvas" width="400" height="400"></canvas>
+</div>
+
+<button id="spinBtn" class="spin-btn" onclick="startSpin()">🎰 GIRAR</button>
+<div id="cooldownDisplay" class="cooldown-display" style="display:none;">
+  <p>⏰ Próximo giro en:</p>
+  <span id="countdownTimer">00:00:00</span>
+</div>
+
+<div id="winOverlay" class="win-overlay" style="display:none;">
+  <div class="win-content">
+    <h2 id="winText">🎉 ¡GANASTE!</h2>
+    <p id="winAmount" class="win-amount">+0 chips</p>
+    <button onclick="closeWin()">CONTINUAR</button>
+  </div>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+
+
+<style>
+.streak-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 20px;
+  margin: 10px auto;
+  max-width: 300px;
+  background: rgba(244, 180, 26, 0.08);
+  border: 1px solid #8b6914;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+.wheel-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto;
+  width: min(400px, 90vw);
+  height: min(400px, 90vw);
+}
+.wheel-container canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 40px rgba(212, 160, 23, 0.4), inset 0 0 20px rgba(0,0,0,0.5);
+  border: 4px solid #d4a017;
+}
+.pointer {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2.5rem;
+  color: #f4b41a;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+  text-shadow: 0 0 10px #f4b41a;
+}
+.spin-btn {
+  display: block;
+  margin: 20px auto;
+  padding: 18px 50px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #06060f;
+  background: linear-gradient(135deg, #f4b41a, #d4a017);
+  border: 3px solid #8b6914;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  animation: pulse 1.5s infinite;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.spin-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(244, 180, 26, 0.6);
+}
+.spin-btn:disabled {
+  animation: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(244, 180, 26, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(244, 180, 26, 0.8); }
+}
+</style>
+
+
+<style>
+.cooldown-display {
+  text-align: center;
+  margin: 20px auto;
+  padding: 15px 30px;
+  background: rgba(255,50,50,0.1);
+  border: 1px solid #ff4444;
+  border-radius: 12px;
+  max-width: 320px;
+}
+.cooldown-display p { color: #ff8888; margin-bottom: 8px; }
+.cooldown-display span {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ff4444;
+  font-family: monospace;
+}
+.win-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(6, 6, 15, 0.92);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.win-content {
+  text-align: center;
+  padding: 40px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 3px solid #d4a017;
+  border-radius: 20px;
+  box-shadow: 0 0 60px rgba(212, 160, 23, 0.5);
+  animation: winPop 0.5s ease;
+}
+.win-content h2 {
+  font-size: 2rem;
+  color: #f4b41a;
+  margin-bottom: 15px;
+}
+.win-amount {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #4ade80;
+  margin: 15px 0;
+  text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+}
+.win-content button {
+  margin-top: 20px;
+  padding: 12px 40px;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #f4b41a, #d4a017);
+  color: #06060f;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+}
+@keyframes winPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+#confettiCanvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+</style>
+
+
+<script>
+// ===== CONFIGURATION =====
+const SEGMENTS = [
+  { value: 100,   color: '#1e3a5f', label: '100' },
+  { value: 200,   color: '#2d1b4e', label: '200' },
+  { value: 500,   color: '#1e3a5f', label: '500' },
+  { value: 1000,  color: '#3d1b1b', label: '1K' },
+  { value: 2000,  color: '#1e3a5f', label: '2K' },
+  { value: 5000,  color: '#2d1b4e', label: '5K' },
+  { value: 50,    color: '#1b3d2d', label: '50' },
+  { value: 10000, color: '#4a3d00', label: '10K' }
+];
+
+const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+const STREAK_MULTIPLIERS = { 1: 1, 2: 1.5, 3: 2, 4: 2.5, 5: 3, 6: 4, 7: 5 };
+
+// ===== STATE =====
+let balance = parseInt(localStorage.getItem('c8l_balance') || '1000');
+let lastSpin = parseInt(localStorage.getItem('c8l_lastSpin') || '0');
+let streak = parseInt(localStorage.getItem('c8l_streak') || '0');
+let lastSpinDate = localStorage.getItem('c8l_lastSpinDate') || '';
+let isSpinning = false;
+let currentRotation = 0;
+
+// ===== AUDIO ENGINE (Web Audio API) =====
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTick() {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = 800 + Math.random() * 400;
+  osc.type = 'square';
+  gain.gain.value = 0.08;
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.05);
+}
+
+function playWinChime() {
+  const ctx = getAudioCtx();
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.value = 0.15;
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3 + i * 0.15);
+    osc.start(ctx.currentTime + i * 0.15);
+    osc.stop(ctx.currentTime + 0.4 + i * 0.15);
+  });
+}
+
+
+// ===== WHEEL DRAWING =====
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = 185;
+
+function drawWheel(rotation) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const segAngle = (2 * Math.PI) / SEGMENTS.length;
+
+  // Draw outer gold ring
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius + 12, 0, 2 * Math.PI);
+  const ringGrad = ctx.createRadialGradient(centerX, centerY, radius, centerX, centerY, radius + 12);
+  ringGrad.addColorStop(0, '#d4a017');
+  ringGrad.addColorStop(0.5, '#f4b41a');
+  ringGrad.addColorStop(1, '#8b6914');
+  ctx.fillStyle = ringGrad;
+  ctx.fill();
+
+  // Draw segments
+  for (let i = 0; i < SEGMENTS.length; i++) {
+    const startAngle = rotation + i * segAngle;
+    const endAngle = startAngle + segAngle;
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.closePath();
+
+    // Gradient fill per segment
+    const grad = ctx.createRadialGradient(centerX, centerY, 20, centerX, centerY, radius);
+    grad.addColorStop(0, '#111');
+    grad.addColorStop(1, SEGMENTS[i].color);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Segment border
+    ctx.strokeStyle = '#d4a017';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(startAngle + segAngle / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#f4b41a';
+    ctx.font = 'bold 18px Segoe UI';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText(SEGMENTS[i].label, radius - 20, 6);
+    ctx.restore();
+  }
+
+  // Draw decorative dots on ring
+  for (let i = 0; i < SEGMENTS.length; i++) {
+    const angle = rotation + i * segAngle;
+    const dx = centerX + (radius + 6) * Math.cos(angle);
+    const dy = centerY + (radius + 6) * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(dx, dy, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  }
+
+  // Center hub
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
+  const hubGrad = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, 30);
+  hubGrad.addColorStop(0, '#f4b41a');
+  hubGrad.addColorStop(1, '#8b6914');
+  ctx.fillStyle = hubGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#d4a017';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // C8L text in center
+  ctx.fillStyle = '#06060f';
+  ctx.font = 'bold 14px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('C8L', centerX, centerY);
+}
+
+
+// ===== SPIN LOGIC =====
+function startSpin() {
+  if (isSpinning) return;
+  if (!canSpin()) return;
+
+  isSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  // Determine winning segment
+  const winIndex = Math.floor(Math.random() * SEGMENTS.length);
+  const segAngle = (2 * Math.PI) / SEGMENTS.length;
+
+  // Calculate target rotation: at least 5 full rotations + land on winning segment
+  // The pointer is at the top (270 degrees / -PI/2)
+  // We need the segment center to align with the top
+  const targetSegCenter = winIndex * segAngle + segAngle / 2;
+  const pointerAngle = -Math.PI / 2;
+  const targetOffset = pointerAngle - targetSegCenter;
+  const fullSpins = 5 + Math.random() * 3; // 5-8 full rotations
+  const targetRotation = currentRotation + fullSpins * 2 * Math.PI + 
+    (targetOffset - currentRotation % (2 * Math.PI) + 4 * Math.PI) % (2 * Math.PI);
+
+  const startRotation = currentRotation;
+  const totalAngle = targetRotation - startRotation;
+  const duration = 4000 + Math.random() * 1000; // 4-5 seconds
+  const startTime = performance.now();
+
+  let lastTickAngle = startRotation;
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Cubic ease-out deceleration
+    const eased = 1 - Math.pow(1 - progress, 3);
+    currentRotation = startRotation + totalAngle * eased;
+
+    drawWheel(currentRotation);
+
+    // Tick sound when crossing segment boundaries
+    const segmentsCrossed = Math.floor(Math.abs(currentRotation - lastTickAngle) / segAngle);
+    if (segmentsCrossed > 0) {
+      playTick();
+      lastTickAngle = currentRotation;
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Spin complete
+      onSpinComplete(winIndex);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function onSpinComplete(winIndex) {
+  const baseReward = SEGMENTS[winIndex].value;
+  
+  // Update streak
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  
+  if (lastSpinDate === yesterday) {
+    streak = Math.min(streak + 1, 7);
+  } else if (lastSpinDate !== today) {
+    streak = 1;
+  }
+  
+  lastSpinDate = today;
+  const multiplier = STREAK_MULTIPLIERS[Math.min(streak, 7)] || 1;
+  const totalReward = Math.floor(baseReward * multiplier);
+
+  // Update state
+  balance += totalReward;
+  lastSpin = Date.now();
+
+  // Save to localStorage
+  localStorage.setItem('c8l_balance', balance.toString());
+  localStorage.setItem('c8l_lastSpin', lastSpin.toString());
+  localStorage.setItem('c8l_streak', streak.toString());
+  localStorage.setItem('c8l_lastSpinDate', lastSpinDate);
+
+  // Show win
+  setTimeout(() => {
+    playWinChime();
+    showWin(totalReward, multiplier);
+    startConfetti();
+    updateUI();
+  }, 300);
+
+  isSpinning = false;
+}
+
+
+// ===== COOLDOWN & UI =====
+function canSpin() {
+  return Date.now() - lastSpin >= COOLDOWN_MS;
+}
+
+function updateUI() {
+  document.getElementById('balanceDisplay').textContent = balance.toLocaleString('es');
+  document.getElementById('streakCount').textContent = streak;
+  const mult = STREAK_MULTIPLIERS[Math.min(streak, 7)] || 1;
+  document.getElementById('streakMultiplier').textContent = 'x' + mult;
+
+  const btn = document.getElementById('spinBtn');
+  const cooldown = document.getElementById('cooldownDisplay');
+
+  if (canSpin()) {
+    btn.style.display = 'block';
+    btn.disabled = false;
+    cooldown.style.display = 'none';
+  } else {
+    btn.style.display = 'none';
+    cooldown.style.display = 'block';
+    updateCountdown();
+  }
+}
+
+function updateCountdown() {
+  const remaining = COOLDOWN_MS - (Date.now() - lastSpin);
+  if (remaining <= 0) {
+    updateUI();
+    return;
+  }
+  const hours = Math.floor(remaining / 3600000);
+  const mins = Math.floor((remaining % 3600000) / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  document.getElementById('countdownTimer').textContent =
+    `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+}
+
+setInterval(() => {
+  if (!canSpin()) updateCountdown();
+  else updateUI();
+}, 1000);
+
+// ===== WIN DISPLAY =====
+function showWin(amount, multiplier) {
+  document.getElementById('winOverlay').style.display = 'flex';
+  document.getElementById('winText').textContent = multiplier > 1 
+    ? `🎉 ¡GANASTE! (x${multiplier} RACHA)` 
+    : '🎉 ¡GANASTE!';
+  document.getElementById('winAmount').textContent = `+${amount.toLocaleString('es')} chips`;
+}
+
+function closeWin() {
+  document.getElementById('winOverlay').style.display = 'none';
+  stopConfetti();
+}
+
+
+// ===== CONFETTI ENGINE =====
+const confettiCanvas = document.getElementById('confettiCanvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+let confettiParticles = [];
+let confettiAnimId = null;
+
+function resizeConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConfetti);
+resizeConfetti();
+
+function startConfetti() {
+  confettiParticles = [];
+  const colors = ['#f4b41a', '#d4a017', '#ff4444', '#4ade80', '#60a5fa', '#f472b6', '#fff'];
+  for (let i = 0; i < 150; i++) {
+    confettiParticles.push({
+      x: Math.random() * confettiCanvas.width,
+      y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 3 + 2,
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 10,
+      opacity: 1
+    });
+  }
+  animateConfetti();
+}
+
+function animateConfetti() {
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  let alive = false;
+  confettiParticles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rotation += p.rotSpeed;
+    p.vy += 0.05;
+    if (p.y > confettiCanvas.height) p.opacity -= 0.02;
+    if (p.opacity <= 0) return;
+    alive = true;
+
+    confettiCtx.save();
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate((p.rotation * Math.PI) / 180);
+    confettiCtx.globalAlpha = p.opacity;
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    confettiCtx.restore();
+  });
+  if (alive) {
+    confettiAnimId = requestAnimationFrame(animateConfetti);
+  }
+}
+
+function stopConfetti() {
+  if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  confettiParticles = [];
+}
+
+// ===== INIT =====
+drawWheel(currentRotation);
+updateUI();
+</script>
+</body>
+</html>
