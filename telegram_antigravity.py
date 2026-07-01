@@ -2445,22 +2445,33 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Callbacks de botones
     app.add_handler(CallbackQueryHandler(handle_callback))
 
-    # --- Iniciar bot ---
-    logger.info("⚡ Bot Telegram ONLINE — Iniciando polling...")
+    # --- Iniciar bot con el approach MÁS SIMPLE POSIBLE ---
+    import sys
+    sys.stdout.write("⚡ Bot Telegram ONLINE — Iniciando polling...\n")
+    sys.stdout.flush()
 
-    # Usar asyncio directo (compatible con Background Worker)
+    # Approach ultra-básico: usar el loop directamente
     import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-    async def run_bot():
-        await app.initialize()
-        await app.start()
-        await app.updater.start_polling(drop_pending_updates=True)
-        logger.info("✅ Polling activo — Bot recibiendo mensajes")
-        # Mantener vivo FOREVER
-        stop_event = asyncio.Event()
-        await stop_event.wait()  # Nunca se resuelve = vive para siempre
-
-    asyncio.run(run_bot())
+    try:
+        loop.run_until_complete(app.initialize())
+        loop.run_until_complete(app.start())
+        loop.run_until_complete(app.updater.start_polling(drop_pending_updates=True))
+        sys.stdout.write("✅ Polling activo — Bot recibiendo mensajes\n")
+        sys.stdout.flush()
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        sys.stdout.write(f"❌ ERROR: {e}\n")
+        sys.stdout.flush()
+        import traceback
+        traceback.print_exc()
+        # Mantener vivo
+        while True:
+            time.sleep(60)
 
 
 if __name__ == "__main__":
