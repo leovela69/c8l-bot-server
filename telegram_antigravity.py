@@ -2514,4 +2514,7 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 if __name__ == "__main__":
+    # Desactivar WEB_CONCURRENCY de Render (causa fork duplicado)
+    os.environ["WEB_CONCURRENCY"] = "1"
+    os.environ["PYTHONUNBUFFERED"] = "1"
     main()
