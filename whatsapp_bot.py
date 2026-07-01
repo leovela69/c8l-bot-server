@@ -3006,6 +3006,87 @@ def main():
             logger.error(f"Error procesando foto: {e}")
             tg_send(chat_id, "❌ Error al procesar la foto.")
 
+    # === HANDLER DE AUDIO/VOZ — Antigravity Voice Control ===
+
+    @bot.message_handler(content_types=["voice", "audio"])
+    def handle_voice(msg):
+        """Procesa notas de voz y audios. Transcribe con Whisper y ejecuta."""
+        import asyncio
+        chat_id = msg.chat.id
+        user_name = msg.from_user.first_name or "Usuario"
+        chat_type = msg.chat.type
+
+        # En grupos: solo si es reply al bot
+        if 'group' in chat_type:
+            is_reply_to_bot = (msg.reply_to_message and
+                               msg.reply_to_message.from_user and
+                               msg.reply_to_message.from_user.username == BOT_NAME)
+            if not is_reply_to_bot:
+                return
+
+        logger.info(f"[VOZ] [{user_name}] ({chat_id}): audio recibido")
+        tg_typing(chat_id)
+
+        try:
+            # Descargar el audio
+            if msg.voice:
+                file_info = bot.get_file(msg.voice.file_id)
+                filename = "voice.ogg"
+            else:
+                file_info = bot.get_file(msg.audio.file_id)
+                filename = msg.audio.file_name or "audio.ogg"
+
+            audio_bytes = bot.download_file(file_info.file_path)
+
+            # Transcribir con Whisper via Groq (gratis)
+            from nlp.audio_processor import AudioProcessor
+            audio_proc = AudioProcessor()
+            text = asyncio.run(audio_proc.transcribe(audio_bytes, filename))
+
+            if not text:
+                tg_send(chat_id, "❌ No pude entender el audio. Intenta de nuevo.")
+                return
+
+            # Mostrar qué entendió
+            tg_send(chat_id, f"🎤 Entendí: _{text[:200]}_", parse_mode="Markdown")
+            tg_typing(chat_id)
+
+            # Actualizar memoria
+            smart_memory.update_from_interaction(msg.from_user.id, user_name, text)
+            levels.add_xp(msg.from_user.id, user_name, "voice_message")
+
+            # Procesar con Antigravity
+            try:
+                from antigravity import antigravity_process
+                ag_response = antigravity_process(
+                    text=text,
+                    chat_id=str(chat_id),
+                    user_name=user_name,
+                    user_id=str(msg.from_user.id),
+                )
+                if ag_response:
+                    tg_send(chat_id, ag_response)
+
+                    # TTS: responder con audio si es mensaje corto
+                    if len(ag_response) < 500:
+                        try:
+                            audio_response = asyncio.run(audio_proc.text_to_speech(ag_response))
+                            if audio_response:
+                                bot.send_voice(chat_id, audio_response)
+                        except Exception as _tts_err:
+                            logger.debug(f"TTS skip: {_tts_err}")
+                    return
+            except Exception as _ag_err:
+                logger.debug(f"Antigravity voice bypass: {_ag_err}")
+
+            # Fallback: Zeus
+            intent_data = analyze_intent(text, user_name)
+            dispatch_to_agent(intent_data, text, chat_id, user_name)
+
+        except Exception as e:
+            logger.error(f"Error procesando audio: {e}")
+            tg_send(chat_id, "❌ Error al procesar el audio.")
+
     # === MENSAJE LIBRE (Zeus orquesta) ===
 
     @bot.message_handler(func=lambda m: m.text and not m.text.startswith('/'), content_types=["text"])
