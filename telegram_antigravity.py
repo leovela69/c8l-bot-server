@@ -2480,15 +2480,31 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- Iniciar health server + bot ---
     logger.info("⚡ Bot Telegram ONLINE — Esperando mensajes...")
 
-    # Iniciar bot con run_polling
+    # Iniciar bot con asyncio directo (más compatible con threading)
     logger.info("⚡ Bot Telegram ONLINE — Esperando mensajes...")
+
+    import asyncio
+
+    async def run_bot():
+        """Inicia el bot de forma compatible con el health server thread."""
+        await app.initialize()
+        await app.start()
+        await app.updater.start_polling(drop_pending_updates=True)
+        logger.info("✅ Polling activo — Bot recibiendo mensajes")
+
+        # Mantener vivo indefinidamente
+        while True:
+            await asyncio.sleep(3600)
+
     try:
-        app.run_polling(drop_pending_updates=True, allowed_updates=["message", "callback_query"])
+        asyncio.run(run_bot())
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("⚡ Apagando Antigravity...")
     except Exception as e:
-        logger.error(f"❌ Error fatal en run_polling: {e}", exc_info=True)
-        # Mantener el proceso vivo para que Render no lo mate
-        import signal
-        signal.pause()
+        logger.error(f"❌ Error fatal: {e}", exc_info=True)
+        # Mantener proceso vivo aunque falle el bot
+        while True:
+            time.sleep(60)
 
 
 if __name__ == "__main__":
