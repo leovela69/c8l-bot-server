@@ -1974,38 +1974,6 @@ def main():
         logger.error("❌ TELEGRAM_BOT_TOKEN no configurado!")
         sys.exit(1)
 
-    # PRIMERO: Iniciar health server (Render necesita respuesta HTTP rápida)
-    import threading
-    from http.server import HTTPServer, BaseHTTPRequestHandler
-    import json as json_lib
-
-    class HealthHandler(BaseHTTPRequestHandler):
-        def do_GET(self):
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            data = {
-                "status": "alive",
-                "version": "antigravity-v5.0",
-                "uptime_hours": round((time.time() - bot_state.start_time) / 3600, 1),
-                "messages": bot_state.messages_processed,
-                "providers_active": len(bot_state.router._providers),
-            }
-            self.wfile.write(json_lib.dumps(data).encode())
-
-        def log_message(self, format, *args):
-            pass  # Silenciar logs de health checks
-
-    def run_http_health():
-        server = HTTPServer(("0.0.0.0", PORT), HealthHandler)
-        server.serve_forever()
-
-    # Arrancar health server en thread separado INMEDIATAMENTE
-    health_thread = threading.Thread(target=run_http_health, daemon=True)
-    health_thread.start()
-    logger.info(f"🌐 Health server activo en puerto {PORT}")
-
-    # DESPUÉS: Configurar el bot
     logger.info("⚡" * 20)
     logger.info("⚡ ANTIGRAVITY v5.0 — INICIANDO...")
     logger.info("⚡" * 20)
@@ -2477,24 +2445,36 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Callbacks de botones
     app.add_handler(CallbackQueryHandler(handle_callback))
 
-    # --- Iniciar bot ---
-    logger.info("⚡ Bot Telegram ONLINE — Iniciando polling...")
+    # --- Iniciar bot con health server integrado ---
+    logger.info("⚡ Bot Telegram ONLINE — Iniciando...")
 
-    # run_polling es bloqueante y maneja todo internamente
-    try:
-        app.run_polling(
-            drop_pending_updates=True,
-            close_loop=False,
-        )
-    except SystemExit:
-        pass
-    except Exception as e:
-        logger.error(f"❌ Error en polling: {e}", exc_info=True)
+    # post_init: arranca health server DENTRO del event loop del bot
+    async def post_init(application):
+        """Arranca health server como tarea async dentro del loop del bot."""
+        from aiohttp import web
 
-    # Si llegamos aquí, mantener vivo para health server
-    logger.info("♻️ Polling terminó — manteniendo health server vivo...")
-    while True:
-        time.sleep(60)
+        async def health_handler(request):
+            return web.json_response({
+                "status": "alive",
+                "version": "antigravity-v5.0",
+                "uptime_hours": round((time.time() - bot_state.start_time) / 3600, 1),
+                "messages": bot_state.messages_processed,
+                "providers_active": len(bot_state.router._providers),
+            })
+
+        health_app = web.Application()
+        health_app.router.add_get("/", health_handler)
+        health_app.router.add_get("/health", health_handler)
+        runner = web.AppRunner(health_app)
+        await runner.setup()
+        site = web.TCPSite(runner, "0.0.0.0", PORT)
+        await site.start()
+        logger.info(f"🌐 Health server activo en puerto {PORT}")
+
+    app.post_init = post_init
+
+    # run_polling maneja TODO: event loop + polling + health (via post_init)
+    app.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":
