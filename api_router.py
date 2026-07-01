@@ -100,9 +100,9 @@ PROVIDERS_CONFIG: List[ProviderConfig] = [
         name=APIProvider.OPENROUTER,
         base_url="https://openrouter.ai/api/v1",
         api_key_env="OPENROUTER_API_KEY",
-        default_model="deepseek/deepseek-v4-flash:free",
+        default_model="deepseek/deepseek-v3.2",
         rpm_limit=20,
-        daily_limit=0,  # unlimited on free models
+        daily_limit=0,  # limitado por credito ($20/mes), no por requests
         priority=2,
         supports_vision=False,
         supports_tools=True,
@@ -646,6 +646,38 @@ class InfiniteAPIRouter:
     # -------------------------------------------------------------------
     # Metodos de conveniencia
     # -------------------------------------------------------------------
+
+    def call_specific(
+        self, provider: "APIProvider", model: str, prompt: str,
+        system: str = "", max_tokens: int = 2048, temperature: float = 0.7,
+    ) -> str:
+        """
+        Llama a un proveedor/modelo especifico, sin pasar por la seleccion
+        automatica por prioridad. Util cuando una tarea necesita SIEMPRE
+        el mismo modelo (p.ej. generacion de codigo con un modelo mas fuerte)
+        en vez del que rote el router para chat normal.
+
+        Si el proveedor pedido no tiene API key configurada, cae a smart().
+        """
+        config = self._providers.get(provider)
+        if not config:
+            logger.warning(f"{provider.value} no configurado, usando smart() como fallback")
+            return self.smart(prompt, system=system, max_tokens=max_tokens)
+
+        messages = [{"role": "user", "content": prompt}]
+        if system:
+            messages = [{"role": "system", "content": system}] + messages
+
+        try:
+            result = self._call_provider(config, messages, model, temperature, max_tokens)
+            if result:
+                self._record_success(provider, 0)
+                return result
+        except Exception as e:
+            logger.warning(f"call_specific {provider.value}/{model} fallo: {e}")
+            self._record_failure(provider, str(e))
+
+        return self.smart(prompt, system=system, max_tokens=max_tokens)
 
     def quick(self, prompt: str, system: str = "", max_tokens: int = 512) -> str:
         """

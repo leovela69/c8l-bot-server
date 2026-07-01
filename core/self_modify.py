@@ -176,7 +176,7 @@ Responde con JSON:
         """
         Fase 2: GENERAR — El LLM genera el código.
         """
-        from api_router import get_router
+        from api_router import get_router, APIProvider
 
         router = get_router()
 
@@ -215,7 +215,13 @@ REGLAS:
 
 Genera el código modificado completo:"""
 
-        response = router.smart(
+        # La generacion de codigo es de bajo volumen pero alto riesgo (se
+        # commitea solo), asi que usa un modelo mas fuerte (Claude Haiku 4.5
+        # via OpenRouter) en vez del modelo rapido/gratis que usa el chat
+        # normal. Si OpenRouter no esta configurado, cae a router.smart().
+        response = router.call_specific(
+            provider=APIProvider.OPENROUTER,
+            model="anthropic/claude-haiku-4.5",
             prompt=gen_prompt,
             system="Eres un programador experto en Python. Genera código limpio, funcional y completo. NO uses markdown, solo código Python puro.",
             max_tokens=4096,
