@@ -1983,8 +1983,22 @@ def main():
     logger.info(f"   Puerto health: {PORT}")
     logger.info("")
 
+    import sys
+    sys.stdout.write(">>> PUNTO 1: Antes de crear Application\n")
+    sys.stdout.flush()
+
     # Crear aplicacion
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    try:
+        app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+        sys.stdout.write(">>> PUNTO 2: Application creada OK\n")
+        sys.stdout.flush()
+    except Exception as e:
+        sys.stdout.write(f">>> ERROR creando Application: {e}\n")
+        sys.stdout.flush()
+        import traceback
+        traceback.print_exc()
+        while True:
+            time.sleep(60)
 
     # --- Registrar handlers ---
 
