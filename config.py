@@ -63,15 +63,15 @@ MODELS = {
     "zeus": "llama-3.3-70b-versatile",
     "minerva": "llama-3.3-70b-versatile",
     "vulcano": "llama-3.3-70b-versatile",
-    "aries": "gemma2-9b-it",
+    "aries": "llama-3.1-8b-instant",
     "hermes": "llama-3.3-70b-versatile",
     "apolo": "llama-3.3-70b-versatile",
     "ares": "llama-3.3-70b-versatile",
     "hefesto": "llama-3.3-70b-versatile",
     "artemisa": "llama-3.3-70b-versatile",
     "atenea": "llama-3.3-70b-versatile",
-    "estia": "gemma2-9b-it",
-    "fallback": "mixtral-8x7b-32768",
+    "estia": "llama-3.1-8b-instant",
+    "fallback": "llama-3.1-8b-instant",
 }
 
 # ---------------------------------------------------------------------------
@@ -139,6 +139,14 @@ IMAGE_UPSCALE_URL: str = "https://image-upscaling.net"
 # Server
 # ---------------------------------------------------------------------------
 PORT: int = int(os.environ.get("PORT", "8080"))
+
+# Render inyecta automaticamente RENDER_EXTERNAL_URL con la URL publica real
+# del servicio (https://<nombre-del-servicio>.onrender.com). Antes varios
+# archivos tenian "https://c8l-bot-server.onrender.com" escrito a mano, asi
+# que si el servicio se renombra o se crea uno nuevo (p.ej. Render lo llama
+# "c8l-bot-server-1" porque el nombre original ya estaba en uso), esos links
+# y el ping de keep-alive apuntaban a la URL vieja/incorrecta.
+PUBLIC_BASE_URL: str = os.environ.get("RENDER_EXTERNAL_URL", "https://c8l-bot-server.onrender.com").rstrip("/")
 
 # ---------------------------------------------------------------------------
 # Paths
