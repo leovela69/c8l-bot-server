@@ -5,7 +5,8 @@ import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = "8863835955:AAEYZ8HegFWPxND_RqKDM4a7Iy6_qRcZssI"
+import os
+TOKEN = os.environ.get("HERMES_BOT_TOKEN", "")
 logging.basicConfig(level=logging.INFO)
 
 

@@ -27,7 +27,7 @@ if os.path.exists(_env_path):
 # ---------------------------------------------------------------------------
 # Telegram
 # ---------------------------------------------------------------------------
-TELEGRAM_BOT_TOKEN: str = os.environ.get("TELEGRAM_BOT_TOKEN", "8557275735:AAFvVQaDkxp9E2ks_R0MYoVUrIDzz8EHT2w")
+TELEGRAM_BOT_TOKEN: str = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 ADMIN_CHAT_ID: str = os.environ.get("ADMIN_CHAT_ID", "")
 BOT_NAME: str = os.environ.get("BOT_NAME", "leon_leo_bot")
 
@@ -47,13 +47,13 @@ GEMINI_IMAGE_URL: str = f"https://generativelanguage.googleapis.com/v1beta/model
 # ---------------------------------------------------------------------------
 # GROQ — Motor principal (GRATIS)
 # ---------------------------------------------------------------------------
-GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "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")
+GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
 GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
 
 # ---------------------------------------------------------------------------
 # OpenRouter — Backup
 # ---------------------------------------------------------------------------
-OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "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")
+OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
 # ---------------------------------------------------------------------------
@@ -120,7 +120,7 @@ MUSICAPI_KEY: str = os.environ.get("MUSICAPI_KEY", "")
 # ---------------------------------------------------------------------------
 # Pollinations — Video/Imagen
 # ---------------------------------------------------------------------------
-POLLINATIONS_API_KEY_P: str = os.environ.get("POLLINATIONS_API_KEY", "sk_MlXME9FBm9QeBjcpuYS9DbW95N5xGWg3")
+POLLINATIONS_API_KEY_P: str = os.environ.get("POLLINATIONS_API_KEY", "")
 POLLINATIONS_BASE_URL: str = "https://gen.pollinations.ai"
 POLLINATIONS_VIDEO_URL: str = f"{POLLINATIONS_BASE_URL}/video"
 POLLINATIONS_IMAGE_URL: str = f"{POLLINATIONS_BASE_URL}/image"
@@ -169,7 +169,7 @@ HERMES_PORT: int = int(os.environ.get("HERMES_PORT", "8081"))
 # Sayan Bridge (conexión con @Sayanyin_Bot)
 # ---------------------------------------------------------------------------
 SAYAN_API_URL: str = os.environ.get("SAYAN_API_URL", "https://sayan-bot1.onrender.com")
-BRIDGE_SECRET: str = os.environ.get("BRIDGE_SECRET", "c8l_sayan_bridge_2026")
+BRIDGE_SECRET: str = os.environ.get("BRIDGE_SECRET", "")
 
 
 
@@ -202,7 +202,7 @@ SKILLSCAN_AUDIT_INTERVAL: int = int(os.environ.get("SKILLSCAN_AUDIT_INTERVAL", "
 # ---------------------------------------------------------------------------
 # Film Production — Video APIs Gratuitas
 # ---------------------------------------------------------------------------
-AGNES_API_KEY: str = os.environ.get("AGNES_API_KEY", "sk-XwX3WByBNCD72zmSK0Q2MPW8fadnVsl8Z1NEheY0k8NL69HN")
+AGNES_API_KEY: str = os.environ.get("AGNES_API_KEY", "")
 CLOUDFLARE_ACCOUNT_ID: str = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
 CLOUDFLARE_AI_TOKEN: str = os.environ.get("CLOUDFLARE_AI_TOKEN", "")
 

@@ -13,7 +13,7 @@ from config import ADMIN_CHAT_ID, GROUP_CHAT_ID, TELEGRAM_BOT_TOKEN
 logger = logging.getLogger("hermes.health")
 
 # Token del bot principal para verificar su estado
-ZEUS_TOKEN = "8557275735:AAFvVQaDkxp9E2ks_R0MYoVUrIDzz8EHT2w"
+ZEUS_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 CHECK_INTERVAL = 120  # Verificar cada 2 minutos
 MAX_FAILURES = 3  # Despues de 3 fallos = declarar caida
 

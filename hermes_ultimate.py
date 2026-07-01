@@ -26,8 +26,8 @@ from telegram.ext import (
 )
 
 # ===== CONFIG =====
-TOKEN = "8863835955:AAEYZ8HegFWPxND_RqKDM4a7Iy6_qRcZssI"
-OPENROUTER_KEY = "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"
+TOKEN = os.environ.get("HERMES_BOT_TOKEN", "")
+OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 MEMORY_FILE = os.path.expanduser("~/hermes_memory.json")
 LOG_FILE = os.path.expanduser("~/hermes_commands.log")
 CMD_TIMEOUT = 60
