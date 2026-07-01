@@ -2480,8 +2480,15 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- Iniciar health server + bot ---
     logger.info("⚡ Bot Telegram ONLINE — Esperando mensajes...")
 
-    # Iniciar con run_polling (maneja su propio event loop)
-    app.run_polling(drop_pending_updates=True)
+    # Iniciar bot con run_polling
+    logger.info("⚡ Bot Telegram ONLINE — Esperando mensajes...")
+    try:
+        app.run_polling(drop_pending_updates=True, allowed_updates=["message", "callback_query"])
+    except Exception as e:
+        logger.error(f"❌ Error fatal en run_polling: {e}", exc_info=True)
+        # Mantener el proceso vivo para que Render no lo mate
+        import signal
+        signal.pause()
 
 
 if __name__ == "__main__":
