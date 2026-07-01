@@ -1518,6 +1518,78 @@ async def cmd_evolve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ---------------------------------------------------------------------------
+# HANDLER DE WATCHDOG — /watchdog
+# ---------------------------------------------------------------------------
+@admin_only
+async def cmd_watchdog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /watchdog — Monitoreo del sistema.
+
+    Subcomandos:
+        /watchdog          — Status del monitor
+        /watchdog ping     — Ping al health endpoint
+        /watchdog start    — Iniciar monitoreo continuo
+        /watchdog stop     — Detener monitoreo
+    """
+    from watchdog.health_monitor import get_health_monitor
+
+    monitor = get_health_monitor()
+    args = update.message.text.replace("/watchdog", "").strip().split()
+    subcmd = args[0].lower() if args else "status"
+
+    if subcmd == "status" or not args:
+        stats = monitor.get_stats_text()
+        await update.message.reply_text(stats, parse_mode="Markdown")
+
+    elif subcmd == "ping":
+        await update.message.reply_text("🏥 Haciendo ping...")
+        result = await monitor.check_health_external()
+        if result.status == "ok":
+            await update.message.reply_text(
+                f"🟢 *Bot ALIVE*\n\n"
+                f"⚡ Latencia: {result.response_time_ms:.0f}ms\n"
+                f"📊 {result.details}",
+                parse_mode="Markdown",
+            )
+        elif result.status == "slow":
+            await update.message.reply_text(
+                f"🟡 *Bot LENTO*\n\n"
+                f"⚡ Latencia: {result.response_time_ms:.0f}ms",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(
+                f"🔴 *Bot NO responde*\n\n"
+                f"❌ Error: {result.error}\n\n"
+                f"Usa `/deploy restart` para reiniciar.",
+                parse_mode="Markdown",
+            )
+
+    elif subcmd == "start":
+        if not monitor._running:
+            # Iniciar en background
+            asyncio.create_task(monitor.start_monitoring(bot=context.bot))
+            await update.message.reply_text(
+                f"👁️ *Monitoreo iniciado*\n\n"
+                f"Ping cada {monitor.check_interval}s\n"
+                f"Auto-restart tras {monitor.max_failures} fallos",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text("👁️ El monitoreo ya está activo.")
+
+    elif subcmd == "stop":
+        monitor.stop()
+        await update.message.reply_text("⏹️ Monitoreo detenido.")
+
+    else:
+        await update.message.reply_text(
+            "👁️ Uso: `/watchdog`, `/watchdog ping`, `/watchdog start`, `/watchdog stop`",
+            parse_mode="Markdown",
+        )
+
+
+# ---------------------------------------------------------------------------
 # Health Check (para UptimeRobot / Render)
 # ---------------------------------------------------------------------------
 async def run_health_server():
@@ -1594,6 +1666,9 @@ def main():
     app.add_handler(CommandHandler("memory", cmd_memory))
     app.add_handler(CommandHandler("memoria", cmd_memory))
     app.add_handler(CommandHandler("evolve", cmd_evolve))
+
+    # Watchdog
+    app.add_handler(CommandHandler("watchdog", cmd_watchdog))
 
     # Mensajes de texto (catch-all)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
