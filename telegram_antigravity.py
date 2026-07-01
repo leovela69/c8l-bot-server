@@ -368,6 +368,8 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/imagen [descripcion] — Generar imagen\n"
         "/musica [estilo] — Crear cancion\n"
         "/video [concepto] — Crear video\n"
+        "/pelicula [idea] [minutos] — Estudio de produccion (guion+voz+montaje)\n"
+        "/juego [descripcion] — Diseñar juego 3D/4D poligonal\n"
         "/codigo [que quieres] — Generar codigo\n\n"
         "🎮 *Juegos:*\n"
         "/casino — Jugar slots\n"
@@ -1680,6 +1682,78 @@ async def cmd_juego(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def cmd_pelicula(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /pelicula — Estudio de producción completo.
+
+    Uso:
+        /pelicula el origen del universo 5
+        /pelicula una historia de amor en Marte 15
+
+    Guionista (LLM) escribe outline + guion por escena → sirvientes en
+    paralelo producen voz (diálogo multi-personaje), imagen y ambiente
+    sonoro por escena (Ken Burns) → montador ensambla el MP4 final.
+    100% gratis e ilimitado (sin video-IA generativo, que no puede serlo).
+    """
+    import re
+
+    text = update.message.text.replace("/pelicula", "").strip()
+
+    if not text:
+        await update.message.reply_text(
+            "🎬 *Estudio de Producción*\n\n"
+            "Describeme la idea y cuántos minutos quieres:\n\n"
+            "`/pelicula el origen del universo 5`\n"
+            "`/pelicula una historia de amor en Marte 15`\n\n"
+            "Sin número al final = 3 minutos por defecto (máximo 60).\n\n"
+            "Guionista + sirvientes de escena (voz por personaje, imagen, "
+            "ambiente) + montador — todo gratis. Los videos largos tardan "
+            "varios minutos en producirse.",
+            parse_mode="Markdown",
+        )
+        return
+
+    minutes = 3.0
+    match = re.search(r"(\d+(?:\.\d+)?)\s*$", text)
+    if match:
+        minutes = min(60.0, max(0.3, float(match.group(1))))
+        text = text[: match.start()].strip()
+
+    status_msg = await update.message.reply_text(
+        f"🎬 Produciendo: {text}\n⏱️ Objetivo: {minutes:.0f} min\n\n"
+        f"Esto puede tardar varios minutos, te aviso el progreso..."
+    )
+
+    async def progress(msg: str):
+        try:
+            await status_msg.edit_text(msg, parse_mode="Markdown")
+        except Exception:
+            pass
+
+    from film_studio.producer import get_producer
+
+    producer = get_producer()
+    result = await producer.produce(text, target_minutes=minutes, progress_cb=progress)
+
+    if not result.success:
+        await status_msg.edit_text(result.message, parse_mode="Markdown")
+        return
+
+    await status_msg.edit_text(result.message, parse_mode="Markdown")
+
+    if result.size_mb < 45:
+        with open(result.path, "rb") as f:
+            await update.message.reply_video(video=f, caption=f"🎬 {result.title}")
+    else:
+        await update.message.reply_text(
+            f"💾 El video pesa {result.size_mb:.0f}MB, demasiado grande para "
+            f"Telegram (límite 50MB). Quedó guardado en el servidor:\n\n"
+            f"`{result.path}`\n\n"
+            f"Descárgalo por SSH:\n`scp root@srv1774129.hstgr.cloud:{result.path} .`",
+            parse_mode="Markdown",
+        )
+
+
 # ---------------------------------------------------------------------------
 # HANDLERS DE MEMORIA Y APRENDIZAJE — /learn, /memory, /evolve
 # ---------------------------------------------------------------------------
@@ -2134,6 +2208,7 @@ def main():
     app.add_handler(CommandHandler("deploy", cmd_deploy))
     app.add_handler(CommandHandler("code", cmd_code))
     app.add_handler(CommandHandler("juego", cmd_juego))
+    app.add_handler(CommandHandler("pelicula", cmd_pelicula))
 
     # Comandos de memoria y evolución
     app.add_handler(CommandHandler("learn", cmd_learn))

@@ -12,6 +12,7 @@ data/memory/
 data/reports/
 data/pages/
 data/generated_games/
+data/films/
 
 # Logs
 *.log
