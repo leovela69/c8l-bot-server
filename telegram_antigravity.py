@@ -521,18 +521,17 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ---------------------------------------------------------------------------
-# Handler de IMAGENES
+# Handler de IMAGENES (con Visual Guide integrado)
 # ---------------------------------------------------------------------------
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Procesa imagenes: analiza con vision y responde."""
+    """Procesa imagenes: si hay guía activa → guía visual, sino → análisis general."""
     if not update.message or not update.message.photo:
         return
 
     user = update.effective_user
+    user_id = str(user.id)
     user_name = user.first_name or "Usuario"
-    caption = update.message.caption or "Describe esta imagen en detalle"
-
-    await update.message.reply_text("👁️ Analizando imagen...")
+    caption = update.message.caption or ""
 
     try:
         # Obtener la foto mas grande
@@ -540,11 +539,32 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await context.bot.get_file(photo.file_id)
         image_url = file.file_path  # URL directa de Telegram
 
-        # Analizar con vision
-        analysis = await analyze_image(image_url, caption)
+        # Verificar si tiene Visual Guide activo
+        from skills.visual_guide import get_visual_guide
+        guide = get_visual_guide()
+
+        if guide.is_active(user_id):
+            # Modo guía visual — analiza y da instrucciones
+            await update.message.reply_text("👁️ Analizando pantalla...")
+            response = await guide.analyze_screenshot(
+                image_url, user_id, caption=caption
+            )
+            if response:
+                try:
+                    await update.message.reply_text(response, parse_mode="Markdown")
+                except Exception:
+                    await update.message.reply_text(response)
+            return
+
+        # Modo normal — análisis general
+        await update.message.reply_text("👁️ Analizando imagen...")
+        analysis = await analyze_image(image_url, caption or "Describe esta imagen en detalle")
 
         if analysis:
-            await update.message.reply_text(f"👁️ *Vision:*\n\n{analysis}", parse_mode="Markdown")
+            try:
+                await update.message.reply_text(f"👁️ *Vision:*\n\n{analysis}", parse_mode="Markdown")
+            except Exception:
+                await update.message.reply_text(f"👁️ Vision:\n\n{analysis}")
         else:
             await update.message.reply_text("❌ No pude analizar la imagen.")
 
@@ -1590,6 +1610,85 @@ async def cmd_watchdog(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ---------------------------------------------------------------------------
+# HANDLER DE GUÍA VISUAL — /guide
+# ---------------------------------------------------------------------------
+async def cmd_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /guide — Modo asistente visual paso a paso.
+
+    Subcomandos:
+        /guide <tarea>    — Iniciar guía con una tarea
+        /guide stop       — Detener guía
+        /guide status     — Estado de la sesión
+        /guide ocr        — Leer texto de la próxima imagen
+    """
+    from skills.visual_guide import get_visual_guide
+
+    guide = get_visual_guide()
+    user_id = str(update.effective_user.id)
+    text = update.message.text.replace("/guide", "").strip()
+
+    if not text:
+        is_active = guide.is_active(user_id)
+        if is_active:
+            session = guide.get_session(user_id)
+            await update.message.reply_text(
+                f"👁️ *Guía Visual ACTIVA*\n\n"
+                f"📋 Tarea: _{session.task or 'General'}_\n"
+                f"📸 Screenshots: {session.screenshots_analyzed}\n"
+                f"✅ Pasos: {len(session.steps_completed)}\n\n"
+                f"Envíame un screenshot y te guío.\n"
+                f"Usa `/guide stop` para desactivar.",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(
+                "👁️ *Guía Visual*\n\n"
+                "Te guío paso a paso con screenshots.\n\n"
+                "Comandos:\n"
+                "`/guide <tarea>` — Iniciar (ej: _configurar Render_)\n"
+                "`/guide stop` — Detener\n"
+                "`/guide status` — Ver sesión\n\n"
+                "Ejemplo:\n"
+                "`/guide configurar las variables de entorno en Render`\n\n"
+                "Después envíame screenshots y te digo qué hacer.",
+                parse_mode="Markdown",
+            )
+        return
+
+    args = text.split()
+    subcmd = args[0].lower()
+
+    # --- /guide stop ---
+    if subcmd == "stop":
+        msg = guide.stop_session(user_id)
+        await update.message.reply_text(msg)
+        return
+
+    # --- /guide status ---
+    if subcmd == "status":
+        if guide.is_active(user_id):
+            session = guide.get_session(user_id)
+            steps_text = "\n".join(f"  ✅ {s}" for s in session.steps_completed[-5:]) or "  (ninguno)"
+            await update.message.reply_text(
+                f"👁️ *Sesión activa*\n\n"
+                f"📋 Tarea: _{session.task}_\n"
+                f"📸 Screenshots: {session.screenshots_analyzed}\n"
+                f"📝 Pasos completados:\n{steps_text}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text("❌ No hay guía activa. Usa `/guide <tarea>` para iniciar.",
+                parse_mode="Markdown")
+        return
+
+    # --- /guide <tarea> — Iniciar sesión ---
+    task = text
+    msg = guide.start_session(user_id, task)
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
+
+# ---------------------------------------------------------------------------
 # Health Check (para UptimeRobot / Render)
 # ---------------------------------------------------------------------------
 async def run_health_server():
@@ -1669,6 +1768,9 @@ def main():
 
     # Watchdog
     app.add_handler(CommandHandler("watchdog", cmd_watchdog))
+
+    # Visual Guide
+    app.add_handler(CommandHandler("guide", cmd_guide))
 
     # Mensajes de texto (catch-all)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
