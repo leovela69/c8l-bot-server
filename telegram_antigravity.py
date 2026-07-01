@@ -1972,9 +1972,40 @@ def main():
 
     if not TELEGRAM_BOT_TOKEN:
         logger.error("❌ TELEGRAM_BOT_TOKEN no configurado!")
-        logger.error("   Configura la variable de entorno TELEGRAM_BOT_TOKEN")
         sys.exit(1)
 
+    # PRIMERO: Iniciar health server (Render necesita respuesta HTTP rápida)
+    import threading
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    import json as json_lib
+
+    class HealthHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            data = {
+                "status": "alive",
+                "version": "antigravity-v5.0",
+                "uptime_hours": round((time.time() - bot_state.start_time) / 3600, 1),
+                "messages": bot_state.messages_processed,
+                "providers_active": len(bot_state.router._providers),
+            }
+            self.wfile.write(json_lib.dumps(data).encode())
+
+        def log_message(self, format, *args):
+            pass  # Silenciar logs de health checks
+
+    def run_http_health():
+        server = HTTPServer(("0.0.0.0", PORT), HealthHandler)
+        server.serve_forever()
+
+    # Arrancar health server en thread separado INMEDIATAMENTE
+    health_thread = threading.Thread(target=run_http_health, daemon=True)
+    health_thread.start()
+    logger.info(f"🌐 Health server activo en puerto {PORT}")
+
+    # DESPUÉS: Configurar el bot
     logger.info("⚡" * 20)
     logger.info("⚡ ANTIGRAVITY v5.0 — INICIANDO...")
     logger.info("⚡" * 20)
@@ -2449,41 +2480,8 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- Iniciar health server + bot ---
     logger.info("⚡ Bot Telegram ONLINE — Esperando mensajes...")
 
-    # Usar el runner nativo de python-telegram-bot v21+
-    # post_init arranca el health server + notifica admin
-    async def post_init(application):
-        """Se ejecuta después de que el bot se inicializa."""
-        # Health server en background
-        asyncio.create_task(_start_health_server())
-        # Notificar al admin
-        if ADMIN_CHAT_ID:
-            try:
-                await application.bot.send_message(
-                    chat_id=ADMIN_CHAT_ID,
-                    text=(
-                        "⚡ *ANTIGRAVITY v5.0 ONLINE*\n\n"
-                        f"🔌 APIs: {len(bot_state.router._providers)} activas\n"
-                        f"🚀 Capacidad: ~{bot_state.router._calc_total_rpm()} req/min\n"
-                        f"♾️ Modo: Sin limites (rotacion infinita)\n\n"
-                        "Bot listo para recibir ordenes, jefe 🦁"
-                    ),
-                    parse_mode="Markdown",
-                )
-            except Exception:
-                pass
-
-    app.post_init = post_init
-
     # Iniciar con run_polling (maneja su propio event loop)
     app.run_polling(drop_pending_updates=True)
-
-
-async def _start_health_server():
-    """Inicia health server como tarea async."""
-    try:
-        await run_health_server()
-    except Exception as e:
-        logger.error(f"Health server error: {e}")
 
 
 if __name__ == "__main__":
