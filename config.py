@@ -166,6 +166,20 @@ HERMES_BOT_NAME: str = "hermes_c8l_bot"
 HERMES_PORT: int = int(os.environ.get("HERMES_PORT", "8081"))
 
 # ---------------------------------------------------------------------------
+# GitHub Integration (bot modifica código)
+# ---------------------------------------------------------------------------
+GITHUB_TOKEN: str = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_OWNER: str = os.environ.get("GITHUB_OWNER", "leovela69")
+GITHUB_REPO: str = os.environ.get("GITHUB_REPO", "c8l-bot-server")
+
+# ---------------------------------------------------------------------------
+# Render Deploy Control
+# ---------------------------------------------------------------------------
+RENDER_API_KEY: str = os.environ.get("RENDER_API_KEY", "")
+RENDER_SERVICE_ID: str = os.environ.get("RENDER_SERVICE_ID", "")
+BOT_HEALTH_URL: str = os.environ.get("BOT_HEALTH_URL", "https://c8l-bot-server.onrender.com/health")
+
+# ---------------------------------------------------------------------------
 # Sayan Bridge (conexión con @Sayanyin_Bot)
 # ---------------------------------------------------------------------------
 SAYAN_API_URL: str = os.environ.get("SAYAN_API_URL", "https://sayan-bot1.onrender.com")

@@ -812,6 +812,493 @@ def _handle_skill_calc(text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# SEGURIDAD — Decorador admin-only
+# ---------------------------------------------------------------------------
+def admin_only(func):
+    """Decorador que restringe un handler a solo el ADMIN."""
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user_id = str(update.effective_user.id)
+        if user_id != ADMIN_CHAT_ID:
+            await update.message.reply_text(
+                "⛔ *Acceso denegado*\n\nEsta operación requiere permisos de administrador.",
+                parse_mode="Markdown",
+            )
+            logger.warning(f"⛔ Intento no autorizado de {user_id} en {func.__name__}")
+            return
+        return await func(update, context)
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+
+# ---------------------------------------------------------------------------
+# HANDLERS DE GITHUB — /git
+# ---------------------------------------------------------------------------
+@admin_only
+async def cmd_git(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /git — Operaciones GitHub.
+
+    Subcomandos:
+        /git status       — Ver último commits y branches
+        /git read <path>  — Leer un archivo
+        /git ls [path]    — Listar archivos
+        /git branches     — Listar branches
+        /git commits      — Últimos commits
+        /git repos        — Listar repos
+        /git edit <path>  — Editar archivo (pide contenido después)
+        /git pr list      — Listar PRs abiertos
+        /git pr merge <n> — Mergear un PR
+    """
+    from integrations.github_ops import get_github
+
+    gh = get_github()
+    args = update.message.text.replace("/git", "").strip().split()
+
+    if not args:
+        await update.message.reply_text(
+            "🐙 *GitHub Ops*\n\n"
+            "Comandos:\n"
+            "`/git status` — Resumen del repo\n"
+            "`/git read <archivo>` — Leer archivo\n"
+            "`/git ls [ruta]` — Listar directorio\n"
+            "`/git branches` — Ver branches\n"
+            "`/git commits` — Últimos commits\n"
+            "`/git repos` — Listar repos\n"
+            "`/git pr list` — PRs abiertas\n"
+            "`/git pr merge <num>` — Mergear PR\n"
+            "`/git edit <archivo>` — Editar (modo interactivo)\n\n"
+            f"📂 Repo default: `{gh.default_owner}/{gh.default_repo}`",
+            parse_mode="Markdown",
+        )
+        return
+
+    subcmd = args[0].lower()
+
+    # --- /git status ---
+    if subcmd == "status":
+        r = gh.get_last_commits(count=3)
+        if r.success:
+            commits_text = "\n".join(
+                f"  `{c['sha']}` {c['message']}" for c in r.data["commits"]
+            )
+            await update.message.reply_text(
+                f"🐙 *Repo Status*\n\n"
+                f"📂 `{gh.default_owner}/{gh.default_repo}`\n\n"
+                f"📝 *Últimos commits:*\n{commits_text}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    # --- /git read <path> ---
+    elif subcmd == "read" and len(args) > 1:
+        file_path = args[1]
+        r = gh.read_file(path=file_path)
+        if r.success and r.data.get("content"):
+            content = r.data["content"]
+            # Truncar si es muy largo
+            if len(content) > 3000:
+                content = content[:3000] + "\n\n... (truncado, archivo completo en GitHub)"
+            await update.message.reply_text(
+                f"📄 *{file_path}*\n\n```\n{content}\n```",
+                parse_mode="Markdown",
+            )
+        elif r.success and r.data.get("type") == "directory":
+            files = r.data["files"]
+            file_list = "\n".join(f"  📁 {f}" for f in files[:30])
+            await update.message.reply_text(
+                f"📂 *{file_path or '/'}*\n\n{file_list}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    # --- /git ls [path] ---
+    elif subcmd == "ls":
+        path = args[1] if len(args) > 1 else ""
+        r = gh.list_files(path=path)
+        if r.success:
+            if r.data.get("files"):
+                files = r.data["files"]
+                file_list = "\n".join(f"  • `{f}`" for f in files[:40])
+                await update.message.reply_text(
+                    f"📂 *{path or 'raíz'}* ({len(files)} items)\n\n{file_list}",
+                    parse_mode="Markdown",
+                )
+            elif r.data.get("content"):
+                await update.message.reply_text(f"📄 Es un archivo. Usa `/git read {path}`",
+                    parse_mode="Markdown")
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    # --- /git branches ---
+    elif subcmd == "branches":
+        r = gh.list_branches()
+        if r.success:
+            branches = r.data["branches"]
+            branch_list = "\n".join(
+                f"  {'🟢' if b == 'main' else '🔀'} `{b}`" for b in branches
+            )
+            await update.message.reply_text(
+                f"🌿 *Branches* ({len(branches)})\n\n{branch_list}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    # --- /git commits ---
+    elif subcmd == "commits":
+        count = int(args[1]) if len(args) > 1 and args[1].isdigit() else 5
+        r = gh.get_last_commits(count=count)
+        if r.success:
+            commits = r.data["commits"]
+            text = "\n".join(
+                f"  `{c['sha']}` {c['date']} — {c['message']}" for c in commits
+            )
+            await update.message.reply_text(
+                f"📝 *Últimos {len(commits)} commits*\n\n{text}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    # --- /git repos ---
+    elif subcmd == "repos":
+        r = gh.list_repos()
+        if r.success:
+            repos = r.data["repos"]
+            text = "\n".join(
+                f"  📦 `{rp['name']}` — {rp['description'] or 'sin desc'}"
+                for rp in repos[:15]
+            )
+            await update.message.reply_text(
+                f"📦 *Repos de {gh.default_owner}*\n\n{text}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    # --- /git pr list ---
+    elif subcmd == "pr" and len(args) > 1 and args[1] == "list":
+        r = gh.list_prs()
+        if r.success:
+            prs = r.data["prs"]
+            if not prs:
+                await update.message.reply_text("✅ No hay PRs abiertos.")
+                return
+            text = "\n".join(
+                f"  🔀 #{p['number']} `{p['branch']}` — {p['title']}"
+                for p in prs
+            )
+            await update.message.reply_text(
+                f"🔀 *PRs abiertos*\n\n{text}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    # --- /git pr merge <number> ---
+    elif subcmd == "pr" and len(args) > 2 and args[1] == "merge":
+        try:
+            pr_num = int(args[2])
+        except ValueError:
+            await update.message.reply_text("❌ Número de PR inválido")
+            return
+        r = gh.merge_pr(pr_num)
+        if r.success:
+            await update.message.reply_text(
+                f"✅ *PR #{pr_num} mergeado!*\n\n{r.message}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    # --- /git edit <path> (modo simple — pasa contenido inline) ---
+    elif subcmd == "edit" and len(args) > 1:
+        file_path = args[1]
+        # El contenido viene después del path en el mensaje
+        full_text = update.message.text
+        # Buscar contenido después del path
+        content_start = full_text.find(file_path) + len(file_path)
+        new_content = full_text[content_start:].strip()
+
+        if not new_content:
+            await update.message.reply_text(
+                f"✏️ *Modo edición*\n\n"
+                f"Para editar `{file_path}`, envía:\n"
+                f"`/git edit {file_path} <contenido nuevo>`\n\n"
+                f"O para edición completa con PR:\n"
+                f"`/git fulledit {file_path}`\n"
+                f"_(te pediré el contenido en el siguiente mensaje)_",
+                parse_mode="Markdown",
+            )
+            return
+
+        # Ejecutar edición completa (branch + edit + PR)
+        await update.message.reply_text("⚡ Editando...")
+        r = gh.full_edit(
+            path=file_path,
+            new_content=new_content,
+            commit_message=f"⚡ Bot edit: {file_path}",
+        )
+        if r.success:
+            url_text = f"\n🔗 {r.url}" if r.url else ""
+            await update.message.reply_text(
+                f"✅ *Edición completada*\n\n{r.message}{url_text}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(f"❌ {r.message}")
+
+    else:
+        await update.message.reply_text(
+            "❓ Subcomando no reconocido. Usa `/git` para ver opciones.",
+            parse_mode="Markdown",
+        )
+
+
+# ---------------------------------------------------------------------------
+# HANDLERS DE DEPLOY — /deploy
+# ---------------------------------------------------------------------------
+@admin_only
+async def cmd_deploy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /deploy — Control de despliegues.
+
+    Subcomandos:
+        /deploy status    — Estado del servicio
+        /deploy trigger   — Nuevo deploy
+        /deploy restart   — Reiniciar servicio
+        /deploy logs      — Últimos deploys
+        /deploy env       — Ver variables de entorno
+        /deploy env set KEY VALUE — Cambiar variable
+        /deploy health    — Health check externo
+    """
+    from integrations.deploy_control import get_deploy_control
+
+    dc = get_deploy_control()
+    args = update.message.text.replace("/deploy", "").strip().split()
+
+    if not args:
+        await update.message.reply_text(
+            "🚀 *Deploy Control*\n\n"
+            "Comandos:\n"
+            "`/deploy status` — Estado del servicio\n"
+            "`/deploy trigger` — Nuevo deploy\n"
+            "`/deploy restart` — Reiniciar\n"
+            "`/deploy logs` — Historial de deploys\n"
+            "`/deploy env` — Variables de entorno\n"
+            "`/deploy env set KEY VALUE` — Cambiar variable\n"
+            "`/deploy health` — Health check\n",
+            parse_mode="Markdown",
+        )
+        return
+
+    subcmd = args[0].lower()
+
+    # --- /deploy status ---
+    if subcmd == "status":
+        await update.message.reply_text("📡 Consultando Render...")
+        r = dc.get_service_status()
+        await update.message.reply_text(
+            r.message if r.success else f"❌ {r.message}",
+            parse_mode="Markdown",
+        )
+
+    # --- /deploy trigger ---
+    elif subcmd == "trigger":
+        clear = "clear" in args
+        await update.message.reply_text("🚀 Iniciando deploy...")
+        r = dc.trigger_deploy(clear_cache=clear)
+        await update.message.reply_text(
+            r.message if r.success else f"❌ {r.message}",
+            parse_mode="Markdown",
+        )
+
+    # --- /deploy restart ---
+    elif subcmd == "restart":
+        await update.message.reply_text("🔄 Reiniciando servicio...")
+        r = dc.restart_service()
+        await update.message.reply_text(
+            r.message if r.success else f"❌ {r.message}",
+            parse_mode="Markdown",
+        )
+
+    # --- /deploy logs ---
+    elif subcmd == "logs":
+        count = int(args[1]) if len(args) > 1 and args[1].isdigit() else 5
+        r = dc.get_deploys(count=count)
+        await update.message.reply_text(
+            r.message if r.success else f"❌ {r.message}",
+            parse_mode="Markdown",
+        )
+
+    # --- /deploy env ---
+    elif subcmd == "env":
+        if len(args) > 2 and args[1] == "set":
+            # /deploy env set KEY VALUE
+            key = args[2]
+            value = " ".join(args[3:]) if len(args) > 3 else ""
+            if not value:
+                await update.message.reply_text(
+                    "❌ Uso: `/deploy env set KEY VALUE`",
+                    parse_mode="Markdown",
+                )
+                return
+            r = dc.set_env_var(key, value)
+            await update.message.reply_text(
+                r.message if r.success else f"❌ {r.message}",
+                parse_mode="Markdown",
+            )
+        else:
+            r = dc.get_env_vars()
+            await update.message.reply_text(
+                r.message if r.success else f"❌ {r.message}",
+                parse_mode="Markdown",
+            )
+
+    # --- /deploy health ---
+    elif subcmd == "health":
+        await update.message.reply_text("🏥 Verificando salud del bot...")
+        r = dc.check_bot_health()
+        await update.message.reply_text(
+            r.message if r.success else f"{r.message}",
+            parse_mode="Markdown",
+        )
+
+    else:
+        await update.message.reply_text(
+            "❓ Subcomando no reconocido. Usa `/deploy` para ver opciones.",
+            parse_mode="Markdown",
+        )
+
+
+# ---------------------------------------------------------------------------
+# HANDLER DE CÓDIGO INTELIGENTE — /code
+# ---------------------------------------------------------------------------
+@admin_only
+async def cmd_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /code — El bot genera código y lo pushea.
+
+    Uso:
+        /code agregar comando /fortuna al bot
+        /code fix el error en casino/slot_engine.py
+        /code crear archivo utils/helpers.py con funciones de formateo
+
+    Flujo: LLM genera código → crea branch → edit → PR
+    """
+    from integrations.github_ops import get_github
+
+    gh = get_github()
+    router = bot_state.router
+    text = update.message.text.replace("/code", "").strip()
+
+    if not text:
+        await update.message.reply_text(
+            "💻 *Code Mode*\n\n"
+            "Describeme qué código quieres y lo creo:\n\n"
+            "`/code agregar comando /fortuna`\n"
+            "`/code fix error en config.py`\n"
+            "`/code crear utils/format.py`\n\n"
+            "El bot:\n"
+            "1️⃣ Analiza qué necesitas\n"
+            "2️⃣ Genera el código\n"
+            "3️⃣ Crea branch + commit + PR\n"
+            "4️⃣ Te da el link para revisar",
+            parse_mode="Markdown",
+        )
+        return
+
+    await update.message.reply_text("🧠 Analizando tu petición...")
+
+    # Paso 1: LLM analiza qué archivo crear/editar y genera código
+    analysis_prompt = (
+        f"El usuario quiere hacer este cambio en un bot de Telegram (Python):\n"
+        f"\"{text}\"\n\n"
+        f"El proyecto tiene esta estructura:\n"
+        f"- telegram_antigravity.py (bot principal)\n"
+        f"- api_router.py (router de APIs)\n"
+        f"- nlp/intent_engine.py (motor de intenciones)\n"
+        f"- config.py (configuración)\n"
+        f"- casino/ (juegos)\n"
+        f"- integrations/ (github, deploy)\n\n"
+        f"Responde con un JSON:\n"
+        f'{{"file": "ruta/archivo.py", "action": "create|edit", '
+        f'"code": "código Python completo del archivo", '
+        f'"commit_message": "mensaje del commit", '
+        f'"explanation": "explicación breve"}}'
+    )
+
+    response = router.smart(
+        prompt=analysis_prompt,
+        system="Eres un programador experto en Python. Genera código limpio y funcional. Responde SOLO con JSON.",
+        max_tokens=2048,
+    )
+
+    if not response:
+        await update.message.reply_text("❌ No pude generar el código. Intenta de nuevo.")
+        return
+
+    # Paso 2: Parsear respuesta
+    import json as json_mod
+    try:
+        # Buscar JSON en la respuesta
+        start = response.find("{")
+        end = response.rfind("}") + 1
+        if start >= 0 and end > start:
+            plan = json_mod.loads(response[start:end])
+        else:
+            raise ValueError("No se encontró JSON")
+    except (json_mod.JSONDecodeError, ValueError):
+        await update.message.reply_text(
+            f"⚠️ *Análisis:*\n\n{response[:1000]}",
+            parse_mode="Markdown",
+        )
+        return
+
+    file_path = plan.get("file", "")
+    code = plan.get("code", "")
+    commit_msg = plan.get("commit_message", f"⚡ Code: {text[:50]}")
+    explanation = plan.get("explanation", "")
+
+    if not file_path or not code:
+        await update.message.reply_text(
+            f"⚠️ No pude determinar qué archivo crear/editar.\n\n"
+            f"_Explicación: {explanation}_",
+            parse_mode="Markdown",
+        )
+        return
+
+    # Paso 3: Mostrar plan y ejecutar
+    await update.message.reply_text(
+        f"📋 *Plan:*\n\n"
+        f"📄 Archivo: `{file_path}`\n"
+        f"✏️ Acción: {plan.get('action', 'edit')}\n"
+        f"💬 Commit: _{commit_msg}_\n"
+        f"📝 {explanation}\n\n"
+        f"⚡ Ejecutando...",
+        parse_mode="Markdown",
+    )
+
+    # Paso 4: Full edit (branch → edit → PR)
+    r = gh.full_edit(
+        path=file_path,
+        new_content=code,
+        commit_message=commit_msg,
+    )
+
+    if r.success:
+        url_text = f"\n\n🔗 [Ver PR]({r.url})" if r.url else ""
+        await update.message.reply_text(
+            f"✅ *Código desplegado!*\n\n{r.message}{url_text}",
+            parse_mode="Markdown",
+        )
+    else:
+        await update.message.reply_text(f"❌ Error: {r.message}")
+
+
+# ---------------------------------------------------------------------------
 # Health Check (para UptimeRobot / Render)
 # ---------------------------------------------------------------------------
 async def run_health_server():
@@ -877,6 +1364,11 @@ def main():
                 "chess", "ajedrez", "clima", "crypto", "traducir",
                 "calcular", "noticias", "recordar"]:
         app.add_handler(CommandHandler(cmd, handle_message))
+
+    # Comandos de sistema (admin-only)
+    app.add_handler(CommandHandler("git", cmd_git))
+    app.add_handler(CommandHandler("deploy", cmd_deploy))
+    app.add_handler(CommandHandler("code", cmd_code))
 
     # Mensajes de texto (catch-all)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
