@@ -2129,6 +2129,112 @@ async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown",
         )
 
+
+# ---------------------------------------------------------------------------
+# ECONOMÍA C8L — /wallet, /daily, /gift, /comprar, /tienda, /retirar
+# ---------------------------------------------------------------------------
+async def cmd_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler para /wallet — Ver balance."""
+    from economy.c8l_economy import get_c8l_economy
+    eco = get_c8l_economy()
+    user_id = str(update.effective_user.id)
+    text = eco.get_balance_text(user_id)
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+
+async def cmd_daily(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler para /daily — Reclamar login diario."""
+    from economy.c8l_economy import get_c8l_economy
+    eco = get_c8l_economy()
+    user_id = str(update.effective_user.id)
+    result = eco.claim_daily_login(user_id)
+    await update.message.reply_text(result["message"], parse_mode="Markdown")
+
+
+async def cmd_gift(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler para /regalo — Enviar regalo a otro usuario."""
+    from economy.c8l_economy import get_c8l_economy
+    eco = get_c8l_economy()
+    user_id = str(update.effective_user.id)
+    text = update.message.text.replace("/regalo", "").replace("/gift", "").strip()
+
+    if not text:
+        gifts_menu = eco._get_gifts_menu()
+        await update.message.reply_text(
+            f"🎁 *Enviar Regalo*\n\n"
+            f"Uso: `/regalo [nombre_regalo] [user_id]`\n\n"
+            f"{gifts_menu}",
+            parse_mode="Markdown",
+        )
+        return
+
+    args = text.split()
+    if len(args) < 2:
+        await update.message.reply_text(
+            "Uso: `/regalo [nombre_regalo] [user_id]`\nEj: `/regalo leon 123456789`",
+            parse_mode="Markdown",
+        )
+        return
+
+    gift_name = args[0].lower()
+    receiver_id = args[1]
+
+    result = eco.send_gift(user_id, receiver_id, gift_name)
+    await update.message.reply_text(result["message"], parse_mode="Markdown")
+
+
+async def cmd_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler para /comprar — Comprar pack de coins."""
+    from economy.c8l_economy import get_c8l_economy
+    eco = get_c8l_economy()
+    user_id = str(update.effective_user.id)
+    text = update.message.text.replace("/comprar", "").strip()
+
+    if not text:
+        packs = eco.get_packs_text()
+        await update.message.reply_text(packs, parse_mode="Markdown")
+        return
+
+    pack_name = text.lower().split()[0]
+    result = eco.purchase_coins(user_id, pack_name)
+    await update.message.reply_text(result["message"], parse_mode="Markdown")
+
+
+async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler para /tienda — Ver tienda completa."""
+    from economy.c8l_economy import get_c8l_economy
+    eco = get_c8l_economy()
+    packs = eco.get_packs_text()
+    gifts = eco._get_gifts_menu()
+    await update.message.reply_text(
+        f"🏪 *Tienda C8L*\n\n{packs}\n\n{'─'*30}\n\n{gifts}",
+        parse_mode="Markdown",
+    )
+
+
+async def cmd_withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler para /retirar — Retirar diamantes."""
+    from economy.c8l_economy import get_c8l_economy
+    eco = get_c8l_economy()
+    user_id = str(update.effective_user.id)
+    text = update.message.text.replace("/retirar", "").strip()
+
+    if not text or not text.isdigit():
+        w = eco.get_wallet(user_id)
+        await update.message.reply_text(
+            f"💎 *Retirar Diamantes*\n\n"
+            f"Tus diamantes: {w['diamonds']} 💎\n"
+            f"Mínimo retiro: 1,000 💎 = $15 USD\n\n"
+            f"Uso: `/retirar 1000`\n\n"
+            f"_Ratio: 1,000 💎 = $15 USD_",
+            parse_mode="Markdown",
+        )
+        return
+
+    amount = int(text)
+    result = eco.withdraw_diamonds(user_id, amount)
+    await update.message.reply_text(result["message"], parse_mode="Markdown")
+
     # Visual Guide
     app.add_handler(CommandHandler("guide", cmd_guide))
 
@@ -2141,6 +2247,16 @@ async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     app.add_handler(CommandHandler("admin_set_premium", cmd_admin))
     app.add_handler(CommandHandler("admin_billing", cmd_admin))
     app.add_handler(CommandHandler("admin_credits", cmd_admin))
+
+    # Economía C8L
+    app.add_handler(CommandHandler("wallet", cmd_wallet))
+    app.add_handler(CommandHandler("saldo", cmd_wallet))
+    app.add_handler(CommandHandler("daily", cmd_daily))
+    app.add_handler(CommandHandler("regalo", cmd_gift))
+    app.add_handler(CommandHandler("gift", cmd_gift))
+    app.add_handler(CommandHandler("comprar", cmd_buy))
+    app.add_handler(CommandHandler("tienda", cmd_shop))
+    app.add_handler(CommandHandler("retirar", cmd_withdraw))
 
     # Mensajes de texto (catch-all)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
