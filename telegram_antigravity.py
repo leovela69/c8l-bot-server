@@ -2445,36 +2445,22 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Callbacks de botones
     app.add_handler(CallbackQueryHandler(handle_callback))
 
-    # --- Iniciar bot con health server integrado ---
-    logger.info("⚡ Bot Telegram ONLINE — Iniciando...")
+    # --- Iniciar bot ---
+    logger.info("⚡ Bot Telegram ONLINE — Iniciando polling...")
 
-    # post_init: arranca health server DENTRO del event loop del bot
-    async def post_init(application):
-        """Arranca health server como tarea async dentro del loop del bot."""
-        from aiohttp import web
+    # Usar asyncio directo (compatible con Background Worker)
+    import asyncio
 
-        async def health_handler(request):
-            return web.json_response({
-                "status": "alive",
-                "version": "antigravity-v5.0",
-                "uptime_hours": round((time.time() - bot_state.start_time) / 3600, 1),
-                "messages": bot_state.messages_processed,
-                "providers_active": len(bot_state.router._providers),
-            })
+    async def run_bot():
+        await app.initialize()
+        await app.start()
+        await app.updater.start_polling(drop_pending_updates=True)
+        logger.info("✅ Polling activo — Bot recibiendo mensajes")
+        # Mantener vivo FOREVER
+        stop_event = asyncio.Event()
+        await stop_event.wait()  # Nunca se resuelve = vive para siempre
 
-        health_app = web.Application()
-        health_app.router.add_get("/", health_handler)
-        health_app.router.add_get("/health", health_handler)
-        runner = web.AppRunner(health_app)
-        await runner.setup()
-        site = web.TCPSite(runner, "0.0.0.0", PORT)
-        await site.start()
-        logger.info(f"🌐 Health server activo en puerto {PORT}")
-
-    app.post_init = post_init
-
-    # run_polling maneja TODO: event loop + polling + health (via post_init)
-    app.run_polling(drop_pending_updates=True)
+    asyncio.run(run_bot())
 
 
 if __name__ == "__main__":
