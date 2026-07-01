@@ -83,6 +83,7 @@ class BotState:
                 "last_active": time.time(),
                 "name": "",
                 "preferences": {},
+                "pending_menu": None,  # {"1": {"action": "clip", "prompt": "..."}, ...}
             }
         self.user_sessions[user_id]["last_active"] = time.time()
         return self.user_sessions[user_id]
@@ -257,6 +258,16 @@ def _build_system_prompt(triage: Optional[TriageResult], user_name: str) -> str:
         f"- Si te manda una foto → la analizas automaticamente\n"
         f"- Responde de forma directa y util. No des explicaciones largas sobre tus limitaciones.\n"
         f"- Eres un BOT con herramientas REALES, no un chatbot generico.\n"
+        f"\n"
+        f"REGLA CRITICA — NUNCA MIENTAS SOBRE ACCIONES:\n"
+        f"- Estas SOLO en modo conversacion. NO tienes forma de generar ni adjuntar "
+        f"imagenes, videos, musica ni archivos desde aqui — eso solo ocurre cuando el "
+        f"usuario ejecuta el comando real (/imagen, /video, /musica, /juego, /codigo).\n"
+        f"- NUNCA digas 'listo', 'aqui tienes', 'ya genere', 'esta procesando' ni "
+        f"describas un resultado como si ya existiera. Eso es mentir.\n"
+        f"- Si el usuario quiere ese tipo de contenido, dile EXACTAMENTE que comando "
+        f"escribir (ej. '/video un cohete en la luna') y para ahi. No inventes que ya "
+        f"lo hiciste.\n"
     )
 
     if not triage:
@@ -506,6 +517,8 @@ async def _execute_intent(
         return _handle_skill_translate(text)
     elif intent == "comando_calcular":
         return _handle_skill_calc(text)
+    elif intent in ("comando_noticias", "noticias"):
+        return _handle_skill_news(text)
 
     # --- Conversacion / Default ---
     else:
@@ -923,19 +936,57 @@ async def _handle_create_music(text: str, user_id: str, update: Update) -> Optio
 
 
 async def _handle_create_video(text: str, user_id: str, update: Update) -> Optional[str]:
-    """Genera video o sugiere produccion."""
+    """Genera un video real (HTML animado -> MP4 via Hyperframes).
+
+    Si el servidor no tiene Node.js/FFmpeg instalados (requisitos de
+    Hyperframes), lo dice honestamente en vez de fingir que genero algo.
+    """
     prompt = text.replace("/video", "").strip()
     if not prompt:
         return "🎬 Describeme el video! Ej: _'animacion de un cohete despegando'_"
 
-    return (
-        f"🎬 *Concepto de video:* {prompt}\n\n"
-        f"Opciones disponibles:\n"
-        f"1️⃣ /clip — Crear clip corto (5-10s)\n"
-        f"2️⃣ /hyperframes — Video HTML animado\n"
-        f"3️⃣ Pollinations Video (experimental)\n\n"
-        f"Cual prefieres?"
+    from hyperframes.engine import HyperframesEngine
+
+    engine = HyperframesEngine()
+    reqs = engine.check_requirements()
+    if not reqs["ready"]:
+        missing = [k for k, v in reqs.items() if k != "ready" and not v]
+        return (
+            f"🎬 Todavía no puedo generar videos reales — falta instalar en el "
+            f"servidor: *{', '.join(missing)}* (ver `install_hyperframes.sh`).\n\n"
+            f"Mientras tanto puedo hacerte:\n"
+            f"🎨 Una imagen del concepto: `/imagen {prompt}`\n"
+            f"🎮 Un juego 3D jugable: `/juego {prompt}`"
+        )
+
+    await update.message.reply_text(f"🎬 Generando video: {prompt}\n⏱️ Esto puede tardar 1-2 minutos...")
+
+    router = bot_state.router
+    html = await asyncio.to_thread(
+        router.smart,
+        prompt=(
+            f"Genera un archivo HTML COMPLETO y autocontenido (incluye <style> y "
+            f"<script> inline, sin dependencias externas ni CDNs) que anime este "
+            f"concepto con CSS/JS puro durante 6 segundos, pensado para 1920x1080: "
+            f'"{prompt}". Responde SOLO con el HTML, sin markdown ni explicacion.'
+        ),
+        system="Eres un motion designer experto en animaciones CSS/JS puras.",
+        max_tokens=3000,
     )
+    html = (html or "").strip()
+    if html.startswith("```"):
+        lines = html.split("\n")
+        html = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+
+    if "<html" not in html.lower():
+        return "❌ No pude generar la animación del concepto. Intenta describirlo distinto."
+
+    result = await engine.render_html(html, width=1920, height=1080, fps=30)
+    if result.get("status") != "success" or not result.get("video_bytes"):
+        return f"❌ No pude renderizar el video: {result.get('error', 'error desconocido')}"
+
+    await update.message.reply_video(video=result["video_bytes"], caption=f"🎬 {prompt}")
+    return None
 
 
 async def _handle_casino(text: str, user_id: str, update: Update) -> Optional[str]:
@@ -1044,6 +1095,18 @@ def _handle_skill_crypto(text: str) -> str:
             )
     except Exception as e:
         return f"💰 Error consultando crypto: {e}"
+
+
+def _handle_skill_news(text: str) -> str:
+    """Noticias reales via GNews (si hay key) o DuckDuckGo (sin key)."""
+    from skills.news import NewsSkill
+
+    topic = text.replace("/noticias", "").replace("noticias", "").strip() or "general"
+    try:
+        skill = NewsSkill()
+        return skill.get_news(topic=topic)
+    except Exception as e:
+        return f"📰 Error consultando noticias: {e}"
 
 
 def _handle_skill_translate(text: str) -> str:
