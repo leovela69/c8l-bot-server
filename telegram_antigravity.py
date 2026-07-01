@@ -2449,23 +2449,16 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # --- Iniciar health server + bot ---
     logger.info("⚡ Bot Telegram ONLINE — Esperando mensajes...")
 
-    # Correr health server en background
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    async def start_all():
-        """Inicia health server y bot en paralelo."""
-        # Health server
-        await run_health_server()
-        # Bot (polling para desarrollo, webhook para produccion)
-        await app.initialize()
-        await app.start()
-        await app.updater.start_polling(drop_pending_updates=True)
-
+    # Usar el runner nativo de python-telegram-bot v21+
+    # post_init arranca el health server + notifica admin
+    async def post_init(application):
+        """Se ejecuta después de que el bot se inicializa."""
+        # Health server en background
+        asyncio.create_task(_start_health_server())
         # Notificar al admin
         if ADMIN_CHAT_ID:
             try:
-                await app.bot.send_message(
+                await application.bot.send_message(
                     chat_id=ADMIN_CHAT_ID,
                     text=(
                         "⚡ *ANTIGRAVITY v5.0 ONLINE*\n\n"
@@ -2479,17 +2472,18 @@ async def cmd_securitylog(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception:
                 pass
 
-        # Mantener vivo
-        try:
-            while True:
-                await asyncio.sleep(3600)
-        except (KeyboardInterrupt, SystemExit):
-            logger.info("⚡ Apagando Antigravity...")
-            await app.updater.stop()
-            await app.stop()
-            await app.shutdown()
+    app.post_init = post_init
 
-    loop.run_until_complete(start_all())
+    # Iniciar con run_polling (maneja su propio event loop)
+    app.run_polling(drop_pending_updates=True)
+
+
+async def _start_health_server():
+    """Inicia health server como tarea async."""
+    try:
+        await run_health_server()
+    except Exception as e:
+        logger.error(f"Health server error: {e}")
 
 
 if __name__ == "__main__":
