@@ -1299,6 +1299,225 @@ async def cmd_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ---------------------------------------------------------------------------
+# HANDLERS DE MEMORIA Y APRENDIZAJE — /learn, /memory, /evolve
+# ---------------------------------------------------------------------------
+@admin_only
+async def cmd_learn(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /learn — Enseñar al bot algo nuevo.
+
+    Subcomandos:
+        /learn <texto>       — Almacenar conocimiento
+        /learn buscar <q>    — Buscar en memoria
+        /learn stats         — Estadísticas de aprendizaje
+        /learn feedback <+/-> — Dar feedback sobre última respuesta
+    """
+    from memory.vector_store import VectorStore
+    from memory.learning_feedback import LearningFeedback
+
+    vs = VectorStore()
+    lf = LearningFeedback()
+    text = update.message.text.replace("/learn", "").strip()
+
+    if not text:
+        await update.message.reply_text(
+            "🧠 *Aprendizaje*\n\n"
+            "Comandos:\n"
+            "`/learn <texto>` — Enseñarme algo\n"
+            "`/learn buscar <tema>` — Buscar en mi memoria\n"
+            "`/learn stats` — Ver estadísticas\n"
+            "`/learn feedback +` — Última respuesta fue buena\n"
+            "`/learn feedback -` — Última respuesta fue mala\n\n"
+            "Ejemplo: `/learn mi estilo favorito es cyberpunk neon`",
+            parse_mode="Markdown",
+        )
+        return
+
+    args = text.split()
+    subcmd = args[0].lower() if args else ""
+
+    # --- /learn stats ---
+    if subcmd == "stats":
+        summary = lf.get_learning_summary()
+        vs_size = vs.size()
+        categories = vs.get_categories()
+        cat_text = "\n".join(f"  • {k}: {v}" for k, v in categories.items()) if categories else "  (vacío)"
+        await update.message.reply_text(
+            f"{summary}\n"
+            f"🔍 *Vector Store:* {vs_size} entries\n"
+            f"📂 Categorías:\n{cat_text}",
+            parse_mode="Markdown",
+        )
+        return
+
+    # --- /learn buscar <query> ---
+    if subcmd == "buscar" and len(args) > 1:
+        query = " ".join(args[1:])
+        results = vs.search(query, limit=5, min_similarity=0.3)
+        if results:
+            result_text = "\n\n".join(
+                f"  📌 _{r['text'][:150]}_\n  (similitud: {r['similarity']:.0%})"
+                for r in results
+            )
+            await update.message.reply_text(
+                f"🔍 *Resultados para:* _{query}_\n\n{result_text}",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(
+                f"🔍 No encontré nada sobre _{query}_ en mi memoria.",
+                parse_mode="Markdown",
+            )
+        return
+
+    # --- /learn feedback +/- ---
+    if subcmd == "feedback":
+        fb_type = args[1] if len(args) > 1 else ""
+        user_id = str(update.effective_user.id)
+        session = bot_state.get_session(user_id)
+        last_history = session["history"][-2:] if session["history"] else []
+
+        if fb_type in ("+", "positivo", "bien", "good"):
+            if last_history:
+                lf.record_positive("general", "hermes", user_id=user_id)
+            await update.message.reply_text("👍 Feedback positivo registrado. Aprendo!")
+        elif fb_type in ("-", "negativo", "mal", "bad"):
+            reason = " ".join(args[2:]) if len(args) > 2 else ""
+            if last_history:
+                lf.record_negative("general", "hermes", reason=reason, user_id=user_id)
+            await update.message.reply_text("👎 Feedback negativo registrado. Mejoraré!")
+        else:
+            await update.message.reply_text("Uso: `/learn feedback +` o `/learn feedback -`",
+                parse_mode="Markdown")
+        return
+
+    # --- /learn <texto> — Almacenar conocimiento ---
+    knowledge = text
+    user_id = str(update.effective_user.id)
+
+    # Detectar categoría automáticamente
+    category = "general"
+    cat_keywords = {
+        "preferencia": ["mi estilo", "me gusta", "prefiero", "favorito"],
+        "regla": ["regla", "nunca", "siempre", "importante"],
+        "dato": ["dato", "info", "sabes que", "recuerda que"],
+        "proyecto": ["proyecto", "repo", "web", "bot"],
+    }
+    text_lower = knowledge.lower()
+    for cat, keywords in cat_keywords.items():
+        if any(kw in text_lower for kw in keywords):
+            category = cat
+            break
+
+    entry_id = vs.add(knowledge, metadata={"user_id": user_id, "source": "telegram"}, category=category)
+    vs.save()
+
+    await update.message.reply_text(
+        f"🧠 *Aprendido!*\n\n"
+        f"📝 _{knowledge[:200]}_\n"
+        f"📂 Categoría: {category}\n"
+        f"🆔 ID: `{entry_id[:8]}`\n\n"
+        f"Lo recordaré para futuras conversaciones.",
+        parse_mode="Markdown",
+    )
+
+
+async def cmd_memory(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /memory — Ver perfil y memoria del usuario.
+    Accesible para todos (cada uno ve solo su perfil).
+    """
+    from memory.user_context import UserContextManager
+
+    ucm = UserContextManager()
+    user_id = str(update.effective_user.id)
+
+    profile_text = ucm.get_profile_text(user_id)
+    await update.message.reply_text(profile_text, parse_mode="Markdown")
+
+
+@admin_only
+async def cmd_evolve(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /evolve — Auto-modificación del bot.
+
+    Subcomandos:
+        /evolve <instrucción>  — El bot se modifica a sí mismo
+        /evolve stats          — Estadísticas del motor
+        /evolve history        — Historial de modificaciones
+    """
+    from core.self_modify import get_self_modify
+
+    engine = get_self_modify()
+    text = update.message.text.replace("/evolve", "").strip()
+
+    if not text:
+        await update.message.reply_text(
+            "🧬 *Self-Modify Engine*\n\n"
+            "Comandos:\n"
+            "`/evolve <instrucción>` — Auto-modificarme\n"
+            "`/evolve stats` — Estadísticas\n"
+            "`/evolve history` — Historial de cambios\n\n"
+            "Ejemplo:\n"
+            "`/evolve agregar comando /dado que tire un dado random`\n"
+            "`/evolve crear skill de horóscopo diario`\n\n"
+            "⚠️ Los cambios van a una branch con PR. Tú apruebas.",
+            parse_mode="Markdown",
+        )
+        return
+
+    args = text.split()
+    subcmd = args[0].lower()
+
+    # --- /evolve stats ---
+    if subcmd == "stats":
+        stats_text = engine.get_stats_text()
+        await update.message.reply_text(stats_text, parse_mode="Markdown")
+        return
+
+    # --- /evolve history ---
+    if subcmd == "history":
+        history = engine.get_history(limit=5)
+        if not history:
+            await update.message.reply_text("📋 Sin historial de modificaciones aún.")
+            return
+        lines = []
+        for h in history:
+            icon = "✅" if h.get("success") else "❌"
+            file = h.get("file", "?")
+            branch = h.get("branch", "?")
+            lines.append(f"  {icon} `{file}` → `{branch}`")
+        await update.message.reply_text(
+            f"📋 *Historial de auto-modificaciones:*\n\n" + "\n".join(lines),
+            parse_mode="Markdown",
+        )
+        return
+
+    # --- /evolve <instrucción> — Ejecutar auto-modificación ---
+    instruction = text
+    await update.message.reply_text(
+        f"🧬 *Planificando modificación...*\n\n"
+        f"📝 _{instruction[:200]}_",
+        parse_mode="Markdown",
+    )
+
+    # Ejecutar flujo completo
+    result = engine.full_modify(instruction, auto_approve=False)
+
+    if result.success:
+        pr_text = f"\n\n🔗 [Ver PR]({result.pr_url})" if result.pr_url else ""
+        await update.message.reply_text(
+            f"{result.message}{pr_text}",
+            parse_mode="Markdown",
+        )
+    else:
+        await update.message.reply_text(
+            result.message,
+            parse_mode="Markdown",
+        )
+
+
+# ---------------------------------------------------------------------------
 # Health Check (para UptimeRobot / Render)
 # ---------------------------------------------------------------------------
 async def run_health_server():
@@ -1369,6 +1588,12 @@ def main():
     app.add_handler(CommandHandler("git", cmd_git))
     app.add_handler(CommandHandler("deploy", cmd_deploy))
     app.add_handler(CommandHandler("code", cmd_code))
+
+    # Comandos de memoria y evolución
+    app.add_handler(CommandHandler("learn", cmd_learn))
+    app.add_handler(CommandHandler("memory", cmd_memory))
+    app.add_handler(CommandHandler("memoria", cmd_memory))
+    app.add_handler(CommandHandler("evolve", cmd_evolve))
 
     # Mensajes de texto (catch-all)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
