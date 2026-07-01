@@ -33,6 +33,12 @@ logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
 )
 
+# Evita UnicodeEncodeError en plataformas donde stdout no es UTF-8 por defecto
+# (p.ej. Windows con code page cp1252) al escribir emojis con sys.stdout.write.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
 
 # ---------------------------------------------------------------------------
 # Imports del ecosistema
