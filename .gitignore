@@ -11,6 +11,7 @@ env/
 data/memory/
 data/reports/
 data/pages/
+data/generated_games/
 
 # Logs
 *.log

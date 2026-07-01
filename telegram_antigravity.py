@@ -1572,6 +1572,51 @@ async def cmd_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Error: {r.message}")
 
 
+async def cmd_juego(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler para /juego — Arquitecto de videojuegos poligonales 3D/4D.
+
+    Uso:
+        /juego un laberinto de cristal con enemigos voladores
+
+    Fragmenta la petición entre sirvientes expertos (nivel, física, IA,
+    mallas, fx, audio) y ensambla el resultado sobre el motor WebGL2 real
+    de C8L (game_designer/engine_3d4d.html).
+    """
+    text = update.message.text.replace("/juego", "").strip()
+
+    if not text:
+        await update.message.reply_text(
+            "🏗️ *Polygon Architect*\n\n"
+            "Describeme el nivel/juego que quieres y lo diseño:\n\n"
+            "`/juego un laberinto de cristal con enemigos voladores`\n"
+            "`/juego arena flotante con portales 4D y trampas`\n\n"
+            "Reparto la petición entre sirvientes expertos (nivel, física, "
+            "IA, mallas, efectos, audio) sobre el motor 3D/4D real.",
+            parse_mode="Markdown",
+        )
+        return
+
+    status_msg = await update.message.reply_text("🏗️ Repartiendo el diseño entre los sirvientes...")
+
+    from game_designer.polygon_architect import get_architect
+
+    architect = get_architect()
+    result = await asyncio.to_thread(architect.design, text)
+
+    if not result.success:
+        await status_msg.edit_text(result.message, parse_mode="Markdown")
+        return
+
+    await status_msg.edit_text(result.message, parse_mode="Markdown")
+    with open(result.html_path, "rb") as f:
+        await update.message.reply_document(
+            document=f,
+            filename=os.path.basename(result.html_path),
+            caption="🎮 Ábrelo en el navegador para jugar (WASD + mouse).",
+        )
+
+
 # ---------------------------------------------------------------------------
 # HANDLERS DE MEMORIA Y APRENDIZAJE — /learn, /memory, /evolve
 # ---------------------------------------------------------------------------
@@ -2025,6 +2070,7 @@ def main():
     app.add_handler(CommandHandler("git", cmd_git))
     app.add_handler(CommandHandler("deploy", cmd_deploy))
     app.add_handler(CommandHandler("code", cmd_code))
+    app.add_handler(CommandHandler("juego", cmd_juego))
 
     # Comandos de memoria y evolución
     app.add_handler(CommandHandler("learn", cmd_learn))
