@@ -7,6 +7,7 @@
 python-telegram-bot>=21.0      # Bot Telegram (async, v21+)
 aiohttp>=3.9.0                 # Health server + webhooks async
 httpx>=0.27.0                  # HTTP client (sync+async) para API Router
+requests>=2.31.0               # HTTP legacy (compatibilidad)
 
 # --- IA / LLM (todo via API, nada local) ---
 # Las APIs se llaman via httpx, no requieren SDK pesado
