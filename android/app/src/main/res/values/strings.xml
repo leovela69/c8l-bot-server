@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">C8L Agency</string>
+    <string name="title_activity_main">C8L Agency</string>
+    <string name="package_name">com.c8lagency.app</string>
+    <string name="custom_url_scheme">com.c8lagency.app</string>
+</resources>

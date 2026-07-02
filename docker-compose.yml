@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  c8l-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: c8l-agency-web
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production      # Variables de entorno en el VPS (Supabase, Firebase, etc.)
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.c8l.service=web"
+      - "com.c8l.version=1.0.0"
+
+  # (Opcional) Nginx como reverse proxy para HTTPS/dominio propio
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: c8l-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - /etc/letsencrypt:/etc/letsencrypt:ro
+  #   depends_on:
+  #     - c8l-web
+  #   restart: unless-stopped

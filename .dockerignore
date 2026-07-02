@@ -1,0 +1,40 @@
+# Dependencias — nunca incluir en la imagen Docker
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts locales — el builder los genera desde cero
+.next
+out
+
+# Variables de entorno — NUNCA al contenedor (se montan en runtime)
+.env
+.env.local
+.env.development
+.env.test
+
+# Control de versiones
+.git
+.gitignore
+
+# Archivos del IDE y sistema
+.agents
+.interface-design
+.firebase
+chrome-debug-profile
+test-results
+*.ipynb
+
+# Backups y exports (no necesarios en producción)
+backups
+original_web
+stitch_export
+market_reports
+android
+android_os_prep
+
+# Archivos temporales
+*.log
+*.tmp
+*.bak

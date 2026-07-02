@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800;900&amp;family=Be+Vietnam+Pro:wght@100;300;400;500;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#e5e2e1",
+                        "surface-container": "#201f1f",
+                        "surface-bright": "#393939",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary-fixed-dim": "#4ae176",
+                        "on-tertiary": "#640039",
+                        "error": "#ffb4ab",
+                        "primary": "#ddb7ff",
+                        "secondary": "#4ae176",
+                        "primary-container": "#b76dff",
+                        "secondary-fixed": "#6bff8f",
+                        "on-tertiary-container": "#570032",
+                        "surface-tint": "#ddb7ff",
+                        "on-secondary": "#003915",
+                        "secondary-container": "#00b954",
+                        "on-surface-variant": "#cfc2d6",
+                        "on-tertiary-fixed": "#3e0022",
+                        "on-secondary-fixed-variant": "#005321",
+                        "tertiary-fixed-dim": "#ffb0cd",
+                        "tertiary-container": "#f751a1",
+                        "on-primary": "#490080",
+                        "tertiary-fixed": "#ffd9e4",
+                        "on-tertiary-fixed-variant": "#8c0053",
+                        "primary-fixed": "#f0dbff",
+                        "outline-variant": "#4d4354",
+                        "on-background": "#e5e2e1",
+                        "on-primary-container": "#400071",
+                        "on-secondary-container": "#004119",
+                        "surface-container-highest": "#353534",
+                        "surface-dim": "#131313",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-error": "#690005",
+                        "surface-container-high": "#2a2a2a",
+                        "surface": "#131313",
+                        "on-error-container": "#ffdad6",
+                        "background": "#131313",
+                        "on-primary-fixed-variant": "#6900b3",
+                        "primary-fixed-dim": "#ddb7ff",
+                        "error-container": "#93000a",
+                        "inverse-on-surface": "#313030",
+                        "surface-container-low": "#1c1b1b",
+                        "outline": "#988d9f",
+                        "tertiary": "#ffb0cd",
+                        "on-primary-fixed": "#2c0051",
+                        "inverse-primary": "#842bd2",
+                        "surface-variant": "#353534",
+                        "on-secondary-fixed": "#002109"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "unit": "8px",
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "container-margin": "24px",
+                        "section-gap": "64px"
+                    },
+                    "fontFamily": {
+                        "display-xl": ["Spline Sans"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "headline-lg": ["Spline Sans"],
+                        "label-bold": ["Be Vietnam Pro"],
+                        "headline-md": ["Spline Sans"]
+                    },
+                    "fontSize": {
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "900"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-bold": ["14px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #000000;
+            color: #e5e2e1;
+        }
+        .glass {
+            background: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .glass-premium {
+            background: linear-gradient(135deg, rgba(183, 109, 255, 0.1) 0%, rgba(247, 81, 161, 0.1) 100%);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(183, 109, 255, 0.4);
+        }
+        .glow-pink {
+            box-shadow: 0 0 20px rgba(247, 81, 161, 0.4);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-black/80 backdrop-blur-xl border-b border-white/15">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 flex items-center justify-center">
+<img alt="C8L Logo Symbol" class="w-8 h-8 invert opacity-90" data-alt="A stylized, glowing neon purple heart monitor icon with digital pulses, set against a dark background, representing the rhythmic heart of electronic music technology. The icon is sharp, minimalist, and perfectly fits into a premium music app interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOanwR0R9lYTl0500g2Oyzih85c1YZvN8F9WwhLBk4lvRpfWfx2bmIg4xVZimQZ1wPFznJnJhl59ACNyq3KZVlmLJa-WAhqfXnPjipCZyxb3_82jNoBJqWVOQmUgqNQ4rISL3XrZQNe7_FD8SWY3nuHQ3dFxRonLXfwuO77zgW2kMwePycy9wnBQtIzd7tvHntv3r8rq4UPZ32tckotSAqvH-aUv48EBhi1iyL65EBwzPJfI-CSx3Eksaqs-u0Jmb474geGU3J0gA"/>
+</div>
+<h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500 font-spline-sans tracking-tight">C8L Music</h1>
+</div>
+<div class="flex items-center gap-4">
+<nav class="hidden md:flex gap-6 mr-6">
+<a class="text-white font-label-bold text-sm uppercase tracking-widest transition-opacity hover:opacity-80" href="#">Inicio</a>
+<a class="text-gray-400 font-label-bold text-sm uppercase tracking-widest transition-opacity hover:opacity-80" href="#">Buscar</a>
+<a class="text-gray-400 font-label-bold text-sm uppercase tracking-widest transition-opacity hover:opacity-80" href="#">Comunidad</a>
+</nav>
+<div class="w-10 h-10 rounded-full border-2 border-primary-container overflow-hidden">
+<img alt="Profile" data-alt="High-contrast close-up portrait of a stylish young person with neon pink and blue lighting hitting their face, conveying a modern electronic music festival vibe. The image is crisp, with deep shadows and vibrant saturated highlights consistent with a premium dark-mode UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzHjKDmVIZmpIxzmTqtPTOEK2SdG3FFxT93GDvu-8eNY3iEg__fjWIeItsAtsWCUey7OEXT9naktkAkxaRuX02pkQUcoIhWbNCcILRVF6iR9los1WOd5or3ydQkUBbXHRQX937Rh6v_z3GX-V15Zm8MJqUUggkT5R27P1BtJ7mz3hqny9hLSymNv5wAhVs-sGqrz9SGsUu-YCgXz8EIMcjhjOvJGbCCrNeaWV6zhMTCj-e1ecHNu1C0OLLy7SCjpkjof1_hkP4mTM"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-container-margin max-w-7xl mx-auto">
+<!-- Hero Section -->
+<section class="text-center mb-section-gap">
+<h2 class="font-display-xl text-display-xl text-on-surface mb-stack-md">Sube el Volumen a tu <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-tertiary">Experiencia</span></h2>
+<p class="text-on-surface-variant text-body-lg max-w-2xl mx-auto">Elige el plan que se adapte a tu ritmo. Desde el oyente casual hasta el creador profesional de estudio.</p>
+</section>
+<!-- Pricing Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Plan Gratuito -->
+<div class="glass p-stack-lg rounded-3xl flex flex-col justify-between group transition-transform hover:scale-[1.02] duration-300">
+<div>
+<span class="text-on-surface-variant font-label-bold uppercase tracking-widest text-xs">Básico</span>
+<h3 class="font-headline-md text-headline-md mt-2">Gratuito</h3>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="text-4xl font-black">€0</span>
+<span class="text-on-surface-variant text-sm">/siempre</span>
+</div>
+<ul class="mt-8 space-y-4">
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-xl">check_circle</span>
+<span class="text-sm">Acceso a 80M de canciones</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-xl">check_circle</span>
+<span class="text-sm">Publicidad ocasional</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant opacity-40">
+<span class="material-symbols-outlined text-xl">block</span>
+<span class="text-sm">Sin modo offline</span>
+</li>
+</ul>
+</div>
+<button class="mt-12 w-full py-4 rounded-full border border-white/20 font-label-bold uppercase tracking-widest text-sm hover:bg-white/10 transition-colors">Empezar gratis</button>
+</div>
+<!-- Plan Estándar -->
+<div class="glass p-stack-lg rounded-3xl flex flex-col justify-between relative transition-transform hover:scale-[1.02] duration-300 border-primary/30">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary px-4 py-1 rounded-full text-on-primary font-label-bold text-xs uppercase tracking-tighter">Más Popular</div>
+<div>
+<span class="text-primary font-label-bold uppercase tracking-widest text-xs">Fanático</span>
+<h3 class="font-headline-md text-headline-md mt-2">Estándar</h3>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="text-4xl font-black">€9.99</span>
+<span class="text-on-surface-variant text-sm">/mes</span>
+</div>
+<ul class="mt-8 space-y-4">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-sm">Todo en Gratuito</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-sm">Escucha sin anuncios</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-sm">Audio Hi-Fi (24-bit)</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-sm">Descargas ilimitadas</span>
+</li>
+</ul>
+</div>
+<button class="mt-12 w-full py-4 rounded-full bg-primary text-on-primary font-label-bold uppercase tracking-widest text-sm glow-purple hover:scale-95 transition-all duration-200">Suscribirse</button>
+</div>
+<!-- Plan Premium (STUDIO focus) -->
+<div class="glass-premium p-stack-lg rounded-3xl flex flex-col justify-between transition-transform hover:scale-[1.05] duration-300 shadow-[0_0_50px_rgba(247,81,161,0.15)] overflow-hidden">
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-tertiary-container/20 blur-[80px] rounded-full"></div>
+<div class="relative z-10">
+<span class="text-tertiary font-label-bold uppercase tracking-widest text-xs flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+                        Pro Studio
+                    </span>
+<h3 class="font-headline-md text-headline-md mt-2">Premium</h3>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="text-4xl font-black">€31.99</span>
+<span class="text-on-surface-variant text-sm">/mes</span>
+</div>
+<!-- Studio Feature Highlight -->
+<div class="mt-8 p-4 rounded-2xl bg-black/40 border border-white/10">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-tertiary">settings_input_component</span>
+<span class="font-label-bold text-sm text-on-surface">ACCESO EXCLUSIVO A STUDIO</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed mb-4">La plataforma definitiva para creadores. Herramientas profesionales de nivel DAW integradas.</p>
+<div class="space-y-3">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-lg">mic_external_on</span>
+<div>
+<p class="text-sm font-bold">Creación Musical Manual</p>
+<p class="text-[10px] text-on-surface-variant">Secuenciador, samples y mezcla Pro.</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-lg">movie_edit</span>
+<div>
+<p class="text-sm font-bold">Creación de Video Clips</p>
+<p class="text-[10px] text-on-surface-variant">Renderizado 4K y efectos visuales AI.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<button class="mt-8 w-full py-4 rounded-full bg-gradient-to-r from-primary-container to-tertiary-container text-white font-label-bold uppercase tracking-widest text-sm glow-pink hover:scale-95 transition-all duration-200 relative overflow-hidden group">
+<span class="relative z-10">Desbloquear Studio</span>
+<div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+</button>
+</div>
+</div>
+<!-- Featured Media Section (Asymmetric) -->
+<section class="mt-section-gap grid grid-cols-1 md:grid-cols-12 gap-6">
+<div class="md:col-span-8 h-80 rounded-3xl overflow-hidden relative glass group">
+<img alt="Studio Setup" class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="A futuristic professional music studio at night, filled with modular synthesizers, multiple monitors displaying complex waveforms, and glowing neon purple and green LED strips. The atmosphere is moody and creative, with smoke machines adding a light haze that catches the vibrant light. High-end equipment and ergonomic design emphasize a luxury production environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA49BBPrbM0yZSPxOfsX-KX7OzgP94hT99Q2u3WhuUN93amJR1SBAXkykTrJtCEWtpgmplmA213yA_kZad-hrIF16kSBiKUjRwhh5bzrQt1889A3HHNUbBBsfR_Tcs84Uu3wX8C1VAV9DvoLLApDpvGoubP6HDOx-yMcYNE2ctDbOjvYVdKPoj6SZVW_69pq8wh6fb26BVobNRcN6ok26E-2uWDpO1Ip6ha4NxVJxWQ0jrmfMpqLWnTHmSh0UKaV60z9WD2F3oRJyc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+<div class="absolute bottom-8 left-8">
+<h4 class="font-headline-md text-white mb-2">Tu Studio, En Cualquier Lugar</h4>
+<p class="text-on-surface-variant max-w-md">C8L Studio te permite producir, mezclar y masterizar directamente desde tu navegador o app móvil con latencia cero.</p>
+</div>
+</div>
+<div class="md:col-span-4 h-80 rounded-3xl overflow-hidden relative glass">
+<div class="p-8 h-full flex flex-col justify-center">
+<span class="material-symbols-outlined text-5xl text-primary mb-6" style="font-variation-settings: 'FILL' 1;">spatial_audio_off</span>
+<h4 class="font-headline-sm text-2xl font-bold mb-3">Sonido Inmersivo</h4>
+<p class="text-on-surface-variant text-sm">Disfruta de Audio Espacial y Dolby Atmos en todos tus dispositivos compatibles con el plan Estándar y Premium.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/15 shadow-[0_-10px_20px_rgba(168,85,247,0.15)]">
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-pink-400 transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-spline-sans text-[10px] font-bold uppercase tracking-widest mt-1">Inicio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-pink-400 transition-colors" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-spline-sans text-[10px] font-bold uppercase tracking-widest mt-1">Buscar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-pink-400 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-spline-sans text-[10px] font-bold uppercase tracking-widest mt-1">Comunidad</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-pink-400 transition-colors" href="#">
+<span class="material-symbols-outlined">library_music</span>
+<span class="font-spline-sans text-[10px] font-bold uppercase tracking-widest mt-1">Biblioteca</span>
+</a>
+</nav>
+<!-- Now Playing Persistent (Visual only, no logic) -->
+<div class="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl h-16 glass rounded-full flex items-center px-4 gap-4 z-40 border border-white/10 shadow-2xl">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Album Art" data-alt="Vibrant abstract digital art for an electronic music album cover featuring fluid, glowing neon lines in violet and cyan that mimic sound frequencies. The background is a deep charcoal grey with subtle grain texture, creating a modern and artistic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKuWb2r1NBgrZdBjH6mDsVmVdxLqxzxW-dtw5HkMnAEnToxRnA64oXU0wiPJFMLmjqX9NVcMOtckR6f-OLXtIvEpsyQEfSICtzY_94j0VcqyYw6XY4IWzsgNclM4NNS3s_O6TaSxkxSTB0TtniUYWR78hcSMrab47jD4v0GXQnSpi3SJRhFsERUbJkNsFYvxDTG7VD1nnj5TDL9XL8-c9AEFa4GIOXo0hihPPsgJAI1kz4k1_IMHFPGPtIG8I8i2aOmdxguzGxtQY"/>
+</div>
+<div class="flex-grow min-w-0">
+<p class="text-xs font-bold truncate">Neon Velocity</p>
+<p class="text-[10px] text-on-surface-variant truncate">C8L Originals</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface">skip_previous</span>
+<div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<span class="material-symbols-outlined text-on-surface">skip_next</span>
+</div>
+<!-- Pulse Glow Indicator -->
+<div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-secondary to-transparent opacity-50 blur-sm"></div>
+</div>
+</body></html>

@@ -1,0 +1,6 @@
+{
+    "appId": "com.c8lagency.app",
+    "appName": "C8L Agency",
+    "webDir": ".",
+    "bundledWebRuntime": false
+}

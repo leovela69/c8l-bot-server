@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>C.8.L. TV | Kinetic Stream Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#00616d",
+                    "on-primary": "#3c2f00",
+                    "on-primary-fixed": "#241a00",
+                    "error": "#ffb4ab",
+                    "tertiary-fixed-dim": "#ffb4a2",
+                    "tertiary": "#ffbfb0",
+                    "on-secondary": "#00363d",
+                    "inverse-on-surface": "#313030",
+                    "on-background": "#e5e2e1",
+                    "on-error": "#690005",
+                    "secondary-fixed-dim": "#00daf3",
+                    "surface-container-high": "#2a2a2a",
+                    "on-tertiary-fixed": "#3c0700",
+                    "tertiary-fixed": "#ffdad2",
+                    "primary-fixed-dim": "#e9c349",
+                    "outline": "#99907c",
+                    "tertiary-container": "#ff977d",
+                    "surface": "#131313",
+                    "surface-tint": "#e9c349",
+                    "outline-variant": "#4d4635",
+                    "on-primary-container": "#554300",
+                    "primary-fixed": "#ffe088",
+                    "surface-container-lowest": "#0e0e0e",
+                    "primary-container": "#d4af37",
+                    "secondary-fixed": "#9cf0ff",
+                    "surface-variant": "#353534",
+                    "secondary-container": "#00e3fd",
+                    "on-error-container": "#ffdad6",
+                    "error-container": "#93000a",
+                    "on-tertiary": "#621100",
+                    "surface-dim": "#131313",
+                    "surface-container-low": "#1c1b1b",
+                    "on-secondary-fixed": "#001f24",
+                    "inverse-primary": "#735c00",
+                    "primary": "#f2ca50",
+                    "surface-container": "#201f1f",
+                    "secondary": "#bdf4ff",
+                    "inverse-surface": "#e5e2e1",
+                    "on-tertiary-fixed-variant": "#8a1d00",
+                    "on-tertiary-container": "#861c00",
+                    "on-surface-variant": "#d0c5af",
+                    "surface-container-highest": "#353534",
+                    "on-primary-fixed-variant": "#574500",
+                    "surface-bright": "#3a3939",
+                    "background": "#0D0D0E",
+                    "on-surface": "#e5e2e1",
+                    "on-secondary-fixed-variant": "#004f58"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "display": ["Space Grotesk"],
+                    "body": ["Inter"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0D0D0E;
+            color: #e5e2e1;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(19, 19, 19, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(242, 202, 80, 0.1);
+        }
+
+        .kinetic-glow-red {
+            box-shadow: 0 0 20px rgba(147, 0, 10, 0.4);
+        }
+
+        .kinetic-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 227, 253, 0.3);
+        }
+
+        .gold-sheen {
+            background: linear-gradient(135deg, #f2ca50 0%, #d4af37 100%);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .vault-border {
+            border-bottom: 1px solid rgba(153, 144, 124, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-background">
+<!-- TopNavBar Component -->
+<header class="fixed top-0 w-full z-50 bg-surface/60 backdrop-blur-xl shadow-[0_40px_60px_-15px_rgba(0,0,0,0.3)]">
+<div class="flex justify-between items-center w-full px-8 h-20">
+<div class="flex items-center gap-8">
+<h1 class="font-headline text-2xl font-bold tracking-tighter text-primary">C.8.L. TV</h1>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-headline text-label-md uppercase tracking-widest text-primary border-b-2 border-primary pb-1" href="#">Feed</a>
+<a class="font-headline text-label-md uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors" href="#">Live</a>
+<a class="font-headline text-label-md uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors" href="#">Lounge</a>
+<a class="font-headline text-label-md uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors" href="#">Casino</a>
+<a class="font-headline text-label-md uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors" href="#">Community</a>
+<a class="font-headline text-label-md uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors" href="#">Profile</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<!-- Search Bar -->
+<div class="relative flex items-center bg-surface-container-high rounded-lg px-4 py-2 w-64 border border-outline-variant/30">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full text-on-surface placeholder-on-surface-variant/50 ml-2" placeholder="Search..." type="text"/>
+<span class="material-symbols-outlined text-on-surface-variant text-lg cursor-pointer">mic</span>
+</div>
+<!-- Wallet Widget -->
+<div class="flex items-center gap-4 bg-surface-container-lowest/80 px-4 py-2 rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-1.5">
+<span class="text-primary material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">toll</span>
+<span class="font-label text-xs font-bold text-primary">1,250</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="text-[#A855F7] material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-label text-xs font-bold text-[#A855F7]">10 BZCN</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="text-secondary material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">diamond</span>
+<span class="font-label text-xs font-bold text-secondary">350</span>
+</div>
+</div>
+<!-- Icons & Profile -->
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all hover:scale-110 active:scale-95">toll</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all hover:scale-110 active:scale-95">savings</button>
+<div class="w-10 h-10 rounded-full border-2 border-primary/50 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
+<img alt="Manager Profile" class="w-full h-full object-cover" data-alt="A high-quality 3D avatar of a professional media manager, wearing sleek black techwear with gold accents. The character has a sharp, confident expression and stylized hair. The background is a clean, dark gray minimalist studio. The overall aesthetic is futuristic, industrial, and high-end." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkmZY0QwEqSrHEBLofMpBME-2EE3FtREBnM1AFADT7msazHy2AetliBz4OZaPxUd9eZvJjdQdfsJp2OdfSRPJraifSHeff1-bjZPkeWBYif7x-T316wxKHTJfbPa5B1wAN2S2_k1b65XVD31tH_0cBho21FZ_Wx4dhwpX807rEgRlHjC2XpgHYxx9iuDgWeZgEAAl_jkORBrdzOOTFB1rsU7GNT2dDn9PN5rgc0HfuI_LHTEWFQnMQFb7G7KysgylED8v23VXFSSA"/>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Hidden/Peek) -->
+<aside class="h-screen w-20 fixed left-0 top-0 pt-24 bg-surface-container-lowest flex flex-col items-center gap-8 border-r border-outline-variant/10">
+<button class="material-symbols-outlined text-secondary font-bold p-3 bg-secondary-container/10 border-r-4 border-secondary transition-all" data-icon="rss_feed">rss_feed</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface p-3 transition-transform hover:translate-x-1" data-icon="sensors">sensors</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface p-3 transition-transform hover:translate-x-1" data-icon="nightlife">nightlife</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface p-3 transition-transform hover:translate-x-1" data-icon="casino">casino</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface p-3 transition-transform hover:translate-x-1" data-icon="groups">groups</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface p-3 transition-transform hover:translate-x-1" data-icon="account_circle">account_circle</button>
+</aside>
+<main class="ml-20 pt-24 pb-12 px-8">
+<!-- Category Chips -->
+<section class="flex items-center gap-3 mb-8 overflow-x-auto no-scrollbar py-2">
+<button class="bg-primary text-on-primary px-5 py-1.5 rounded-full font-label text-sm font-bold whitespace-nowrap transition-all shadow-[0_0_15px_rgba(242,202,80,0.3)]">Todas</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Música</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">C8L Live</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Beat</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">En Vivo</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Dom</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Bow</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Cluster</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Freestyle</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Beats</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Salsa</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Trap</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Mixes</button>
+<button class="bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-5 py-1.5 rounded-full font-label text-sm whitespace-nowrap transition-all border border-outline-variant/20">Comunidad</button>
+</section>
+<!-- Main Content Area: Featured + Chat -->
+<section class="grid grid-cols-12 gap-6 mb-12">
+<!-- Video Player -->
+<div class="col-span-12 lg:col-span-9 relative group">
+<div class="aspect-video w-full rounded-xl overflow-hidden bg-surface-container relative border border-outline-variant/20 shadow-2xl">
+
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+<div class="absolute top-6 left-6 flex gap-3">
+<div class="bg-error/90 text-on-error flex items-center gap-2 px-3 py-1 rounded text-xs font-bold kinetic-glow-red uppercase tracking-widest animate-pulse">
+<span class="w-2 h-2 bg-white rounded-full"></span> LIVE
+                        </div>
+<div class="bg-black/60 backdrop-blur-md text-white flex items-center gap-2 px-3 py-1 rounded text-xs font-medium">
+<span class="material-symbols-outlined text-sm">visibility</span> 1,840 watching
+                        </div>
+</div>
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+<div class="max-w-2xl">
+<h2 class="font-headline text-3xl font-bold text-white mb-2 leading-tight">C8L TV Live: La Batalla PK Suprema <br/><span class="text-primary">(Leo Vela vs El Retador)</span></h2>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full border border-primary/30 overflow-hidden">
+<img alt="Leo Vela" class="w-full h-full" data-alt="A hyper-realistic 3D avatar of a trendy music producer wearing reflective cyber-goggles and a gold-trimmed leather jacket. The lighting is dominated by deep neon blues and obsidian blacks with sharp gold highlights. Professional digital art style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTbWTJIqmYOTPpWEsN6zTqjoLIioBq0IBpmH9Di765sg28rP7C0glXbwaASWXba-_ILgZ68hEDDIlO4rlX7qCjGbTp8AESPaEWFmDAGFTbti_3sq97MRhtLkoCt0LtqdljooWdSxFtJGaNhKvNN0mUOBY6x2xKr2BUkVgYqK6joO8fYzcQ3VIZxs5W67O4btwJ6yJotA2riQqNVs6Cz0iIYuNkugKrokV_SnynB9O_uxmlr5l7EBq6FLBbDufFG3eSrKkCRrkrCGA"/>
+</div>
+<span class="text-sm font-label text-on-surface-variant">Leo Vela Music</span>
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-3">
+<button class="bg-[#A855F7] hover:bg-[#9333ea] text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-bold transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:scale-105 active:scale-95">
+<span class="material-symbols-outlined">bolt</span> TIP BIZCOIN
+                            </button>
+<div class="flex gap-2">
+<button class="p-2 bg-white/10 backdrop-blur-md rounded hover:bg-white/20 text-white"><span class="material-symbols-outlined">settings</span></button>
+<button class="p-2 bg-white/10 backdrop-blur-md rounded hover:bg-white/20 text-white"><span class="material-symbols-outlined">fullscreen</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Chat Sidebar -->
+<div class="col-span-12 lg:col-span-3 flex flex-col bg-surface-container-low rounded-xl border border-outline-variant/10 h-[500px] lg:h-auto overflow-hidden">
+<div class="p-4 vault-border flex items-center justify-between">
+<h3 class="font-headline font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">chat_bubble</span> LIVE CHAT
+                    </h3>
+<span class="text-xs font-label text-on-surface-variant uppercase tracking-tighter">Vault Protocol Active</span>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar" id="chat-messages">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] text-on-surface-variant/60 font-label">12:45 PM</span>
+<p class="text-sm"><span class="text-secondary font-bold">CyberViper:</span> Let's goooo! Leo is fire today 🔥</p>
+</div>
+<div class="bg-[#A855F7]/10 border-l-2 border-[#A855F7] p-3 rounded-r-lg animate-pulse">
+<p class="text-sm font-bold text-[#A855F7] flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">bolt</span> User123 sent 5 BZCN!
+                        </p>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] text-on-surface-variant/60 font-label">12:46 PM</span>
+<p class="text-sm"><span class="text-primary font-bold">Mod_Luna:</span> Keep the chat clean and enjoy the stream!</p>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] text-on-surface-variant/60 font-label">12:47 PM</span>
+<p class="text-sm"><span class="text-on-surface font-bold">RhythmGhost:</span> The bass drop on that last track was insane.</p>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] text-on-surface-variant/60 font-label">12:48 PM</span>
+<p class="text-sm"><span class="text-[#00e3fd] font-bold">NeonPanda:</span> VODs available later?</p>
+</div>
+</div>
+<div class="p-4 bg-surface-container-high border-t border-outline-variant/10">
+<div class="relative flex items-center bg-background rounded-lg px-3 py-2 border border-outline-variant/30">
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full text-on-surface placeholder-on-surface-variant/50" placeholder="Type a message..." type="text"/>
+<button class="material-symbols-outlined text-primary">send</button>
+</div>
+</div>
+</div>
+</section>
+<!-- VOD Grid Section -->
+<section class="mb-12">
+<div class="flex justify-between items-end mb-6">
+<div>
+<h3 class="font-headline text-2xl font-bold text-on-surface mb-1">Vault Recaps</h3>
+<p class="text-on-surface-variant text-sm">Latest uploads from the C.8.L. network</p>
+</div>
+<button class="text-primary font-label text-sm font-bold flex items-center gap-1 hover:underline">
+                    VIEW ALL <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- VOD Card 1 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden bg-surface-container mb-3 border border-outline-variant/10">
+<img alt="Leo Vela" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A Cinematic scene of a music studio with high-tech equipment and purple led lights. A male artist with headphones is deeply focused on a mixer. The room is filled with atmospheric smoke and dark obsidian shadows. Ultra high definition and professional photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_sFr1_6a3nuG45EevFOkQEeMUFvbVpQxufzMwoLeiynHMYec7MTQsV3Xb53SKqt9euRwv0yDmejrxY5VXX9KYdmEXdatgLQf11P4L1oeifHM5Jbs3RsdMmS7izFrT2nDLuDq4s-ZyM_GKvJo_I41_dJ1OP5oRQQ4aMPh5Ip9cB-ffdWlEmtWXrCd-z9iTo3UTu05W-wTdyA7IDRl3o-rKW-yWsWznW6Zloq75UDrjAACtA4oBpUxeXNYcHRbHtah9ocoITX9glck"/>
+<div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all"></div>
+<span class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-bold text-white">12:45</span>
+</div>
+<h4 class="font-headline font-bold text-on-surface group-hover:text-primary transition-colors">Leo Vela - Tan Solo Tú</h4>
+<div class="flex items-center gap-2 mt-1 text-xs text-on-surface-variant">
+<span>4.2K views</span>
+<span>•</span>
+<span>2 days ago</span>
+</div>
+</div>
+<!-- VOD Card 2 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden bg-surface-container mb-3 border border-outline-variant/10">
+<img alt="DJ Rayo" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A top-down view of a futuristic DJ controller with glowing neon blue and cyan buttons. Dark environment with dramatic shadows. Intricate technological details of the knobs and sliders. High-contrast lighting and industrial aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG_v-SXpqDD6hHNvFfzXYdNe3BvePQcuEGp9Es4HIu0QBCTuS2UjK4o9tjjhZXid25IP7ede6nXRzGarloCQwWwZE3QVxtLsYehqfxoZPrAm60Cn_Pe85XFJrFElXvxYnixqUgBRWou_kb9F6Cw1uXAJR5Bc5aUkSPgttlPp1kqkTPZTTgRxyKojiJnIMLNbT9wobWDM-gGIUDp6FrTAlKcEa6Mb3vFIF3hC8vENb5DC7WVakYtj6PkzOIx-Laa1N3cpNxePTazbM"/>
+<div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all"></div>
+<span class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-bold text-white">45:12</span>
+</div>
+<h4 class="font-headline font-bold text-on-surface group-hover:text-primary transition-colors">DJ Rayo - Cyberpunk Beats Mix</h4>
+<div class="flex items-center gap-2 mt-1 text-xs text-on-surface-variant">
+<span>12K views</span>
+<span>•</span>
+<span>5 days ago</span>
+</div>
+</div>
+<!-- VOD Card 3 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-video rounded-lg overflow-hidden bg-surface-container mb-3 border border-outline-variant/10">
+<img alt="Reina Melody" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A portrait of a stunning female singer on a stage under a single cyan spotlight. She is wearing a reflective, futuristic gown. The background is a dense obsidian black, creating a high-key spotlight effect. Modern, editorial music photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMltri0YnCAVl2nB3LiWZd4j9zk-fL0TV7Eg-KPwY3JjDUsckENK4U-Kl_PiLO7gbAR8e1XPafyLFwBAfE_2wMt7SgrXzPtJ6vBEkGt0-YZvcT2L10ePAPtGTe_KDD_F0UO_ns9wAWKXcBEg8hmwCtQzkA0HGuQ_E0IRWqCzFh71unSIS1c943y9uPoJD09woUQAORd-ELYa2qMmbhGN4EzgFbQo6rw7qofsYTYy8paDCV8SiVttggyrerhwwBbaMq9IPNqQDh8_Q"/>
+<div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all"></div>
+<span class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-bold text-white">08:34</span>
+</div>
+<h4 class="font-headline font-bold text-on-surface group-hover:text-primary transition-colors">Reina Melody - Dembow Espacial Duet</h4>
+<div class="flex items-center gap-2 mt-1 text-xs text-on-surface-variant">
+<span>890 views</span>
+<span>•</span>
+<span>1 week ago</span>
+</div>
+</div>
+<!-- Upload CTA Card -->
+<div class="glass-panel rounded-xl border border-dashed border-primary/40 flex flex-col items-center justify-center p-6 text-center group hover:bg-primary/5 transition-all cursor-pointer">
+<div class="w-12 h-12 rounded-full gold-sheen flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-on-primary font-black">add</span>
+</div>
+<h4 class="font-headline font-bold text-primary text-lg mb-1 uppercase tracking-wider">Upload Your Content</h4>
+<p class="text-xs text-on-surface-variant/70 leading-relaxed">Join the C.8.L. network and monetize your stream today.</p>
+</div>
+</div>
+</section>
+<!-- Dynamic Asset / ThreeJS Placement -->
+<section class="mt-20 relative h-64 w-full rounded-2xl overflow-hidden border border-outline-variant/10 bg-surface-container-lowest">
+
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+<h3 class="font-headline text-4xl font-black text-white mb-2 uppercase tracking-tighter">The Future of Streaming is Here</h3>
+<p class="font-body text-primary font-medium">Secure your spot in the Vault. High-fidelity management for elite talent.</p>
+</div>
+</section>
+</main>
+<script>
+        // Simple micro-interaction for chat
+        const chatContainer = document.getElementById('chat-messages');
+        const autoScroll = () => {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        };
+        autoScroll();
+
+        // Simulate new messages
+        const users = ["TechnoMage", "StarGazer", "BassLine", "BeatMaster"];
+        const texts = ["This track is heavy!", "Watching from London!", "C8L never misses.", "Pure quality."];
+        
+        setInterval(() => {
+            const user = users[Math.floor(Math.random() * users.length)];
+            const text = texts[Math.floor(Math.random() * texts.length)];
+            const div = document.createElement('div');
+            div.className = 'flex flex-col gap-1 opacity-0 translate-y-4 transition-all duration-500';
+            div.innerHTML = `
+                <span class="text-[10px] text-on-surface-variant/60 font-label">Now</span>
+                <p class="text-sm"><span class="text-on-surface-variant font-bold">${user}:</span> ${text}</p>
+            `;
+            chatContainer.appendChild(div);
+            
+            setTimeout(() => {
+                div.classList.remove('opacity-0', 'translate-y-4');
+                autoScroll();
+            }, 10);
+
+            if (chatContainer.children.length > 20) {
+                chatContainer.removeChild(chatContainer.firstChild);
+            }
+        }, 8000);
+    </script>
+</body></html>

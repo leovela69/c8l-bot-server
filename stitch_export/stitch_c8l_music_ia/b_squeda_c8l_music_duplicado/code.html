@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Búsqueda - C8L Music (Duplicado)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800;900&amp;family=Be+Vietnam+Pro:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#313030",
+                        "on-error-container": "#ffdad6",
+                        "error-container": "#93000a",
+                        "on-surface": "#e5e2e1",
+                        "on-secondary-container": "#004119",
+                        "outline": "#988d9f",
+                        "on-primary-fixed": "#2c0051",
+                        "outline-variant": "#4d4354",
+                        "on-tertiary": "#640039",
+                        "on-secondary": "#003915",
+                        "primary-fixed-dim": "#ddb7ff",
+                        "primary": "#ddb7ff",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#00b954",
+                        "tertiary-container": "#f751a1",
+                        "inverse-primary": "#842bd2",
+                        "on-primary-container": "#400071",
+                        "on-primary": "#490080",
+                        "primary-container": "#b76dff",
+                        "on-tertiary-container": "#570032",
+                        "on-surface-variant": "#cfc2d6",
+                        "surface-container-highest": "#353534",
+                        "on-tertiary-fixed-variant": "#8c0053",
+                        "on-tertiary-fixed": "#3e0022",
+                        "on-secondary-fixed-variant": "#005321",
+                        "on-primary-fixed-variant": "#6900b3",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface": "#131313",
+                        "on-background": "#e5e2e1",
+                        "tertiary-fixed": "#ffd9e4",
+                        "surface-bright": "#393939",
+                        "surface-container": "#201f1f",
+                        "background": "#131313",
+                        "secondary-fixed-dim": "#4ae176",
+                        "on-error": "#690005",
+                        "tertiary": "#ffb0cd",
+                        "secondary": "#4ae176",
+                        "inverse-surface": "#e5e2e1",
+                        "on-secondary-fixed": "#002109",
+                        "tertiary-fixed-dim": "#ffb0cd",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-tint": "#ddb7ff",
+                        "surface-variant": "#353534",
+                        "surface-dim": "#131313",
+                        "secondary-fixed": "#6bff8f",
+                        "primary-fixed": "#f0dbff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "section-gap": "64px",
+                        "container-margin": "24px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Be Vietnam Pro"],
+                        "display-xl": ["Spline Sans"],
+                        "label-bold": ["Be Vietnam Pro"],
+                        "headline-md": ["Spline Sans"],
+                        "headline-lg": ["Spline Sans"],
+                        "body-lg": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "900"}],
+                        "label-bold": ["14px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "headline-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .genre-gradient-1 { background: linear-gradient(135deg, #8E2DE2, #4A00E0); }
+        .genre-gradient-2 { background: linear-gradient(135deg, #f953c6, #b91d73); }
+        .genre-gradient-3 { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .genre-gradient-4 { background: linear-gradient(135deg, #ff9966, #ff5e62); }
+        .genre-gradient-5 { background: linear-gradient(135deg, #4568dc, #b06ab3); }
+        .genre-gradient-6 { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+        .genre-gradient-7 { background: linear-gradient(135deg, #56ab2f, #a8e063); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary/30">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-[100] bg-[#121212]/80 backdrop-blur-[20px] border-b border-white/15 flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-white/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A high-contrast, professional portrait of a stylish young person with colorful neon backlighting against a dark, minimalist background. The photography style is modern and high-end, featuring deep purple and teal rim lighting that highlights their silhouette. The mood is energetic and premium, perfectly matching the electronic music aesthetic of the brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBw0WlUoB6y2OV6HKLxIOBtzdgs6QVdEBUpTvWRnyGad30qOv4CYOBHaCZJH-y1hZPjpdhIg_cnzSotI507ltriE1QjwAF-2F5yJC34j5v1yU8-srpTwlOCpVofm3ycmd_Xqoi0wHR0Z8pSsJX6B7DjaJf1DWALP_VM06CAXjhzjX67q2G_sNfGqrjXXxF4Jl1TEoXpYSUA7YUiwE6FWUZT3qUZbz5BJ_n60E4FDm-DHTdZ4iHYshNrhbsPDp9lvBuGjmL31gCSDsY"/>
+</div>
+<span class="text-white font-['Spline_Sans'] font-bold tracking-tight text-xl italic tracking-tighter">C8L Music</span>
+</div>
+<button class="text-zinc-500 hover:text-purple-400 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[28px]" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="pt-24 pb-48 px-container-margin">
+<!-- Search Title -->
+<h1 class="font-headline-lg text-headline-lg text-white mb-stack-lg">Búsqueda</h1>
+<!-- Search Bar -->
+<div class="relative mb-section-gap group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-zinc-400 group-focus-within:text-primary transition-colors" data-icon="search">search</span>
+</div>
+<input class="w-full h-14 bg-surface-container-high border-none rounded-xl pl-12 pr-4 text-white font-body-md focus:ring-2 focus:ring-primary transition-all placeholder:text-zinc-500" placeholder="Artistas, canciones o podcasts" type="text"/>
+</div>
+<!-- Browse All Section -->
+<section>
+<h2 class="font-headline-md text-headline-md text-white mb-stack-md">Explorar todo</h2>
+<div class="grid grid-cols-2 gap-4">
+<!-- Genre Tiles -->
+<div class="genre-gradient-1 h-28 rounded-xl p-4 relative overflow-hidden group active:scale-95 transition-transform cursor-pointer">
+<span class="font-label-bold text-lg text-white relative z-10">Rock</span>
+<img alt="Rock Music" class="absolute -right-2 -bottom-2 w-20 h-20 rotate-[25deg] rounded-lg shadow-2xl transition-transform group-hover:scale-110" data-alt="A dynamic, high-contrast shot of an electric guitar being played on a smoke-filled stage, illuminated by intense purple and magenta spotlights. The lighting creates a sense of high energy and late-night festival atmosphere. The focus is on the metallic textures and the vibrant glowing colors of the concert lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLusUVQAoTi6-KbupDxWboAdKpFOwKticXQd5iDpSDsNHqAjnW18gh4ObRLZFGlKx2y7hFnuV3bx0Ddb88zeCyk17Qo_TJ3PVJP2ZDqUlwfcxjX1h3SOkY0LVsAc30lBTTd8Em9SJTPvrhDKOVcyvXh5pT0RGZESOnnuGMLVZ1sTGj2pWZZJ3Le0BMxSlwXX0JJIU79iM7G1rlWnk_m4RPeNSmT2tXWihFTW0Gqlz33wmSPlpl4Tg7V9CjtH3fj9-u2BLu-7LVhvA"/>
+</div>
+<div class="genre-gradient-2 h-28 rounded-xl p-4 relative overflow-hidden group active:scale-95 transition-transform cursor-pointer">
+<span class="font-label-bold text-lg text-white relative z-10">Pop</span>
+<img alt="Pop Music" class="absolute -right-2 -bottom-2 w-20 h-20 rotate-[25deg] rounded-lg shadow-2xl transition-transform group-hover:scale-110" data-alt="A vibrant, saturated close-up of a pop performer under bright pink and neon blue stage lights. The image captures the glitter and excitement of a modern concert with lens flares and high-key color saturation. The overall mood is youthful, electric, and premium, featuring soft glares and intense depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrBUgIwq0QJ6-X6Jjwyvq23FENiUQxBQWaHXgMDFZCJbKcQHk-GNR_z8MT5FXAkbPKzXoAXcCigEQpvqtuEhHSoxtgW_gonZOqpddNqe8A3cvLhco0qCwHCANCBkSF0RXD8UlFi6jLfWH1V1B61i5JfEmJtrtsGfqZwgYbgs0vpqLGwSVNy-bm8K99AtdOqWjkeRbsrtZ50AKHxfeEVvMjhnPNbYy8tcLLeSG3cPDRU9ZnWGZxacO_O-XhGzBqTpOJk44y9Rx-17Y"/>
+</div>
+<div class="genre-gradient-3 h-28 rounded-xl p-4 relative overflow-hidden group active:scale-95 transition-transform cursor-pointer">
+<span class="font-label-bold text-lg text-white relative z-10">Techno</span>
+<img alt="Techno Music" class="absolute -right-2 -bottom-2 w-20 h-20 rotate-[25deg] rounded-lg shadow-2xl transition-transform group-hover:scale-110" data-alt="An abstract visualization of digital sound waves and neon laser beams cutting through a dark, hazy club environment. The color palette is dominated by electric greens and deep blacks, evoking a high-octane electronic music vibe. The composition is fast-paced and technological, using long exposure effects to suggest movement." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD731GVQ8cO2In2L5GaY6gswdxyQOantxzycqhu4v6x-Ixv5iX7CZjAXEG0Q45wFfUCO3gc3DlVabVbUYc-RlfS6DmjX1zNybfU6oCnzkG_uk0NWSHNLRE94WW5S8LTGtvUjeNy9cPwBbsfrxph2STrY2cW6ynWBZc5hAL0W6n9jmQdZ11t6bdVkxw55h8Tyk_jjssmuN_1TO-7Ece2KSr1mwJqerI9ULvdAFkhuQ9xQKO7mTnyr7pOYj1X3gVPcG8mO1bSYCDf7BI"/>
+</div>
+<div class="genre-gradient-4 h-28 rounded-xl p-4 relative overflow-hidden group active:scale-95 transition-transform cursor-pointer">
+<span class="font-label-bold text-lg text-white relative z-10">Jazz</span>
+<img alt="Jazz Music" class="absolute -right-2 -bottom-2 w-20 h-20 rotate-[25deg] rounded-lg shadow-2xl transition-transform group-hover:scale-110" data-alt="A moody, elegant shot of a golden saxophone resting against a dark velvet background, lit by a single warm orange spotlight. The image exudes luxury and soul, with deep shadows and highlighted metallic brass textures. The lighting is sophisticated and intimate, mimicking a high-end late-night jazz lounge atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXD9LJVGwK_DzGqQn9GelWR29cx4OwaEs3WWVj0yJ7vku7rVYP93rQDTSV_KbUTrEVKt5XOgi9tw6eUAsX5_DYz4a7E7Irore02COgz2EKCzTiuUmeOy2aPKivyKL20mTtIHtU1iUf62bv50vDdgxix93uCOOD46FvdoEosqCRd1LK908hmrt6RaGOFLPM4ezQfyC1Ds_Z6uw-0KmCe6N_f8cVOmibo6j-o_RgBv8Ca1KC6phRa-HXanoqPNrVzHmpDiZIK3Tqu-k"/>
+</div>
+<div class="genre-gradient-5 h-28 rounded-xl p-4 relative overflow-hidden group active:scale-95 transition-transform cursor-pointer">
+<span class="font-label-bold text-lg text-white relative z-10">Hip Hop</span>
+<img alt="Hip Hop" class="absolute -right-2 -bottom-2 w-20 h-20 rotate-[25deg] rounded-lg shadow-2xl transition-transform group-hover:scale-110" data-alt="A gritty yet polished urban street scene at night, featuring neon purple graffiti and a classic boombox under flickering streetlights. The visual style is high-contrast and edgy, focusing on texture and shadow to create an immersive urban mood. The color scheme is cold with warm electric accents of violet and gold." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAszaVpt26Mljsany6YVKqvPysI1ITM-24-8vK9zU8TtcW4D4PdrEdWooBNAJ3HfRWWwB5Ug7uGeDyz482KfPWUr9t_mh4bEeyOT8P4eqIwSYDvDYvJcGJio-jAohykhTkciavFrPRO2JH2XvPZkEutTCQK-3iJSAxhKx5BnjjFg4lTNDBZmmkIVloBtwRhbmmzlGL_d3dFUP56p215nv3cZouIbHshb4PdqbJ5fteRxYKoxnSFB4ZjsotJpT972YsSM5k1YdydEw0"/>
+</div>
+<div class="genre-gradient-6 h-28 rounded-xl p-4 relative overflow-hidden group active:scale-95 transition-transform cursor-pointer">
+<span class="font-label-bold text-lg text-white relative z-10">Chill</span>
+<img alt="Chill Music" class="absolute -right-2 -bottom-2 w-20 h-20 rotate-[25deg] rounded-lg shadow-2xl transition-transform group-hover:scale-110" data-alt="A serene, ethereal sunset over a calm ocean, viewed through a semi-transparent digital filter that adds a soft glow. The palette is composed of soothing blues, soft pinks, and gentle oranges. The mood is tranquil and immersive, creating a visual representation of relaxation and atmospheric soundscapes." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDfE-8wdv-XkRvA_bz0ZRqQTsXGy7IakkMr5a11xmkkcG4bTatSD3ODMiLZSY5SqGPzMmhE7IRbMkqn4-56jVQsic-rOo5nuyExVnZsBS7IY7BfoofLJbqjpoplhPX_3Df-k4sbvmb81qsZmBEfjnUaTmxv1hFnUSg0ZWcngVzIke94F10pp9DBO8Zm9Jo9ZpZ5N8ubmjgtjqYFYo6u1j5HhsAsUry4N_2GDVozrdHwIdOBUcOMDD1GZpKMD9qgEia2yYsT9CPA8U"/>
+</div>
+<div class="genre-gradient-7 h-28 rounded-xl p-4 relative overflow-hidden group active:scale-95 transition-transform cursor-pointer">
+<span class="font-label-bold text-lg text-white relative z-10">Classical</span>
+<img alt="Classical Music" class="absolute -right-2 -bottom-2 w-20 h-20 rotate-[25deg] rounded-lg shadow-2xl transition-transform group-hover:scale-110" data-alt="A grand piano's keys captured in a minimalist, high-key architectural composition. The lighting is crisp and cool, highlighting the pristine white and deep black keys with clinical precision. The aesthetic is sophisticated and timeless, emphasizing clean lines and a premium sense of order and harmony." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQzEf7jJe1OltIBMrQQGOwKOGbbkT6zlRoFgskqJUvTFlDPROKcs-VmNNvVdrg1UpCPfVA7IkLcJgrNcfmTUwY0t2uhq2yHiqrsXt4mmBwk--5J3XwKnJip1aoORVdRg6MtTbU6zxiIDs5teupcMdELAU7cqwQuR7hMFIIyZQzwgiq53_hMl-xgUjmZ0xFHnyj2VKSwiy0Z66e542BhndSS0kTXBt3hioTafAwpGkdvG2RK2709Ga6_4e7J8uuA0PPF64ldqNAbUE"/>
+</div>
+</div>
+</section>
+</main>
+<!-- Now Playing Bar (Floating) -->
+<div class="fixed bottom-24 left-4 right-4 z-[90] glass-card h-16 rounded-xl flex items-center px-4 gap-4">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Current Song" class="w-full h-full object-cover" data-alt="High-contrast album art featuring a stylized neon heart shattered into geometric glass shards against a deep black background. The colors are vibrant pinks and purples with a subtle glow effect on the edges. The visual language is sharp, modern, and high-end, representing a premium digital music experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5HXzgYCK5F9qoW0GGsl0xoKi7XwBugY00e-eSdJfEoIlZq-Cs5owGoRbYCUEep3_wjSKWRNW04761hLYetjTVuSm8Hmo5TJj3ggtBS_FRp5QHfL3yy9BJHjzKyAQr_yn11kHAPVkKv4PvyV1xZSwCliYtaQN31lVLfLVfyIj4KeGMzQg2yR8vP7GIneDHi5lTRfiiyTFeL83CdzL-zAWrXlo-g2QVw1PX8_MZjnBhLBjNm8lYc_5wUHQWnaeM7WqnL1IbKfwhsNI"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-white font-label-bold truncate">Neon Nights</p>
+<p class="text-zinc-400 text-xs truncate">Cyber-Pulse • Synth Wave</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-white">
+<span class="material-symbols-outlined" data-icon="devices">devices</span>
+</button>
+<button class="text-white">
+<span class="material-symbols-outlined text-[32px]" data-icon="play_arrow" data-weight="fill">play_arrow</span>
+</button>
+</div>
+<!-- Progress Bar -->
+<div class="absolute bottom-0 left-4 right-4 h-0.5 bg-white/10 rounded-full">
+<div class="h-full w-1/3 bg-secondary rounded-full shadow-[0_0_8px_rgba(74,225,118,0.8)]"></div>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-[100] bg-[#121212]/90 backdrop-blur-[40px] border-t border-white/15 flex justify-around items-center px-4 pb-6 pt-4">
+<a class="flex flex-col items-center justify-center text-zinc-400 opacity-60 hover:opacity-100 hover:text-purple-300 transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Spline_Sans'] text-[12px] font-bold uppercase tracking-widest mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white bg-gradient-to-tr from-purple-600 to-pink-500 rounded-full px-6 py-2 shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="search" data-weight="fill">search</span>
+<span class="font-['Spline_Sans'] text-[12px] font-bold uppercase tracking-widest mt-1">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-400 opacity-60 hover:opacity-100 hover:text-purple-300 transition-all active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="library_music">library_music</span>
+<span class="font-['Spline_Sans'] text-[12px] font-bold uppercase tracking-widest mt-1">Library</span>
+</a>
+</nav>
+</body></html>

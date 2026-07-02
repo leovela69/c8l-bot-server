@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>C.8.L. TERMINAL | MICRO F1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Inter:wght@300;400;600;700&amp;family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary-fixed-variant": "#574500",
+                        "tertiary": "#ffbfb0",
+                        "surface-container-low": "#1c1b1b",
+                        "on-tertiary-fixed": "#3c0700",
+                        "on-primary-container": "#554300",
+                        "surface-tint": "#e9c349",
+                        "secondary": "#bdf4ff",
+                        "on-tertiary-container": "#861c00",
+                        "secondary-fixed": "#9cf0ff",
+                        "surface-dim": "#131313",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#00363d",
+                        "inverse-on-surface": "#313030",
+                        "surface-container-high": "#2a2a2a",
+                        "secondary-container": "#00e3fd",
+                        "on-tertiary-fixed-variant": "#8a1d00",
+                        "on-primary-fixed": "#241a00",
+                        "on-surface": "#e5e2e1",
+                        "on-secondary-fixed": "#001f24",
+                        "surface-variant": "#353534",
+                        "background": "#0D0D0E",
+                        "primary-container": "#d4af37",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#ffe088",
+                        "secondary-fixed-dim": "#00daf3",
+                        "surface-container": "#201f1f",
+                        "primary": "#f2ca50",
+                        "inverse-surface": "#e5e2e1",
+                        "primary-fixed-dim": "#e9c349",
+                        "on-background": "#e5e2e1",
+                        "on-tertiary": "#621100",
+                        "on-secondary-fixed-variant": "#004f58",
+                        "outline-variant": "#4d4635",
+                        "on-primary": "#3c2f00",
+                        "tertiary-fixed-dim": "#ffb4a2",
+                        "tertiary-container": "#ff977d",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-bright": "#3a3939",
+                        "tertiary-fixed": "#ffdad2",
+                        "outline": "#99907c",
+                        "on-surface-variant": "#d0c5af",
+                        "error-container": "#93000a",
+                        "surface-container-highest": "#353534",
+                        "inverse-primary": "#735c00",
+                        "surface": "#131313",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#00616d",
+                        "neon-lime": "#84CC16"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "display": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Manrope"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .f1-track-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawPath 3s forwards ease-in-out;
+        }
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+        .car-anim {
+            offset-path: path("M50,150 C50,50 150,50 250,150 C350,250 450,250 550,150 C650,50 750,50 750,150 C750,250 650,350 400,350 C150,350 50,250 50,150 Z");
+            animation: race 10s infinite linear;
+        }
+        @keyframes race {
+            from { offset-distance: 0%; }
+            to { offset-distance: 100%; }
+        }
+        .shift-light-pulse {
+            animation: pulse-glow 0.8s infinite alternate;
+        }
+        @keyframes pulse-glow {
+            from { opacity: 0.4; }
+            to { opacity: 1; filter: brightness(1.5) blur(2px); }
+        }
+        .glass-panel {
+            background: rgba(19, 19, 19, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(242, 202, 80, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 overflow-hidden h-screen flex flex-col">
+<!-- TopNavBar Component -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-surface/60 backdrop-blur-xl shadow-[0px_0px_15px_rgba(0,227,253,0.1)]">
+<div class="flex items-center gap-8">
+<div class="text-primary font-headline font-black tracking-tighter text-xl">C.8.L. TERMINAL</div>
+<nav class="hidden md:flex gap-6">
+<a class="text-primary border-b-2 border-primary pb-1 font-headline uppercase tracking-widest text-xs active:scale-95 transition-transform" href="#">RACE_SIM</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors duration-300 font-headline uppercase tracking-widest text-xs" href="#">MARKET</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors duration-300 font-headline uppercase tracking-widest text-xs" href="#">VAULT</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-sm">
+<span class="material-symbols-outlined text-primary text-sm">account_balance_wallet</span>
+<span class="text-primary font-headline font-bold text-sm tracking-wider">1,250 <span class="text-[10px] opacity-60">COINS</span></span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-sm">
+<span class="material-symbols-outlined text-[#A855F7] text-sm" style="font-variation-settings: 'FILL' 1;">memory</span>
+<span class="text-[#A855F7] font-headline font-bold text-sm tracking-wider">10 <span class="text-[10px] opacity-60">BZCN</span></span>
+</div>
+</div>
+<button class="text-primary font-headline font-bold text-xs uppercase tracking-widest border border-primary/30 px-4 py-2 hover:bg-primary/10 transition-all active:scale-95">
+                BACK TO LOBBY
+            </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 pt-20 pb-12 flex flex-col px-6">
+<!-- HUD Telemetry / Shift Lights -->
+<div class="w-full flex flex-col items-center mb-6">
+<div class="flex gap-1.5 mb-2">
+<!-- Shift Lights -->
+<div class="w-6 h-3 bg-green-600 rounded-sm"></div>
+<div class="w-6 h-3 bg-green-600 rounded-sm"></div>
+<div class="w-6 h-3 bg-green-600 rounded-sm"></div>
+<div class="w-6 h-3 bg-green-600 rounded-sm"></div>
+<div class="w-6 h-3 bg-amber-500 rounded-sm"></div>
+<div class="w-6 h-3 bg-amber-500 rounded-sm"></div>
+<div class="w-6 h-3 bg-amber-500 rounded-sm"></div>
+<div class="w-6 h-3 bg-red-600 rounded-sm shift-light-pulse shadow-[0_0_10px_#ef4444]"></div>
+<div class="w-6 h-3 bg-red-600 rounded-sm shift-light-pulse shadow-[0_0_10px_#ef4444]"></div>
+<div class="w-6 h-3 bg-red-600 rounded-sm shift-light-pulse shadow-[0_0_10px_#ef4444]"></div>
+</div>
+<div class="flex gap-12 text-center bg-surface-container-low/40 backdrop-blur px-10 py-3 rounded-lg border-t border-white/5">
+<div>
+<div class="text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Speed</div>
+<div class="text-3xl font-headline font-black text-secondary">245 <span class="text-xs font-light text-on-surface-variant">km/h</span></div>
+</div>
+<div>
+<div class="text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Gear</div>
+<div class="text-3xl font-headline font-black text-primary">5</div>
+</div>
+<div>
+<div class="text-[10px] font-label text-on-surface-variant uppercase tracking-widest">RPM</div>
+<div class="text-3xl font-headline font-black text-on-surface">9,200</div>
+</div>
+<div class="text-left border-l border-outline-variant pl-12">
+<div class="text-[10px] font-label text-secondary uppercase tracking-widest">Circuit Status</div>
+<div class="text-lg font-headline font-bold text-on-surface uppercase">Monza Urban <span class="text-neon-lime text-xs ml-2">● LIVE</span></div>
+</div>
+</div>
+</div>
+<div class="flex-1 flex gap-6 min-h-0">
+<!-- Left: Race Track (65%) -->
+<div class="flex-[0.65] relative bg-surface-container-lowest/30 rounded-xl overflow-hidden border border-outline-variant/10 shadow-inner group">
+<!-- Track SVG Overlay -->
+<div class="absolute inset-0 z-0 opacity-10">
+<div class="w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+</div>
+<div class="relative w-full h-full flex items-center justify-center p-8">
+<!-- The Circuit Map -->
+<svg class="w-full h-full max-h-[600px] drop-shadow-[0_0_30px_rgba(132,204,22,0.2)]" viewbox="0 0 800 500">
+<path class="f1-track-path opacity-20" d="M50,150 C50,50 150,50 250,150 C350,250 450,250 550,150 C650,50 750,50 750,150 C750,250 650,350 400,350 C150,350 50,250 50,150 Z" fill="none" id="trackPath" stroke="#84CC16" stroke-linecap="round" stroke-width="24"></path>
+<path class="opacity-80" d="M50,150 C50,50 150,50 250,150 C350,250 450,250 550,150 C650,50 750,50 750,150 C750,250 650,350 400,350 C150,350 50,250 50,150 Z" fill="none" stroke="#84CC16" stroke-width="2"></path>
+<!-- Micro Cars (Animated offsets) -->
+<rect class="car-anim" fill="#f2ca50" height="6" rx="1" style="animation-delay: -1s;" width="12"></rect>
+<rect class="car-anim" fill="#ef4444" height="6" rx="1" style="animation-delay: -1.2s;" width="12"></rect>
+<rect class="car-anim" fill="#22c55e" height="6" rx="1" style="animation-delay: -0.5s;" width="12"></rect>
+<rect class="car-anim" fill="#3b82f6" height="6" rx="1" style="animation-delay: -2s;" width="12"></rect>
+<rect class="car-anim" fill="#84CC16" height="6" rx="1" style="animation-delay: -4s;" width="12"></rect>
+<rect class="car-anim" fill="#ec4899" height="6" rx="1" style="animation-delay: -0.8s;" width="12"></rect>
+</svg>
+<!-- Safety Car Overlay -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none text-center">
+<div class="bg-amber-500/10 backdrop-blur-md border-2 border-amber-500 p-8 rounded-lg animate-pulse">
+<span class="material-symbols-outlined text-amber-500 text-6xl mb-4" style="font-variation-settings: 'FILL' 1;">warning</span>
+<h2 class="text-4xl font-headline font-black text-amber-500 tracking-tighter uppercase italic">Safety Car Active</h2>
+<p class="text-amber-200/60 font-label text-xs tracking-widest mt-2">RESTRICTED OVERTAKING | PIT LANE OPEN</p>
+</div>
+</div>
+</div>
+<!-- Carbon/Skidmark Decor -->
+<div class="absolute bottom-6 left-6 text-[10px] font-mono text-on-surface-variant/30 leading-none">
+                    SECTOR_1: 22.45s<br/>SECTOR_2: 31.02s<br/>SECTOR_3: 18.91s
+                </div>
+</div>
+<!-- Right: Telemetry Dashboard (35%) -->
+<div class="flex-[0.35] flex flex-col gap-6">
+<!-- Standings Table -->
+<div class="flex-1 bg-surface-container-low rounded-lg p-5 border border-outline-variant/10">
+<h3 class="text-primary font-headline font-bold text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">leaderboard</span> Live Standings
+                    </h3>
+<div class="space-y-1">
+<!-- Header Row -->
+<div class="grid grid-cols-12 gap-2 text-[10px] font-label text-on-surface-variant uppercase py-2 border-b border-outline-variant/20 mb-2">
+<div class="col-span-1">P</div>
+<div class="col-span-5">Driver/Team</div>
+<div class="col-span-3">Gap</div>
+<div class="col-span-3 text-right">Laps</div>
+</div>
+<!-- 1st -->
+<div class="grid grid-cols-12 gap-2 text-xs font-body py-3 px-2 bg-surface-container-high/50 rounded-sm items-center">
+<div class="col-span-1 font-bold">1</div>
+<div class="col-span-5 flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+<span class="truncate">Red Bull Hype</span>
+</div>
+<div class="col-span-3 text-secondary font-mono">--</div>
+<div class="col-span-3 text-right font-headline">2/3</div>
+</div>
+<!-- 2nd -->
+<div class="grid grid-cols-12 gap-2 text-xs font-body py-3 px-2 border-b border-outline-variant/5 items-center">
+<div class="col-span-1 font-bold">2</div>
+<div class="col-span-5 flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+<span class="truncate">C8L Racing Gold</span>
+</div>
+<div class="col-span-3 text-on-surface-variant font-mono">+0.254</div>
+<div class="col-span-3 text-right font-headline">2/3</div>
+</div>
+<!-- 3rd -->
+<div class="grid grid-cols-12 gap-2 text-xs font-body py-3 px-2 border-b border-outline-variant/5 items-center">
+<div class="col-span-1 font-bold opacity-60">3</div>
+<div class="col-span-5 flex items-center gap-2 opacity-60">
+<div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+<span class="truncate">Alpine Wave</span>
+</div>
+<div class="col-span-3 text-on-surface-variant font-mono">+1.402</div>
+<div class="col-span-3 text-right font-headline">2/3</div>
+</div>
+<!-- 4th -->
+<div class="grid grid-cols-12 gap-2 text-xs font-body py-3 px-2 opacity-40 italic items-center">
+<div class="col-span-1">4</div>
+<div class="col-span-5 flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+<span class="truncate">McLaren Drift</span>
+</div>
+<div class="col-span-3">RETIRED</div>
+<div class="col-span-3 text-right">0/3</div>
+</div>
+</div>
+</div>
+<!-- Action Block -->
+<div class="bg-surface-container-high rounded-lg p-6 border-l-2 border-primary shadow-xl">
+<div class="mb-6">
+<label class="text-[10px] font-label text-primary uppercase tracking-[0.2em] block mb-2">Investment Amount</label>
+<div class="flex items-center gap-3 bg-surface-container-highest px-4 py-3 border-b border-outline-variant">
+<span class="text-primary font-bold">50</span>
+<span class="text-xs text-on-surface-variant/60 font-body">COINS</span>
+<div class="ml-auto flex gap-1">
+<button class="w-6 h-6 bg-surface-container-low text-xs border border-outline-variant hover:bg-primary hover:text-on-primary transition-colors">MIN</button>
+<button class="w-6 h-6 bg-surface-container-low text-xs border border-outline-variant hover:bg-primary hover:text-on-primary transition-colors">MAX</button>
+</div>
+</div>
+</div>
+<div class="mb-8">
+<label class="text-[10px] font-label text-primary uppercase tracking-[0.2em] block mb-2">Select Unit</label>
+<div class="relative group">
+<select class="w-full bg-surface-container-highest border-0 border-b border-outline-variant text-sm py-3 px-4 focus:ring-0 appearance-none cursor-pointer">
+<option>C8L Racing Gold</option>
+<option>Red Bull Hype</option>
+<option>Alpine Wave</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">expand_more</span>
+</div>
+</div>
+<button class="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-on-primary font-display font-black text-lg tracking-widest uppercase shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                        START RACE
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- Incident Alert Bar -->
+<footer class="fixed bottom-0 w-full z-50 h-10 bg-amber-500 flex items-center px-6 overflow-hidden">
+<div class="flex items-center gap-3 animate-marquee whitespace-nowrap">
+<span class="material-symbols-outlined text-on-primary font-bold" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="text-on-primary font-label font-bold text-xs uppercase tracking-wider">
+                SAFETY CAR ACTIVE - Oil spill in turn 3! Ferrari retired | Incident under investigation | Sector 2 remains yellow flag |
+            </span>
+<!-- Duplicate for infinite marquee effect -->
+<span class="material-symbols-outlined text-on-primary font-bold ml-12" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="text-on-primary font-label font-bold text-xs uppercase tracking-wider">
+                SAFETY CAR ACTIVE - Oil spill in turn 3! Ferrari retired | Incident under investigation | Sector 2 remains yellow flag |
+            </span>
+</div>
+</footer>
+<style>
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: flex;
+            animation: marquee 20s linear infinite;
+        }
+    </style>
+<script>
+        // Micro-interaction for HUD number updates
+        setInterval(() => {
+            const speedEl = document.querySelector('.text-3xl.text-secondary');
+            if (speedEl) {
+                const currentSpeed = parseInt(speedEl.innerText);
+                const variation = Math.floor(Math.random() * 5) - 2;
+                speedEl.innerHTML = `${currentSpeed + variation} <span class="text-xs font-light text-on-surface-variant">km/h</span>`;
+            }
+        }, 1000);
+    </script>
+</body></html>

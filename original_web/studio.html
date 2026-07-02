@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C8L AI Studio - Professional Production</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --neon-gold: #e2b04a;
+            --neon-red: #d62828;
+            --dark-bg: #050505;
+            --console-gray: #121215;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Console */
+        .sidebar {
+            width: 300px;
+            background: var(--console-gray);
+            border-right: 1px solid #333;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .logo-studio {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--neon-gold);
+            text-shadow: 0 0 10px var(--neon-gold);
+        }
+
+        .effect-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .effect-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #888;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: #333;
+            height: 4px;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: var(--neon-gold);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--neon-gold);
+        }
+
+        /* Main Workspace */
+        .workspace {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #visualizer {
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 1px solid #333;
+        }
+
+        .drop-zone {
+            width: 400px;
+            height: 200px;
+            border: 2px dashed #444;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--neon-red);
+            background: rgba(214, 40, 40, 0.05);
+        }
+
+        .controls {
+            margin-top: 3rem;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .btn-studio {
+            background: transparent;
+            border: 1px solid #444;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-studio:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .active-btn {
+            background: var(--neon-gold);
+            color: var(--dark-bg);
+            border-color: var(--neon-gold);
+        }
+
+        .ai-pulse {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--neon-red);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--neon-red);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #backBtn {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            text-decoration: none;
+            color: #888;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="users.html" id="backBtn" data-translate="studio-back">← SALIR DEL ESTUDIO</a>
+
+    <div class="sidebar">
+        <div class="logo-studio">C8L AI STUDIO</div>
+
+        <div class="effect-group">
+            <span class="effect-label" data-translate="studio-mastering-label">AI Mastering Presence</span>
+            <input type="range" id="presence" min="0" max="100" value="50">
+        </div>
+
+        <div class="effect-group">
+            <span class="effect-label" data-translate="studio-reverb-label">Cloud Studio Reverb</span>
+            <input type="range" id="reverb" min="0" max="100" value="0">
+        </div>
+
+        <div class="effect-group">
+            <span class="effect-label" data-translate="studio-bass-label">Deep Bass AI Boost</span>
+            <input type="range" id="bass" min="0" max="100" value="30">
+        </div>
+
+        <div style="margin-top: auto;">
+            <p style="font-size: 0.7rem; color: #555;"><span data-translate="studio-ai-footer">PROCESAMIENTO IA
+                    ACTIVO</span><br>CORAZONES LOCOS ENGINE V1.0</p>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <div class="ai-pulse">
+            <div class="dot"></div>
+            <span data-translate="studio-analyser-label">ANALIZADOR IA EN TIEMPO REAL</span>
+        </div>
+
+        <canvas id="visualizer"></canvas>
+
+        <div id="dropZone" class="drop-zone">
+            <span style="font-size: 3rem;">🎵</span>
+            <p data-translate="studio-drop-text">Arrastra tu canción aquí o haz click</p>
+            <input type="file" id="fileInput" hidden accept="audio/*">
+        </div>
+
+        <div class="controls">
+            <button id="playBtn" class="btn-studio">PLAY / PAUSE</button>
+            <button id="aiMasterBtn" class="btn-studio" data-translate="studio-btn-master">APLICAR IA MASTERING</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Sync with global system
+        const originalUpdateLanguageStudio = updateLanguage;
+        updateLanguage = function () {
+            if (typeof originalUpdateLanguageStudio === 'function') originalUpdateLanguageStudio();
+        }
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let source;
+        let analyser = audioCtx.createAnalyser();
+        let biquadFilter = audioCtx.createBiquadFilter();
+        let gainNode = audioCtx.createGain();
+
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const canvas = document.getElementById('visualizer');
+        const canvasCtx = canvas.getContext('2d');
+
+        // ConfiguraciÃ³n inicial del filtro (Bass)
+        biquadFilter.type = "lowshelf";
+        biquadFilter.frequency.value = 200;
+        biquadFilter.gain.value = 0;
+
+        dropZone.onclick = () => fileInput.click();
+
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) handleAudio(file);
+        };
+
+        function handleAudio(file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                audioCtx.decodeAudioData(e.target.result, function (buffer) {
+                    if (source) source.stop();
+                    source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+
+                    // ConexiÃ³n: Source -> Filter -> Analyser -> Output
+                    source.connect(biquadFilter);
+                    biquadFilter.connect(analyser);
+                    analyser.connect(audioCtx.destination);
+
+                    source.start(0);
+                    visualize();
+                    dropZone.style.display = 'none';
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Efecto Bass Boost desde el slider
+        document.getElementById('bass').oninput = function (e) {
+            biquadFilter.gain.value = e.target.value / 4;
+        };
+
+        // SimulaciÃ³n de AI Mastering
+        document.getElementById('aiMasterBtn').onclick = function () {
+            this.classList.toggle('active-btn');
+            if (this.classList.contains('active-btn')) {
+                // Brillo dinÃ¡mico
+                const highShelf = audioCtx.createBiquadFilter();
+                highShelf.type = "highshelf";
+                highShelf.frequency.value = 3000;
+                highShelf.gain.value = 10;
+                biquadFilter.connect(highShelf);
+                highShelf.connect(analyser);
+            }
+        };
+
+        function visualize() {
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+
+                canvasCtx.fillStyle = '#0a0a0f';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = dataArray[i] / 2;
+                    canvasCtx.fillStyle = `rgb(0, 242, 255)`;
+                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+            }
+            draw();
+        }
+
+        window.onresize = () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        window.onresize();
+    </script>
+</body>
+
+</html>

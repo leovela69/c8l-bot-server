@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800;900&amp;family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#e5e2e1",
+                        "surface-container": "#201f1f",
+                        "surface-bright": "#393939",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary-fixed-dim": "#4ae176",
+                        "on-tertiary": "#640039",
+                        "error": "#ffb4ab",
+                        "primary": "#ddb7ff",
+                        "secondary": "#4ae176",
+                        "primary-container": "#b76dff",
+                        "secondary-fixed": "#6bff8f",
+                        "on-tertiary-container": "#570032",
+                        "surface-tint": "#ddb7ff",
+                        "on-secondary": "#003915",
+                        "secondary-container": "#00b954",
+                        "on-surface-variant": "#cfc2d6",
+                        "on-tertiary-fixed": "#3e0022",
+                        "on-secondary-fixed-variant": "#005321",
+                        "tertiary-fixed-dim": "#ffb0cd",
+                        "tertiary-container": "#f751a1",
+                        "on-primary": "#490080",
+                        "tertiary-fixed": "#ffd9e4",
+                        "on-tertiary-fixed-variant": "#8c0053",
+                        "primary-fixed": "#f0dbff",
+                        "outline-variant": "#4d4354",
+                        "on-background": "#e5e2e1",
+                        "on-primary-container": "#400071",
+                        "on-secondary-container": "#004119",
+                        "surface-container-highest": "#353534",
+                        "surface-dim": "#131313",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-error": "#690005",
+                        "surface-container-high": "#2a2a2a",
+                        "surface": "#131313",
+                        "on-error-container": "#ffdad6",
+                        "background": "#131313",
+                        "on-primary-fixed-variant": "#6900b3",
+                        "primary-fixed-dim": "#ddb7ff",
+                        "error-container": "#93000a",
+                        "inverse-on-surface": "#313030",
+                        "surface-container-low": "#1c1b1b",
+                        "outline": "#988d9f",
+                        "tertiary": "#ffb0cd",
+                        "on-primary-fixed": "#2c0051",
+                        "inverse-primary": "#842bd2",
+                        "surface-variant": "#353534",
+                        "on-secondary-fixed": "#002109"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "unit": "8px",
+                        "stack-lg": "32px",
+                        "gutter": "16px",
+                        "container-margin": "24px",
+                        "section-gap": "64px"
+                    },
+                    "fontFamily": {
+                        "display-xl": ["Spline Sans"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "headline-lg": ["Spline Sans"],
+                        "label-bold": ["Be Vietnam Pro"],
+                        "headline-md": ["Spline Sans"]
+                    },
+                    "fontSize": {
+                        "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "900"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-bold": ["14px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #b76dff, #f751a1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-black text-on-surface font-body-md min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-black/80 backdrop-blur-xl border-b border-white/15">
+<div class="flex items-center gap-3">
+<img alt="C8L Logo" class="w-8 h-8 object-contain" data-alt="A futuristic and sleek high-fidelity logo for a premium music brand named C8L. The logo is rendered with a metallic purple and pink gradient finish, featuring smooth curves and a modern minimalist aesthetic. It is set against a pure black background with a soft purple glow emanating from behind, suggesting depth and high-end technology." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4siq0egagRFePO3b4ePuSd8Ow58SvDtgQ13mxhJEvvRXyxj0cO_88Uzcswan_g2ZnFyYYl6d5NI5OsaOSw9UZLSXDUbjmiegbHpBhmI2IWIyhG_bDBPTYGuQY3Hir9JCE6_m1VCUotTcefFU7eRLClLTJc9LgI77mH5XQkRzmDeUfQjwNvGHIWNc9cmFmzjHY36Yjit46VE2PJb4xi7oKkDnPw2cm7NCws5CCFuG66gQVkpNMjfFwAJhTN2PsiDydnB1JTXwCSWk"/>
+<h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500 font-spline-sans tracking-tight">C8L Music</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface cursor-pointer hover:opacity-80 transition-opacity">search</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-purple-500/50">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A stylish close-up portrait of a young adult with a creative, modern aesthetic, illuminated by neon purple and pink studio lighting. The person has a confident expression, wearing high-fashion urban streetwear. The background is dark and moody with soft bokeh circles of light, perfectly matching an electric premium music application's user profile aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrdwSc2lcLAFYZWA74RCdAKGXpOK_kRDecP-nCZlTeRwvb2JZIln2B8nlVjb0M0gCGVRchlO_dIzzDhLtZ5JbWt1_L2ACj-MGiFHimwLorgSa8bozawu-vVCSLOSW_8t23hkmAs0i5U6-PQ556GQas4kW-Opfhq42hL5INkN3lgh1m3a4becNOWZDtI-IqHaak8XGjWyTZ6NEu05EEf9kdvQHbnrJadeC-GmQDC2krbueAPSxB63ORRS0TULP2mXvEckaEI8YD4bc"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-container-margin max-w-7xl mx-auto space-y-section-gap">
+<!-- Hero Section / Personalized Recommendations -->
+<section>
+<div class="flex items-end justify-between mb-stack-lg">
+<div>
+<span class="text-primary font-label-bold uppercase tracking-widest text-[12px] mb-2 block">Exclusivo para ti</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Recomendaciones</h2>
+</div>
+<button class="text-primary font-label-bold flex items-center gap-1 hover:opacity-80 transition-opacity">
+                    Ver todo <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Bento Card 1 -->
+<div class="glass-card relative rounded-3xl overflow-hidden group col-span-1 md:col-span-2 aspect-[16/9] md:aspect-[21/9]">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="A dynamic high-contrast photograph of a soul singer performing with intense emotion under a single spotlight in a dark, atmospheric venue. Wisps of stage smoke catch the light, creating a moody, cinematic scene. The color palette is dominated by deep blacks and vibrant magenta highlights, reflecting a premium and curated music experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAERIyZVoEuf0woRqrtP5S3jNW2ypeg_Mi4RqCzv_lcU2cOP06tK9J8J5oXvMN8ViX6LuEeE52SO5tcfGhsXP3gDVtyjMwema7NBpaBCr-0mc_gOwqk6iViDp9uCeR3UbF8NnTxcZ54Y4E53-QyjdnW7fdG_mBLI6p5611akaghrWSN0lT_aIcNzQVhFjogrjvjxp-jX6Ab3CHA5nIprwiLwhejaxqPAg0D2wzYSYA96n7HUAAbK7Xp3DVMqn7RXknxO7Qa6slNZ3I"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-stack-lg flex flex-col justify-end">
+<div class="bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full w-fit mb-3 uppercase tracking-tighter">Daily Mix</div>
+<h3 class="font-headline-md text-white mb-2">Energía Nocturna</h3>
+<p class="text-on-surface-variant text-body-md max-w-md">Basado en tus reproducciones recientes de Techno y House melódico.</p>
+</div>
+</div>
+<!-- Bento Card 2 -->
+<div class="glass-card relative rounded-3xl overflow-hidden group aspect-square">
+<img class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" data-alt="A vibrant shot of a professional DJ deck in a high-energy nightclub environment. The scene is bathed in electric blue and neon pink lighting, with laser beams cutting through a light haze. The focus is sharp on the illuminated buttons and sliders, capturing the high-octane atmosphere of a modern festival VIP experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcpDjR8ESwNlv0WdTPR0yYiIFuJ8K7SQlS4dTY0mYMSy_taElswQy3xEVeih-Y6EuKP14v1p5FqyADLZAfBkV0edLf7EVIEE2h0IurpaW6PSYQ7cYrc1SrcH8M5cr3kbniNL_9rtWQGSjfiUiSI1oEdBgt4lMblCyAnIJUwEAcuBqHg-vjcjttAI8zgGt0slF8QT21t1ZmmZHT3co6CYfZTCn6C2IV1WSIlHSH6EA4O8hyLTcA__gqE9iHamrDJKHtkR3XapKeBAw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent p-stack-lg flex flex-col justify-end">
+<h3 class="font-headline-md text-white text-2xl mb-1">C8L Radio</h3>
+<p class="text-on-surface-variant text-sm">Explora nuevos sonidos</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Playlists Carousel -->
+<section>
+<div class="flex items-end justify-between mb-stack-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Listas destacadas</h2>
+<div class="flex gap-2">
+<button class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-on-surface hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-on-surface hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="flex gap-gutter overflow-x-auto hide-scrollbar pb-4 snap-x">
+<!-- Playlist Item -->
+<div class="min-w-[200px] group snap-start">
+<div class="aspect-square rounded-2xl overflow-hidden mb-4 relative shadow-2xl shadow-purple-500/5">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Abstract 3D artwork featuring flowing, iridescent liquid shapes in shades of purple, violet, and electric pink. The lighting is dramatic, highlighting the crystalline textures and reflections. The overall aesthetic is futuristic, sophisticated, and high-end, representing a curated electronic music playlist." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4ssxs3UldLCH4VuwFUBCcuXUkUpLhZGENqFxaqFzEoadDflnGcneg2fRG0uhT8xo-iDCC87VXQBuZQF1gOoiTF14ChzEfF9dRHHSZxHnsMzyzKBSKbNvlUUG_KgBuEybXH4d6Y6LQ3tx22V6LmXftD6Yrjbfzo73VgFveGpnjaCm9SIaSY5z6YpB0QGhFL8a-0FBtEEAQimbxMSv-rThUXRikM6kVvmPjSoiIcOFXt4lcPlYqT04dPa7EoLiaHOWY5poteuap5iI"/>
+<button class="absolute bottom-3 right-3 w-12 h-12 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+<h4 class="font-label-bold text-on-surface text-lg">Cyberpunk Vibes</h4>
+<p class="text-on-surface-variant text-sm">64 canciones • 4h 20m</p>
+</div>
+<div class="min-w-[200px] group snap-start">
+<div class="aspect-square rounded-2xl overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A wide-angle shot of a grand concert hall with spectacular stage lighting. Long beams of white and purple light pierce through a thick atmosphere, creating a rhythmic pattern. The mood is epic and grand, conveying the scale of a world-class live music performance in a premium digital interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvnKefPC-w74smyKUyDVmM1rk6X2-f641jaEHCmLcmDL97BLx_uptY5w0NES8N8YAaksoTZgVhFsOb3Zu2sWfGZlYrOet94_qjdKgLRmd_jv02AIgUfnbXRzQqrR9CEu4OOJBjXbAkA9XsLCWWDX7P4HMA0yjH5OfIY5p7FWLrnSpy1tjOz3J4Qpa2G4HREyDfpMAUjxihjVHH_mAuFQi74rdotHChpxK233g1zc6Fku53Df8qWNU-fFAE_rbh8Fj-GhYFKj2_4to"/>
+<button class="absolute bottom-3 right-3 w-12 h-12 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+<h4 class="font-label-bold text-on-surface text-lg">Indie Global</h4>
+<p class="text-on-surface-variant text-sm">Lo mejor del mundo indie</p>
+</div>
+<div class="min-w-[200px] group snap-start">
+<div class="aspect-square rounded-2xl overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A macro photograph of an expensive set of headphones with metallic pink finishes. The focus is on the intricate detail of the ear cup, with soft light reflections creating a luxury tech feel. The dark background emphasizes the premium materials and the high-fidelity sound promise of the C8L music brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhGo-SwtNHe9ivHceR1J_dwjLXPiuVn5SOLHrLmos9L6NVVc75a9XpjbcVUW-p0xf_TJOt-2djzhjeA_p4inwJYbbtobyta_wZIXx9xPgZ0OaeSkj6gYpf1t7h3Wy0_h9pQz2M1DFqBToTWxtluZ8t7RWED5DFatmlDzik_znG-spBkcGEpf0tg4-rPLgAlHdJbi9Lb_YSjuXUjkjRTr-fDkefxHcTLCLWAC0KTInAbm3dMgumoIn9CNucP3Vq8hdLsUUGsab0m94"/>
+<button class="absolute bottom-3 right-3 w-12 h-12 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+<h4 class="font-label-bold text-on-surface text-lg">Focus &amp; Flow</h4>
+<p class="text-on-surface-variant text-sm">Lo-fi beats para concentrarse</p>
+</div>
+<div class="min-w-[200px] group snap-start">
+<div class="aspect-square rounded-2xl overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A close-up of a vintage vinyl record spinning on a high-end modern turntable. The needle is precisely placed, and the record's surface reflects neon purple and cyan lights from a nearby window or lamp. The image merges nostalgia with a modern, electric premium aesthetic, perfect for a curated music app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD786OiHTX5b0bmYCUpuxtz8oJQobWBoVhhAyt_iVWKgJgR1EcpVl-m9zfUSwyOZuys-sQW3fmB7zbGjNH7MM-xYzlEooeBqQpIbpkC26UzJLOnsYHQ0NIho3H4Q5yySYSDX60N7xkuSTxFY6ydXQpsjuLmv5IfW2uNWn2FiNnCnwSU4i_RDx2rnwnUn5JLs1qV0j_uUIL84zG-EzkJf6TtxoaCdjtydqL4ISPB7ksC7i_CBzaKYB6YWGzEMoInLRQvU9tMV1ACHy8"/>
+<button class="absolute bottom-3 right-3 w-12 h-12 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+<h4 class="font-label-bold text-on-surface text-lg">Clásicos Modernos</h4>
+<p class="text-on-surface-variant text-sm">Joyas que nunca mueren</p>
+</div>
+<div class="min-w-[200px] group snap-start">
+<div class="aspect-square rounded-2xl overflow-hidden mb-4 relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="An artistic representation of a sound wave visualized as glowing pink and purple neon lines flowing through a dark, void-like space. The lines are sharp and clear, suggesting high-resolution audio. The overall mood is energetic, vibrant, and technologically advanced, echoing the C8L brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMnCKuQ8xdSvq4Y5zHSzSPt-GFCRu2FbWLUkyH4fwVLMuZlqghyWNdEwPyR9LyGenj1gcCHtB8pwGcfnTv3Yxg97UJFIalzIDhDfO0ohAUIx1OuM-kW_FX6HRvdE5Ys7wJmqz3Th5B6bmSR6BBAifXaDc82P28Gk3-pY_0y7oa08sDd49R7E1R2NXwCtlB4mAgzTDFUwjux9Qndmx3IREteiOFsSx3OU7E_bpD5_kA-lpHAWyihi82m6v0cTDYbXDC3hk7K3zDqvI"/>
+<button class="absolute bottom-3 right-3 w-12 h-12 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+<h4 class="font-label-bold text-on-surface text-lg">Bass Boosted</h4>
+<p class="text-on-surface-variant text-sm">Para los amantes del bajo</p>
+</div>
+</div>
+</section>
+<!-- New Releases List -->
+<section class="pb-12">
+<div class="flex items-end justify-between mb-stack-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Nuevos lanzamientos</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Release Row 1 -->
+<div class="flex items-center gap-4 p-4 glass-card rounded-2xl group hover:bg-white/5 transition-colors cursor-pointer">
+<img class="w-16 h-16 rounded-lg object-cover" data-alt="Album cover art featuring a stylized neon butterfly with wings made of circuit board patterns. The background is a deep, dark purple, and the butterfly glows with a brilliant pink and white intensity. The design is modern, sharp, and perfectly suited for a futuristic pop or electronic music release." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3LXMohv3YyQi9zpRB48bOTamWegXv0YOn70PA1-F8ogKrcQ-ng70481aQYzkFedFhHgwgRdUEn4neMd3_iZ90gqgzTZ3YKbt193VI-P62yDSrpK4RW8l8opcmEDKoJOzzXsPjeBg-moNrOEtspjk3D9wU8RXiwn6KxDGJO941_Bay-HyOJ2JBW-CTgb7xfnbFbwiQtTLGzwYnmWR7u4vhyGS44jhXPaKAFaMTxQLk_ej421VlwS117whErC4BnU293E0E95fEx0Y"/>
+<div class="flex-1">
+<h5 class="font-label-bold text-on-surface">Neon Dreams</h5>
+<p class="text-on-surface-variant text-sm">Nova Phase • Sencillo</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">more_vert</span>
+</div>
+<!-- Release Row 2 -->
+<div class="flex items-center gap-4 p-4 glass-card rounded-2xl group hover:bg-white/5 transition-colors cursor-pointer">
+<img class="w-16 h-16 rounded-lg object-cover" data-alt="A portrait of an artist partially obscured by colorful geometric light projections. The artist's silhouette is strong against a background of vibrant red and blue hues. The image is artistic, high-contrast, and evokes a sense of modern creative expression, ideal for a new indie music release." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDs0SF6BRYcv72D612E_mKaGBQOMIHtPa1RfVySxTJ02Oc-mtDoHx1grGVb0LBF1YUqsTRSbonelRH2pkxcErpHHo6T04v2sgu8TKznzILVx09G_2qb1W3rldQ9CuQ6pnLeEfariICevH7-_rxAGiiN1TX5XLSjQcl3oVo6GOoFe9vnqOrtAFXdl7wxidCJWetVBzGufruPkeRpofg13wYUzDpZ_H_UimEwjlCEhkDDeUOUGRR7rS43Pc0ipEvsUkHsV0PvflMJkBo"/>
+<div class="flex-1">
+<h5 class="font-label-bold text-on-surface">Fragments of Light</h5>
+<p class="text-on-surface-variant text-sm">Loomis &amp; The Void • Álbum</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">more_vert</span>
+</div>
+<!-- Release Row 3 -->
+<div class="flex items-center gap-4 p-4 glass-card rounded-2xl group hover:bg-white/5 transition-colors cursor-pointer">
+<img class="w-16 h-16 rounded-lg object-cover" data-alt="A sleek, minimalist silver microphone positioned in a dark professional recording booth. The lighting is soft and moody, with a hint of purple backlight creating a sophisticated outline. The image conveys quality, professionalism, and the intimate moment of music creation, fitting for a new vocal-focused track." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9epYz0uEo2nNPTxctmQMIIEMnU6vSl6lwGCaYDzBowq9bkbMeqFKw-3GV28VzRYNjGIyGG5c0P8O3zeK2grhJKYxQOO3TwHWzyhqZ8Vb57z7MUlv1ZW5510L_A0F_918GFpKVw7A4vs0v3CI8Cxy0SKQtbihRbf7nyI1oN8T4PV7t26NIY0HErMP0h05WTrBVbmtVae00A9B4ZA6oVJFOpBCOEkFUaNoetqyxWogD3Jikup2eFl-ujsYJYTYVXEl-i2ggaOHw4yU"/>
+<div class="flex-1">
+<h5 class="font-label-bold text-on-surface">Unspoken Words</h5>
+<p class="text-on-surface-variant text-sm">Elena Soul • EP</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">more_vert</span>
+</div>
+<!-- Release Row 4 -->
+<div class="flex items-center gap-4 p-4 glass-card rounded-2xl group hover:bg-white/5 transition-colors cursor-pointer">
+<img class="w-16 h-16 rounded-lg object-cover" data-alt="An abstract gradient background moving from a deep midnight blue to a searing, vibrant pink. The texture is smooth and velvety, with subtle digital noise adding a modern, tactile feel. It represents a clean, high-concept album cover for a contemporary ambient or synth-pop project." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWcmaGTgJ1mhhpOEVL1bb2NAvQasX3FgEojvZhT0q5qxZzZhcIJYd0dbKDNIK4sXeBKZ5k6Lz1MoaAeN-TtsJ3yZsWcjREEzUyExhfTVpcDblZhdoiqz5ikYag_RfN4lbBNq4u8uOBmFUQVEa-W5dbtm4vI0zluhRpR08D_9r1E9ycJD8NLdr40Y2m97SRIF66ORvSOB3A6TKR2qNToB1_ooVRJ98mvOjZrvD9qhHpx3425jJXOXGiU4kv4i9j2iFbBTqGQ5QJy6g"/>
+<div class="flex-1">
+<h5 class="font-label-bold text-on-surface">Velocity</h5>
+<p class="text-on-surface-variant text-sm">Rhythm Collective • Sencillo</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">more_vert</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Now Playing Bar -->
+<div class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[92%] max-w-2xl z-50">
+<div class="bg-black/60 backdrop-blur-[40px] rounded-full p-2 border border-white/10 flex items-center justify-between shadow-2xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Miniature album art showing vibrant purple and pink light trails, matching the currently playing track. The style is abstract and energetic, providing a consistent visual cue for the player controls." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvBjdIZsLMNKKKdJjU2iZO6SUn_6fvobey0ysMT9QZ6QacolZvKUzPX9Rd-HV2nkilfmjr7sCjDLqz3btaiVj3hnuwTGtsv6IIfbzxVNTAVcMGSnbwhIoI_BNopyCZ17P4q05nLRhMN8LNwHrZb7xOi569S2MRoZlH97m-HjagNOChpuzZo8-hrIWqX7M2obnS1YPhe-k2LC9cLrZi1O3hmT-f6dA5xS17QMA4LU4I1YUGeidzWqtMOnn4VQ1frRLZNEqhpZ4yiMk"/>
+</div>
+<div>
+<p class="text-xs font-bold text-white leading-none mb-1">Cyberpunk Vibes</p>
+<p class="text-[10px] text-on-surface-variant leading-none">Nova Phase</p>
+</div>
+</div>
+<div class="flex items-center gap-4 pr-4">
+<span class="material-symbols-outlined text-on-surface cursor-pointer text-xl">skip_previous</span>
+<div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black cursor-pointer">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<span class="material-symbols-outlined text-on-surface cursor-pointer text-xl">skip_next</span>
+</div>
+<!-- Progress Glow Bar -->
+<div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-secondary-container/30 rounded-full">
+<div class="h-full bg-secondary w-2/3 rounded-full shadow-[0_0_8px_#4ae176]"></div>
+</div>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-black/80 backdrop-blur-2xl border-t border-white/15 shadow-[0_-10px_20px_rgba(168,85,247,0.15)]">
+<a class="flex flex-col items-center justify-center text-purple-400 bg-purple-500/10 rounded-xl px-3 py-1 transform scale-110 duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-spline-sans text-[10px] font-bold uppercase tracking-widest mt-1">Inicio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-pink-400 transition-colors" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-spline-sans text-[10px] font-bold uppercase tracking-widest mt-1">Buscar</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-pink-400 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-spline-sans text-[10px] font-bold uppercase tracking-widest mt-1">Comunidad</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 hover:text-pink-400 transition-colors" href="#">
+<span class="material-symbols-outlined">library_music</span>
+<span class="font-spline-sans text-[10px] font-bold uppercase tracking-widest mt-1">Biblioteca</span>
+</a>
+</nav>
+</body></html>

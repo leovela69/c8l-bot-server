@@ -1,0 +1,10 @@
+PASOS PARA TENER TU WEB EN INTERNET (GRATIS)
+
+1. Abre tu navegador y ve a: https://app.netlify.com/drop
+2. Verás un cuadro que dice "Drag and drop your site folder here".
+3. Arrastra tu carpeta "chrono-cluster" completa dentro de ese cuadro.
+4. ¡LISTO! En 5 segundos Netlify te dará un enlace (ej: https://c8l-agency-test.netlify.app).
+
+Ese es el enlace que puedes enviar por WhatsApp a tus amigos para que vean tu web desde cualquier parte del mundo.
+
+Felicidades por tu nueva agencia C8L!

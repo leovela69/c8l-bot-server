@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corazones Locos - C8L Agency</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #d62828;
+            --accent-gold: #e2b04a;
+            --dark-bg: #050505;
+            --glass: rgba(255, 255, 255, 0.05);
+            --neon-gold: #ffdf00;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-heart), #300c12);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .heart-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: url('https://www.transparenttextures.com/patterns/hearts.png');
+            opacity: 0.05;
+            animation: move-bg 60s linear infinite;
+        }
+
+        @keyframes move-bg {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 1000px 1000px;
+            }
+        }
+
+        .user-hero {
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(circle, rgba(255, 45, 85, 0.2) 0%, transparent 70%);
+        }
+
+        .user-hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, var(--accent-gold), var(--primary-red));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 4rem 10%;
+        }
+
+        .user-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .user-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(226, 176, 74, 0.2);
+            border-color: var(--accent-gold);
+        }
+
+        .user-card img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-bottom: 1.5rem;
+            border: 3px solid var(--accent-gold);
+            object-fit: cover;
+        }
+
+        /* Credits Badge */
+        .credits-badge {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--accent-gold);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            color: var(--accent-gold);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 15px rgba(226, 176, 74, 0.2);
+        }
+
+        .credits-badge span {
+            color: #fff;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(15px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #0a0a0c;
+            border: 1px solid var(--accent-gold);
+            padding: 3rem;
+            border-radius: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(197, 160, 89, 0.2);
+        }
+
+        .modal-content h2 {
+            color: var(--accent-gold);
+            margin-bottom: 2rem;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            border-radius: 10px;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent-gold);
+            border: none;
+            color: black;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="heart-bg"></div>
+
+    <div style="position: absolute; top: 2rem; right: 2rem; display: flex; gap: 1rem; align-items: center; z-index: 100;">
+        <div class="credits-badge" id="creditsDisplay">
+            🪙 <span id="creditValue">0</span> <span data-translate="credits-label">Créditos</span>
+        </div>
+        <a href="index.html" class="nav-link" style="position: static;" data-translate="studio-back">Volver a C8L Agency</a>
+    </div>
+
+        <a href="index.html" class="nav-link">â† Volver a C8L Agency</a>
+
+        <header class="user-hero">
+            <h1 data-translate="community-title">Corazones Locos</h1>
+            <p data-translate="community-subtitle">El área exclusiva de nuestra comunidad creativa.</p>
+        </header>
+
+        <section class="community-grid">
+            <!-- C8L AI Studio Access -->
+            <div class="user-card" style="border-color: var(--accent-gold);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎙️</div>
+                <h3 style="color: var(--accent-gold);" data-translate="studio-access-title">C8L AI Studio</h3>
+                <p data-translate="studio-access-desc">Sube tus canciones y aplica efectos de estudio con nuestra IA.
+                </p>
+                <button onclick="checkAccess()" class="btn-login"
+                    style="background: var(--accent-gold); color: #000; margin-top: 1rem;"
+                    data-translate="studio-access-btn">Acceder al Estudio</button>
+            </div>
+
+            <!-- YouTube Content -->
+            <div class="user-card">
+                <div style="border-radius: 15px; overflow: hidden; margin-bottom: 1rem;">
+                    <iframe width="100%" height="180"
+                        src="https://www.youtube.com/embed?listType=user_uploads&list=CorazoneLocos" frameborder="0"
+                        allowfullscreen></iframe>
+                </div>
+                <h3 data-translate="youtube-title">Últimos Videos</h3>
+                <p data-translate="youtube-desc">Conecta con el canal oficial de Corazones Locos.</p>
+                <a href="https://www.youtube.com/@CorazoneLocos" target="_blank"
+                    style="color: #ff0000; text-decoration: none; font-weight: bold;" data-translate="youtube-link">Ver
+                    en YouTube</a>
+            </div>
+
+            <!-- TikTok Content -->
+            <div class="user-card">
+                <img src="assets/team/leo_vela.jpg" alt="TikTok">
+                <h3 data-translate="tiktok-title">TikTok Star</h3>
+                <p data-translate="tiktok-desc">Mira los clips más virales de Leo Vela.</p>
+                <a href="https://www.tiktok.com/@leo_vela39" target="_blank"
+                    style="color: #fff; background: #000; padding: 0.5rem 1rem; border-radius: 20px; text-decoration: none; display: inline-block; margin-top: 1rem;"
+                    data-translate="tiktok-link">Seguir
+                    en TikTok</a>
+            </div>
+        </section>
+
+
+
+        <!-- Firebase SDK (Compat Version for Static HTML) -->
+        <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+        <script src="script.js"></script>
+        <script>
+            // Sync credits with main system
+            function updateCreditUI() {
+                const credits = localStorage.getItem('c8l_credits') || 0;
+                document.getElementById('creditValue').innerText = credits;
+            }
+
+            function checkAccess() {
+                if (firebase.auth().currentUser) {
+                    window.location.href = 'studio.html';
+                } else {
+                    if (confirm(currentLang === 'es' ? 'Necesitas iniciar sesión para entrar al estudio. ¿Ir a la sección de registro/login?' : 'You need to sign in to enter the studio. Go to the sign-in/register section?')) {
+                        window.location.href = 'index.html#social-login';
+                    }
+                }
+            }
+
+            // Override updateLanguage to also update locally if needed
+            const originalUpdateLanguage = updateLanguage;
+            updateLanguage = function () {
+                originalUpdateLanguage();
+                updateCreditUI();
+            }
+
+            window.addEventListener('DOMContentLoaded', updateCreditUI);
+        </script>
+    </body>
+
+</html>

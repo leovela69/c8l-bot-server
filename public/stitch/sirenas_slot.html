@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sirenas Slot | Kinetic Vault</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Manrope:wght@100..900&amp;family=Space+Grotesk:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#201f1f",
+                      "background": "#131313",
+                      "surface-container-low": "#1c1b1b",
+                      "on-tertiary-fixed": "#3c0700",
+                      "on-primary-container": "#554300",
+                      "surface-container-high": "#2a2a2a",
+                      "secondary-fixed": "#9cf0ff",
+                      "primary-fixed-dim": "#e9c349",
+                      "surface-dim": "#131313",
+                      "tertiary": "#ffbfb0",
+                      "secondary": "#bdf4ff",
+                      "inverse-primary": "#735c00",
+                      "surface-container-highest": "#353534",
+                      "secondary-container": "#00e3fd",
+                      "primary-container": "#d4af37",
+                      "on-error-container": "#ffdad6",
+                      "on-primary-fixed-variant": "#574500",
+                      "on-tertiary-fixed-variant": "#8a1d00",
+                      "surface": "#131313",
+                      "secondary-fixed-dim": "#00daf3",
+                      "on-secondary": "#00363d",
+                      "error": "#ffb4ab",
+                      "tertiary-fixed-dim": "#ffb4a2",
+                      "surface-bright": "#3a3939",
+                      "outline": "#99907c",
+                      "on-primary-fixed": "#241a00",
+                      "on-secondary-fixed": "#001f24",
+                      "on-tertiary-container": "#861c00",
+                      "primary-fixed": "#ffe088",
+                      "on-primary": "#3c2f00",
+                      "surface-tint": "#e9c349",
+                      "on-secondary-container": "#00616d",
+                      "on-background": "#e5e2e1",
+                      "on-secondary-fixed-variant": "#004f58",
+                      "inverse-surface": "#e5e2e1",
+                      "outline-variant": "#4d4635",
+                      "error-container": "#93000a",
+                      "tertiary-container": "#ff977d",
+                      "primary": "#f2ca50",
+                      "surface-container-lowest": "#0e0e0e",
+                      "tertiary-fixed": "#ffdad2",
+                      "on-error": "#690005",
+                      "on-surface": "#e5e2e1",
+                      "surface-variant": "#353534",
+                      "on-tertiary": "#621100",
+                      "on-surface-variant": "#d0c5af",
+                      "inverse-on-surface": "#313030"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "fontFamily": {
+                      "headline": ["Space Grotesk"],
+                      "display": ["Space Grotesk"],
+                      "body": ["Inter"],
+                      "label": ["Manrope"]
+              }
+            },
+          }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0D0D0E;
+            color: #e5e2e1;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(19, 19, 19, 0.6);
+            backdrop-filter: blur(20px);
+        }
+        .cyan-glow {
+            box-shadow: 0 0 20px rgba(0, 227, 253, 0.3);
+        }
+        .gold-glow {
+            box-shadow: 0 0 20px rgba(242, 202, 80, 0.2);
+        }
+        .marine-texture {
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 227, 253, 0.05) 0%, transparent 80%);
+        }
+        .slot-reel-anim {
+            transition: transform 1s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+        }
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body class="marine-texture min-h-screen selection:bg-secondary/30">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full px-6 py-3 z-50 flex justify-between items-center bg-surface/60 backdrop-blur-xl border-b border-outline-variant/15 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+<div class="flex items-center gap-8">
+<h1 class="font-headline text-2xl font-bold italic text-primary drop-shadow-[0_0_8px_rgba(242,202,80,0.4)]">Sirenas Slot</h1>
+<nav class="flex gap-6">
+<a class="font-label uppercase font-bold text-[10px] text-primary border-b-2 border-primary pb-1 tracking-widest" href="#">Back to Lobby</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-4 py-1.5 bg-surface-container-low/40 rounded-lg border border-outline-variant/10">
+<span class="material-symbols-outlined text-primary text-sm">toll</span>
+<span class="font-label font-bold text-[10px] uppercase text-primary">Gold: 1,250,000</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-1.5 bg-surface-container-low/40 rounded-lg border border-outline-variant/10">
+<span class="material-symbols-outlined text-tertiary text-sm">account_balance_wallet</span>
+<span class="font-label font-bold text-[10px] uppercase text-tertiary">Bizcoin: 450</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center overflow-hidden">
+<img alt="Player Profile" class="w-full h-full object-cover" data-alt="A stylized digital avatar for a high-tier cybernetic user, featuring subtle glowing blue facial markings and sleek black tech-wear. The avatar is set against a dark, industrial obsidian background with soft ambient cyan lighting. The overall aesthetic is futuristic and elite." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0Occ4HQtJZfmovtPNrTqbq7JA7JH1Y1WDr_rzGIT09HNNUeGHo-TWBYE7lDKC-2Q37AZDdp9IBQtpxM_uGRnCFHBAX_68IERFMLFAFnQh65aL7UV6xBTAlCA2HcCu4rrCDjPdLvMl3UsI5RBLogQPHbE2xa-EhnB_oWZBIAuSwIzZr9LHmz_JYCOfw_ZOqWpZ_SH23iC0b5N4n0zbZbYflk7F9JFWM171MjkeXyI3PE9Cw9YkLMmVI7jCvGktg7EtbOOADVOX4VY"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-8 px-8 h-screen flex gap-8 items-stretch overflow-hidden">
+<!-- Slot Cabinet (Center-Left) -->
+<section class="flex-grow flex flex-col gap-6 items-center justify-center relative">
+<!-- Atmospheric Shader Background -->
+
+<div class="relative w-full max-w-2xl h-[716px] glass-panel border border-secondary/20 rounded-xl overflow-hidden cyan-glow flex flex-col p-1">
+<!-- Inner Cabinet Lighting -->
+<div class="absolute inset-x-0 top-0 h-1 bg-secondary shadow-[0_0_15px_#00e3fd]"></div>
+<div class="absolute inset-x-0 bottom-0 h-1 bg-secondary shadow-[0_0_15px_#00e3fd]"></div>
+<!-- 3x3 Slot Grid -->
+<div class="flex-grow grid grid-cols-3 gap-1 p-4 bg-surface-container-lowest/50 relative">
+<!-- Column 1 -->
+<div class="relative overflow-hidden rounded-lg bg-surface-container-low/30 border border-outline-variant/10">
+<div class="flex flex-col gap-4 p-4 items-center" id="reel-1">
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-primary text-6xl" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label text-[10px] uppercase font-bold text-primary tracking-widest">Mermaid</span>
+</div>
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-secondary text-6xl">water_drop</span>
+<span class="font-label text-[10px] uppercase font-bold text-secondary tracking-widest">Pearl</span>
+</div>
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-secondary text-6xl">navigation</span>
+<span class="font-label text-[10px] uppercase font-bold text-secondary tracking-widest">Trident</span>
+</div>
+</div>
+</div>
+<!-- Column 2 -->
+<div class="relative overflow-hidden rounded-lg bg-surface-container-low/30 border border-outline-variant/10">
+<div class="flex flex-col gap-4 p-4 items-center" id="reel-2">
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-secondary text-6xl">navigation</span>
+<span class="font-label text-[10px] uppercase font-bold text-secondary tracking-widest">Trident</span>
+</div>
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-6xl">filter_drama</span>
+<span class="font-label text-[10px] uppercase font-bold text-on-surface-variant tracking-widest">Oyster</span>
+</div>
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-primary text-6xl" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label text-[10px] uppercase font-bold text-primary tracking-widest">Mermaid</span>
+</div>
+</div>
+</div>
+<!-- Column 3 -->
+<div class="relative overflow-hidden rounded-lg bg-surface-container-low/30 border border-outline-variant/10">
+<div class="flex flex-col gap-4 p-4 items-center" id="reel-3">
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-secondary text-6xl">water_drop</span>
+<span class="font-label text-[10px] uppercase font-bold text-secondary tracking-widest">Pearl</span>
+</div>
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-primary text-6xl" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label text-[10px] uppercase font-bold text-primary tracking-widest">Mermaid</span>
+</div>
+<div class="w-32 h-32 flex flex-col items-center justify-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-6xl">filter_drama</span>
+<span class="font-label text-[10px] uppercase font-bold text-on-surface-variant tracking-widest">Oyster</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Slot Controls -->
+<div class="bg-surface-container/80 p-6 flex items-center justify-between border-t border-secondary/10">
+<div class="flex gap-8">
+<div class="flex flex-col gap-1">
+<span class="font-label text-[9px] uppercase tracking-[0.2em] text-on-surface-variant">Bet Amount</span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded border border-outline-variant/30 flex items-center justify-center hover:bg-secondary/10 transition-colors">
+<span class="material-symbols-outlined text-xs">remove</span>
+</button>
+<span class="font-headline text-xl font-bold text-secondary">50</span>
+<button class="w-6 h-6 rounded border border-outline-variant/30 flex items-center justify-center hover:bg-secondary/10 transition-colors">
+<span class="material-symbols-outlined text-xs">add</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label text-[9px] uppercase tracking-[0.2em] text-on-surface-variant">Current Win</span>
+<span class="font-headline text-xl font-bold text-primary">0</span>
+</div>
+</div>
+<button class="group relative px-12 py-4 rounded-lg bg-gradient-to-r from-secondary to-[#00616d] text-on-secondary font-headline font-black text-lg tracking-widest uppercase italic transition-all hover:scale-105 active:scale-95 cyan-glow" id="spin-btn">
+<span class="relative z-10">GIRAR / SPIN</span>
+<div class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity shimmer rounded-lg"></div>
+</button>
+</div>
+</div>
+</section>
+<!-- Utility Panel (Right) -->
+<aside class="w-96 flex flex-col gap-4">
+<!-- Header Identity -->
+<div class="glass-panel rounded-xl p-6 border border-outline-variant/10 flex items-center gap-4">
+<div class="relative">
+<img alt="Vault Icon" class="w-12 h-12 rounded-lg bg-surface-container-high p-1" data-alt="A minimalist tech icon representing a secure vault, designed with geometric cyan lines on a dark grey substrate. The style is sharp and industrial, matching a high-security agency command center aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQyR1Ag7yj4xgHrqouKKNVeOMPtu3AyQf3adRxcxLZUuj3ILWofl8xPxAwe9G2_-lmqWIU1EtAnzug8RiWhY83l8KkcOJMwhyiHtzZpvTMjWGCG2eQ9kObEhZ2Yvibpq-gtKTpeBM18gtyDYrVg1aGwGt5wLrsPVSskIwhDEE8UoZKwvvtR0xTFcTwGkAJhH8xNuehCdVqoVBU02rDL3xNazBt3PQRv6yPZKNwtIsB7vexyHiCnSaq5p9LtgSHTYaDOZDAVJWZTNk"/>
+<div class="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full animate-pulse shadow-[0_0_8px_#00e3fd]"></div>
+</div>
+<div>
+<h2 class="font-headline text-lg font-bold tracking-tight text-on-surface">C.8.L. Operator</h2>
+<p class="font-label text-[10px] uppercase tracking-widest text-secondary">Elite Tier Management</p>
+</div>
+</div>
+<!-- Arena Tactical Panel -->
+<div class="flex-grow glass-panel rounded-xl border border-outline-variant/10 flex flex-col overflow-hidden">
+<!-- Tabs -->
+<div class="grid grid-cols-3 border-b border-outline-variant/10">
+<button class="py-3 font-label text-[10px] uppercase font-bold text-secondary bg-surface-container-high/50 border-b-2 border-secondary tracking-widest">Paytable</button>
+<button class="py-3 font-label text-[10px] uppercase font-bold text-on-surface-variant hover:text-on-surface transition-colors tracking-widest">Activity</button>
+<button class="py-3 font-label text-[10px] uppercase font-bold text-on-surface-variant hover:text-on-surface transition-colors tracking-widest">History</button>
+</div>
+<!-- Paytable Content -->
+<div class="p-6 space-y-4">
+<div class="flex items-center justify-between p-3 rounded bg-surface-container-low/50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-body text-sm font-medium">Mermaid</span>
+</div>
+<span class="font-headline font-bold text-primary">10,000x</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded bg-surface-container-low/50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">navigation</span>
+<span class="font-body text-sm font-medium">Trident</span>
+</div>
+<span class="font-headline font-bold text-secondary">5,000x</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded bg-surface-container-low/50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">water_drop</span>
+<span class="font-body text-sm font-medium">Pearl</span>
+</div>
+<span class="font-headline font-bold text-secondary">1,200x</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded bg-surface-container-low/50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">filter_drama</span>
+<span class="font-body text-sm font-medium">Oyster</span>
+</div>
+<span class="font-headline font-bold text-on-surface-variant">500x</span>
+</div>
+</div>
+<!-- Multiplier Gauge -->
+<div class="px-6 py-4 border-t border-outline-variant/10">
+<div class="flex justify-between items-end mb-4">
+<span class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Multiplier Power</span>
+<span class="font-headline text-2xl font-black text-secondary">x2.4</span>
+</div>
+<div class="h-48 w-full bg-surface-container-low rounded-lg relative overflow-hidden flex items-end p-1">
+<div class="w-full bg-gradient-to-t from-[#00616d] to-secondary rounded h-[40%] cyan-glow relative">
+<div class="absolute top-0 left-0 w-full h-1 bg-white/40"></div>
+</div>
+<!-- Marker Ticks -->
+<div class="absolute inset-y-0 right-4 flex flex-col justify-between py-2 font-label text-[8px] text-on-surface-variant">
+<span>x10</span><span>x8</span><span>x6</span><span>x4</span><span class="text-secondary font-bold">x2</span><span>x1</span>
+</div>
+</div>
+</div>
+<!-- Recent Logs -->
+<div class="flex-grow p-6 bg-surface-container-lowest/40 flex flex-col gap-3 overflow-y-auto">
+<h3 class="font-label text-[9px] uppercase tracking-[0.2em] text-on-surface-variant mb-1">Telemetry Log</h3>
+<div class="flex gap-3 text-[11px] font-body text-on-surface-variant leading-relaxed p-2 border-l border-primary/50 bg-primary/5">
+<span class="text-primary font-bold">🏆</span>
+<span>Operative Leo won 600 Coins on Sirenas Slot!</span>
+</div>
+<div class="flex gap-3 text-[11px] font-body text-on-surface-variant leading-relaxed p-2 border-l border-secondary/30 bg-secondary/5">
+<span class="text-secondary font-bold">⚡</span>
+<span>Multiplier Peak reached x4.5 by Ghost_X</span>
+</div>
+<div class="flex gap-3 text-[11px] font-body text-on-surface-variant leading-relaxed p-2 border-l border-outline/30">
+<span class="opacity-50">#</span>
+<span>New session initialized for Operator C.8.L.</span>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Footer Meta -->
+<footer class="fixed bottom-0 w-full px-8 py-3 flex justify-between items-center text-[10px] font-label uppercase tracking-widest text-on-surface-variant/40 pointer-events-none">
+<span>Kinetic Vault v4.2 // Secure Session active</span>
+<div class="flex gap-4">
+<span class="text-secondary/50">Lat: 48ms</span>
+<span class="text-primary/50">RNG Verified</span>
+</div>
+</footer>
+<script>
+        const spinBtn = document.getElementById('spin-btn');
+        const reels = [
+            document.getElementById('reel-1'),
+            document.getElementById('reel-2'),
+            document.getElementById('reel-3')
+        ];
+
+        spinBtn.addEventListener('click', () => {
+            if (spinBtn.disabled) return;
+            
+            spinBtn.disabled = true;
+            spinBtn.classList.add('opacity-50', 'scale-95');
+            
+            reels.forEach((reel, index) => {
+                reel.style.transition = 'none';
+                reel.style.transform = 'translateY(0)';
+                
+                // Force reflow
+                reel.offsetHeight;
+                
+                const distance = 1000 + (Math.random() * 500);
+                reel.style.transition = `transform ${1.5 + (index * 0.5)}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
+                reel.style.transform = `translateY(-${distance}px)`;
+            });
+
+            setTimeout(() => {
+                spinBtn.disabled = false;
+                spinBtn.classList.remove('opacity-50', 'scale-95');
+                
+                // Add a small vibration to the cabinet on stop
+                const cabinet = document.querySelector('.glass-panel');
+                cabinet.animate([
+                    { transform: 'translate(1px, 1px) rotate(0deg)' },
+                    { transform: 'translate(-1px, -2px) rotate(-0.1deg)' },
+                    { transform: 'translate(-3px, 0px) rotate(0.1deg)' },
+                    { transform: 'translate(0px, 0px) rotate(0deg)' }
+                ], { duration: 200 });
+
+            }, 3000);
+        });
+
+        // Hover sounds or effects could be added here
+    </script>
+</body></html>

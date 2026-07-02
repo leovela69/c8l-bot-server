@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta name="keywords" content="synthwave ia, retro beats, industrial gaming, soundtracks ia, c8l arcade">
+    <!-- Auto-injected by Daily Market Agent -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C8L Agency | Advertising & Art</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav id="navbar">
+        <div class="logo-container">
+            <a href="#"><img src="assets/c8l_logo_blue_chrome.png" alt="C8L Agency Logo" style="border-radius: 50%;"></a>
+        </div>
+        <div class="nav-links">
+            <a href="#services" data-translate="nav-services">Servicios</a>
+            <a href="#products" data-translate="nav-products">Productos</a>
+            <a href="#pricing" data-translate="nav-pricing">Planes</a>
+            <a href="#ads" data-translate="nav-ads">Publicidad</a>
+            <a href="#gaming" data-translate="nav-gaming">Juegos</a>
+            <a href="#team" data-translate="nav-team">Equipo</a>
+            <a href="users.html" class="glass" style="padding: 8px 20px;">Corazones Locos</a>
+        </div>
+        <div class="nav-utilities">
+            <div class="lang-switcher">
+                <button onclick="switchLanguage('es')" id="btn-es" class="active">ES</button>
+                <span>|</span>
+                <button onclick="switchLanguage('en')" id="btn-en">EN</button>
+            </div>
+            <div id="credit-display">
+                <span data-translate="credits-label">Créditos</span>: <span id="credit-count">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero section-padding">
+        <div class="container animate-fade">
+            <h1 data-translate="hero-title">Elevamos tu Marca al Siguiente Nivel</h1>
+            <p data-translate="hero-subtitle">C8L Agency: Fusionando publicidad estratégica con la vanguardia del arte y
+                la tecnología.</p>
+            <a href="#contact" class="cta-button" data-translate="hero-cta">Comienza Ahora</a>
+        </div>
+    </header>
+
+    <section id="services" class="section-padding">
+        <div class="container">
+            <h2 class="section-title" data-translate="services-title">Nuestros Servicios</h2>
+            
+            <div style="display: flex; gap: 40px; flex-wrap: wrap; align-items: center; margin-top: 40px;">
+                <!-- Left Column: Dashboard Preview -->
+                <div style="flex: 1.2; min-width: 320px;">
+                    <div class="glass pulse-border-gold" style="padding: 12px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; background: rgba(0,0,0,0.4);">
+                        <img src="assets/services_dashboard_alt.jpg" alt="C8L Services Dashboard" style="width: 100%; border-radius: 12px; display: block; filter: contrast(1.05) brightness(0.95);">
+                    </div>
+                </div>
+                
+                <!-- Right Column: Services Cards List -->
+                <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 20px;">
+                    <!-- Servicio 1 -->
+                    <div class="service-card glass" style="display: flex; gap: 20px; align-items: flex-start; padding: 25px; cursor: pointer; transition: var(--transition-smooth);">
+                        <div class="service-icon" style="background: rgba(197, 160, 89, 0.1); border: 1px solid var(--accent-gold); border-radius: 50%; padding: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-gold);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 8px; font-weight: 800;" data-translate="service-1-title">Juegos & Casino IA</h3>
+                            <p data-translate="service-1-desc" class="service-desc" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-muted);">Accede a nuestros desarrollos interactivos de advergaming y casino social basados en IA.</p>
+                        </div>
+                    </div>
+                    <!-- Servicio 2 -->
+                    <div class="service-card glass" style="display: flex; gap: 20px; align-items: flex-start; padding: 25px; cursor: pointer; transition: var(--transition-smooth);">
+                        <div class="service-icon" style="background: rgba(197, 160, 89, 0.1); border: 1px solid var(--accent-gold); border-radius: 50%; padding: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-gold);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 8px; font-weight: 800;" data-translate="service-2-title">Música & Contenido IA</h3>
+                            <p data-translate="service-2-desc" class="service-desc" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-muted);">Creación de música generativa por IA y mastering profesional liderado por Leo Vela.</p>
+                        </div>
+                    </div>
+                    <!-- Servicio 3 -->
+                    <div class="service-card glass" style="display: flex; gap: 20px; align-items: flex-start; padding: 25px; cursor: pointer; transition: var(--transition-smooth);">
+                        <div class="service-icon" style="background: rgba(197, 160, 89, 0.1); border: 1px solid var(--accent-gold); border-radius: 50%; padding: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-gold);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01"/></svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 8px; font-weight: 800;" data-translate="service-3-title">Merchandising Corporativo</h3>
+                            <p data-translate="service-3-desc" class="service-desc" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-muted);">Diseño y distribución de merchandising exclusivo C8L (prendas, gorras y accesorios).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="process" class="section-padding" style="background: rgba(197, 160, 89, 0.02);">
+        <div class="container">
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 60px; font-weight: 800; text-transform: uppercase; letter-spacing: -1px;"
+                data-translate="process-title">
+                Nuestro Proceso</h2>
+            <div class="team-grid">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 20px; font-weight: 800;">01
+                    </div>
+                    <h3 style="margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;" data-translate="process-1-title">Descubrimiento</h3>
+                    <p style="color: var(--text-muted);" data-translate="process-1-desc">Analizamos tu marca y objetivos para trazar el camino al éxito.
+                    </p>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 20px; font-weight: 800;">02
+                    </div>
+                    <h3 style="margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;" data-translate="process-2-title">Estrategia</h3>
+                    <p style="color: var(--text-muted);" data-translate="process-2-desc">Desarrollamos un plan de acción creativo y técnico a medida.
+                    </p>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 20px; font-weight: 800;">03
+                    </div>
+                    <h3 style="margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;" data-translate="process-3-title">Ejecución</h3>
+                    <p style="color: var(--text-muted);" data-translate="process-3-desc">Materializamos la visión con los más altos estándares de
+                        calidad.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="team" class="section-padding">
+        <div class="container">
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: -1px;"
+                data-translate="team-title">Nuestro Equipo</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 50px; font-weight: 300;" data-translate="team-subtitle">
+                Los líderes de la revolución musical y del entretenimiento digital en C8L Agency.
+            </p>
+
+            <!-- Corporate Team Stage Banner -->
+            <div class="glass pulse-border-gold" style="max-width: 900px; margin: 0 auto 60px auto; padding: 20px; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); background: rgba(0,0,0,0.4); text-align: center;">
+                <img src="assets/staff_stage.jpg" alt="C8L Agency Staff Stage" style="width: 100%; border-radius: 12px; display: block; margin-bottom: 25px; filter: contrast(1.02) brightness(0.98);">
+                <span style="font-size: 0.8rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 3px; display: block; margin-bottom: 8px;">C8L Agency Corporate Staff</span>
+                <h3 style="font-size: 1.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px; color: #fff;">C.8.L AGENCY: EL FUTURO DE LA MUSICA Y EL ENTRETENIMIENTO</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 12px; max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                    Nuestro equipo directivo fusiona la producción artística del más alto nivel con tecnologías emergentes de Inteligencia Artificial para potenciar marcas internacionales y creadores de contenido.
+                </p>
+            </div>
+
+            <div class="team-grid">
+                <!-- Leo Vela -->
+                <div class="team-card glass">
+                    <img src="assets/c8l_logo_blue_chrome.png" class="team-card-pin pulse-glow" alt="C8L Gold Pin">
+                    <img src="assets/team/leo_vela.jpg" alt="Leo Vela">
+                    <div class="team-info">
+                        <h3>Leo Vela</h3>
+                        <p data-translate="role-leo">Agente y Gerente</p>
+                    </div>
+                </div>
+                <!-- Kukis -->
+                <div class="team-card glass">
+                    <img src="assets/c8l_logo_blue_chrome.png" class="team-card-pin pulse-glow" alt="C8L Gold Pin">
+                    <img src="assets/team/kukis.jpg" alt="Kukis">
+                    <div class="team-info">
+                        <h3>Kukis</h3>
+                        <p data-translate="role-kukis">Gerente de Diseño</p>
+                    </div>
+                </div>
+                <!-- Sherlyn -->
+                <div class="team-card glass">
+                    <img src="assets/c8l_logo_blue_chrome.png" class="team-card-pin pulse-glow" alt="C8L Gold Pin">
+                    <img src="assets/team/sherlyn.jpg" alt="Sherlyn">
+                    <div class="team-info">
+                        <h3>Sherlyn</h3>
+                        <p data-translate="role-sherlyn">Gerente de Recursos Humanos</p>
+                    </div>
+                </div>
+                <!-- Yusleny -->
+                <div class="team-card glass">
+                    <img src="assets/c8l_logo_blue_chrome.png" class="team-card-pin pulse-glow" alt="C8L Gold Pin">
+                    <img src="assets/team/yusleny.jpg" alt="Yusleny">
+                    <div class="team-info">
+                        <h3>Yusleny</h3>
+                        <p data-translate="role-yusleny">Gerente de Marketing</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="ads" class="section-padding" style="background: rgba(197, 160, 89, 0.05);">
+        <div class="container animate-fade">
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: -1px;"
+                data-translate="ads-title">C8L Agency & Staff</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px; font-weight: 300;">Conoce a los creadores de campañas de impacto bajo la dirección de Leo Vela</p>
+            
+            <!-- Daily Trend Ticker -->
+            <div class="glass" style="max-width: 800px; margin: -10px auto 40px auto; padding: 15px 30px; border-radius: 30px; text-align: center; border-color: rgba(197, 160, 89, 0.3); background: rgba(197, 160, 89, 0.03); font-size: 0.9rem; color: #fff; font-weight: 600;">
+                <span style="font-size: 0.75rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 2px; margin-right: 10px;">★ TENDENCIA RECIENTE:</span>
+                <p data-translate="ads-card-2-desc">C8L Arcade: Beats Synthwave Retro para Videojuegos.</p>
+            </div>
+
+            <div class="team-grid">
+                <!-- Leo Vela Producer Card -->
+                <div class="glass ad-card premium-ad" style="height: auto; padding: 40px; text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <img src="assets/c8l_logo_blue_chrome.png" class="ad-card-logo spin-slow" alt="C8L Blue Logo">
+                        <h3 style="color: var(--accent-gold); font-size: 1.5rem; margin-bottom: 15px;">Leo Vela - Dirección de Producción</h3>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 20px;">
+                            Identidad musical de alta gama, spots estratégicos y lanzamientos artísticos globales. Leo Vela lidera la dirección de sonido y branding sonoro de C8L Agency para posicionar marcas en los top charts.
+                        </p>
+                    </div>
+                    <a href="#contact" class="cta-button" style="padding: 10px 20px; font-size: 0.75rem; text-align: center; align-self: flex-start; margin-top: auto;">Contratar Producción</a>
+                    <div class="ad-glow"></div>
+                </div>
+                <!-- Staff & Talents Card -->
+                <div class="glass ad-card premium-ad" style="height: auto; padding: 40px; text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <img src="assets/c8l_logo_purple_3d.png" class="ad-card-logo float-slow" alt="C8L Purple Logo">
+                        <h3 style="color: var(--accent-gold); font-size: 1.5rem; margin-bottom: 15px;">C8L Staff & Talents</h3>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 20px;">
+                            Acceso directo a nuestra cartera selecta de artistas y creadores, representados de manera exclusiva por Sherlyn (Recursos Humanos) y proyectados digitalmente por Yusleny (Marketing).
+                        </p>
+                    </div>
+                    <a href="#contact" class="cta-button" style="padding: 10px 20px; font-size: 0.75rem; text-align: center; align-self: flex-start; margin-top: auto;">Ver Dossier de Talentos</a>
+                    <div class="ad-glow"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="gaming" class="section-padding" style="background: #000;">
+        <div class="container animate-fade">
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: -1px; color: #fff;"
+                data-translate="gaming-title">C8L Interactive & Advergaming</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 50px; font-weight: 300;">Dossier de aplicaciones y videojuegos de marketing interactivo desarrollados por C8L</p>
+            
+            <!-- Dossier Grid -->
+            <div class="cards-grid" style="margin-bottom: 60px;">
+                <!-- Dossier 1 -->
+                <div class="glass" style="overflow: hidden; text-align: left; display: flex; flex-direction: column; transition: var(--transition-smooth); border: 1px solid var(--glass-border); border-radius: 20px;">
+                    <div style="height: 220px; width: 100%; background: #1a1a1f; position: relative; overflow: hidden;">
+                        <img src="assets/gaming/runner.jpg" alt="Corazones Locos Runner" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="assets/c8l_logo_green_3d.png" class="product-logo spin-slow" alt="C8L Green Logo" style="position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--accent-gold); background: #000; z-index: 5;">
+                    </div>
+                    <div style="padding: 30px; display: flex; flex-direction: column; flex-grow: 1;">
+                        <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 2px;">Mobile Campaign</span>
+                        <h3 style="font-size: 1.4rem; margin: 10px 0 15px 0;">Corazones Locos: Runner</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; flex-grow: 1;">Juego de carrera infinita integrado con redes sociales para promocionar el single de Leo Vela. Campaña viral para maximizar reproducciones.</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; font-size: 0.8rem; font-weight: 600;">
+                            <span style="color: #fff;">Partidas: <strong style="color: var(--accent-gold);">+1.5M</strong></span>
+                            <span style="color: #fff;">Engagement: <strong style="color: var(--accent-gold);">85%</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Dossier 2 -->
+                <div class="glass" style="overflow: hidden; text-align: left; display: flex; flex-direction: column; transition: var(--transition-smooth); border: 1px solid var(--glass-border); border-radius: 20px;">
+                    <div style="height: 220px; width: 100%; background: #1a1a1f; position: relative; overflow: hidden;">
+                        <img src="assets/gaming/rhythm.jpg" alt="Quantum Rhythm" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="assets/c8l_logo_green_3d.png" class="product-logo spin-slow" alt="C8L Green Logo" style="position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--accent-gold); background: #000; z-index: 5;">
+                    </div>
+                    <div style="padding: 30px; display: flex; flex-direction: column; flex-grow: 1;">
+                        <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 2px;">Web Application</span>
+                        <h3 style="font-size: 1.4rem; margin: 10px 0 15px 0;">Quantum Rhythm IA</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; flex-grow: 1;">Aplicación web rítmica donde los usuarios tocan compases generados en tiempo real por el motor C8L Music AI. Fusión de tecnología e interactividad.</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; font-size: 0.8rem; font-weight: 600;">
+                            <span style="color: #fff;">Usuarios: <strong style="color: var(--accent-gold);">+500K</strong></span>
+                            <span style="color: #fff;">Retención: <strong style="color: var(--accent-gold);">92%</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demo Live Game -->
+            <div class="glass"
+                style="max-width: 800px; margin: 0 auto; padding: 40px; text-align: center; border-color: var(--accent-gold);">
+                <img src="assets/c8l_logo_green_3d.png" class="ad-card-logo spin-slow" style="margin: 0 auto 15px auto; width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent-gold);" alt="C8L Gaming Logo">
+                <h3 style="font-size: 1.5rem; color: var(--accent-gold); margin-bottom: 10px;">C8L Arcade - Demo en Vivo</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Prueba nuestra demostración interactiva de advergaming directamente en tu navegador y gana 1 crédito al finalizar.
+                </p>
+                <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 700; color: var(--accent-gold);"><span
+                            data-translate="game-score">Puntos</span>: <span id="score-val">0</span></span>
+                    <button onclick="initSnakeGame()" class="cta-button" style="padding: 10px 25px; font-size: 0.8rem;"
+                        data-translate="game-start">Empezar Juego</button>
+                </div>
+                <canvas id="snakeGame" width="600" height="400"
+                    style="background: #0a0a0c; border: 2px solid var(--accent-gold); border-radius: 8px; width: 100%; max-width: 600px; cursor: crosshair;"></canvas>
+                <p id="game-msg" style="margin-top: 20px; font-weight: 700; color: var(--accent-red); height: 24px;">
+                </p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;" data-translate="game-rules">Usa las flechas del teclado
+                    para jugar. ¡Gana 1 crédito al terminar!</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="products" class="section-padding" style="background: rgba(10, 10, 12, 0.4);">
+        <div class="container animate-fade">
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: -1px;"
+                data-translate="products-title">Línea de Productos Oficiales</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 50px; font-weight: 300;">Adquiere nuestras plantillas y recursos de diseño con el ecosistema visual de C8L</p>
+            <div class="cards-grid">
+                <!-- Product 1 -->
+                <div class="glass product-card" style="padding: 30px; text-align: left; border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="product-image" style="height: 250px; border-radius: 12px; overflow: hidden; background: #1a1a1f; position: relative;">
+                        <img src="assets/WhatsApp Image 2026-01-15 at 12.22.26.jpeg" alt="Logo & Identity Pack C8L" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span style="position: absolute; top: 15px; left: 15px; background: var(--accent-gold); color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px;">BRANDING</span>
+                        <img src="assets/c8l_logo_blue_chrome.png" class="product-logo spin-slow" alt="C8L Blue Logo" style="position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--accent-gold); background: #000; z-index: 5;">
+                    </div>
+                    <h3 style="font-size: 1.3rem; margin-top: 25px; margin-bottom: 10px; font-weight: 800;" data-translate="product-1-title">Identidad & Logotipo C8L</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">Manual oficial de identidad corporativa de C8L Agency. Incluye logotipos vectoriales de alta resolución y recursos de marca.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+                        <span style="font-size: 1.4rem; font-weight: 800; color: var(--accent-gold);">€29.99</span>
+                        <button onclick="showNotification(currentLang === 'es' ? '¡Producto añadido al carrito!' : 'Product added to cart!')" class="cta-button" style="padding: 10px 20px; font-size: 0.75rem; border-radius: 4px;">Comprar</button>
+                    </div>
+                </div>
+                <!-- Product 2 -->
+                <div class="glass product-card" style="padding: 30px; text-align: left; border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="product-image" style="height: 250px; border-radius: 12px; overflow: hidden; background: #1a1a1f; position: relative;">
+                        <img src="assets/WhatsApp Image 2026-01-15 at 12.01.45.jpeg" alt="Premium Web Design C8L" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span style="position: absolute; top: 15px; left: 15px; background: var(--accent-gold); color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px;">WEB TEMPLATE</span>
+                        <img src="assets/c8l_logo_blue_chrome.png" class="product-logo spin-slow" alt="C8L Blue Logo" style="position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--accent-gold); background: #000; z-index: 5;">
+                    </div>
+                    <h3 style="font-size: 1.3rem; margin-top: 25px; margin-bottom: 10px; font-weight: 800;" data-translate="product-2-title">Plantilla Web Premium C8L</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">Plantilla web profesional responsive C8L. Diseño elegante con glassmorphism, optimizado para SEO y alta conversión.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+                        <span style="font-size: 1.4rem; font-weight: 800; color: var(--accent-gold);">€99.99</span>
+                        <button onclick="showNotification(currentLang === 'es' ? '¡Producto añadido al carrito!' : 'Product added to cart!')" class="cta-button" style="padding: 10px 20px; font-size: 0.75rem; border-radius: 4px;">Comprar</button>
+                    </div>
+                </div>
+                <!-- Product 3 -->
+                <div class="glass product-card" style="padding: 30px; text-align: left; border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="product-image" style="height: 250px; border-radius: 12px; overflow: hidden; background: #1a1a1f; position: relative;">
+                        <img src="assets/WhatsApp Image 2026-01-15 at 11.53.20 (2).jpeg" alt="Mobile App UI Prototype C8L" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span style="position: absolute; top: 15px; left: 15px; background: var(--accent-gold); color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px;">APP PROTOTYPE</span>
+                        <img src="assets/c8l_logo_blue_chrome.png" class="product-logo spin-slow" alt="C8L Blue Logo" style="position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--accent-gold); background: #000; z-index: 5;">
+                    </div>
+                    <h3 style="font-size: 1.3rem; margin-top: 25px; margin-bottom: 10px; font-weight: 800;" data-translate="product-3-title">Prototipo App Móvil C8L</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">Interfaz de usuario (UI/UX) completa para iOS y Android. Incluye prototipo navegable y componentes Figma.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+                        <span style="font-size: 1.4rem; font-weight: 800; color: var(--accent-gold);">€149.99</span>
+                        <button onclick="showNotification(currentLang === 'es' ? '¡Producto añadido al carrito!' : 'Product added to cart!')" class="cta-button" style="padding: 10px 20px; font-size: 0.75rem; border-radius: 4px;">Comprar</button>
+                    </div>
+                </div>
+                <!-- Product 4 -->
+                <div class="glass product-card" style="padding: 30px; text-align: left; border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="product-image" style="height: 250px; border-radius: 12px; overflow: hidden; background: #1a1a1f; position: relative;">
+                        <img src="assets/WhatsApp Image 2025-10-22 at 18.14.36.jpeg" alt="Flyer Promocional C8L" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span style="position: absolute; top: 15px; left: 15px; background: var(--accent-gold); color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px;">CREATIVE ART</span>
+                        <img src="assets/c8l_logo_blue_chrome.png" class="product-logo spin-slow" alt="C8L Blue Logo" style="position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--accent-gold); background: #000; z-index: 5;">
+                    </div>
+                    <h3 style="font-size: 1.3rem; margin-top: 25px; margin-bottom: 10px; font-weight: 800;" data-translate="product-4-title">Artwork & Arte Digital C8L</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;">Diseño promocional artístico para campañas de música, conciertos y eventos, adaptable a redes sociales.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+                        <span style="font-size: 1.4rem; font-weight: 800; color: var(--accent-gold);">€39.99</span>
+                        <button onclick="showNotification(currentLang === 'es' ? '¡Producto añadido al carrito!' : 'Product added to cart!')" class="cta-button" style="padding: 10px 20px; font-size: 0.75rem; border-radius: 4px;">Comprar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="section-padding" style="background: rgba(197, 160, 89, 0.01);">
+        <div class="container animate-fade">
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: -1px;" data-translate="pricing-title">
+                Planes de Suscripción</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 50px; font-weight: 300;" data-translate="pricing-subtitle">Elige el plan ideal para potenciar tu creatividad y acceder al ecosistema C8L</p>
+            
+            <!-- Graphic Plans Board -->
+            <div class="glass pulse-border-gold" style="max-width: 900px; margin: 0 auto 50px auto; padding: 15px; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); background: rgba(0,0,0,0.4);">
+                <img src="assets/plans_board_hologram.jpg" alt="C8L Subscription Plans Board" style="width: 100%; border-radius: 12px; display: block; filter: contrast(1.03) brightness(0.97);">
+            </div>
+
+            <div class="pricing-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                <!-- Basic Plan -->
+                <div class="glass pricing-card">
+                    <img src="assets/c8l_logo_blue_chrome.png" class="plan-card-logo pulse-glow" alt="C8L Logo" style="border-radius: 50%;">
+                    <h3 data-translate="pricing-basic-title" style="font-size: 1.5rem; margin-bottom: 10px;">Modo Básico</h3>
+                    <p data-translate="pricing-basic-desc" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Acceso a Foros y Casino Social Básico.</p>
+                    <div class="price">€9.99<span>/mes</span></div>
+                    <ul class="pricing-features">
+                        <li data-translate="pricing-basic-feat1">Casino Social Básico</li>
+                        <li data-translate="pricing-basic-feat2">Acceso a Foros de la Comunidad</li>
+                        <li style="opacity: 0.4; text-decoration: line-through;">Casino Premium & Eventos</li>
+                        <li style="opacity: 0.4; text-decoration: line-through;">Creación de Música IA</li>
+                    </ul>
+                    <button onclick="subscribe('basic')" class="cta-button btn-price" data-translate="pricing-basic-btn">Suscribirse (€9.99)</button>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="glass pricing-card popular">
+                    <div class="badge-offer" data-translate="pricing-best-deal">MÁS POPULAR</div>
+                    <img src="assets/c8l_logo_blue_chrome.png" class="plan-card-logo pulse-glow" alt="C8L Logo" style="border-radius: 50%;">
+                    <h3 data-translate="pricing-premium-title" style="font-size: 1.5rem; margin-bottom: 10px; color: var(--accent-gold);">Modo Premium</h3>
+                    <p data-translate="pricing-premium-desc" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Casino Premium, Foros Exclusivos y preventa de Merchandising.</p>
+                    <div class="price" style="color: var(--accent-gold);">€24.99<span>/mes</span></div>
+                    <ul class="pricing-features">
+                        <li data-translate="pricing-premium-feat1">Acceso a Casino Premium</li>
+                        <li data-translate="pricing-premium-feat2">Foros VIP Exclusivos</li>
+                        <li data-translate="pricing-premium-feat3">Pre-ventas de Merchandising</li>
+                        <li data-translate="pricing-premium-feat4">Acceso a herramientas de IA</li>
+                    </ul>
+                    <button onclick="subscribe('premium')" class="cta-button btn-price" style="background: var(--accent-gold);" data-translate="pricing-premium-btn">Suscribirse (€24.99)</button>
+                </div>
+
+                <!-- Agency Plan -->
+                <div class="glass pricing-card">
+                    <img src="assets/c8l_logo_blue_chrome.png" class="plan-card-logo pulse-glow" alt="C8L Logo" style="border-radius: 50%;">
+                    <h3 data-translate="pricing-agency-title" style="font-size: 1.5rem; margin-bottom: 10px;">Modo Agencia</h3>
+                    <p data-translate="pricing-agency-desc" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Creación de Contenido IA, Eventos VIP y Merchandising Exclusivo.</p>
+                    <div class="price">€49.99<span>/mes</span></div>
+                    <ul class="pricing-features">
+                        <li data-translate="pricing-agency-feat1">Todo lo del plan Premium</li>
+                        <li data-translate="pricing-agency-feat2">Creación de Contenido IA Ilimitado</li>
+                        <li data-translate="pricing-agency-feat3">Pases a Eventos VIP Exclusivos</li>
+                        <li data-translate="pricing-agency-feat4">Merchandising Exclusivo de C8L</li>
+                    </ul>
+                    <button onclick="subscribe('agency')" class="cta-button btn-price" data-translate="pricing-agency-btn">Suscribirse (€49.99)</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="social-login" class="section-padding" style="background: rgba(197, 160, 89, 0.02);">
+        <div class="container animate-fade">
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: -1px;" data-translate="social-login-title">
+                Regístrate en la Comunidad</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 50px;" data-translate="social-login-desc">Usa tu red social o tu correo para unirte a C8L Agency.</p>
+            
+            <div id="auth-container" class="glass" style="max-width: 500px; margin: 0 auto; padding: 40px; border-color: var(--accent-gold);">
+                <!-- Logged In View -->
+                <div id="auth-logged-in" style="display: none; text-align: center;">
+                    <img src="assets/c8l_logo_blue_chrome.png" class="plan-card-logo pulse-glow" style="width: 80px; height: 80px; margin-bottom: 20px; border-radius: 50%;" alt="C8L Logo">
+                    <h3 style="color: var(--accent-gold); font-size: 1.5rem; margin-bottom: 10px;">¡Sesión Activa!</h3>
+                    <p id="user-email-display" style="color: var(--text-main); font-weight: 600; margin-bottom: 30px;"></p>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <a href="users.html" class="cta-button" style="padding: 12px 25px; font-size: 0.8rem;">Estudio VIP</a>
+                        <button onclick="handleFirebaseLogout()" class="cta-button" style="padding: 12px 25px; font-size: 0.8rem; background: var(--accent-red); color: white; box-shadow: none;">Cerrar Sesión</button>
+                    </div>
+                </div>
+
+                <!-- Logged Out Form -->
+                <div id="auth-logged-out">
+                    <img src="assets/c8l_logo_blue_chrome.png" class="plan-card-logo pulse-glow" style="width: 80px; height: 80px; margin-bottom: 25px; border-radius: 50%;" alt="C8L Logo">
+                    <!-- Google Button -->
+                    <button onclick="handleFirebaseGoogleLogin()" class="social-btn google" style="width: 100%; justify-content: center; margin-bottom: 25px; border-radius: 4px; padding: 15px 30px; background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid var(--glass-border);">
+                        <img src="https://www.google.com/favicon.ico" alt="G" style="width: 20px; height: 20px; margin-right: 10px; vertical-align: middle;"> Iniciar Sesión con Google
+                    </button>
+                    
+                    <div style="display: flex; align-items: center; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 25px;">
+                        <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+                        <span style="padding: 0 15px; font-weight: bold; letter-spacing: 1px;">O USA TU CORREO</span>
+                        <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                        <button id="tab-login" onclick="switchAuthTab('login')" style="border: none; background: transparent; color: var(--accent-gold); font-weight: bold; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--accent-gold); padding-bottom: 5px; cursor: pointer;">Ingresar</button>
+                        <button id="tab-register" onclick="switchAuthTab('register')" style="border: none; background: transparent; color: var(--text-muted); font-weight: bold; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; padding-bottom: 5px; cursor: pointer;">Registrarse</button>
+                    </div>
+
+                    <!-- Email Form -->
+                    <div style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
+                        <div>
+                            <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px;">Correo Electrónico</label>
+                            <input type="email" id="auth-email" placeholder="nombre@correo.com" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: white; outline: none; font-family: inherit; font-size: 0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px;">Contraseña</label>
+                            <input type="password" id="auth-password" placeholder="Tu contraseña (mín. 6 caracteres)" style="width: 100%; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: white; outline: none; font-family: inherit; font-size: 0.9rem;">
+                        </div>
+                        
+                        <button id="auth-submit-btn" onclick="handleAuthSubmit()" class="cta-button" style="width: 100%; margin-top: 10px; border-radius: 4px; padding: 15px;">Ingresar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="section-padding contact-bg-wrapper">
+        <div class="dynamic-bg">
+            <img src="assets/contact_bg.jpg" alt="Concert Background">
+        </div>
+        <div class="container animate-fade">
+            <h2 style="text-align: center; font-size: 3rem; margin-bottom: 60px; font-weight: 800; text-transform: uppercase; letter-spacing: -1px;"
+                data-translate="contact-title">
+                Hablemos de tu Proyecto</h2>
+            <div class="glass"
+                style="max-width: 900px; margin: 0 auto; padding: 60px 50px; text-align: center; border-color: var(--accent-gold);">
+                <p style="font-size: 1.4rem; margin-bottom: 30px; font-weight: 300; color: var(--text-main);"
+                    data-translate="contact-desc">Estamos listos para llevar tu marca a la cima de la industria.</p>
+                
+                <!-- Premium Interactive Contact Form -->
+                <form id="agency-contact-form" style="max-width: 600px; margin: 0 auto 40px auto; text-align: left; display: flex; flex-direction: column; gap: 20px;">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">Nombre Completo</label>
+                            <input type="text" id="contact-name" placeholder="Tu nombre" required style="width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; font-family: inherit; font-size: 0.9rem; transition: var(--transition-smooth);">
+                        </div>
+                        <div style="flex: 1; min-width: 250px;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">Correo Electrónico</label>
+                            <input type="email" id="contact-email" placeholder="tu@correo.com" required style="width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; font-family: inherit; font-size: 0.9rem; transition: var(--transition-smooth);">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">Mensaje / Detalles del Proyecto</label>
+                        <textarea id="contact-message" rows="5" placeholder="Cuéntanos sobre tu proyecto, objetivos y plazos..." required style="width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; font-family: inherit; font-size: 0.9rem; resize: vertical; transition: var(--transition-smooth);"></textarea>
+                    </div>
+                    <button type="submit" class="cta-button" style="width: 100%; padding: 20px; border-radius: 8px; border: none; font-size: 0.95rem; text-align: center;">Enviar Mensaje</button>
+                </form>
+
+                <div style="margin-bottom: 40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 40px;">
+                    <h3 style="color: var(--accent-gold); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem;"
+                        data-translate="contact-hr">Dirección de Talento</h3>
+                    <p style="font-size: 1.2rem; font-weight: 600;">Sherlyn - <a
+                            href="mailto:agenciacorazoneslocos.c8l@gmail.com"
+                            style="color: var(--accent-gold); text-decoration: none; border-bottom: 1px solid var(--accent-gold); padding-bottom: 2px;">agenciacorazoneslocos.c8l@gmail.com</a>
+                    </p>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px;"
+                    data-translate="contact-footer">C8L AGENCY © CORPORATE HEADQUARTERS</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="section-padding" style="text-align: center; border-top: 1px solid var(--glass-border);">
+        <img src="assets/c8l_logo_blue_chrome.png" alt="C8L Logo" style="height: 40px; margin-bottom: 20px; opacity: 0.8; border-radius: 50%;">
+        <p style="color: var(--text-muted);">&copy; 2026 C8L Agency. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Firebase SDK (Compat Version for Static HTML) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="script.js"></script>
+    <script>
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+
+</html>

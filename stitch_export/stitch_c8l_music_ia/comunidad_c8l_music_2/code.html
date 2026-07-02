@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800;900&amp;family=Be+Vietnam+Pro:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#2a2a2a",
+                    "primary-fixed": "#f0dbff",
+                    "on-primary-fixed": "#2c0051",
+                    "on-error-container": "#ffdad6",
+                    "tertiary": "#ffb0cd",
+                    "on-primary-fixed-variant": "#6900b3",
+                    "inverse-on-surface": "#313030",
+                    "background": "#131313",
+                    "secondary-fixed-dim": "#4ae176",
+                    "on-tertiary": "#640039",
+                    "on-primary": "#490080",
+                    "on-secondary-container": "#004119",
+                    "secondary": "#4ae176",
+                    "on-surface": "#e5e2e1",
+                    "error-container": "#93000a",
+                    "inverse-surface": "#e5e2e1",
+                    "tertiary-fixed": "#ffd9e4",
+                    "on-surface-variant": "#cfc2d6",
+                    "surface-tint": "#ddb7ff",
+                    "surface-container-low": "#1c1b1b",
+                    "error": "#ffb4ab",
+                    "outline": "#988d9f",
+                    "on-tertiary-fixed": "#3e0022",
+                    "on-primary-container": "#400071",
+                    "surface": "#131313",
+                    "tertiary-fixed-dim": "#ffb0cd",
+                    "on-secondary-fixed": "#002109",
+                    "surface-bright": "#393939",
+                    "on-tertiary-container": "#570032",
+                    "on-secondary-fixed-variant": "#005321",
+                    "surface-dim": "#131313",
+                    "on-secondary": "#003915",
+                    "secondary-fixed": "#6bff8f",
+                    "on-tertiary-fixed-variant": "#8c0053",
+                    "on-background": "#e5e2e1",
+                    "surface-container-lowest": "#0e0e0e",
+                    "surface-container-highest": "#353534",
+                    "inverse-primary": "#842bd2",
+                    "secondary-container": "#00b954",
+                    "tertiary-container": "#f751a1",
+                    "surface-variant": "#353534",
+                    "primary-fixed-dim": "#ddb7ff",
+                    "on-error": "#690005",
+                    "surface-container": "#201f1f",
+                    "primary": "#ddb7ff",
+                    "outline-variant": "#4d4354",
+                    "primary-container": "#b76dff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "stack-sm": "8px",
+                    "stack-lg": "32px",
+                    "container-margin": "24px",
+                    "gutter": "16px",
+                    "stack-md": "16px",
+                    "section-gap": "64px"
+            },
+            "fontFamily": {
+                    "label-bold": ["Be Vietnam Pro"],
+                    "display-xl": ["Spline Sans"],
+                    "headline-md": ["Spline Sans"],
+                    "headline-lg": ["Spline Sans"],
+                    "body-lg": ["Be Vietnam Pro"],
+                    "body-md": ["Be Vietnam Pro"]
+            },
+            "fontSize": {
+                    "label-bold": ["14px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "900"}],
+                    "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "headline-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass {
+            background: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .glass-vibrant {
+            background: rgba(168, 85, 247, 0.15);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#121212]/80 backdrop-blur-[20px] fixed top-0 w-full z-50 border-b border-white/15">
+<div class="flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full border-2 border-primary-container overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A high-contrast, professional studio portrait of a modern music enthusiast with cool, atmospheric purple lighting. The individual has a confident expression, styled hair, and is wearing contemporary urban fashion. The background is a deep, velvety black that emphasizes the sharp rim lighting on their silhouette, following the Electric Premium brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCV0v8XCjooft1FWB1CUbWWc6bLXV73foB5FeqbQ-S04b7RbAAaGIRKGGN02mA15W2lCsaC_6SnffykYPGOyd-OQJ_t70nPeBG-nuTXibyqdkejv6H9xyVRj1maqh1xIjGSRCPlUavBEegrYxybxEt4pOFk5JwAcxoseO724Im4JtLmYbbf1zu3-kK17A4rBMK_F-T3S2MkOg1aMhjGvP_8J7sjDf2fhJIdbgRe-YhxKPsLKXFZ6hOqoKp63E-gjd7lDckNQH70rqw"/>
+</div>
+<h1 class="font-['Spline_Sans'] font-bold tracking-tight text-2xl font-black text-white italic tracking-tighter">C8L Music</h1>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-zinc-500 hover:text-purple-400 transition-colors cursor-pointer" data-icon="notifications">notifications</span>
+</div>
+</div>
+</header>
+<main class="pt-24 px-container-margin max-w-7xl mx-auto">
+<!-- Community Hero Header -->
+<section class="mb-stack-lg">
+<h2 class="font-headline-lg text-headline-lg mb-2">Comunidad</h2>
+<p class="text-on-surface-variant text-body-lg">Conecta con el pulso de la música.</p>
+</section>
+<!-- Genre Communities (Bento Style) -->
+<section class="mb-section-gap">
+<div class="flex justify-between items-end mb-stack-md">
+<h3 class="font-headline-md text-headline-md">Explorar Géneros</h3>
+<span class="text-primary-container font-label-bold cursor-pointer">Ver todo</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Large Feature -->
+<div class="md:col-span-2 relative h-64 rounded-xl overflow-hidden group cursor-pointer border border-white/10">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A cinematic wide shot of a high-energy techno warehouse party. Silhouettes of a crowd dancing under intense pink and purple laser beams cutting through a haze of smoke. The lighting is dramatic and saturated, reflecting a vibrant late-night festival atmosphere with deep blacks and electric neon glows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgbgj9qcZB0PptxnPBcTRz_UUt3hlirVNdCiYyMaMwZTJyQMGHzKQ666pM4nIIqKBamiZyFBjD36V4B_OF087Ho6uRComcVDBnoP1xdoIJjnfSho98pE-JZmW_E8n1leCcda_QfQHAsJpKLz4ROF360vVZGweCxQP-BWFcu-DecElKic2a48aKfKnqz3WFZhh-lDCeWHCrmlLazcVvwhOIKa3qa2mOzV9qvHmkdUTm0MgQpOrsylQVNJLDaeoN8hBxXCGaRPbltac"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+<div class="absolute bottom-6 left-6">
+<span class="bg-primary-container text-on-primary-container font-label-bold px-3 py-1 rounded-full text-xs uppercase mb-2 inline-block">Populares</span>
+<h4 class="font-headline-md text-white">Techno Community</h4>
+<p class="text-zinc-300">12.4k Miembros • 150 activos ahora</p>
+</div>
+</div>
+<!-- Small Feature 1 -->
+<div class="relative h-64 rounded-xl overflow-hidden group cursor-pointer border border-white/10">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A cozy, sophisticated jazz lounge setting with warm, golden-purple ambient lighting. A vintage saxophone rests on a polished dark wood table next to a glass of whiskey. The mood is intimate and premium, featuring soft focus on the background where a velvet-curtained stage is visible." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVw5crZb64RKYUW8D7N8AXhrji5WsMGF9jKYFzw5iEmczo3gjH23Qr1rSgrKBTqHsEx5cj6RXFLIwo5Z8w4ZX4L6c4h3aIjV63sQISxIrVR7Gv7U-LpYUjTDyekxxhXDkP76dDGsjdzOv8GWVsPveKg7U2CtW3NsPlH7Qv94OKxaP4xs8ruXyTsvTjrMu-uccBbqyI3pQBq95-FB54ACFzwWrHYBbFOpWk1JXiCHkkpC1Aj0MDxop8nQx6jWJA58sQ1P-NZKTsEzw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+<div class="absolute bottom-6 left-6">
+<h4 class="font-headline-md text-white text-xl">Jazz Lounge</h4>
+<p class="text-zinc-300">4.2k Miembros</p>
+</div>
+</div>
+<!-- Small Feature 2 -->
+<div class="relative h-64 rounded-xl overflow-hidden group cursor-pointer border border-white/10 md:hidden lg:block">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="An ethereal and atmospheric lo-fi study room at night. Cool neon pink light spills from a window onto a desk with a vinyl player and aesthetic plants. The visual style is grainy and nostalgic, perfectly capturing the chill, relaxed mood of lofi beats with soft glowing accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1cswM6uoFQ1Goa2u0GyO8gHfd2Y-cq41m4XaK1Kj8smXXHYf9lSyvgTngDjPywcyd_6eaW-8MEDpD9nZj4um3uNdPibNyV_KD70y-l5R-FDBLoadgUL5rgTsRwdYFBvYFd2Lou_Xz95aBqBCT86kZV6RjiTT-uILWm5eBWy50K7VJbu6Y9ZWFvbEzlBRKrzBlF0kviDuiN5hzodUX3APM6lUG75VsNbuggUrCDxoHrV9vrYwxOBi8ut85J08Uc_HZIWJokJn2EsY"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+<div class="absolute bottom-6 left-6">
+<h4 class="font-headline-md text-white text-xl">Lo-Fi Study</h4>
+<p class="text-zinc-300">8.9k Miembros</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Members Horizontal Scroll -->
+<section class="mb-section-gap">
+<h3 class="font-headline-md text-headline-md mb-stack-md">Miembros Destacados</h3>
+<div class="flex overflow-x-auto gap-stack-md pb-4 hide-scrollbar">
+<!-- Member 1 -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-purple-600 to-pink-500">
+<div class="w-full h-full rounded-full border-2 border-black overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform" data-alt="A close-up portrait of a vibrant young woman with a creative aesthetic. She has bright, stylish makeup and is set against a backdrop of neon purple lights. The image feels energetic and fashionable, reflecting a prominent member of a music community with high-end digital photography quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD92wmRFvMtTtL-dckzJY-OuTdl1VRYt-HzEedqcqYX-lt-DZpX70ENZJVgwbLzbqvz9Q1S1dxXfkg8ysv83VpS1RfsKqQIHxzbw7Jf6ZYLhjtSqKgBrx2uYNdsT9oZ69p7Ht2qMthzAOAMHWWcjm6HFvm-_qkwDrnKQlwHewyupqE3hLMfd1Dp_pX5JpYbW2MjNCo2PKtpWeNu-ET7_UWuNGjlFtKxf5PLqOUljD7xc23aT5cpP-EhZJudk7Dr1-kjtKgrPQsEAqU"/>
+</div>
+</div>
+<span class="font-label-bold text-white">Elena M.</span>
+</div>
+<!-- Member 2 -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-20 h-20 rounded-full p-1 bg-zinc-800">
+<div class="w-full h-full rounded-full border-2 border-black overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform" data-alt="A portrait of a male musician with a brooding, artistic vibe. He is wearing a dark leather jacket, lit by a singular magenta spotlight that creates deep shadows. The aesthetic is raw, premium, and focused, emphasizing his role as an influential contributor to the electronic music scene." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2WgxemPWOncQKbBiiBkyj5Ed5sv9XfZ6kn96yeNIDhq4kPlwopePw-Zz0x9DzfHHbsN6u38QosIsyhbAeD6ZmaHMwMHtB2aMo8rCH-mZIBNnavFi4R3iPAj264ISAwvcl-CJoKkIULV0bi6RdvzFmaclWv2hL92woFR8yh8wL1xEZA-y0FTHfYKlU_B2wp96IU0311Kg0o0BrUCmp07zF_X3hBBhZl0fxqowyjnQItFCKjRUHnamQ4yNG31uYyN_JH9RKCVVkBu4"/>
+</div>
+</div>
+<span class="font-label-bold text-white">Julian Bass</span>
+</div>
+<!-- Member 3 -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-purple-600 to-pink-500">
+<div class="w-full h-full rounded-full border-2 border-black overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform" data-alt="A striking portrait of a young man with a modern streetwear style. The lighting is high-contrast with a mix of cool blue and warm pink tones, highlighting his features. He has a creative and approachable aura, fitting for a featured member of an online music community." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeEQtkzJ68v8kawA2VqzOlKSW9OXPnU7La6SZU4Jc4reTKgv-0BUxnTUHf9JKcPqhbkYc1PWvzKfWzdrGj30AilM_L3Z9FUzOgjVGaQE1LT3Yp2n6Rxi96UtDQ0VswWiiH98fjv9-6ya0i5Zt5aAIczlqaJ7AZzSqaiwpfBR4IGCug6e84g-IIgE8ghnw2sGkqFNLy1vw63ep1_Dx0numXQFwti7XsMOJ0D3lZUhu3N9Pd3MSl2LQA4ku3EntX3qydC7wVSYDbCzk"/>
+</div>
+</div>
+<span class="font-label-bold text-white">Marco_V</span>
+</div>
+<!-- Repeat for scroll feel -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-20 h-20 rounded-full p-1 bg-zinc-800">
+<div class="w-full h-full rounded-full border-2 border-black overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform" data-alt="A fashionable young woman with an edgy, alternative look. She is photographed in a dimly lit studio with vibrant cyan and purple backlighting. Her expression is cool and composed, embodying the luxury and energy of the Sonic Pulse design system's aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCb_DM-BdWT5XELmkjQWWrqpl6-jOEommLtubVNSvy2g4O4tcUalRQ1IOqCXihN9umgiRqXGDTXfJxzVlMspCmyxygUafb4JhCutk54muidJ8SlFRZ5b1G_FhFFD8QpI1aZ4zZq7ZPHXI0QDQRhozplvee6Xi7c_K3dqY466iz0gMuyxzRIotahuTV8LwXaHECfFHq5cOzPVxNpBO8jRC8TxfjUv7OFsvGkS-lFApOD5_221FLm1c_1RoPGUq5hERDvGNoTWfOWZU0"/>
+</div>
+</div>
+<span class="font-label-bold text-white">Sofia Zen</span>
+</div>
+<div class="flex-shrink-0 flex flex-col items-center gap-2 group cursor-pointer">
+<div class="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-purple-600 to-pink-500">
+<div class="w-full h-full rounded-full border-2 border-black overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform" data-alt="A stylish man with a clean, modern aesthetic. He is captured in a minimalist setting with a single violet glow illuminating his profile. The image is crisp and professional, fitting for a high-profile community member on a premium music platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr5VDrzzkR1TlLvbfLFuu0RuaaCHTHyuvJP21WPh-kTn_mN7fOpch_fseSLngVAKP86pRYf7IbtjzkxJJXrULVRD-zOQXIFmbbesfcq9nzvOyqcgU6Bf1CYUOMe5kRuOIG0tbBTdzTrv7-x0yLnLTUjUhcIpzXAkhraiTHQ4UFknjCATB-DqAEZITcFfVcjKwDfYzk63hxotBZr4NV8Y561V5AvcyaPeKe0iUk3o-jtvCS8BCEgYO71STAq1MHc4OS_ETExlzR-Bs"/>
+</div>
+</div>
+<span class="font-label-bold text-white">X-Beat</span>
+</div>
+</div>
+</section>
+<!-- User Profile Cards -->
+<section class="mb-section-gap">
+<h3 class="font-headline-md text-headline-md mb-stack-md">Novedades de la Comunidad</h3>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Card 1 -->
+<div class="glass p-6 rounded-2xl flex flex-col gap-6">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="w-14 h-14 rounded-xl overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover" data-alt="A high-fashion portrait of a woman in an urban setting at night. She is surrounded by the blurred lights of a city, with dominant purple and electric blue tones. The image is sophisticated and moody, perfectly aligned with the dark mode aesthetic of a premium music app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtvKb-Y-2nPPB0L-IeGJG5_x_deK_r2NGiSWam5yiK3ihlak7IcWab8UEI6AzkLLs3HkpGVf6p--jTzfYDCzUI1EBSV9dbhb-DvOgpnNaIVS6p0fHYu78CrkgaAbALDj-9a2fAbyfzdbmBR1-vVtQS-Q_W0FYgvqi3Hv9xi-2I972A4fKL8U7T4g1N9Uy13i3tkS2oLm34CfcwNwBanB8gU4mraLrIDp4gthY-f5qtKdqI3O_cmC3kMQm9nfkXJsVkrAA3YQegwgE"/>
+</div>
+<div>
+<h4 class="font-label-bold text-white text-lg">Lucia Sparks</h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">public</span>
+<span class="text-xs text-zinc-400 font-label-bold uppercase tracking-wider">Perfil Público</span>
+</div>
+</div>
+</div>
+<button class="bg-gradient-to-tr from-purple-600 to-pink-500 text-white font-label-bold px-6 py-2 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.4)] active:scale-95 transition-all">Seguir</button>
+</div>
+<div class="space-y-3">
+<p class="text-on-surface-variant text-body-md italic">"Escuchando el nuevo álbum de Artbat, ¡pura energía!"</p>
+<div class="glass-vibrant p-4 rounded-xl flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="play_circle" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+<div>
+<p class="text-white font-label-bold">Flame - Artbat Remix</p>
+<p class="text-xs text-zinc-400">Shared track</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-pink-500 text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-xs font-label-bold">128</span>
+</div>
+<span class="material-symbols-outlined text-zinc-400" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass p-6 rounded-2xl flex flex-col gap-6 opacity-80 grayscale-[0.2]">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="w-14 h-14 rounded-xl overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover" data-alt="A portrait of a man with an artistic, creative expression. He is lit by vibrant pink and magenta neon lights against a deep black background. The lighting is sharp and professional, highlighting a premium feel and high-contrast digital art style characteristic of the Electric Premium brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6JkOxcQFkKPiILDXuot5QcGAkfe_z2677RqXU1UvTi9SimBztgcpR9oxcKEZWm72GvxP-Fl43oq3-SAHmGPLjun06UjLDYE10o-rzE2yHukJJWmJb5HlJdl50cMVsNNZPXCGsTBaDSkyoBUDo4cNYmQABKQye6Z4zx_o3n0Qrt4htuF_-uc_9CyZhEfo67yCOuzP1x4gq-ioCgKetkzSWD-DymbXwBpJps10095EKTuZI58mlehhD4x6E9BMhmcXwSC0poZ_3C6c"/>
+</div>
+<div>
+<h4 class="font-label-bold text-white text-lg">Dani_Vibes</h4>
+<div class="flex items-center gap-2 mt-1 text-zinc-500">
+<span class="material-symbols-outlined text-sm">lock</span>
+<span class="text-xs font-label-bold uppercase tracking-wider">Perfil Privado</span>
+</div>
+</div>
+</div>
+<button class="border border-white/20 text-white font-label-bold px-6 py-2 rounded-full hover:bg-white/5 active:scale-95 transition-all">Seguir</button>
+</div>
+<div class="space-y-3">
+<p class="text-on-surface-variant text-body-md italic">"Descubriendo joyas del jazz clásico hoy..."</p>
+<div class="glass-vibrant p-4 rounded-xl flex items-center justify-between group border-l-4 border-secondary">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary" data-icon="play_circle" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+<div>
+<p class="text-white font-label-bold">Blue In Green</p>
+<p class="text-xs text-zinc-400">Shared track</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-pink-500 text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-xs font-label-bold">45</span>
+</div>
+<span class="material-symbols-outlined text-zinc-400" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Now Playing Bar -->
+<div class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl z-50">
+<div class="bg-[#121212]/90 backdrop-blur-[40px] p-3 rounded-2xl border border-white/10 shadow-2xl flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-lg overflow-hidden bg-surface-container-high relative">
+<img class="w-full h-full object-cover" data-alt="Album art featuring an abstract representation of sound waves in neon green and deep purple. The design is sleek and modern, with a tactile glass-like texture and a glowing pulse effect that suggests movement and energy, fitting for a contemporary electronic track." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaYMcjY5Oj2jGJnqgJPZ89uYA9-cJq9XqujtNK75SUyHNGX8g1o103jW_df4NV_9PlD53G_jWzKFhtFwNvsy_gPGG1iSZTr3LJB-mVcLPHoWCXNjBk8gwT8WWhx1Q0xjGu6wLkh6gx6MP1QO7XSBrVQZAVccdveyFJV_4_j-IwTpB5grPQRwqb5xm-DG4oQjCIMjnx__FBsOji4RfZgMDrc22p6Z9qv6xrypjI0xYTft-W4GNCX1QB2Ux0UajjTYwxosTXRry62KQ"/>
+</div>
+<div>
+<p class="text-white font-label-bold text-sm">Sonic Pulse - Original Mix</p>
+<p class="text-xs text-secondary-fixed-dim">C8L Collective</p>
+</div>
+</div>
+<div class="flex items-center gap-4 mr-2">
+<span class="material-symbols-outlined text-white" data-icon="skip_previous">skip_previous</span>
+<div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black">
+<span class="material-symbols-outlined" data-icon="pause" style="font-variation-settings: 'FILL' 1;">pause</span>
+</div>
+<span class="material-symbols-outlined text-white" data-icon="skip_next">skip_next</span>
+</div>
+<!-- Progress Pulse -->
+<div class="absolute bottom-0 left-0 h-1 bg-secondary w-[45%] rounded-b-2xl shadow-[0_0_10px_rgba(74,225,118,0.8)]"></div>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-4 bg-[#121212]/90 backdrop-blur-[40px] z-50 border-t border-white/15 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+<div class="flex flex-col items-center justify-center text-zinc-400 opacity-60 hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Spline_Sans'] text-[12px] font-bold uppercase tracking-widest mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 opacity-60 hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Spline_Sans'] text-[12px] font-bold uppercase tracking-widest mt-1">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white bg-gradient-to-tr from-purple-600 to-pink-500 rounded-full px-6 py-2 shadow-[0_0_15px_rgba(168,85,247,0.5)] active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined" data-icon="groups" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-['Spline_Sans'] text-[10px] font-bold uppercase tracking-widest leading-none">Comunidad</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 opacity-60 hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="library_music">library_music</span>
+<span class="font-['Spline_Sans'] text-[12px] font-bold uppercase tracking-widest mt-1">Library</span>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,10 @@
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+
+export function useScrollReset() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+}

@@ -1,0 +1,424 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gold: #D4AF37;
+  --color-gold-light: #F0CF65;
+  --color-gold-dark: #AA8B29;
+  --color-neon-blue: #00F3FF;
+  --color-neon-blue-light: #66F8FF;
+  --color-neon-blue-dark: #00A3AB;
+  --color-neon-purple: #8A2BE2;
+  --color-neon-pink: #FF69B4;
+  
+  --color-background: #000000;
+  --color-foreground: #ededed;
+  --color-panel: rgba(20, 20, 20, 0.4);
+  --color-panel-border: rgba(255, 255, 255, 0.05);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #000000;
+  --foreground: #ededed;
+  --color-panel: rgba(10, 15, 30, 0.55);
+  --color-panel-border: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] {
+  --background: #f4f4f6;
+  --foreground: #1c1c1e;
+  --color-panel: rgba(240, 240, 243, 0.85);
+  --color-panel-border: rgba(0, 0, 0, 0.08);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neon-blue) transparent;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Scrollbar for Chrome/Safari */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-neon-blue);
+  border-radius: 4px;
+}
+
+@layer utilities {
+  .glass-panel {
+    background: var(--color-panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--color-panel-border);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .glass-header {
+    @apply bg-black/40 backdrop-blur-lg border-b border-white/5;
+  }
+  
+  .text-glow-neon {
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.4);
+  }
+  
+  .text-glow-gold {
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.6), 0 0 20px rgba(212, 175, 55, 0.4);
+  }
+  
+  .box-glow-neon {
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3), inset 0 0 10px rgba(0, 243, 255, 0.1);
+  }
+  
+  .box-glow-gold {
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3), inset 0 0 10px rgba(212, 175, 55, 0.1);
+  }
+}
+
+/* Noise / Grain Overlay */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Premium Custom Cursor styles matching gold/neon theme */
+.custom-cursor {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #00F3FF;
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10000;
+  transition: width 0.3s, height 0.3s, background-color 0.3s, border-color 0.3s, opacity 0.3s;
+  transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.custom-cursor-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #00F3FF;
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10001;
+  transition: opacity 0.3s;
+}
+
+/* Cursor Hover scaling */
+.custom-cursor.hover {
+  width: 50px;
+  height: 50px;
+  background-color: rgba(0, 243, 255, 0.1);
+  border-color: #fff;
+}
+
+/* Moving Mesh Gradients */
+@keyframes meshMovement {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.premium-mesh-bg {
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 243, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 30%, rgba(0, 110, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 30% 80%, rgba(0, 243, 255, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(0, 110, 255, 0.05) 0%, transparent 50%);
+  background-size: 200% 200%;
+  animation: meshMovement 20s ease infinite;
+}
+
+/* ==========================================================================
+   Cyberpunk Overhaul Animaciones y Elementos
+   ========================================================================== */
+
+@keyframes gridMove {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(50px);
+  }
+}
+
+.digital-grid-animated {
+  position: fixed;
+  inset: -50px 0 0 0;
+  background-image: 
+    linear-gradient(rgba(0, 243, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 243, 255, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 1;
+  animation: gridMove 12s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes hologramScan {
+  0% {
+    top: -5%;
+  }
+  100% {
+    top: 105%;
+  }
+}
+
+.hologram-scanline {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(180deg, 
+    transparent, 
+    rgba(0, 243, 255, 0.15) 50%, 
+    transparent 100%);
+  animation: hologramScan 8s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Custom cyber-slanted panel border */
+.cyber-panel-holo {
+  position: relative;
+  background: rgba(0, 15, 20, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.15), inset 0 0 15px rgba(0, 243, 255, 0.05);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+}
+
+.cyber-panel-holo::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  background: rgba(0, 243, 255, 0.5);
+  clip-path: polygon(100% 0, 0 100%, 100% 100%);
+  pointer-events: none;
+}
+
+/* Glitch text effect */
+.cyber-glitch-text {
+  position: relative;
+  color: #fff;
+  text-shadow: 0 0 5px rgba(0, 243, 255, 0.8);
+}
+
+.cyber-glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  text-shadow: -1px 0 #ff0055;
+  top: 0;
+  color: #00F3FF;
+  background: transparent;
+  overflow: hidden;
+  clip: rect(0, 900px, 0, 0); 
+  animation: noise-anim 2s infinite linear alternate-reverse;
+}
+
+@keyframes noise-anim {
+  0% {
+    clip: rect(2px, 9999px, 21px, 0);
+  }
+  20% {
+    clip: rect(12px, 9999px, 4px, 0);
+  }
+  40% {
+    clip: rect(32px, 9999px, 14px, 0);
+  }
+  60% {
+    clip: rect(4px, 9999px, 35px, 0);
+  }
+  80% {
+    clip: rect(18px, 9999px, 8px, 0);
+  }
+  100% {
+    clip: rect(30px, 9999px, 40px, 0);
+  }
+}
+
+/* ==========================================================================
+   C8L Cyberpunk Arcade/Cel-Shaded Primitives
+   ========================================================================== */
+.c8l-cyber-panel {
+  background-color: #0d0d0e;
+  border: 3px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0px #00F3FF !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.c8l-cyber-panel:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #00F3FF !important;
+}
+.c8l-cyber-panel-gold {
+  background-color: #0d0d0e;
+  border: 3px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0px #D4AF37 !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.c8l-cyber-panel-gold:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #D4AF37 !important;
+}
+.c8l-cyber-panel-red {
+  background-color: #0d0d0e;
+  border: 3px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0px #FF0055 !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.c8l-cyber-panel-red:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #FF0055 !important;
+}
+.c8l-cyber-input {
+  background-color: #050506 !important;
+  border: 3px solid #000000 !important;
+  border-radius: 4px !important;
+  color: #ffffff !important;
+  font-family: var(--font-mono), monospace !important;
+  outline: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.c8l-cyber-input:focus {
+  border-color: #00F3FF !important;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.4) !important;
+}
+.c8l-cyber-button {
+  background-color: #00F3FF;
+  color: #000000;
+  font-family: var(--font-heading), sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 3px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: 3px 3px 0px #000000 !important;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.c8l-cyber-button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #000000 !important;
+}
+.c8l-cyber-button:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000 !important;
+}
+.c8l-cyber-button-gold {
+  background-color: #D4AF37;
+  color: #000000;
+  font-family: var(--font-heading), sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 3px solid #000000 !important;
+  border-radius: 4px !important;
+  box-shadow: 3px 3px 0px #000000 !important;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.c8l-cyber-button-gold:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #000000 !important;
+}
+.c8l-cyber-button-gold:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000 !important;
+}
+.c8l-scanlines {
+  position: relative;
+  overflow: hidden;
+}
+.c8l-scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 2;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Efectos Anime, Dinámicos y Movimiento de Cámara (Win Alerts)
+   ========================================================================== */
+
+@keyframes cameraShake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-4px, 4px) rotate(-1.5deg); }
+  20% { transform: translate(4px, -4px) rotate(1.5deg); }
+  30% { transform: translate(-5px, -3px) rotate(-1deg); }
+  40% { transform: translate(5px, 3px) rotate(1.5deg); }
+  50% { transform: translate(-4px, 5px) rotate(-1.5deg); }
+  60% { transform: translate(4px, -5px) rotate(1deg); }
+  70% { transform: translate(-5px, 2px) rotate(-1.5deg); }
+  80% { transform: translate(5px, -2px) rotate(1deg); }
+  90% { transform: translate(-2px, 4px) rotate(-1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.animate-camera-shake {
+  animation: cameraShake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes animeFlash {
+  0%, 100% { opacity: 0; }
+  25% { opacity: 0.15; background-color: #00F3FF; }
+  50% { opacity: 0.25; background-color: #FF0055; }
+  75% { opacity: 0.15; background-color: #D4AF37; }
+}
+
+.animate-anime-flash {
+  animation: animeFlash 0.6s ease-in-out infinite;
+}
+
+@keyframes speedLines {
+  0% { opacity: 0; transform: scale(1.0); }
+  50% { opacity: 0.75; transform: scale(1.05); }
+  100% { opacity: 0; transform: scale(1.1); }
+}
+
+.anime-speed-lines {
+  background: 
+    repeating-radial-gradient(circle, transparent, transparent 15px, rgba(0, 243, 255, 0.05) 15px, rgba(0, 243, 255, 0.05) 30px),
+    repeating-radial-gradient(circle, transparent, transparent 20px, rgba(255, 0, 85, 0.03) 20px, rgba(255, 0, 85, 0.03) 40px);
+  animation: speedLines 0.4s linear infinite;
+}
+
+
